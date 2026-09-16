@@ -1,0 +1,47 @@
+# Local reference archive: contains source repositories, credentials and data.
+/archive/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/secrets/
+**/.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite3
+*.sqlite3-*
+*.db
+*.dump
+*.sql
+/backups/
+/runtime/
+/logs/
+*.log
+
+# Python and frontend generated files
+.venv/
+.uv-cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage*
+htmlcov/
+node_modules/
+dist/
+coverage/
+.turbo/
+playwright-report/
+test-results/
+
+# Local editor and operating system metadata
+.DS_Store
+.idea/
+.vscode/
+
+# Local Compose/runtime metadata
+.compose-state/

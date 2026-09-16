@@ -1,0 +1,70 @@
+import base64
+import secrets
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+
+_PURPOSES = {"control", "subscription"}
+
+
+def _b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).decode("ascii")
+
+
+def _unb64(value: str) -> bytes:
+    return base64.urlsafe_b64decode(value.encode("ascii"))
+
+
+class SecretStore:
+    """Envelope encryption with per-record DEKs and purpose/AAD binding.
+
+    ``master_keys`` maps purpose to ``{version: raw_32_byte_key}``; callers may
+    retain old versions to decrypt during rotation, while encrypt always uses
+    the highest version.
+    """
+
+    def __init__(self, master_keys):
+        self.master_keys = {p: dict(v) for p, v in master_keys.items()}
+        unknown = set(self.master_keys) - _PURPOSES
+        if unknown:
+            raise ValueError(f"unsupported purpose: {sorted(unknown)}")
+        for versions in self.master_keys.values():
+            for key in versions.values():
+                if len(key) != 32:
+                    raise ValueError("master keys must be 32 bytes")
+
+    def _aad(self, purpose, key_version, aad):
+        if purpose not in _PURPOSES:
+            raise ValueError("unsupported purpose")
+        return b"xray-envelope/v1|" + purpose.encode() + b"|" + str(key_version).encode() + b"|" + aad
+
+    def encrypt(self, plaintext: bytes, *, purpose: str, aad: bytes = b"") -> dict:
+        if purpose not in _PURPOSES or purpose not in self.master_keys or not self.master_keys[purpose]:
+            raise ValueError("unsupported purpose")
+        version = max(self.master_keys[purpose])
+        master = self.master_keys[purpose][version]
+        dek = AESGCM.generate_key(bit_length=256)
+        nonce = secrets.token_bytes(12)
+        wrapped_nonce = secrets.token_bytes(12)
+        context = self._aad(purpose, version, aad)
+        ciphertext = AESGCM(dek).encrypt(nonce, plaintext, context)
+        wrapped = AESGCM(master).encrypt(wrapped_nonce, dek, context)
+        return {
+            "v": 1,
+            "purpose": purpose,
+            "key_version": version,
+            "wrapped_dek_nonce": _b64(wrapped_nonce),
+            "wrapped_dek": _b64(wrapped),
+            "nonce": _b64(nonce),
+            "ciphertext": _b64(ciphertext),
+        }
+
+    def decrypt(self, envelope: dict, *, purpose: str, aad: bytes = b"") -> bytes:
+        if envelope.get("purpose") != purpose or purpose not in _PURPOSES:
+            raise ValueError("purpose mismatch")
+        version = int(envelope["key_version"])
+        master = self.master_keys.get(purpose, {}).get(version)
+        if master is None:
+            raise ValueError("unknown key version")
+        context = self._aad(purpose, version, aad)
+        dek = AESGCM(master).decrypt(_unb64(envelope["wrapped_dek_nonce"]), _unb64(envelope["wrapped_dek"]), context)
+        return AESGCM(dek).decrypt(_unb64(envelope["nonce"]), _unb64(envelope["ciphertext"]), context)

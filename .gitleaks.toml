@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "test configuration placeholders"
+paths = ['''(^|/)\.env\.example$''']
+regexes = ['''test-only-[a-z-]+''']
