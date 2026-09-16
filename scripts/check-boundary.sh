@@ -13,7 +13,13 @@ if [[ -d backend ]]; then
 fi
 
 # No build or test command may treat the local archive as an input directory.
-if rg -n --hidden --glob '!archive/**' --glob '!.git/**' '/archive/|archive/shop-' Makefile scripts deploy backend frontend installer tests 2>/dev/null; then
+scan_roots=(Makefile scripts deploy backend installer tests)
+[[ ! -d frontend ]] || scan_roots+=(frontend)
+if rg -n --hidden \
+  --glob '!archive/**' \
+  --glob '!.git/**' \
+  --glob '!scripts/check-boundary.sh' \
+  '/archive/|archive/shop-' "${scan_roots[@]}"; then
   echo 'boundary violation: active project files reference archive/' >&2
   exit 1
 fi

@@ -1,6 +1,9 @@
 """Settings for isolated PostgreSQL integration tests."""
+
 from __future__ import annotations
+
 import os
+
 from .base import *  # noqa: F403
 from .base import database_from_url
 

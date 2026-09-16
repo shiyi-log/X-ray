@@ -186,3 +186,51 @@ class OperationService:
                 raise DomainError("OPERATION_NOT_CANCELLABLE", "当前状态不能取消", status_code=409)
             operation.save(update_fields=["status", "updated_at"])
             return operation
+
+    @staticmethod
+    def retry(operation_id: UUID, *, admin) -> Operation:
+        with transaction.atomic():
+            operation = Operation.objects.select_for_update().get(
+                pk=operation_id, admin=admin
+            )
+            if operation.status not in {
+                "PARTIALLY_SUCCEEDED",
+                "NEEDS_RECONCILIATION",
+            }:
+                raise DomainError(
+                    "OPERATION_NOT_RETRYABLE",
+                    "当前状态不能重试",
+                    status_code=409,
+                )
+            operation.status = "RETRY_PENDING"
+            operation.error_code = ""
+            operation.error_details = {}
+            operation.lease_owner = ""
+            operation.lease_expires_at = None
+            operation.save(
+                update_fields=[
+                    "status",
+                    "error_code",
+                    "error_details",
+                    "lease_owner",
+                    "lease_expires_at",
+                    "updated_at",
+                ]
+            )
+            if not OutboxEvent.objects.filter(
+                operation=operation, delivered_at__isnull=True
+            ).exists():
+                OutboxEvent.objects.create(
+                    operation=operation,
+                    schema_version=operation.schema_version,
+                    available_at=timezone.now(),
+                )
+            AuditService.append(
+                action=f"operation.retry.{operation.kind}",
+                target_type=operation.target_type,
+                target_id=operation.target_id,
+                result="ACCEPTED",
+                metadata={"operation_id": str(operation.pk)},
+                actor=admin,
+            )
+            return operation

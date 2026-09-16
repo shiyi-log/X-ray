@@ -1,2 +1,3 @@
-"""Public subscription URL namespace, intentionally empty until P4."""
-urlpatterns: list = []
+from django.urls import include, path
+
+urlpatterns = [path("", include("apps.subscriptions.urls"))]

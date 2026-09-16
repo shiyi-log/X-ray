@@ -6,20 +6,18 @@ from functools import wraps
 
 import pyotp
 from django.conf import settings
-from django.contrib.auth import authenticate
-from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
+from common.crypto import configured_secret_store
 from common.errors import DomainError
 
 from .services import (
     complete_recovery,
     complete_totp,
     complete_totp_setup,
-    current_admin,
     password_login,
     require_admin,
     require_recent_step_up,
@@ -50,6 +48,7 @@ def _error(exc: DomainError) -> JsonResponse:
         },
         status=exc.status_code,
     )
+
 
 def _run(fn):
     @wraps(fn)
@@ -164,8 +163,10 @@ def step_up(request):
     code = str(payload.get("code") or "")
     if not admin.totp_secret_envelope:
         raise DomainError("TOTP_SETUP_REQUIRED", "请先绑定验证器", status_code=409)
-    secret = __import__("common.crypto", fromlist=["configured_secret_store"]).configured_secret_store().decrypt(
-        admin.totp_secret_envelope, purpose="control", aad=f"totp:{admin.pk}".encode()
+    secret = configured_secret_store().decrypt(
+        admin.totp_secret_envelope,
+        purpose="control",
+        aad=f"totp:{admin.pk}".encode(),
     ).decode()
     if not pyotp.TOTP(secret).verify(code, valid_window=0):
         raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)

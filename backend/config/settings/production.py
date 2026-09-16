@@ -1,9 +1,12 @@
 import os
-from .base import *  # noqa: F403
 
-if SECRET_KEY == "development-only-change-me":
+from .base import *  # noqa: F403
+from .base import ALLOWED_HOSTS as BASE_ALLOWED_HOSTS
+from .base import SECRET_KEY as BASE_SECRET_KEY
+
+if BASE_SECRET_KEY == "development-only-change-me":
     raise RuntimeError("XRAY_SECRET_KEY must be set in production")
-if not ALLOWED_HOSTS:
+if not BASE_ALLOWED_HOSTS:
     raise RuntimeError("XRAY_ALLOWED_HOSTS must contain at least one host")
 if not os.getenv("XRAY_DATABASE_URL"):
     raise RuntimeError("XRAY_DATABASE_URL must be set in production")

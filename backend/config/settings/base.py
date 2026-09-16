@@ -16,7 +16,11 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 def env_list(name: str, default: tuple[str, ...] = ()) -> list[str]:
     value = os.getenv(name)
-    return list(default) if value is None else [item.strip() for item in value.split(",") if item.strip()]
+    return (
+        list(default)
+        if value is None
+        else [item.strip() for item in value.split(",") if item.strip()]
+    )
 
 
 def database_from_url(value: str) -> dict[str, object]:
@@ -52,6 +56,7 @@ INSTALLED_APPS = [
     "apps.cloud_accounts",
     "apps.operations",
     "apps.nodes",
+    "apps.subscriptions",
 ]
 AUTH_USER_MODEL = "identity.SuperAdmin"
 MIDDLEWARE = [
@@ -65,7 +70,14 @@ MIDDLEWARE = [
 ]
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
-DATABASES = {"default": database_from_url(os.getenv("XRAY_DATABASE_URL", "postgresql://xray:xray@127.0.0.1:5432/xray"))}
+DATABASES = {
+    "default": database_from_url(
+        os.getenv(
+            "XRAY_DATABASE_URL",
+            "postgresql://xray:xray@127.0.0.1:5432/xray",
+        )
+    )
+}
 LANGUAGE_CODE = "zh-hans"
 TIME_ZONE = "Asia/Shanghai"
 USE_I18N = True

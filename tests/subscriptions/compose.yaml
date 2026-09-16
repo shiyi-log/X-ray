@@ -1,0 +1,15 @@
+services:
+  clash:
+    image: dreamacro/clash:v1.18.0@sha256:8d10815afb37cc49d262f64e82d9346b15ea889b2ba7fd566c1369a2630b807c
+    command: ["-t", "-f", "/fixtures/clash.yaml"]
+    network_mode: none
+    read_only: true
+    volumes:
+      - ${SUBSCRIPTION_FIXTURE_DIR:-./fixtures}:/fixtures:ro
+  mihomo:
+    image: metacubex/mihomo:v1.19.12@sha256:faa7f8ef37573f59430024c6a0278627f50ddec48a25a2ad60e04f0d851636c8
+    command: ["-t", "-f", "/fixtures/mihomo.yaml"]
+    network_mode: none
+    read_only: true
+    volumes:
+      - ${SUBSCRIPTION_FIXTURE_DIR:-./fixtures}:/fixtures:ro

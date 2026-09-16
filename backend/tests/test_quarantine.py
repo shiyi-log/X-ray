@@ -90,7 +90,9 @@ def test_broad_ipv6_rule_prevents_isolation_confirmation(admin, prepared_node):
 
 
 @pytest.mark.django_db
-def test_unsafe_security_state_blocks_start_without_verified_restore(admin, prepared_node):
+def test_unsafe_security_state_cannot_be_bypassed_by_request_parameter(
+    admin, prepared_node
+):
     node, create_operation = prepared_node
     lifecycle, _holder = make_lifecycle(node)
     lifecycle.create(node.pk, operation_id=create_operation.pk)
@@ -101,12 +103,40 @@ def test_unsafe_security_state_blocks_start_without_verified_restore(admin, prep
     operation = OperationService.submit(
         kind="node.start",
         target_id=node.pk,
+        params={
+            "region": node.region,
+            "account_id": str(node.cloud_account_id),
+            "verified_restore": True,
+        },
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=node.cloud_credential_version,
+    )
+    with pytest.raises(DomainError) as caught:
+        lifecycle.dispatch("start", node.pk, operation_id=operation.pk)
+    assert caught.value.code == "RESTORE_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_global_restore_barrier_blocks_reopening_an_open_node(admin, prepared_node):
+    from apps.operations.services import OperationService
+    from apps.subscriptions.security_barrier import SecurityBarrier
+
+    node, create_operation = prepared_node
+    lifecycle, _holder = make_lifecycle(node)
+    lifecycle.create(node.pk, operation_id=create_operation.pk)
+    operation = OperationService.submit(
+        kind="node.start",
+        target_id=node.pk,
         params={"region": node.region, "account_id": str(node.cloud_account_id)},
         key=uuid4(),
         preview_id=None,
         admin=admin,
         cloud_credential_version=node.cloud_credential_version,
     )
+    SecurityBarrier.enter_restore()
+
     with pytest.raises(DomainError) as caught:
         lifecycle.dispatch("start", node.pk, operation_id=operation.pk)
     assert caught.value.code == "RESTORE_REQUIRED"

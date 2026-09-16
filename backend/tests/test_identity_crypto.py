@@ -1,5 +1,4 @@
 import pytest
-from cryptography.exceptions import InvalidTag
 from django.db import IntegrityError, transaction
 
 from apps.audit.models import AuditEvent
@@ -21,7 +20,7 @@ def secret_store():
 def test_ciphertext_is_bound_to_purpose_and_aad(secret_store):
     envelope = secret_store.encrypt(b"fake-key", purpose="control", aad=b"account:1")
     assert secret_store.decrypt(envelope, purpose="control", aad=b"account:1") == b"fake-key"
-    with pytest.raises(InvalidTag):
+    with pytest.raises(ValueError, match="authentication failed"):
         secret_store.decrypt(envelope, purpose="control", aad=b"account:2")
     with pytest.raises(ValueError):
         secret_store.decrypt(envelope, purpose="subscription", aad=b"account:1")

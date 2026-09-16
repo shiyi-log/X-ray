@@ -28,10 +28,15 @@ def readiness(request):
     try:
         import redis
         from django.conf import settings
-        redis.Redis.from_url(settings.REDIS_URL, socket_connect_timeout=1).ping()
+        redis.Redis.from_url(
+            settings.REDIS_URL, socket_connect_timeout=1
+        ).ping()
         checks["redis"] = "ok"
     except Exception:
         logger.exception("readiness redis check failed")
         checks["redis"] = "unavailable"
     ready = all(value == "ok" for value in checks.values())
-    return JsonResponse({"status": "ok" if ready else "unavailable", "checks": checks}, status=200 if ready else 503)
+    return JsonResponse(
+        {"status": "ok" if ready else "unavailable", "checks": checks},
+        status=200 if ready else 503,
+    )

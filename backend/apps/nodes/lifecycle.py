@@ -420,12 +420,22 @@ class NodeLifecycle:
         ).get(pk=node_id)
         operation = Operation.objects.get(pk=operation_id)
         self._ensure_scope(node, operation)
-        if (
-            kind in {"start", "reboot", "reinstall"}
-            and node.security_state in UNSAFE_SECURITY_STATES
-        ):
-            if operation.params.get("verified_restore") is not True:
-                raise DomainError("RESTORE_REQUIRED", "需先完成撤销状态核验", status_code=409)
+        if kind in {"start", "reboot", "reinstall"}:
+            from apps.subscriptions.security_barrier import (
+                PublishingBlocked,
+                SecurityBarrier,
+            )
+
+            try:
+                SecurityBarrier.assert_open(purpose="reopen_node")
+            except PublishingBlocked as exc:
+                raise DomainError(
+                    "RESTORE_REQUIRED", "需先完成恢复安全核验", status_code=409
+                ) from exc
+            if node.security_state in UNSAFE_SECURITY_STATES:
+                raise DomainError(
+                    "RESTORE_REQUIRED", "需先完成撤销状态核验", status_code=409
+                )
         if kind == "reinstall":
             raise DomainError(
                 "REINSTALL_CONFIRMATION_REQUIRED", "重装必须使用独立破坏性确认流程", status_code=409

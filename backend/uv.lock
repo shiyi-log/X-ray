@@ -1153,6 +1153,7 @@ dependencies = [
     { name = "paramiko" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pyotp" },
+    { name = "pyyaml" },
     { name = "redis" },
 ]
 
@@ -1176,6 +1177,7 @@ requires-dist = [
     { name = "paramiko", specifier = ">=4,<5" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pyotp", specifier = ">=2.9,<3" },
+    { name = "pyyaml", specifier = ">=6,<7" },
     { name = "redis", specifier = ">=6,<7" },
 ]
 

@@ -14,6 +14,24 @@ class DatabaseWriteAuthorizer:
     def __init__(self, claim: Claim):
         self.claim = claim
 
+    @staticmethod
+    def _is_authorized_recovery(operation) -> bool:
+        if operation.kind != "security.recovery.quarantine":
+            return False
+        from apps.subscriptions.security_barrier import SecurityBarrier
+
+        preview = operation.preview
+        state = SecurityBarrier.state()
+        return bool(
+            preview
+            and preview.consumed_at is not None
+            and preview.kind == operation.kind
+            and preview.target_id == operation.target_id
+            and preview.required_phrase == "RECOVERY QUARANTINE"
+            and operation.params.get("confirmation") == preview.required_phrase
+            and preview.snapshot.get("restore_epoch") == state.restore_epoch
+        )
+
     def assert_allowed(
         self,
         permit: MutationPermit,
@@ -23,6 +41,20 @@ class DatabaseWriteAuthorizer:
         resource_id: str | None,
     ) -> None:
         operation = assert_current(self.claim)
+        if not self._is_authorized_recovery(operation):
+            from apps.subscriptions.security_barrier import (
+                PublishingBlocked,
+                SecurityBarrier,
+            )
+
+            try:
+                SecurityBarrier.assert_open(purpose="cloud_write")
+            except PublishingBlocked as exc:
+                raise DomainError(
+                    "SECURITY_BARRIER_CLOSED",
+                    "恢复屏障关闭期间禁止云写入",
+                    status_code=503,
+                ) from exc
         if operation.status != "RUNNING":
             raise DomainError("CLOUD_WRITE_NOT_AUTHORIZED", "操作不在运行状态", status_code=403)
         if permit.operation_id != operation.pk or permit.fence != operation.lease_fence:

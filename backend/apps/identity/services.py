@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone as dt_timezone
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from functools import wraps
-from typing import Callable
 
 import pyotp
 from django.conf import settings
@@ -81,13 +81,23 @@ def _challenge_from_request(request, challenge_id: str | None) -> MFAChallenge:
 def password_login(request, username: str, password: str) -> dict:
     ip = request_ip(request)
     if _too_many_failures(username, ip):
-        raise DomainError("AUTH_RATE_LIMITED", "登录尝试过于频繁，请稍后重试", retryable=True, status_code=429)
+        raise DomainError(
+            "AUTH_RATE_LIMITED",
+            "登录尝试过于频繁，请稍后重试",
+            retryable=True,
+            status_code=429,
+        )
     admin = authenticate(request, username=username, password=password)
     if admin is None or not admin.is_active:
         _record_failure(username, ip)
         raise DomainError("AUTH_INVALID", "用户名或密码错误", status_code=401)
     if admin.locked_until and admin.locked_until > timezone.now():
-        raise DomainError("AUTH_RATE_LIMITED", "登录暂时受限，请稍后重试", retryable=True, status_code=429)
+        raise DomainError(
+            "AUTH_RATE_LIMITED",
+            "登录暂时受限，请稍后重试",
+            retryable=True,
+            status_code=429,
+        )
     challenge = MFAChallenge.objects.create(
         admin=admin,
         source_ip=ip,
@@ -130,7 +140,7 @@ def _verify_totp_for_admin(admin: SuperAdmin, code: str) -> int:
     totp = pyotp.TOTP(_secret_for_admin(admin))
     if not totp.verify(str(code), valid_window=0):
         raise DomainError("MFA_INVALID", "验证码错误", status_code=401)
-    return totp.timecode(datetime.now(dt_timezone.utc))
+    return totp.timecode(datetime.now(UTC))
 
 
 def _verify_pending_totp(request, challenge: MFAChallenge, code: str) -> int:
@@ -143,7 +153,7 @@ def _verify_pending_totp(request, challenge: MFAChallenge, code: str) -> int:
     totp = pyotp.TOTP(secret)
     if not totp.verify(str(code), valid_window=0):
         raise DomainError("MFA_INVALID", "验证码错误", status_code=401)
-    return totp.timecode(datetime.now(dt_timezone.utc))
+    return totp.timecode(datetime.now(UTC))
 
 
 def _new_recovery_codes() -> list[str]:

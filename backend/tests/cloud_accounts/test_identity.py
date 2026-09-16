@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 
 import pytest
-from cryptography.exceptions import InvalidTag
 from django.utils import timezone as django_timezone
 
 from apps.cloud_accounts.services import create_account, rotate_credentials
@@ -93,7 +92,7 @@ def test_credential_ciphertext_is_bound_to_account_and_version(fake_reader):
         region="ap-northeast-1",
     )
     envelope = first.credential_versions.get(version=1).encrypted_credentials
-    with pytest.raises(InvalidTag):
+    with pytest.raises(ValueError, match="authentication failed"):
         configured_secret_store().decrypt(
             envelope,
             purpose="control.cloud_credentials",

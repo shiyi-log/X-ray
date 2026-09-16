@@ -1,0 +1,11 @@
+{
+  "xray": "26.3.27",
+  "clash": "1.18.0",
+  "mihomo": "1.19.12",
+  "formats": {
+    "shadowrocket": ["shadowsocks", "socks5", "vmess", "vless", "trojan"],
+    "clash": ["shadowsocks", "socks5", "vmess", "trojan"],
+    "mihomo": ["shadowsocks", "socks5", "vmess", "vless", "trojan"],
+    "v2ray": ["shadowsocks", "socks5", "vmess", "vless", "trojan"]
+  }
+}

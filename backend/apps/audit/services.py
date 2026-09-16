@@ -1,5 +1,4 @@
-from .models import AuditEvent
-
+from apps.audit.models import AuditEvent
 
 _SECRET_KEYS = {
     "password",
@@ -35,7 +34,16 @@ def _sanitize(value):
 
 class AuditService:
     @staticmethod
-    def append(*, action, target_type, target_id="", result, metadata=None, actor=None, request_id=""):
+    def append(
+        *,
+        action,
+        target_type,
+        target_id="",
+        result,
+        metadata=None,
+        actor=None,
+        request_id="",
+    ):
         return AuditEvent.objects.create(
             action=action,
             target_type=target_type,

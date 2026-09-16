@@ -31,7 +31,17 @@ class NodeExecutor:
             operation = Operation.objects.get(pk=operation_id)
         except Operation.DoesNotExist as exc:
             raise DomainError("OPERATION_NOT_FOUND", "操作不存在", status_code=404) from exc
-        if operation.target_id != node.pk or operation.target_type != "node":
+        direct_node_operation = (
+            operation.target_id == node.pk and operation.target_type == "node"
+        )
+        related_revocation = False
+        if operation.kind == "subscription.revoke":
+            from apps.subscriptions.models import RevocationNodeState
+
+            related_revocation = RevocationNodeState.objects.filter(
+                operation=operation, node=node
+            ).exists()
+        if not direct_node_operation and not related_revocation:
             raise DomainError(
                 "OPERATION_TARGET_MISMATCH", "操作与节点目标不匹配", status_code=409
             )
@@ -49,13 +59,14 @@ class NodeExecutor:
         with transaction.atomic():
             node = ManagedNode.objects.select_for_update().get(pk=node_id)
             self._scope(node, operation_id)
-            if generation <= node.applied_generation or generation <= node.desired_generation:
+            if generation <= node.applied_generation or generation < node.desired_generation:
                 raise DomainError(
                     "STALE_CONFIG_GENERATION", "配置 generation 不是严格递增", status_code=409
                 )
             previous_generation = node.applied_generation
-            node.desired_generation = generation
-            node.save(update_fields=["desired_generation", "updated_at"])
+            if generation > node.desired_generation:
+                node.desired_generation = generation
+                node.save(update_fields=["desired_generation", "updated_at"])
 
         transport = self.transport_factory(node)
         if transport is None:

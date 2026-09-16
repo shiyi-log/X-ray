@@ -3,6 +3,7 @@ import hashlib
 import os
 import secrets
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from django.conf import settings
 
@@ -79,12 +80,17 @@ class SecretStore:
         if master is None:
             raise ValueError("unknown key version")
         context = self._aad(purpose, version, aad)
-        dek = AESGCM(master).decrypt(
-            _unb64(envelope["wrapped_dek_nonce"]), _unb64(envelope["wrapped_dek"]), context
-        )
-        return AESGCM(dek).decrypt(
-            _unb64(envelope["nonce"]), _unb64(envelope["ciphertext"]), context
-        )
+        try:
+            dek = AESGCM(master).decrypt(
+                _unb64(envelope["wrapped_dek_nonce"]),
+                _unb64(envelope["wrapped_dek"]),
+                context,
+            )
+            return AESGCM(dek).decrypt(
+                _unb64(envelope["nonce"]), _unb64(envelope["ciphertext"]), context
+            )
+        except InvalidTag as exc:
+            raise ValueError("authentication failed") from exc
 
 
 def _configured_key(name: str, *, allow_development_fallback: bool) -> bytes:
@@ -123,5 +129,25 @@ def configured_secret_store(*, allow_development_fallback: bool | None = None) -
                     allow_development_fallback=allow_development_fallback,
                 )
             },
+        }
+    )
+
+
+def configured_subscription_store(
+    *, allow_development_fallback: bool | None = None
+) -> SecretStore:
+    """Build the public-process store without loading any control-plane key."""
+    if allow_development_fallback is None:
+        allow_development_fallback = getattr(settings, "DEBUG", False) or getattr(
+            settings, "XRAY_ENV", ""
+        ) in {"test", "development"}
+    return SecretStore(
+        {
+            "subscription": {
+                1: _configured_key(
+                    "XRAY_SUBSCRIPTION_MASTER_KEY",
+                    allow_development_fallback=allow_development_fallback,
+                )
+            }
         }
     )
