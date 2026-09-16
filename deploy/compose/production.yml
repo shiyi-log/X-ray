@@ -154,6 +154,22 @@ services:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
 
+  security-ledger-dispatcher:
+    <<: *backend
+    command: [xray-security-outbox]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      XRAY_DATABASE_USER: xray_outbox
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/outbox_db_password
+      XRAY_SECURITY_LEDGER_DIR: /var/lib/xray/security-ledger
+    secrets: [django_secret_key, outbox_db_password]
+    volumes:
+      - ${XRAY_SECURITY_LEDGER_HOST_DIR}:/var/lib/xray/security-ledger
+    networks: [data]
+    depends_on:
+      postgres: {condition: service_healthy}
+
   frontend:
     image: ${XRAY_FRONTEND_IMAGE:?set XRAY_FRONTEND_IMAGE to an immutable digest}
     restart: unless-stopped

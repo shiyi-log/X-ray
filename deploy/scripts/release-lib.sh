@@ -84,7 +84,7 @@ except (ValueError, TypeError):
     raise SystemExit(1)
 raise SystemExit(0 if document and all(not tasks for tasks in document.values()) else 1)
 '; then
-      compose stop -t 60 worker outbox-dispatcher
+      compose stop -t 60 worker outbox-dispatcher security-ledger-dispatcher
       return 0
     fi
     now=$(date +%s)

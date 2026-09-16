@@ -36,5 +36,5 @@ export XRAY_RELEASE_CONFIG XRAY_RELEASE_COMPOSE
 # forward-only security state. Rollback changes images only and never restores DB data.
 wait_for_worker_drain
 compose up -d --wait --no-deps admin-api subscription-api frontend gateway
-compose up -d --no-deps worker outbox-dispatcher
+compose up -d --no-deps worker outbox-dispatcher security-ledger-dispatcher
 echo "application images rolled back to configured version=$previous; database unchanged"

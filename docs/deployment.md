@@ -28,6 +28,7 @@ deploy/scripts/preflight.sh \
 | `subscription-api` | public-app、data | subscription reader DB、subscription only |
 | `worker` | data、queue | worker DB、control、subscription、cloud |
 | `outbox-dispatcher` | data、queue | outbox DB、Django signing only |
+| `security-ledger-dispatcher` | data、离机账本挂载 | outbox DB、Django signing only |
 | `frontend` | control | 无业务秘密 |
 | `gateway` | edge、control、public-app | TLS key only |
 

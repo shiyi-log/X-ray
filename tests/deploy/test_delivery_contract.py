@@ -77,7 +77,8 @@ def test_release_and_rollback_never_restore_database_state():
     rollback = (ROOT / "deploy/scripts/rollback.sh").read_text(encoding="utf-8")
     preflight = (ROOT / "deploy/scripts/preflight.sh").read_text(encoding="utf-8")
     assert "migrate --plan" in release
-    assert "backup.sh" in release
+    assert "run-in-tools.sh" in release
+    assert ' backup \\' in release
     assert "migrate --check" in release
     assert "pg_restore" not in rollback
     assert "restore.sh" not in rollback

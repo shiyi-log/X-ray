@@ -11,7 +11,13 @@ from django.utils import timezone
 
 from common.errors import DomainError
 
-from .models import AccessProfile, Subscription, SubscriptionToken
+from .models import (
+    AccessProfile,
+    RevocationTombstone,
+    Subscription,
+    SubscriptionToken,
+)
+from .security_events import SecurityLedger
 
 TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{43}$")
 
@@ -60,6 +66,12 @@ class TokenService:
                         "订阅令牌已交付；请显式轮换",
                         status_code=409,
                     )
+                if RevocationTombstone.objects.filter(token_digest=digest).exists():
+                    raise DomainError(
+                        "SECRET_ALREADY_DELIVERED",
+                        "订阅令牌未交付；请重新发起创建",
+                        status_code=409,
+                    )
                 subscription = Subscription.objects.create(
                     profile=profile,
                     token_digest=digest,
@@ -96,6 +108,12 @@ class TokenService:
                 raise DomainError(
                     "PROFILE_NOT_ACTIVE", "访问身份不是活动状态", status_code=409
                 )
+            if RevocationTombstone.objects.filter(token_digest=digest).exists():
+                raise DomainError(
+                    "SECRET_ALREADY_DELIVERED",
+                    "订阅令牌未交付；请重新发起轮换",
+                    status_code=409,
+                )
             current = SubscriptionToken.objects.select_for_update().get(
                 subscription=subscription,
                 token_epoch=subscription.token_epoch,
@@ -111,6 +129,22 @@ class TokenService:
             current.revoked_at = timezone.now()
             current.replaced_by = replacement
             current.save(update_fields=["status", "revoked_at", "replaced_by"])
+            tombstone, created = RevocationTombstone.objects.get_or_create(
+                token_digest=current.token_digest,
+                defaults={"reason": "token-rotated", "revoked_at": current.revoked_at},
+            )
+            if created:
+                event = SecurityLedger.append(
+                    kind="TOKEN_REVOKED",
+                    payload={
+                        "token_digest": current.token_digest,
+                        "reason": tombstone.reason,
+                    },
+                )
+                RevocationTombstone.objects.filter(pk=tombstone.pk).update(
+                    source_event_id=event["event_id"],
+                    source_sequence=event["sequence"],
+                )
             subscription.token_digest = digest
             subscription.token_epoch = new_epoch
             subscription.save(update_fields=["token_digest", "token_epoch", "updated_at"])
@@ -129,12 +163,33 @@ class TokenService:
             token.status = "REVOKED"
             token.revoked_at = timezone.now()
             token.save(update_fields=["status", "revoked_at"])
+            tombstone, created = RevocationTombstone.objects.get_or_create(
+                token_digest=token.token_digest,
+                defaults={
+                    "reason": "subscription-disabled",
+                    "revoked_at": token.revoked_at,
+                },
+            )
+            if created:
+                event = SecurityLedger.append(
+                    kind="TOKEN_REVOKED",
+                    payload={
+                        "token_digest": token.token_digest,
+                        "reason": tombstone.reason,
+                    },
+                )
+                RevocationTombstone.objects.filter(pk=tombstone.pk).update(
+                    source_event_id=event["event_id"],
+                    source_sequence=event["sequence"],
+                )
             subscription.status = "REVOKED"
             subscription.save(update_fields=["status", "updated_at"])
 
     @staticmethod
     def resolve(raw_token: str) -> Subscription:
         digest = _digest(raw_token)
+        if RevocationTombstone.objects.filter(token_digest=digest).exists():
+            raise TokenGone()
         subscription = (
             Subscription.objects.select_related("profile", "current_revision")
             .filter(token_digest=digest)

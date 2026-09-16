@@ -57,7 +57,13 @@ WHERE schemaname = 'public'
     'operations_outboxevent',
     'nodes_managednode',
     'subscriptions_revocationnodestate',
-    'subscriptions_nodecredential'
+    'subscriptions_nodecredential',
+    'subscriptions_revocationtombstone',
+    'subscriptions_securityeventrecord',
+    'subscriptions_securityeventoutbox',
+    'subscriptions_securitystate',
+    'subscriptions_subscription',
+    'subscriptions_subscriptiontoken'
   ]) \gexec
 
 SELECT format(
@@ -66,7 +72,13 @@ SELECT format(
     tablename
 )
 FROM pg_tables
-WHERE schemaname = 'public' AND tablename = 'operations_outboxevent' \gexec
+WHERE schemaname = 'public'
+  AND tablename IN (
+    'operations_outboxevent',
+    'subscriptions_securityeventoutbox',
+    'subscriptions_securityeventrecord',
+    'subscriptions_securitystate'
+  ) \gexec
 
 SELECT format(
     'REVOKE UPDATE, DELETE ON TABLE %I.%I FROM xray_admin_api, xray_subscription_reader',

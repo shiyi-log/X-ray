@@ -24,8 +24,20 @@ def _preflight_fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         "XRAY_CLOUD_CREDENTIALS_FILE",
         "XRAY_ADMIN_TLS_KEY_FILE",
         "XRAY_SUBSCRIPTION_TLS_KEY_FILE",
+        "XRAY_BACKUP_PGPASS_FILE",
     }
-    public_keys = {"XRAY_ADMIN_TLS_CERT_FILE", "XRAY_SUBSCRIPTION_TLS_CERT_FILE"}
+    public_keys = {
+        "XRAY_ADMIN_TLS_CERT_FILE",
+        "XRAY_SUBSCRIPTION_TLS_CERT_FILE",
+        "XRAY_BACKUP_PG_SERVICE_FILE",
+        "XRAY_BACKUP_AGE_RECIPIENT_FILE",
+        "XRAY_SECURITY_LEDGER_SNAPSHOT_FILE",
+    }
+    directory_keys = {
+        "XRAY_RELEASE_BACKUP_DESTINATION",
+        "XRAY_SECURITY_LEDGER_HOST_DIR",
+        "XRAY_RECOVERY_EVIDENCE_DIR",
+    }
     files: dict[str, Path] = {}
     output: list[str] = []
     for line in EXAMPLE.read_text(encoding="utf-8").splitlines():
@@ -39,8 +51,9 @@ def _preflight_fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
             target.write_text("fixture-only\n", encoding="utf-8")
             target.chmod(0o600 if key in secret_keys else 0o644)
             files[key] = target
-        elif key == "XRAY_RELEASE_BACKUP_DESTINATION":
-            value = str(tmp_path / "offsite")
+        elif key in directory_keys:
+            value = str(tmp_path / key.lower())
+            Path(value).mkdir(mode=0o700)
         output.append(f"{key}={value}")
     config = tmp_path / "config.env"
     config.write_text("\n".join(output) + "\n", encoding="utf-8")

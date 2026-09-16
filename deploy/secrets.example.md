@@ -12,6 +12,8 @@
 | `XRAY_*_DB_PASSWORD_FILE` | 对应数据库角色 | 每个进程独立数据库口令 |
 | `XRAY_CLOUD_CREDENTIALS_FILE` | worker | 云 SDK 的显式凭据载体 |
 | `XRAY_*_TLS_KEY_FILE` | gateway | 两个入口各自的 TLS 私钥 |
+| `XRAY_BACKUP_PGPASS_FILE` | backup tools | 只读备份/隔离恢复数据库口令文件 |
+| `XRAY_BACKUP_AGE_RECIPIENT_FILE` | backup tools | 公开 age recipient，不含私钥 |
 
 私密文件使用绝对路径，所有者为部署账户或受限运维组，权限只能是 `0400`、`0440`、`0600` 或 `0640`。证书公钥可以是 `0644`。`preflight.sh` 只检查存在性、非空、权限和 Compose 解析，不输出内容。
 

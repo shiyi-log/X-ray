@@ -39,10 +39,10 @@ backend_image=$(require_config_value XRAY_BACKEND_IMAGE "$XRAY_RELEASE_CONFIG")
 case "$backend_image" in *"@$digest") ;; *) die "backend image does not match --digest" ;; esac
 
 "$script_dir/preflight.sh" --config "$XRAY_RELEASE_CONFIG" --compose "$XRAY_RELEASE_COMPOSE"
-[ -x "$root_dir/deploy/backup/backup.sh" ] || die "backup workflow is unavailable"
+[ -x "$root_dir/deploy/backup/run-in-tools.sh" ] || die "backup workflow is unavailable"
 backup_destination=$(require_config_value XRAY_RELEASE_BACKUP_DESTINATION "$XRAY_RELEASE_CONFIG")
-"$root_dir/deploy/backup/backup.sh" --destination "$backup_destination" \
-  --config "$XRAY_RELEASE_CONFIG"
+"$root_dir/deploy/backup/run-in-tools.sh" --config "$XRAY_RELEASE_CONFIG" backup \
+  --destination "$backup_destination"
 
 compose --profile release run --rm database-bootstrap
 compose --profile release run --rm migrator python /app/backend/manage.py migrate --plan --noinput
@@ -52,5 +52,5 @@ compose --profile release run --rm database-bootstrap
 compose --profile release run --rm migrator python /app/backend/manage.py migrate --check --noinput
 
 compose up -d --wait admin-api subscription-api frontend gateway
-compose up -d worker outbox-dispatcher
+compose up -d worker outbox-dispatcher security-ledger-dispatcher
 echo "released version=$version backend_digest=$digest"

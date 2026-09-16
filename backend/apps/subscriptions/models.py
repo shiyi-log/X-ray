@@ -4,6 +4,7 @@ import uuid
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from apps.nodes.models import ManagedNode, NodeProtocol
 
@@ -117,6 +118,26 @@ class SubscriptionToken(models.Model):
         raise ValidationError("subscription token tombstones are permanent")
 
 
+class RevocationTombstone(models.Model):
+    token_digest = models.CharField(primary_key=True, max_length=64, editable=False)
+    reason = models.CharField(max_length=120)
+    source_event_id = models.CharField(max_length=128, blank=True, default="")
+    source_sequence = models.PositiveBigIntegerField(null=True, blank=True)
+    revoked_at = models.DateTimeField(default=timezone.now)
+    imported_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            previous = type(self).objects.get(pk=self.pk)
+            immutable = ("reason", "source_event_id", "source_sequence", "revoked_at")
+            if any(getattr(previous, field) != getattr(self, field) for field in immutable):
+                raise ValidationError("revocation tombstones are immutable")
+        return super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("revocation tombstones are permanent")
+
+
 class SubscriptionRevision(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     subscription = models.ForeignKey(
@@ -183,6 +204,8 @@ class SecurityState(models.Model):
     mode = models.CharField(max_length=20, choices=MODE_CHOICES, default="OPEN")
     last_security_sequence = models.PositiveBigIntegerField(default=0)
     expected_security_sequence = models.PositiveBigIntegerField(default=0)
+    last_external_security_sequence = models.PositiveBigIntegerField(default=0)
+    security_backup_lagging = models.BooleanField(default=False)
     restore_epoch = models.PositiveBigIntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -198,6 +221,7 @@ class SecurityEventRecord(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     sequence = models.PositiveBigIntegerField(unique=True)
     event_id = models.CharField(max_length=128, unique=True)
+    previous_digest = models.CharField(max_length=64, default="0" * 64)
     digest = models.CharField(max_length=64)
     kind = models.CharField(max_length=80)
     verified = models.BooleanField(default=False)
@@ -210,6 +234,26 @@ class SecurityEventRecord(models.Model):
 
     def delete(self, *args, **kwargs):
         raise ValidationError("security event records are retained")
+
+
+class SecurityEventOutbox(models.Model):
+    event = models.OneToOneField(
+        SecurityEventRecord,
+        on_delete=models.PROTECT,
+        related_name="external_outbox",
+    )
+    payload = models.JSONField()
+    attempts = models.PositiveIntegerField(default=0)
+    available_at = models.DateTimeField(default=timezone.now)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    last_error_code = models.CharField(max_length=100, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["delivered_at", "available_at"])]
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("security event outbox records are retained")
 
 
 class RevocationNodeState(models.Model):

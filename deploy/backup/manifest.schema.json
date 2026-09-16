@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xray.invalid/schemas/backup-manifest-v1.json",
+  "title": "X-ray encrypted backup manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "app_version",
+    "created_at",
+    "database_name",
+    "encrypted_dump",
+    "encrypted_sha256",
+    "plaintext_sha256",
+    "security_ledger_sequence",
+    "security_ledger_sha256",
+    "backend_image",
+    "frontend_image",
+    "installer_manifest_sha256",
+    "control_key_version",
+    "subscription_key_version"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "app_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "database_name": {"type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,62}$"},
+    "encrypted_dump": {"const": "database.dump.age"},
+    "encrypted_sha256": {"$ref": "#/$defs/sha256"},
+    "plaintext_sha256": {"$ref": "#/$defs/sha256"},
+    "security_ledger_sequence": {"type": "integer", "minimum": 0},
+    "security_ledger_sha256": {"$ref": "#/$defs/sha256"},
+    "backend_image": {"type": "string", "pattern": "@sha256:[0-9a-f]{64}$"},
+    "frontend_image": {"type": "string", "pattern": "@sha256:[0-9a-f]{64}$"},
+    "installer_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "control_key_version": {"type": "integer", "minimum": 1},
+    "subscription_key_version": {"type": "integer", "minimum": 1}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

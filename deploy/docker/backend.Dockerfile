@@ -19,7 +19,9 @@ COPY backend/ /app/backend/
 COPY installer/ /app/installer/
 COPY deploy/scripts/container-entrypoint.sh /usr/local/bin/xray-entrypoint
 COPY deploy/scripts/run-outbox.sh /usr/local/bin/xray-outbox
+COPY deploy/scripts/run-security-outbox.sh /usr/local/bin/xray-security-outbox
 RUN chmod 0555 /usr/local/bin/xray-entrypoint /usr/local/bin/xray-outbox \
+      /usr/local/bin/xray-security-outbox \
     && chown -R 10001:10001 /app
 ENV PATH=/app/backend/.venv/bin:$PATH PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 USER 10001:10001
