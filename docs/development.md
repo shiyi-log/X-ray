@@ -29,3 +29,18 @@ uv run --project backend pytest -c backend/pyproject.toml backend/tests -q
 ```
 
 真实 AWS、阿里云、SSH、Google 探测、服务器部署和生产密钥不属于本地测试流程；测试中的云和 SSH 必须使用 stub/fake。
+
+## 前端
+
+前端是仓库内独立 pnpm workspace，要求 Node.js `>=22.18` 和 pnpm `10.33.x`，不读取同级项目的依赖或环境文件。
+
+```bash
+pnpm --dir frontend install --frozen-lockfile
+pnpm --dir frontend typecheck
+pnpm --dir frontend lint
+pnpm --dir frontend test:unit
+pnpm --dir frontend build
+pnpm --dir frontend dev
+```
+
+开发服务器固定监听 `127.0.0.1:5178`，并把 `/api` 与 `/s` 代理到本项目后端 `127.0.0.1:8000`。登录状态只来自服务器 session Cookie；CSRF token、MFA challenge、首次绑定密钥和恢复码只保存在当前页面内存。

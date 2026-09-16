@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-09-16：用户已确认总体架构、领域模型、节点生命周期、账号/API/界面及部署验收设计。当前交付为设计与开发计划，业务实现、真实云操作和部署尚未开始。
+2026-09-17：P1–P4 已完成本地实现与阶段标签，P5 独立控制台正在实施。当前版本和可复现证据以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准；本地通过不代表真实云或生产上线。
 
 - [正式设计规格](docs/superpowers/specs/2026-09-16-xray-manager-design.md)
 - [开发计划总览](docs/superpowers/plans/2026-09-16-xray-manager.md)
@@ -23,7 +23,7 @@ tests/         跨服务契约和端到端测试
 archive/       本机参考归档，禁止提交、构建、发布或运行时引用
 ```
 
-上述业务目录由执行计划时建立。原先遗留的根目录 `nodes/`、`xray_service/`、`static/` 目前仅是空骨架，保留原样，不视为可运行系统。
+前端固定参考 Vben `v5.7.0` / `63a38dce49ba109f61607994e21ba921d8e970e9`，精确来源、许可证和保留包见 `frontend/UPSTREAM.md`。原先遗留的根目录 `nodes/`、`xray_service/`、`static/` 仅是空骨架，不视为可运行系统。
 
 ## 执行边界
 
