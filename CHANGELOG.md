@@ -14,6 +14,13 @@
 - `SecretStore` 支持 control/subscription purpose、AAD 绑定和密钥版本保留。
 - 双云、节点、订阅、前端和真实外部验收仍未完成。
 
+## 0.2.0 - 2026-09-17
+
+- 增加不可变云凭据版本、云身份验证/轮换和只写不读管理 API。
+- 锁定 AWS Lightsail 与阿里云 SWAS SDK，并交付显式 client、拒绝默认写入的适配器契约。
+- 增加能力矩阵、MutationPermit/authorizer、SDK 错误脱敏和默认断网门禁。
+- 30 项后端测试、迁移漂移、Ruff、边界和秘密扫描通过；真实云验证未执行。
+
 ## 版本规则
 
 - `0.x` 表示尚未承诺生产兼容性的开发版本。

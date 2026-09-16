@@ -8,7 +8,8 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 0.0.0 | 基线 | `2da51e7` | `v0.0.0-baseline` | 2026-09-17 | 初始骨架 | `not-run` | `not-run` | `v0.0.0-baseline` |
 | 0.0.1 | P0 | `2885503` | `v0.0.1` | 2026-09-17 | 无业务迁移 | runtime/skill/backend tests passed | `blocked` | `v0.0.0-baseline` |
-| 0.1.0 | P1 | 待提交 | 待创建 | 2026-09-17 | identity 0001-0003 | backend tests passed | `blocked` | `v0.0.1` |
+| 0.1.0 | P1 | `fb0a2db` | `v0.1.0` | 2026-09-17 | identity 0001-0003 | 13 backend tests passed | `blocked` | `v0.0.1` |
+| 0.2.0 | P2 | `851f8dd` | `v0.2.0` | 2026-09-17 | cloud_accounts 0001-0002 | 30 backend tests and static gates passed | `blocked` | `v0.1.0` |
 
 ## 回退规则
 

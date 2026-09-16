@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.2.0",
   "generated_at": "2026-09-17",
   "allowed_statuses": [
     "passed",
@@ -12,9 +12,9 @@
     {
       "id": "local-boundary",
       "environment": "local",
-      "status": "not-run",
-      "evidence": [],
-      "commit": null,
+      "status": "passed",
+      "evidence": ["backend:30-tests", "migration-check", "boundary-scan", "secret-scan"],
+      "commit": "851f8dd98330",
       "provider": null,
       "region": null,
       "cost": null,
