@@ -10,6 +10,9 @@
 | 0.0.1 | P0 | `2885503` | `v0.0.1` | 2026-09-17 | 无业务迁移 | runtime/skill/backend tests passed | `blocked` | `v0.0.0-baseline` |
 | 0.1.0 | P1 | `fb0a2db` | `v0.1.0` | 2026-09-17 | identity 0001-0003 | 13 backend tests passed | `blocked` | `v0.0.1` |
 | 0.2.0 | P2 | `851f8dd` | `v0.2.0` | 2026-09-17 | cloud_accounts 0001-0002 | 30 backend tests and static gates passed | `blocked` | `v0.1.0` |
+| 0.3.0 | P3 | `f4975a7` | `v0.3.0-nodes` | 2026-09-17 | operations 0001; nodes 0001-0002 | 66 backend/installer tests, fixed Xray five-protocol runtime, Ruff, ShellCheck and static gates passed | real cloud/SSH/public probe `blocked` | `v0.2.0` |
+
+P3 锁文件摘要：`backend/uv.lock` 为 `903eb25ec192a4181cff7e950b5e2fba11095fb76c2abcb44ae832b4c3e1e114`；`installer/manifest.json` 为 `2ed19fe494e91d0ece94c7d13c6851f5e55a14c817a401050ec12149f65a24bc`。固定 Xray 发行物缺失或摘要不匹配时安装门禁失败，不回退到在线 `latest`。
 
 ## 回退规则
 

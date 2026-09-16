@@ -1,5 +1,13 @@
 # 变更记录
 
+## 0.3.0 - 2026-09-17
+
+- 增加 PostgreSQL 配额预留、UUID 幂等、危险操作预览、durable outbox、worker lease/fencing、取消与重复投递终态处理。
+- 增加双云 Fake 共用的节点创建/对账/隔离生命周期；未知云写入转入 `NEEDS_RECONCILIATION`，防火墙 ACK 不再等同隔离成功。
+- 固定 Xray-core `v26.3.27` 及三平台官方 SHA-256，提供仅接受离线固定包的安装、验证和 generation-safe 原子配置脚本。
+- 增加 Paramiko 指纹钉扎传输、五协议能力矩阵、socks5h 探测，以及真实本地 Xray 五协议链路验收。
+- 66 项后端/安装器测试、Ruff、ShellCheck、迁移漂移、边界和秘密扫描通过；真实云、远程 SSH 和公网探测未执行。
+
 ## 0.0.1 - 2026-09-17
 
 - 建立 `codex/xray-manager` 实施分支和 `v0.0.0-baseline` 可回退基线。

@@ -8,9 +8,11 @@
 | 2026-09-17 | P0 | migration/boundary/traceability | `2885503` | `./scripts/check-runtime.sh`; skill validator; `pytest backend/tests -q` | 0 | local command output | passed | `v0.0.0-baseline` |
 | 2026-09-17 | P1 | administrator, MFA, encryption | `fb0a2db` | `pytest backend/tests -q`; `manage.py makemigrations --check --dry-run` | 0 | 13 passed | passed | `v0.0.1` |
 | 2026-09-17 | P2 | dual-cloud contracts | `851f8dd` | `pytest backend/tests -q`; migration check; Ruff; boundary/secret scans | 0 | 30 passed; `docs/architecture/cloud-capabilities.md` | passed | `v0.1.0` |
-| 2026-09-17 | P3 | operations and nodes | pending | pending | - | pending | not-run | `v0.2.0-cloud` |
+| 2026-09-17 | P3 | operations, nodes, fixed installer and five-protocol runtime | `f4975a7` | `pytest backend/tests tests/installer -q`; Ruff; ShellCheck 0.10.0; migration/boundary/secret/diff gates | 0 | `artifacts/acceptance/0.3.0/backend-and-installer.junit.xml`; 66 passed | passed | `v0.2.0` |
 | 2026-09-17 | P4 | subscriptions and revocation | pending | pending | - | pending | not-run | `v0.3.0-nodes` |
 | 2026-09-17 | P5 | Vben console | pending | pending | - | pending | not-run | `v0.4.0-subscriptions` |
 | 2026-09-17 | P6 | delivery and recovery | pending | pending | - | pending | not-run | `v0.5.0-console` |
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、独立生产服务器、实例删除和 IP 释放在获得具体授权前保持 `blocked` 或 `not-run`。
+
+P3 的真实 Xray 证据使用哈希固定的 macOS arm64 `v26.3.27` 本地二进制，完成 Shadowsocks、SOCKS5、VMess、VLESS、Trojan 到本机 HTTP 目标的实际链路测试。该证据不代表 Linux 远程 SSH、真实云或公网可用性。
