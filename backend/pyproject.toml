@@ -13,6 +13,9 @@ dependencies = [
   "cryptography>=45,<46",
   "argon2-cffi>=25,<26",
   "pyotp>=2.9,<3",
+  "boto3>=1.43.95",
+  "alibabacloud-swas-open20200601>=4.0.0",
+  "alibabacloud-sts20150401>=1.2.0",
 ]
 
 [dependency-groups]

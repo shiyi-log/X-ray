@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "apps.identity",
     "apps.audit",
+    "apps.cloud_accounts",
 ]
 AUTH_USER_MODEL = "identity.SuperAdmin"
 MIDDLEWARE = [

@@ -2,11 +2,18 @@ import base64
 import hashlib
 import os
 import secrets
-from django.conf import settings
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from django.conf import settings
 
 _PURPOSES = {"control", "subscription"}
+
+
+def _purpose_domain(purpose: str) -> str:
+    domain = purpose.split(".", 1)[0]
+    if domain not in _PURPOSES:
+        raise ValueError("unsupported purpose")
+    return domain
 
 
 def _b64(data: bytes) -> str:
@@ -36,15 +43,17 @@ class SecretStore:
                     raise ValueError("master keys must be 32 bytes")
 
     def _aad(self, purpose, key_version, aad):
-        if purpose not in _PURPOSES:
-            raise ValueError("unsupported purpose")
-        return b"xray-envelope/v1|" + purpose.encode() + b"|" + str(key_version).encode() + b"|" + aad
+        _purpose_domain(purpose)
+        return (
+            b"xray-envelope/v1|" + purpose.encode() + b"|" + str(key_version).encode() + b"|" + aad
+        )
 
     def encrypt(self, plaintext: bytes, *, purpose: str, aad: bytes = b"") -> dict:
-        if purpose not in _PURPOSES or purpose not in self.master_keys or not self.master_keys[purpose]:
+        domain = _purpose_domain(purpose)
+        if domain not in self.master_keys or not self.master_keys[domain]:
             raise ValueError("unsupported purpose")
-        version = max(self.master_keys[purpose])
-        master = self.master_keys[purpose][version]
+        version = max(self.master_keys[domain])
+        master = self.master_keys[domain][version]
         dek = AESGCM.generate_key(bit_length=256)
         nonce = secrets.token_bytes(12)
         wrapped_nonce = secrets.token_bytes(12)
@@ -62,15 +71,20 @@ class SecretStore:
         }
 
     def decrypt(self, envelope: dict, *, purpose: str, aad: bytes = b"") -> bytes:
-        if envelope.get("purpose") != purpose or purpose not in _PURPOSES:
+        if envelope.get("purpose") != purpose:
             raise ValueError("purpose mismatch")
+        domain = _purpose_domain(purpose)
         version = int(envelope["key_version"])
-        master = self.master_keys.get(purpose, {}).get(version)
+        master = self.master_keys.get(domain, {}).get(version)
         if master is None:
             raise ValueError("unknown key version")
         context = self._aad(purpose, version, aad)
-        dek = AESGCM(master).decrypt(_unb64(envelope["wrapped_dek_nonce"]), _unb64(envelope["wrapped_dek"]), context)
-        return AESGCM(dek).decrypt(_unb64(envelope["nonce"]), _unb64(envelope["ciphertext"]), context)
+        dek = AESGCM(master).decrypt(
+            _unb64(envelope["wrapped_dek_nonce"]), _unb64(envelope["wrapped_dek"]), context
+        )
+        return AESGCM(dek).decrypt(
+            _unb64(envelope["nonce"]), _unb64(envelope["ciphertext"]), context
+        )
 
 
 def _configured_key(name: str, *, allow_development_fallback: bool) -> bytes:
@@ -98,7 +112,16 @@ def configured_secret_store(*, allow_development_fallback: bool | None = None) -
         ) in {"test", "development"}
     return SecretStore(
         {
-            "control": {1: _configured_key("XRAY_CONTROL_MASTER_KEY", allow_development_fallback=allow_development_fallback)},
-            "subscription": {1: _configured_key("XRAY_SUBSCRIPTION_MASTER_KEY", allow_development_fallback=allow_development_fallback)},
+            "control": {
+                1: _configured_key(
+                    "XRAY_CONTROL_MASTER_KEY", allow_development_fallback=allow_development_fallback
+                )
+            },
+            "subscription": {
+                1: _configured_key(
+                    "XRAY_SUBSCRIPTION_MASTER_KEY",
+                    allow_development_fallback=allow_development_fallback,
+                )
+            },
         }
     )
