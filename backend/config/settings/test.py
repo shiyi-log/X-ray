@@ -19,3 +19,5 @@ SECRET_KEY = "test-only-not-for-production"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_NAME = "xray_test_session"
+CSRF_COOKIE_NAME = "xray_test_csrf"

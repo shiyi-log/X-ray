@@ -229,6 +229,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "result": {"type": "object", "additionalProperties": True},
                     "steps": {"type": "array", "items": _ref("OperationStep")},
                     "revocation_nodes": {"type": "array", "items": {"type": "object"}},
+                    "link_revoked": {"type": "boolean"},
                     "created_at": {"type": "string", "format": "date-time"},
                     "updated_at": {"type": "string", "format": "date-time"},
                 },

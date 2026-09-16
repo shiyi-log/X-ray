@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 
 import { authApi, type AdminSession, type LoginChallenge, type TotpSetup } from '@/api/auth';
-import { clearSensitiveState } from '@/api/request';
+import { clearSensitiveState, registerSensitiveClearer } from '@/api/request';
 
 interface SensitiveAuthState {
   challengeId: string;
@@ -84,7 +84,7 @@ export const useSessionStore = defineStore('session', {
       }
     },
     installUnauthorizedHandler() {
-      clearSensitiveState(() => {
+      registerSensitiveClearer(() => {
         this.session = null;
         this.loaded = true;
         this.clearSensitive();

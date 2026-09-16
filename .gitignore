@@ -37,6 +37,7 @@ coverage/
 .turbo/
 playwright-report/
 test-results/
+frontend/.playwright/
 
 # Local editor and operating system metadata
 .DS_Store

@@ -18,6 +18,8 @@ export interface OperationDetail {
   current_step: string;
   can_cancel?: boolean;
   error_code?: string;
+  link_revoked?: boolean;
+  result?: Record<string, unknown>;
   steps: OperationStep[];
   revocation_nodes?: Array<Record<string, unknown>>;
 }

@@ -26,7 +26,7 @@ export class ApiError extends Error {
 
 let csrfToken: string | null = null;
 let csrfPromise: Promise<string> | null = null;
-let sensitiveStateClearer: (() => void) | null = null;
+const sensitiveStateClearers = new Set<() => void>();
 
 const writeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -41,12 +41,17 @@ function performSensitiveClear() {
   csrfToken = null;
   csrfPromise = null;
   purgeLegacyBrowserSecrets();
-  sensitiveStateClearer?.();
+  for (const clearer of sensitiveStateClearers) clearer();
 }
 
 export function clearSensitiveState(clearer?: () => void) {
-  if (clearer) sensitiveStateClearer = clearer;
+  if (clearer) sensitiveStateClearers.add(clearer);
   performSensitiveClear();
+}
+
+export function registerSensitiveClearer(clearer: () => void) {
+  sensitiveStateClearers.add(clearer);
+  return () => sensitiveStateClearers.delete(clearer);
 }
 
 export function resetCsrfToken() {

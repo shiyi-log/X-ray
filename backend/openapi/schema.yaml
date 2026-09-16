@@ -1143,6 +1143,8 @@ components:
           type: array
           items:
             type: object
+        link_revoked:
+          type: boolean
         created_at:
           type: string
           format: date-time

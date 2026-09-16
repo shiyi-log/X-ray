@@ -31,6 +31,8 @@ def operation_representation(operation, *, include_steps: bool = False) -> dict:
         "created_at": operation.created_at.isoformat(),
         "updated_at": operation.updated_at.isoformat(),
     }
+    if operation.kind == "subscription.revoke":
+        value["link_revoked"] = True
     if include_steps:
         value["steps"] = [step_representation(step) for step in operation.steps.all()]
         value["revocation_nodes"] = [

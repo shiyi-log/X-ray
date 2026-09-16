@@ -482,6 +482,7 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             readonly kind: string;
+            readonly link_revoked?: boolean;
             readonly result?: {
                 readonly [key: string]: unknown;
             };

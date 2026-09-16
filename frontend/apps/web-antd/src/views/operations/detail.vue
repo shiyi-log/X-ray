@@ -12,6 +12,17 @@ import { useOperation } from '@/composables/useOperation';
 const route = useRoute();
 const id = computed(() => String(route.params.id));
 const { data, loading, error, reload } = useOperation(id.value);
+const revocationStates = computed(() => data.value?.revocation_nodes || []);
+const revocationVerified = computed(
+  () =>
+    revocationStates.value.length > 0 &&
+    revocationStates.value.every((item) => item.status === 'VERIFIED_REVOKED'),
+);
+const revocationUnconfirmed = computed(
+  () =>
+    data.value?.kind === 'subscription.revoke' &&
+    (!revocationVerified.value || data.value?.status === 'PARTIALLY_SUCCEEDED'),
+);
 
 async function cancel() {
   await resourcesApi.cancelOperation(id.value);
@@ -39,6 +50,12 @@ async function retry() {
       <div><span>当前步骤</span><strong>{{ data?.current_step || '-' }}</strong></div>
       <div><span>错误</span><strong class="danger-text">{{ data?.error_code || '-' }}</strong></div>
     </section>
+    <section v-if="data?.kind === 'subscription.revoke'" class="revocation-summary" aria-label="撤销结果">
+      <div class="result-line success-line"><strong>链接已撤销</strong><span>旧订阅 Token 已永久进入 tombstone。</span></div>
+      <div v-if="revocationVerified" class="result-line success-line"><strong>节点访问已验证失效</strong><span>每个目标凭据均有拒绝探测证据。</span></div>
+      <div v-else-if="revocationUnconfirmed" class="result-line warning-line"><strong>节点访问撤销未确认</strong><span>系统保持失败关闭；不得视为全部旧凭据已失效。</span></div>
+      <div v-for="item in revocationStates" :key="String(item.node_id)" class="node-result"><code>{{ item.node_id }}</code><StatusBadge :value="String(item.status)" /><span>{{ item.last_error_code || '-' }}</span></div>
+    </section>
     <section class="timeline">
       <h2>执行步骤</h2>
       <PageState :empty="!data?.steps?.length" empty-text="尚无步骤记录">
@@ -63,5 +80,14 @@ async function retry() {
 .timeline-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--x-accent); }
 .timeline small { display: block; margin-top: 3px; color: var(--x-text-muted); }
 .danger-text { color: var(--x-danger); }
+.revocation-summary { margin-top: 18px; border: 1px solid var(--x-border); background: white; }
+.result-line { min-height: 56px; display: grid; grid-template-columns: 210px 1fr; align-items: center; gap: 12px; padding: 10px 15px; border-bottom: 1px solid var(--x-border); }
+.result-line span { color: var(--x-text-muted); font-size: 12px; }
+.success-line { border-left: 3px solid var(--x-success); }
+.warning-line { color: #7b5100; border-left: 3px solid var(--x-warning); background: #fffaf0; }
+.node-result { min-height: 48px; display: grid; grid-template-columns: minmax(180px, 1fr) auto minmax(100px, .7fr); align-items: center; gap: 12px; padding: 8px 15px; border-bottom: 1px solid var(--x-border); }
+.node-result:last-child { border-bottom: 0; }
+.node-result code { overflow: hidden; font-size: 11px; text-overflow: ellipsis; }
 @media (max-width: 800px) { .operation-summary { grid-template-columns: 1fr 1fr; } .operation-summary > div:nth-child(2) { border-right: 0; } .operation-summary > div:nth-child(-n+2) { border-bottom: 1px solid var(--x-border); } }
+@media (max-width: 560px) { .result-line { grid-template-columns: 1fr; gap: 3px; } .node-result { grid-template-columns: 1fr auto; } .node-result span { grid-column: 1 / -1; } }
 </style>

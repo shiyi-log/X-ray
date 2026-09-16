@@ -5,7 +5,7 @@ from uuid import UUID
 from django.http import JsonResponse
 
 from apps.nodes.models import ManagedNode
-from apps.subscriptions.models import AccessProfile
+from apps.subscriptions.models import AccessProfile, NodeCredential
 from common.admin_api import admin_endpoint, json_payload, paginated_response
 from common.errors import DomainError
 
@@ -59,8 +59,28 @@ def preview(request):
         raise ValueError("params must be an object")
     if kind == "subscription.revoke":
         profile = AccessProfile.objects.select_related("subscription").get(pk=target_id)
+        shared_scopes = list(
+            NodeCredential.objects.filter(
+                profile=profile,
+                revoked_at__isnull=True,
+                credential_scope="shared",
+            ).values_list("node_id", "protocol_id")
+        )
+        shared_query = NodeCredential.objects.none()
+        for node_id, protocol_id in shared_scopes:
+            shared_query = shared_query | NodeCredential.objects.filter(
+                node_id=node_id,
+                protocol_id=protocol_id,
+                profile__status="ACTIVE",
+                revoked_at__isnull=True,
+            )
         impacted = list(
-            AccessProfile.objects.filter(status="ACTIVE").values_list("id", "name")
+            AccessProfile.objects.filter(
+                node_credentials__in=shared_query.exclude(profile=profile)
+            )
+            .distinct()
+            .order_by("name", "pk")
+            .values_list("id", "name")
         )
         snapshot = {
             "profile_status": profile.status,
