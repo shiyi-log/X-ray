@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     "apps.identity",
     "apps.audit",
     "apps.cloud_accounts",
+    "apps.operations",
+    "apps.nodes",
 ]
 AUTH_USER_MODEL = "identity.SuperAdmin"
 MIDDLEWARE = [

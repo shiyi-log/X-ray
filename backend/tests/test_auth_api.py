@@ -1,6 +1,5 @@
-import pytest
 import pyotp
-from django.conf import settings
+import pytest
 from django.utils import timezone
 from rest_framework.test import APIClient
 

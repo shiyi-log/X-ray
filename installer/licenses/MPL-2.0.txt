@@ -1,0 +1,13 @@
+Mozilla Public License Version 2.0
+==================================
+
+The Xray-core binary is distributed under the Mozilla Public License 2.0.
+The canonical license text is available at:
+https://www.mozilla.org/MPL/2.0/
+
+The exact corresponding source for the pinned binary is available at:
+https://github.com/XTLS/Xray-core/tree/v26.3.27
+
+This repository does not modify or embed the Xray-core binary. The offline
+installer verifies an operator-supplied official release archive against the
+publisher's pinned SHA-256 digest before installation.
