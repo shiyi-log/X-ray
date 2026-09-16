@@ -1,13 +1,31 @@
 from .models import AuditEvent
 
 
-_SECRET_KEYS = {"password", "token", "secret", "private_key", "credential", "key"}
+_SECRET_KEYS = {
+    "password",
+    "passwd",
+    "token",
+    "secret",
+    "private_key",
+    "privatekey",
+    "credential",
+    "credentials",
+    "authorization",
+    "cookie",
+    "wrapped_dek",
+    "ciphertext",
+}
 
 
 def _sanitize(value):
     if isinstance(value, dict):
         return {
-            str(k): ("[REDACTED]" if str(k).lower() in _SECRET_KEYS else _sanitize(v))
+            str(k): (
+                "[REDACTED]"
+                if str(k).lower() in _SECRET_KEYS
+                or any(secret in str(k).lower() for secret in _SECRET_KEYS)
+                else _sanitize(v)
+            )
             for k, v in value.items()
         }
     if isinstance(value, (list, tuple)):

@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+XRAY_ENV = os.getenv("XRAY_ENV", "development")
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -74,11 +75,25 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = env_bool("XRAY_SESSION_COOKIE_SECURE", not DEBUG)
 SESSION_COOKIE_SAMESITE = "Strict"
 SESSION_COOKIE_PATH = "/"
+SESSION_COOKIE_AGE = 60 * 30
+SESSION_SAVE_EVERY_REQUEST = True
 CSRF_COOKIE_NAME = "__Host-xray_csrf"
 CSRF_COOKIE_SECURE = env_bool("XRAY_CSRF_COOKIE_SECURE", not DEBUG)
 CSRF_COOKIE_SAMESITE = "Strict"
 CSRF_COOKIE_PATH = "/"
 CSRF_TRUSTED_ORIGINS = env_list("XRAY_CSRF_TRUSTED_ORIGINS")
+CSRF_FAILURE_VIEW = "common.api.csrf_failure"
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
+AUTH_SESSION_IDLE_SECONDS = 30 * 60
+AUTH_SESSION_ABSOLUTE_SECONDS = 12 * 60 * 60
+AUTH_STEP_UP_SECONDS = 5 * 60
+MFA_CHALLENGE_SECONDS = 5 * 60
+AUTH_RATE_LIMIT_WINDOW_SECONDS = 60
+AUTH_RATE_LIMIT_MAX_FAILURES = 10
 REDIS_URL = os.getenv("XRAY_REDIS_URL", "redis://127.0.0.1:6379/0")
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL

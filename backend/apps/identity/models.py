@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 
@@ -15,6 +17,9 @@ class SuperAdmin(AbstractBaseUser, PermissionsMixin):
     totp_secret_envelope = models.JSONField(null=True, blank=True)
     last_totp_step = models.BigIntegerField(default=-1)
     recovery_code_hashes = models.JSONField(default=list, blank=True)
+    totp_confirmed_at = models.DateTimeField(null=True, blank=True)
+    last_password_change_at = models.DateTimeField(null=True, blank=True)
+    locked_until = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -43,3 +48,24 @@ class AdminSession(models.Model):
     expires_at = models.DateTimeField()
     revoked_at = models.DateTimeField(null=True, blank=True)
     session_version = models.PositiveBigIntegerField()
+    absolute_expires_at = models.DateTimeField(null=True, blank=True)
+    last_step_up_at = models.DateTimeField(null=True, blank=True)
+    source_ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent_hash = models.CharField(max_length=64, blank=True, default="")
+
+
+class MFAChallenge(models.Model):
+    """Short-lived password challenge; possession does not authorize APIs."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    admin = models.ForeignKey(SuperAdmin, on_delete=models.CASCADE, related_name="mfa_challenges")
+    kind = models.CharField(max_length=32, default="password")
+    source_ip = models.GenericIPAddressField(null=True, blank=True)
+    session_binding = models.CharField(max_length=64, blank=True, default="")
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    failed_attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["admin", "expires_at"])]

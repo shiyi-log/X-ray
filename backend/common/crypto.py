@@ -1,5 +1,8 @@
 import base64
+import hashlib
+import os
 import secrets
+from django.conf import settings
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
@@ -68,3 +71,34 @@ class SecretStore:
         context = self._aad(purpose, version, aad)
         dek = AESGCM(master).decrypt(_unb64(envelope["wrapped_dek_nonce"]), _unb64(envelope["wrapped_dek"]), context)
         return AESGCM(dek).decrypt(_unb64(envelope["nonce"]), _unb64(envelope["ciphertext"]), context)
+
+
+def _configured_key(name: str, *, allow_development_fallback: bool) -> bytes:
+    value = os.getenv(name, "")
+    if value:
+        try:
+            decoded = base64.urlsafe_b64decode(value.encode("ascii"))
+        except (ValueError, UnicodeEncodeError):
+            decoded = b""
+        if len(decoded) == 32:
+            return decoded
+        if len(value.encode("utf-8")) == 32:
+            return value.encode("utf-8")
+        raise ValueError(f"{name} must contain a 32-byte raw or base64url key")
+    if not allow_development_fallback:
+        raise RuntimeError(f"{name} is required")
+    return hashlib.sha256((settings.SECRET_KEY + ":" + name).encode("utf-8")).digest()
+
+
+def configured_secret_store(*, allow_development_fallback: bool | None = None) -> SecretStore:
+    """Build the process-local store without reading cloud/provider credentials."""
+    if allow_development_fallback is None:
+        allow_development_fallback = getattr(settings, "DEBUG", False) or getattr(
+            settings, "XRAY_ENV", ""
+        ) in {"test", "development"}
+    return SecretStore(
+        {
+            "control": {1: _configured_key("XRAY_CONTROL_MASTER_KEY", allow_development_fallback=allow_development_fallback)},
+            "subscription": {1: _configured_key("XRAY_SUBSCRIPTION_MASTER_KEY", allow_development_fallback=allow_development_fallback)},
+        }
+    )

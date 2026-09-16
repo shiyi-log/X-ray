@@ -7,7 +7,8 @@
 | 版本 | 阶段 | 提交 | 标签 | 日期 | 迁移 | 本地门禁 | 外部验收 | 回退点 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 0.0.0 | 基线 | `2da51e7` | `v0.0.0-baseline` | 2026-09-17 | 初始骨架 | `not-run` | `not-run` | `v0.0.0-baseline` |
-| 0.0.1 | P0 | 待提交 | 待创建 | 2026-09-17 | 无业务迁移 | 待记录 | `blocked` | `v0.0.0-baseline` |
+| 0.0.1 | P0 | `2885503` | `v0.0.1` | 2026-09-17 | 无业务迁移 | runtime/skill/backend tests passed | `blocked` | `v0.0.0-baseline` |
+| 0.1.0 | P1 | 待提交 | 待创建 | 2026-09-17 | identity 0001-0003 | backend tests passed | `blocked` | `v0.0.1` |
 
 ## 回退规则
 
