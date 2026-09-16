@@ -1,0 +1,4 @@
+interface:
+  display_name: "X-ray Manager"
+  short_description: "Maintain the isolated X-ray management platform"
+  default_prompt: "Use $xray-manager to implement and verify this repository safely."

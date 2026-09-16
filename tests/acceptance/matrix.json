@@ -1,0 +1,57 @@
+{
+  "version": "0.0.1",
+  "generated_at": "2026-09-17",
+  "allowed_statuses": [
+    "passed",
+    "failed",
+    "blocked",
+    "not-run",
+    "risky_not_executed"
+  ],
+  "items": [
+    {
+      "id": "local-boundary",
+      "environment": "local",
+      "status": "not-run",
+      "evidence": [],
+      "commit": null,
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "aws-real-cloud",
+      "environment": "real_cloud",
+      "status": "blocked",
+      "evidence": [],
+      "commit": null,
+      "provider": "aws-lightsail",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "swas-real-cloud",
+      "environment": "real_cloud",
+      "status": "blocked",
+      "evidence": [],
+      "commit": null,
+      "provider": "aliyun-swas",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "production-release",
+      "environment": "production",
+      "status": "blocked",
+      "evidence": [],
+      "commit": null,
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    }
+  ]
+}

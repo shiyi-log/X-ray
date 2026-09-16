@@ -1,4 +1,4 @@
-.PHONY: compose-up compose-down compose-logs compose-config test check-boundary secret-scan check
+.PHONY: compose-up compose-down compose-logs compose-config test check-boundary secret-scan check-runtime check
 
 COMPOSE := docker compose -p xray-test -f deploy/compose/test.yml
 
@@ -22,5 +22,8 @@ check-boundary:
 
 secret-scan:
 	./scripts/check-secrets.sh
+
+check-runtime:
+	./scripts/check-runtime.sh
 
 check: compose-config check-boundary secret-scan

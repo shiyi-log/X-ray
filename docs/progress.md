@@ -1,13 +1,16 @@
 # 开发进度
 
-## P1.1 基础环境
+本文件只记录已执行的命令和证据。状态只能使用 `passed`、`failed`、`blocked`、`not-run` 或 `risky_not_executed`；未授权的真实云/生产动作不得写成 `passed`。
 
-- [x] 新仓库与归档边界文件已建立。
-- [x] PostgreSQL/Redis 测试 Compose 已建立，服务仅 loopback 暴露。
-- [x] 本地开发环境样例和统一 Makefile 门禁已建立。
-- [x] 源码边界与秘密扫描脚本已建立。
-- [ ] Django 健康路由、测试设置和 pytest 测试（由后端实现任务完成）。
-- [ ] P1.2 单例超级管理员、审计与信封加密。
-- [ ] P1.3 密码、TOTP、会话、CSRF 与恢复流程。
+| date | phase | task | commit | command | exit_code | evidence | status | rollback_ref |
+| --- | --- | --- | --- | --- | ---: | --- | --- | --- |
+| 2026-09-17 | baseline | capture initial repository | `2da51e7` | `git show --stat --oneline HEAD` | 0 | `v0.0.0-baseline` | passed | `v0.0.0-baseline` |
+| 2026-09-17 | P0 | migration/boundary/traceability | pending | pending | - | pending | not-run | `v0.0.0-baseline` |
+| 2026-09-17 | P1 | administrator, MFA, encryption | pending | pending | - | pending | not-run | `v0.0.1` |
+| 2026-09-17 | P2 | dual-cloud contracts | pending | pending | - | pending | not-run | `v0.1.0-foundation` |
+| 2026-09-17 | P3 | operations and nodes | pending | pending | - | pending | not-run | `v0.2.0-cloud` |
+| 2026-09-17 | P4 | subscriptions and revocation | pending | pending | - | pending | not-run | `v0.3.0-nodes` |
+| 2026-09-17 | P5 | Vben console | pending | pending | - | pending | not-run | `v0.4.0-subscriptions` |
+| 2026-09-17 | P6 | delivery and recovery | pending | pending | - | pending | not-run | `v0.5.0-console` |
 
-本文件只记录已验证的本地仓库状态；未进行任何真实云写入、远程 SSH 或生产部署。
+真实 AWS/SWAS、远程 SSH、Google 公网探测、独立生产服务器、实例删除和 IP 释放在获得具体授权前保持 `blocked` 或 `not-run`。
