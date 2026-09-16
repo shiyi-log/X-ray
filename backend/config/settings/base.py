@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "apps.identity",
     "apps.audit",
     "apps.cloud_accounts",
@@ -119,6 +120,14 @@ CELERY_TIMEZONE = TIME_ZONE
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "common.api.exception_handler",
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "X-ray Manager API",
+    "DESCRIPTION": "Private administrator API. Secrets are write-only or delivered once.",
+    "VERSION": "0.5.0-dev",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "POSTPROCESSING_HOOKS": ["config.openapi.inject_contract"],
 }
 LOGGING = {
     "version": 1,

@@ -1,0 +1,20 @@
+from django.urls import path
+
+from . import admin_views
+
+profile_urlpatterns = [
+    path("", admin_views.profile_collection, name="access-profile-list"),
+    path("<uuid:profile_id>/", admin_views.profile_detail, name="access-profile-detail"),
+    path("<uuid:profile_id>/subscription/", admin_views.issue, name="subscription-issue"),
+    path(
+        "<uuid:profile_id>/force-revoke/",
+        admin_views.force_revoke,
+        name="subscription-force-revoke",
+    ),
+]
+
+subscription_urlpatterns = [
+    path("", admin_views.subscription_collection, name="subscription-list"),
+    path("<uuid:subscription_id>/rotate/", admin_views.rotate, name="subscription-rotate"),
+    path("<uuid:subscription_id>/publish/", admin_views.publish, name="subscription-publish"),
+]
