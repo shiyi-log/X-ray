@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.4.0",
   "generated_at": "2026-09-17",
   "allowed_statuses": [
     "passed",
@@ -14,15 +14,30 @@
       "environment": "local",
       "status": "passed",
       "evidence": [
-        "backend-and-installer:66-tests",
+        "backend-installer-revocation:111-tests",
         "fixed-xray-v26.3.27-five-protocol-runtime",
+        "fixed-xray-v26.3.27-revocation-runtime",
+        "fixed-clash-v1.18.0-parser",
+        "fixed-mihomo-v1.19.12-parser",
+        "shadowrocket-uri-independent-parser",
         "migration-check",
         "ruff",
         "shellcheck-v0.10.0",
         "boundary-scan",
         "secret-scan"
       ],
-      "commit": "f4975a75a1bc24a7cfac41bc6ce4ea280acabae8",
+      "commit": "aaf9913d4ed2eca5466c1b57f3c41f0228f029bd",
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "shadowrocket-device",
+      "environment": "external",
+      "status": "not-run",
+      "evidence": [],
+      "commit": null,
       "provider": null,
       "region": null,
       "cost": null,

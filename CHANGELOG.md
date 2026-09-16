@@ -1,5 +1,13 @@
 # 变更记录
 
+## 0.4.0 - 2026-09-17
+
+- 增加 AccessProfile、凭据版本、一次性交付 Token、永久 tombstone、不可变订阅 revision 与 PublicationBatch。
+- 增加 Shadowrocket、Clash、Mihomo 和 V2Ray 四种订阅格式，并通过固定 Xray/Clash/Mihomo 原生解析门禁。
+- 增加强制撤销状态机、逐节点验证、部分失败重试、共享 Shadowsocks 密钥轮换和 fail-closed 恢复屏障。
+- 使用固定 Xray `v26.3.27` 实测五类协议的旧连接关闭、旧凭据拒绝和新凭据正向连接；111 项后端/安装器/撤销测试通过。
+- Shadowrocket 真机、UDP/TLS 证书链、真实云、远程 SSH、公网探测和生产发布未执行，不属于本版本本地验收结论。
+
 ## 0.3.0 - 2026-09-17
 
 - 增加 PostgreSQL 配额预留、UUID 幂等、危险操作预览、durable outbox、worker lease/fencing、取消与重复投递终态处理。
