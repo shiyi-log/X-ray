@@ -1,0 +1,198 @@
+name: xray-staging
+
+x-backend: &backend
+  image: ${XRAY_BACKEND_IMAGE:?set XRAY_BACKEND_IMAGE to an immutable digest}
+  restart: unless-stopped
+  read_only: true
+  user: "10001:10001"
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  tmpfs: [/tmp:rw,noexec,nosuid,size=64m]
+  environment: &backend_environment
+    XRAY_ENV: production
+    XRAY_DATABASE_HOST: postgres
+    XRAY_DATABASE_PORT: "5432"
+    XRAY_DATABASE_NAME: ${XRAY_DATABASE_NAME:-xray_stage}
+    XRAY_REDIS_URL: redis://redis:6379/0
+    XRAY_ALLOWED_HOSTS: ${XRAY_ADMIN_HOST}
+    XRAY_CSRF_TRUSTED_ORIGINS: https://${XRAY_ADMIN_HOST}:18443
+    XRAY_SESSION_COOKIE_SECURE: "true"
+    XRAY_CSRF_COOKIE_SECURE: "true"
+
+services:
+  postgres:
+    image: postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    restart: unless-stopped
+    read_only: true
+    user: "70:70"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      POSTGRES_DB: ${XRAY_DATABASE_NAME:-xray_stage}
+      POSTGRES_USER: xray_owner
+      POSTGRES_PASSWORD_FILE: /run/secrets/owner_db_password
+    secrets: [owner_db_password]
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    tmpfs: [/tmp:rw,noexec,nosuid,size=64m, /run/postgresql:rw,nosuid,size=8m]
+    networks: [data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U xray_owner -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  database-bootstrap:
+    image: postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94
+    profiles: [release]
+    read_only: true
+    user: "70:70"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      XRAY_DATABASE_HOST: postgres
+      XRAY_DATABASE_PORT: "5432"
+      XRAY_DATABASE_NAME: ${XRAY_DATABASE_NAME:-xray_stage}
+    secrets: [owner_db_password, admin_db_password, subscription_db_password, worker_db_password, outbox_db_password]
+    volumes:
+      - ../postgres/roles.sql:/opt/xray/roles.sql:ro
+      - ../scripts/bootstrap-roles.sh:/opt/xray/bootstrap-roles.sh:ro
+    tmpfs: [/tmp:rw,noexec,nosuid,size=16m]
+    entrypoint: [/opt/xray/bootstrap-roles.sh]
+    networks: [data]
+    depends_on: {postgres: {condition: service_healthy}}
+
+  redis:
+    image: redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf
+    restart: unless-stopped
+    read_only: true
+    user: "999:999"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    command: [redis-server, --save, "", --appendonly, "no"]
+    tmpfs: [/data:rw,noexec,nosuid,size=64m]
+    networks: [queue]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  admin-api:
+    <<: *backend
+    command: [gunicorn, --chdir, /app/backend, --bind, "0.0.0.0:8000", --workers, "2", config.wsgi:application]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      XRAY_DATABASE_USER: xray_admin_api
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/admin_db_password
+    secrets: [django_secret_key, control_master_key, subscription_master_key, admin_db_password]
+    networks: [control, data, queue]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+
+  migrator:
+    <<: *backend
+    profiles: [release]
+    command: [python, /app/backend/manage.py, migrate, --check, --noinput]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      XRAY_DATABASE_USER: xray_owner
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/owner_db_password
+    secrets: [django_secret_key, control_master_key, subscription_master_key, owner_db_password]
+    networks: [data, queue]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+
+  subscription-api:
+    <<: *backend
+    command: [gunicorn, --chdir, /app/backend, --bind, "0.0.0.0:8000", --workers, "2", config.wsgi:application]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.subscription
+      XRAY_ALLOWED_HOSTS: ${XRAY_SUBSCRIPTION_HOST}
+      XRAY_CSRF_TRUSTED_ORIGINS: ""
+      XRAY_DATABASE_USER: xray_subscription_reader
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/subscription_db_password
+    secrets: [subscription_master_key, subscription_db_password]
+    networks: [public-app, data]
+    depends_on: {postgres: {condition: service_healthy}}
+
+  worker:
+    <<: *backend
+    command: [celery, -A, config.celery:app, worker, --loglevel=INFO, --concurrency=1]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      XRAY_DATABASE_USER: xray_worker
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/worker_db_password
+    secrets: [django_secret_key, control_master_key, subscription_master_key, worker_db_password, cloud_credentials]
+    networks: [data, queue]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+
+  outbox-dispatcher:
+    <<: *backend
+    command: [xray-outbox]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.production
+      XRAY_DATABASE_USER: xray_outbox
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/outbox_db_password
+    secrets: [django_secret_key, outbox_db_password]
+    networks: [data, queue]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+
+  frontend:
+    image: ${XRAY_FRONTEND_IMAGE:?set XRAY_FRONTEND_IMAGE to an immutable digest}
+    restart: unless-stopped
+    read_only: true
+    user: "10001:0"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp:rw,noexec,nosuid,size=32m, /var/cache/nginx:rw,noexec,nosuid,size=16m]
+    networks: [control]
+
+  gateway:
+    image: nginx@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284
+    restart: unless-stopped
+    read_only: true
+    user: "101:101"
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      XRAY_ADMIN_HOST: ${XRAY_ADMIN_HOST}
+      XRAY_ADMIN_ALLOW_CIDR: ${XRAY_ADMIN_ALLOW_CIDR}
+      XRAY_SUBSCRIPTION_HOST: ${XRAY_SUBSCRIPTION_HOST}
+    ports:
+      - 127.0.0.1:18443:8443
+      - 127.0.0.1:19443:9443
+    secrets: [admin_tls_cert, admin_tls_key, subscription_tls_cert, subscription_tls_key]
+    volumes:
+      - ../nginx/gateway.conf:/etc/nginx/nginx.conf:ro
+      - ../nginx/admin.conf:/etc/nginx/templates/admin.conf.template:ro
+      - ../nginx/subscription.conf:/etc/nginx/templates/subscription.conf.template:ro
+      - ../nginx/default-deny.conf:/etc/nginx/templates/default-deny.conf.template:ro
+    tmpfs: [/tmp:rw,noexec,nosuid,size=32m, /var/cache/nginx:rw,noexec,nosuid,size=16m, /var/run:rw,noexec,nosuid,size=4m, /etc/nginx/conf.d:rw,noexec,nosuid,size=4m]
+    networks: [edge, control, public-app]
+    depends_on: {admin-api: {condition: service_healthy}, subscription-api: {condition: service_healthy}, frontend: {condition: service_healthy}}
+
+networks:
+  edge: {}
+  control: {internal: true}
+  public-app: {internal: true}
+  data: {internal: true}
+  queue: {internal: true}
+volumes:
+  postgres-data: {}
+secrets:
+  django_secret_key: {file: "${XRAY_DJANGO_SECRET_KEY_FILE}"}
+  control_master_key: {file: "${XRAY_CONTROL_MASTER_KEY_FILE}"}
+  subscription_master_key: {file: "${XRAY_SUBSCRIPTION_MASTER_KEY_FILE}"}
+  owner_db_password: {file: "${XRAY_OWNER_DB_PASSWORD_FILE}"}
+  admin_db_password: {file: "${XRAY_ADMIN_DB_PASSWORD_FILE}"}
+  subscription_db_password: {file: "${XRAY_SUBSCRIPTION_DB_PASSWORD_FILE}"}
+  worker_db_password: {file: "${XRAY_WORKER_DB_PASSWORD_FILE}"}
+  outbox_db_password: {file: "${XRAY_OUTBOX_DB_PASSWORD_FILE}"}
+  cloud_credentials: {file: "${XRAY_CLOUD_CREDENTIALS_FILE}"}
+  admin_tls_cert: {file: "${XRAY_ADMIN_TLS_CERT_FILE}"}
+  admin_tls_key: {file: "${XRAY_ADMIN_TLS_KEY_FILE}"}
+  subscription_tls_cert: {file: "${XRAY_SUBSCRIPTION_TLS_CERT_FILE}"}
+  subscription_tls_key: {file: "${XRAY_SUBSCRIPTION_TLS_KEY_FILE}"}

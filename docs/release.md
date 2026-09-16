@@ -1,0 +1,39 @@
+# 发布与应用回退
+
+## 发布
+
+先在 registry 中构建并验证 backend/frontend 镜像，记录两个不可变 digest。服务器的受限配置文件指向这些 digest，然后执行：
+
+```bash
+deploy/scripts/release.sh \
+  --version 0.6.0 \
+  --digest sha256:<backend-image-digest> \
+  --config /etc/xray/config.env \
+  --compose deploy/compose/production.yml
+```
+
+`--digest` 必须与配置中的 backend 镜像完全一致，`--version` 必须与仓库 `VERSION` 一致。脚本不接受 tag-only 镜像。发布前的备份失败、迁移计划失败、worker 无法排空或迁移检查失败都会阻止镜像切换。
+
+发布证据至少记录 Git commit/tag、两个镜像 digest、Compose config 摘要、备份 manifest、迁移计划、门禁结果和操作者审批。任何输出进入 `artifacts/acceptance/<version>/` 前都要脱敏。
+
+## 回退
+
+应用回退使用已验证的上一版本镜像配置：
+
+```bash
+deploy/scripts/rollback.sh \
+  --version 0.5.0 \
+  --config /etc/xray/previous-images.env \
+  --compose deploy/compose/production.yml
+```
+
+回退脚本只排空 worker 并切换应用镜像，不调用 `pg_restore`、不反向迁移，也不修改撤销记录、Token tombstone、已失效凭据、云操作结果或安全事件。若上一版本无法读取当前 expand/contract schema，保持维护模式并停止，不允许以旧数据库覆盖当前库。
+
+## 失败处理
+
+- worker drain 超时：检查 Operation 和 provider request ID，完成对账后人工恢复 consumer 或重试发布。
+- 迁移失败：保持旧应用或维护模式，保存错误和迁移状态；通过向前修复迁移处理。
+- 新镜像健康检查失败：保持数据库原状，使用上一组 digest 执行应用回退。
+- 撤销/云结果不明：保持 SecurityBarrier 关闭、节点隔离和 worker 云写禁用，按事故手册对账。
+
+Git 层使用阶段标签或 `git revert <commit>`。禁止强推、硬重置和删除安全历史。

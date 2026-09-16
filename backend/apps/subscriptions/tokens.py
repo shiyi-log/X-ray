@@ -13,7 +13,7 @@ from common.errors import DomainError
 
 from .models import AccessProfile, Subscription, SubscriptionToken
 
-TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{43,64}$")
+TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{43}$")
 
 
 class TokenUnknown(Exception):
