@@ -1,5 +1,14 @@
 # 变更记录
 
+## 0.5.0 - 2026-09-17
+
+- 固定 Vben `v5.7.0` / `63a38dce49ba109f61607994e21ba921d8e970e9`，交付独立 Vue 管理控制台，不引用 Shop 工作区或演示数据。
+- 增加真实 Cookie/CSRF 会话恢复、密码/TOTP/恢复码登录，以及总览、云账号、节点池、节点、操作、访问配置、订阅、审计和系统页面。
+- 增加确定性 OpenAPI 类型生成、Operation 刷新恢复、真实空状态、API 失败状态、危险预览、一次性交付内存清理和部分撤销诚实文案。
+- Google Chrome 浏览器桌面与移动验收通过：6 个 E2E、11 个前端单测、120 个后端/安装器/撤销测试，以及 typecheck、lint、build、Ruff、迁移、边界和秘密门禁通过。
+- 浏览器证据位于 `artifacts/acceptance/0.5.0/`；trace 已移除网络归档，不包含 Cookie、CSRF、密码、TOTP 或订阅 Token。
+- 真实 AWS/SWAS、远程 SSH、Google 公网探测、独立服务器、生产发布、删除实例和释放 IP 未执行，不属于本版本本地验收结论。
+
 ## 0.4.0 - 2026-09-17
 
 - 增加 AccessProfile、凭据版本、一次性交付 Token、永久 tombstone、不可变订阅 revision 与 PublicationBatch。

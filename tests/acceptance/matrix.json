@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "generated_at": "2026-09-17",
   "allowed_statuses": [
     "passed",
@@ -14,7 +14,12 @@
       "environment": "local",
       "status": "passed",
       "evidence": [
-        "backend-installer-revocation:111-tests",
+        "backend-installer-revocation:120-tests",
+        "frontend-unit:11-tests",
+        "frontend-chrome-e2e:6-tests",
+        "openapi-double-generation-deterministic",
+        "desktop-1440x900-visual",
+        "mobile-390x844-visual",
         "fixed-xray-v26.3.27-five-protocol-runtime",
         "fixed-xray-v26.3.27-revocation-runtime",
         "fixed-clash-v1.18.0-parser",
@@ -26,7 +31,7 @@
         "boundary-scan",
         "secret-scan"
       ],
-      "commit": "aaf9913d4ed2eca5466c1b57f3c41f0228f029bd",
+      "commit": "de1ab0b1ff6c628415bb5b38ed6cd1133e880650",
       "provider": null,
       "region": null,
       "cost": null,

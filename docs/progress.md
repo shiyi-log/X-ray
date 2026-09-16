@@ -10,7 +10,9 @@
 | 2026-09-17 | P2 | dual-cloud contracts | `851f8dd` | `pytest backend/tests -q`; migration check; Ruff; boundary/secret scans | 0 | 30 passed; `docs/architecture/cloud-capabilities.md` | passed | `v0.1.0` |
 | 2026-09-17 | P3 | operations, nodes, fixed installer and five-protocol runtime | `f4975a7` | `pytest backend/tests tests/installer -q`; Ruff; ShellCheck 0.10.0; migration/boundary/secret/diff gates | 0 | `artifacts/acceptance/0.3.0/backend-and-installer.junit.xml`; 66 passed | passed | `v0.2.0` |
 | 2026-09-17 | P4 | subscriptions, fixed format parsers and fail-closed revocation | `aaf9913d4ed2eca5466c1b57f3c41f0228f029bd` | `pytest ... backend/tests tests/installer tests/subscriptions/test_xray_revocation.py`; `tests/subscriptions/verify_formats.sh`; migration/Ruff/ShellCheck/boundary/Gitleaks/skill gates | 0 | `artifacts/acceptance/0.4.0/backend-installer-revocation.junit.xml`; 111 passed; fixed Xray/Clash/Mihomo parser output | passed | `v0.3.0-nodes` |
-| 2026-09-17 | P5 | Vben console | pending | pending | - | pending | not-run | `v0.4.0-subscriptions` |
+| 2026-09-17 | P5 | independent Vben console and safe revocation controls | `fd23a51` / `ee02808` / `de1ab0b` | backend full pytest; frontend unit/typecheck/lint/build/E2E; OpenAPI double generation; migration/boundary/Gitleaks | 0 | `artifacts/acceptance/0.5.0/`; 120 backend tests; 11 frontend unit; 6 Chrome E2E | passed | `v0.4.0-subscriptions` |
+| 2026-09-17 | P5 | Ruff availability gate | `de1ab0b` | `backend/.venv/bin/ruff check backend tests` | 127 | virtualenv tool absent; no pass claimed | failed | `v0.4.0-subscriptions` |
+| 2026-09-17 | P5 | pinned Ruff fallback | `de1ab0b` | `uvx --from ruff==0.13.1 ruff check backend tests` | 0 | `All checks passed!` | passed | `v0.4.0-subscriptions` |
 | 2026-09-17 | P6 | delivery and recovery | pending | pending | - | pending | not-run | `v0.5.0-console` |
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、独立生产服务器、实例删除和 IP 释放在获得具体授权前保持 `blocked` 或 `not-run`。
@@ -18,3 +20,5 @@
 P3 的真实 Xray 证据使用哈希固定的 macOS arm64 `v26.3.27` 本地二进制，完成 Shadowsocks、SOCKS5、VMess、VLESS、Trojan 到本机 HTTP 目标的实际链路测试。该证据不代表 Linux 远程 SSH、真实云或公网可用性。
 
 P4 在固定 Xray `v26.3.27` 上验证五类协议的旧持续连接关闭、旧凭据新握手拒绝和新凭据正向连接，并用 Clash `v1.18.0`、Mihomo `v1.19.12` 与独立 Shadowrocket URI 解析器验证四种格式。Shadowrocket 真机、UDP、TLS 证书链、真实云、远程 SSH、公网 Google 探测和生产服务器仍没有执行证据。
+
+P5 使用本机 Google Chrome、真实 Django/PostgreSQL/Redis 和测试 Fake 资源验证密码/TOTP、刷新恢复、空状态、断网错误、固定 Operation、一次性交付、危险确认、部分撤销及 `390x844` 移动布局。测试种子命令仅允许专用 `xray_test` 数据库；没有执行真实云写入、SSH、公网探测或生产发布。
