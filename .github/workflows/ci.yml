@@ -1,0 +1,88 @@
+name: X-ray delivery gates
+
+on:
+  push:
+    branches: [main, codex/xray-manager]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xray-delivery-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      XRAY_ENV: test
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      XRAY_TEST_DATABASE_URL: postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/xray_test
+      XRAY_REDIS_URL: redis://127.0.0.1:56379/0
+      XRAY_TEST_SERVICES_EXTERNAL: "1"
+      XRAY_CSRF_TRUSTED_ORIGINS: http://127.0.0.1:5178
+      XRAY_BACKEND_TEST_IMAGE: xray-manager-backend:ci
+      XRAY_FRONTEND_TEST_IMAGE: xray-manager-frontend:ci
+      XRAY_BACKUP_TEST_IMAGE: xray-manager-backup-tools:ci
+      XRAY_SKILL_VALIDATOR: scripts/vendor/skill-quick-validate.py
+    services:
+      postgres:
+        image: postgres:17.6-alpine
+        env:
+          POSTGRES_DB: xray_test
+          POSTGRES_USER: xray_test
+          POSTGRES_PASSWORD: xray_test_only_password
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U xray_test -d xray_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 56379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.28"
+          enable-cache: true
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "10.33.0"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.18.0"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install locked dependencies
+        run: |
+          uv sync --project backend --frozen --group test
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir frontend exec playwright install --with-deps chrome
+      - name: Validate acceptance claims before execution
+        run: python3 scripts/validate-acceptance.py
+      - name: Run complete local delivery gates
+        run: ./scripts/check-local.sh
+      - name: Upload sanitized acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xray-acceptance-${{ github.run_id }}
+          path: artifacts/acceptance/
+          if-no-files-found: error
+          retention-days: 14
