@@ -1,6 +1,6 @@
 {
   "version": "0.6.0",
-  "generated_at": "2026-09-17T10:57:24+08:00",
+  "generated_at": "2026-09-17T10:59:16+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -19,7 +19,7 @@
           "command": "./scripts/check-local.sh",
           "exit_code": 0,
           "artifact": "artifacts/acceptance/0.6.0/gates/summary.tsv",
-          "timestamp": "2026-09-17T08:16:32+08:00"
+          "timestamp": "2026-09-17T10:59:16+08:00"
         },
         {
           "kind": "pytest",
