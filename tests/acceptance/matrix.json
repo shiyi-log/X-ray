@@ -1,6 +1,6 @@
 {
   "version": "0.6.0",
-  "generated_at": "2026-09-17T10:59:16+08:00",
+  "generated_at": "2026-09-17T19:59:55+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -19,7 +19,7 @@
           "command": "./scripts/check-local.sh",
           "exit_code": 0,
           "artifact": "artifacts/acceptance/0.6.0/gates/summary.tsv",
-          "timestamp": "2026-09-17T10:59:16+08:00"
+          "timestamp": "2026-09-17T19:59:55+08:00"
         },
         {
           "kind": "pytest",
@@ -47,9 +47,26 @@
           "kind": "local_images",
           "count": 3,
           "artifact": "artifacts/acceptance/0.6.0/image-manifest.json"
+        },
+        {
+          "kind": "boundary_fail_closed",
+          "primary_exit_code": 0,
+          "portable_fallback_exit_code": 0,
+          "prohibited_import_exit_code": 1,
+          "scanner_unavailable_exit_code": 2,
+          "artifact": "scripts/check-boundary.sh"
+        },
+        {
+          "kind": "sanitized_trace_audit",
+          "trace_network_entries": 0,
+          "sensitive_marker_matches": 0,
+          "artifacts": [
+            "artifacts/acceptance/0.6.0/full-flow-sanitized.zip",
+            "artifacts/acceptance/0.6.0/resource-flow-sanitized.zip"
+          ]
         }
       ],
-      "commit": "a5ff96e239c70b2b7c43d6c3e9f12bd96c588561",
+      "commit": "924cd3d9741bc66bfee2cd72ec89752f3d0e2070",
       "provider": null,
       "region": null,
       "cost": null,

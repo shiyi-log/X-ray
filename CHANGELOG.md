@@ -6,6 +6,7 @@
 - 增加固定工具链的加密备份、隔离恢复、`MAINTENANCE` 屏障、永久 Token tombstone、独立安全事件账本、恢复对账与全量凭据轮换流程。
 - 增加发布/应用回退脚本、GitHub CI、统一本地门禁、结构化验收矩阵及真实云/生产证据防伪校验；应用回退不会恢复数据库撤销状态、云操作结果或旧凭据。
 - 浏览器全流程 trace 只在一次性 Token 从 DOM 清除后启动；移除网络归档后再扫描 ZIP 内容，检测到原始 Token 时立即删除产物并使测试失败。
+- 边界门禁优先使用 `rg`，缺失时使用 `find`/`grep` 等价扫描；扫描器缺失或异常会明确失败，不再因工具不可用而误报通过。
 - 本地门禁通过 181 项后端/安装器/部署/恢复测试（0 skipped）、11 项前端单测和 7 项 Google Chrome E2E；OpenAPI 双生成、固定 Xray `v26.3.27`、四订阅格式、Ruff、ShellCheck、Gitleaks、边界与技能验证通过。
 - 本地镜像 ID：backend `sha256:c219bc15b6abbe24e40be12aec723d63c5b3183e74bb62c53ddd7e46190f75c9`、frontend `sha256:5a3c117ba9bfc53452be1d9fc7b309b122e29488810850bd5ce13d69d8d75b6f`、backup-tools `sha256:12c06b2a52040b3c634f160c52837ce3752849a610560750e62d4b1ce570fe7b`；它们不是生产 registry 摘要或上线证据。
 - 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布未执行。
