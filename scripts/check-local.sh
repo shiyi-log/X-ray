@@ -73,6 +73,9 @@ export XRAY_TEST_DATABASE_URL=${XRAY_TEST_DATABASE_URL:-postgresql://xray_test:x
 export XRAY_REDIS_URL=${XRAY_REDIS_URL:-redis://127.0.0.1:56379/0}
 export XRAY_REQUIRE_FIXED_BINARY=1
 export XRAY_TEST_BINARY=${XRAY_TEST_BINARY:-"$root_dir/runtime/xray/v26.3.27/xray"}
+export XRAY_BACKEND_TEST_IMAGE=${XRAY_BACKEND_TEST_IMAGE:-"xray-manager-backend:$version-local"}
+export XRAY_FRONTEND_TEST_IMAGE=${XRAY_FRONTEND_TEST_IMAGE:-"xray-manager-frontend:$version-local"}
+export XRAY_BACKUP_TEST_IMAGE=${XRAY_BACKUP_TEST_IMAGE:-"xray-manager-backup-tools:$version-local"}
 
 run_gate() {
   local gate=$1
@@ -120,9 +123,6 @@ gate_compose_config() {
   docker compose --env-file deploy/compose/config.example.env \
     -f deploy/compose/staging.yml config --quiet
 
-  export XRAY_BACKEND_TEST_IMAGE=${XRAY_BACKEND_TEST_IMAGE:-"xray-manager-backend:$version-local"}
-  export XRAY_FRONTEND_TEST_IMAGE=${XRAY_FRONTEND_TEST_IMAGE:-"xray-manager-frontend:$version-local"}
-  export XRAY_BACKUP_TEST_IMAGE=${XRAY_BACKUP_TEST_IMAGE:-"xray-manager-backup-tools:$version-local"}
   ensure_image "$XRAY_BACKEND_TEST_IMAGE" deploy/docker/backend.Dockerfile
   ensure_image "$XRAY_FRONTEND_TEST_IMAGE" deploy/docker/frontend.Dockerfile
   ensure_image "$XRAY_BACKUP_TEST_IMAGE" deploy/docker/backup-tools.Dockerfile
@@ -143,6 +143,9 @@ gate_ruff() {
 
 gate_backend_tests() {
   ensure_fixed_xray
+  docker image inspect "$XRAY_BACKEND_TEST_IMAGE" >/dev/null
+  docker image inspect "$XRAY_FRONTEND_TEST_IMAGE" >/dev/null
+  docker image inspect "$XRAY_BACKUP_TEST_IMAGE" >/dev/null
   uv run --project backend pytest -c backend/pyproject.toml backend/tests tests -q \
     --junitxml="$artifact_dir/backend-and-delivery.junit.xml"
 }
@@ -158,8 +161,9 @@ gate_openapi() (
     --file "$temporary/schema-two.yaml" --validate --settings=config.settings.test
   cmp "$temporary/schema-one.yaml" "$temporary/schema-two.yaml"
   cmp "$temporary/schema-one.yaml" backend/openapi/schema.yaml
+  cp frontend/apps/web-antd/src/api/generated/schema.ts "$temporary/frontend-schema-before.ts"
   pnpm --dir frontend generate:api
-  git diff --exit-code -- backend/openapi/schema.yaml \
+  cmp "$temporary/frontend-schema-before.ts" \
     frontend/apps/web-antd/src/api/generated/schema.ts
 )
 

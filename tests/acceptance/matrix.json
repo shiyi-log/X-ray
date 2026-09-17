@@ -1,6 +1,6 @@
 {
-  "version": "0.5.0",
-  "generated_at": "2026-09-17",
+  "version": "0.6.0",
+  "generated_at": "2026-09-17T07:58:43+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -10,28 +10,22 @@
   ],
   "items": [
     {
-      "id": "local-boundary",
+      "id": "local-delivery-gates",
       "environment": "local",
-      "status": "passed",
-      "evidence": [
-        "backend-installer-revocation:120-tests",
-        "frontend-unit:11-tests",
-        "frontend-chrome-e2e:6-tests",
-        "openapi-double-generation-deterministic",
-        "desktop-1440x900-visual",
-        "mobile-390x844-visual",
-        "fixed-xray-v26.3.27-five-protocol-runtime",
-        "fixed-xray-v26.3.27-revocation-runtime",
-        "fixed-clash-v1.18.0-parser",
-        "fixed-mihomo-v1.19.12-parser",
-        "shadowrocket-uri-independent-parser",
-        "migration-check",
-        "ruff",
-        "shellcheck-v0.10.0",
-        "boundary-scan",
-        "secret-scan"
-      ],
-      "commit": "de1ab0b1ff6c628415bb5b38ed6cd1133e880650",
+      "status": "not-run",
+      "evidence": [],
+      "commit": null,
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-ci",
+      "environment": "ci",
+      "status": "not-run",
+      "evidence": [],
+      "commit": null,
       "provider": null,
       "region": null,
       "cost": null,
@@ -88,6 +82,28 @@
       "evidence": [],
       "commit": null,
       "provider": "aliyun-swas",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "instance-deletion",
+      "environment": "real_cloud",
+      "status": "risky_not_executed",
+      "evidence": [],
+      "commit": null,
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "static-ip-release",
+      "environment": "real_cloud",
+      "status": "risky_not_executed",
+      "evidence": [],
+      "commit": null,
+      "provider": null,
       "region": null,
       "cost": null,
       "residual_resources": []

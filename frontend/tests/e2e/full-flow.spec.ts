@@ -1,9 +1,12 @@
+import { rmSync } from 'node:fs';
+
 import { expect, test } from '@playwright/test';
 
 import {
   completePartialRevocation,
   removeTraceNetworkArchive,
   screenshotPath,
+  traceContainsSecret,
   tracePath,
 } from './helpers';
 
@@ -12,9 +15,10 @@ test.setTimeout(90_000);
 test('管理员从会话恢复完成一次性交付与部分撤销全流程', async ({ page, context }) => {
   const profileName = `e2e-full-flow-${Date.now()}`;
   const sanitizedTrace = tracePath('full-flow-sanitized.zip');
+  let deliveredToken = '';
   let traceError: Error | null = null;
-  let traceSaved = false;
-  await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+  let traceStarted = false;
+  rmSync(sanitizedTrace, { force: true });
 
   try {
     await page.goto('/overview');
@@ -47,13 +51,15 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
     await expect(profileRow).toBeVisible();
     await profileRow.getByRole('button', { name: '签发 Token' }).click();
     const delivery = page.getByRole('dialog', { name: '一次性交付' });
-    const token = (await delivery.locator('.secret-value code').textContent()) || '';
-    expect(token).toHaveLength(43);
+    deliveredToken = (await delivery.locator('.secret-value code').textContent()) || '';
+    expect(deliveredToken).toHaveLength(43);
     expect(await page.evaluate(() => ({ ...localStorage }))).toEqual({});
     expect(await page.evaluate(() => ({ ...sessionStorage }))).toEqual({});
     await delivery.getByRole('button', { name: '我已安全保存并关闭' }).click();
     await page.reload();
-    await expect(page.getByText(token, { exact: true })).toHaveCount(0);
+    await expect(page.getByText(deliveredToken, { exact: true })).toHaveCount(0);
+    await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
+    traceStarted = true;
 
     await page.getByRole('link', { name: '订阅', exact: true }).click();
     await expect(page).toHaveURL(/\/subscriptions$/);
@@ -85,13 +91,19 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
     });
   } finally {
     await context.setOffline(false).catch(() => undefined);
-    try {
-      await context.tracing.stop({ path: sanitizedTrace });
-      traceSaved = true;
-    } catch (error) {
-      traceError = error instanceof Error ? error : new Error(String(error));
+    if (traceStarted) {
+      try {
+        await context.tracing.stop({ path: sanitizedTrace });
+        removeTraceNetworkArchive(sanitizedTrace);
+        if (traceContainsSecret(sanitizedTrace, deliveredToken)) {
+          rmSync(sanitizedTrace, { force: true });
+          traceError = new Error('Sanitized trace contained the one-time token and was removed');
+        }
+      } catch (error) {
+        rmSync(sanitizedTrace, { force: true });
+        traceError = error instanceof Error ? error : new Error(String(error));
+      }
     }
   }
-  if (traceSaved) removeTraceNetworkArchive(sanitizedTrace);
   expect(traceError, traceError?.message).toBeNull();
 });

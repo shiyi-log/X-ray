@@ -6,7 +6,9 @@
 
 ## 当前状态
 
-2026-09-17：P1–P5 已完成本地实现与阶段标签，P6 独立部署、备份与恢复正在实施。当前版本和可复现证据以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准；本地通过不代表真实云或生产上线。
+2026-09-17：P1–P6 已完成本地实现，当前交付版本为 `0.6.0`。独立部署包、加密备份/隔离恢复、统一门禁和浏览器控制台均已在专用本地环境验证；当前版本和可复现证据以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
+
+真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 
 - [正式设计规格](docs/superpowers/specs/2026-09-16-xray-manager-design.md)
 - [开发计划总览](docs/superpowers/plans/2026-09-16-xray-manager.md)

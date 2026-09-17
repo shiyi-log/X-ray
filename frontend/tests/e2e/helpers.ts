@@ -58,3 +58,10 @@ export function removeTraceNetworkArchive(target: string) {
     execFileSync('zip', ['-d', target, ...entries], { stdio: 'ignore' });
   }
 }
+
+export function traceContainsSecret(target: string, secret: string) {
+  const archive = execFileSync('unzip', ['-p', target], {
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return archive.includes(Buffer.from(secret));
+}
