@@ -1,0 +1,27 @@
+{
+  "version": "0.6.0",
+  "generated_at": "2026-09-17T08:16:51+08:00",
+  "environment": "local",
+  "source_commit": "c229c7fcf2574d3a024420da686b4abe4ef6ddc0",
+  "status": "passed",
+  "test": "recovery.test_real_restore_drill.test_real_encrypted_backup_restore_stays_closed_and_imports_newer_revocation",
+  "pipeline": [
+    "pg_dump",
+    "age encrypt",
+    "age decrypt",
+    "pg_restore"
+  ],
+  "elapsed_seconds": 2.043,
+  "junit_artifact": "artifacts/acceptance/0.6.0/gates/backend-and-delivery.junit.xml",
+  "recovery_target": "fresh xray_restore_<uuid> database on dedicated local PostgreSQL",
+  "rpo_observation": "A revocation created after the backup was reconciled from the external security ledger.",
+  "security_assertions": [
+    "restored security mode is MAINTENANCE",
+    "restored network mode is isolated",
+    "post-backup revocation tombstone is present",
+    "the pre-backup token remains gone",
+    "the temporary restore database is dropped"
+  ],
+  "residual_resources": [],
+  "scope": "Local encrypted recovery drill only; no production backup or server was used."
+}

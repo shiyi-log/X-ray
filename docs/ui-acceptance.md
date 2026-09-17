@@ -44,3 +44,21 @@ API Key 的 CLI。视觉验收以真实浏览器 DOM、桌面/移动截图和溢
 
 真实 AWS Lightsail、阿里云 SWAS、远程 SSH、Google 公网探测、独立生产服务器与
 真实删除/IP 释放均没有授权证据，本阶段保持 `blocked` 或 `risky_not_executed`。
+
+## 0.6.0 交付复验
+
+- 日期：2026-09-17
+- 应用提交：`c229c7fcf2574d3a024420da686b4abe4ef6ddc0`
+- 浏览器：本机 Google Chrome；桌面 `1440x900`，移动 `390x844`
+- 结果：7 passed，0 failed，0 flaky，0 skipped
+- 报告：`artifacts/acceptance/0.6.0/playwright-report.json`
+
+0.6.0 增加了密码/TOTP 登录、服务器会话刷新恢复、主要控制台页面、真实空状态、
+AccessProfile 创建、一次性交付、浏览器存储为空、Token DOM 清理、API 离线错误、
+危险预览/确认和部分撤销诚实结果的单一全流程复验。完整流程的 trace 只在一次性
+Token 对话框关闭、页面刷新且 DOM 无 Token 后启动；停止后删除 `trace.network`，
+再以本次 Token 的原始字节扫描整个 ZIP。发现匹配时测试会删除 trace 并失败。
+
+脱敏 trace 位于 `artifacts/acceptance/0.6.0/full-flow-sanitized.zip` 和
+`artifacts/acceptance/0.6.0/resource-flow-sanitized.zip`。这仍是专用本地数据库和
+Fake 资源上的 UI 证据，不代表 Shadowrocket 真机、真实云、远程 SSH 或生产上线。

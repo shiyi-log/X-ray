@@ -1,6 +1,6 @@
 {
   "version": "0.6.0",
-  "generated_at": "2026-09-17T07:58:43+08:00",
+  "generated_at": "2026-09-17T08:16:51+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -12,9 +12,44 @@
     {
       "id": "local-delivery-gates",
       "environment": "local",
-      "status": "not-run",
-      "evidence": [],
-      "commit": null,
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "command",
+          "command": "./scripts/check-local.sh",
+          "exit_code": 0,
+          "artifact": "artifacts/acceptance/0.6.0/gates/summary.tsv",
+          "timestamp": "2026-09-17T08:16:32+08:00"
+        },
+        {
+          "kind": "pytest",
+          "tests": 181,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "artifact": "artifacts/acceptance/0.6.0/gates/backend-and-delivery.junit.xml"
+        },
+        {
+          "kind": "playwright",
+          "expected": 7,
+          "unexpected": 0,
+          "flaky": 0,
+          "skipped": 0,
+          "artifact": "artifacts/acceptance/0.6.0/playwright-report.json"
+        },
+        {
+          "kind": "encrypted_restore",
+          "pipeline": "pg_dump -> age encrypt -> age decrypt -> pg_restore",
+          "elapsed_seconds": 2.043,
+          "artifact": "artifacts/acceptance/0.6.0/recovery-measurement.json"
+        },
+        {
+          "kind": "local_images",
+          "count": 3,
+          "artifact": "artifacts/acceptance/0.6.0/image-manifest.json"
+        }
+      ],
+      "commit": "c229c7fcf2574d3a024420da686b4abe4ef6ddc0",
       "provider": null,
       "region": null,
       "cost": null,
