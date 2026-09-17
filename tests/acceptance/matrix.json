@@ -1,6 +1,6 @@
 {
   "version": "0.6.0",
-  "generated_at": "2026-09-17T08:16:51+08:00",
+  "generated_at": "2026-09-17T10:57:24+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -49,7 +49,7 @@
           "artifact": "artifacts/acceptance/0.6.0/image-manifest.json"
         }
       ],
-      "commit": "c229c7fcf2574d3a024420da686b4abe4ef6ddc0",
+      "commit": "a5ff96e239c70b2b7c43d6c3e9f12bd96c588561",
       "provider": null,
       "region": null,
       "cost": null,
