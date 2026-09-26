@@ -181,3 +181,12 @@ time_logic: <clock, timezone, boundary, TTL/expiry, test clock, or N/A>
 - 推送未完成，因为仓库没有配置 `origin` 或其他 remote；不能安全猜测远端 URL。
 - 未跟踪的 3 个副本文件保持原样，未加入提交、未删除、未重命名。
 - 完成远端推送的最小下一步是提供并配置明确的 remote URL，然后重新核对远端 `main` 的祖先关系和推送权限。
+
+## 2026-09-26T23:07:08+08:00 — 创建 GitHub 远端仓库：操作定义
+
+`run_id`: `xray-repository-create-20260926-01`
+
+| event_id | timestamp | actor | event_type | path_scope | operation | reason | command/tool | result / evidence | status | commit_or_tree | rollback_ref | time_logic |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| xray-repository-create-20260926-01/001 | 2026-09-26T23:07:08+08:00 | Codex | decision | GitHub repository `shiyi-log/X-ray`, local `main`, tracked audit docs | define remote repository creation and initial push | User explicitly requested repository creation after the prior push was blocked by missing remote | `gh auth status`; `gh repo list shiyi-log`; `git status`; `git log -1` | GitHub CLI is authenticated as `shiyi-log` with repository scope; exact `shiyi-log/X-ray` repository was not found; local branch is `main` at `37888a3`; default visibility will be private; current 3 untracked duplicate files are excluded | passed | `37888a3` plus 3 untracked files | If creation succeeds, remote deletion is a separate destructive action and is not planned; local rollback is `git remote remove origin` | No application time logic changes; operation timestamp uses `Asia/Shanghai` execution clock |
+| xray-repository-create-20260926-01/002 | 2026-09-26T23:07:08+08:00 | Codex | boundary | repository creation and push scope | define inclusions and exclusions | Prevent accidental publication or unrelated-file mutation | repository contract plus user authorization | In scope: create private GitHub repository, add `origin`, push committed local `main`, verify remote refs and visibility. Out of scope: public publication, reading/copying secrets, staging untracked duplicates, deleting other repositories, production/cloud actions, and changing application code | passed | `37888a3` plus 3 untracked files | Remove only the newly added local `origin` if the external operation is not completed; no remote deletion without a separate explicit request | No business expiry/retry behavior |
