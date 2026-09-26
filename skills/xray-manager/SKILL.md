@@ -5,31 +5,73 @@ description: Maintain the isolated X-ray management platform and its auditable d
 
 # X-ray Manager
 
-Use this skill for work under `/Users/a399/Desktop/data/X-ray`.
+Use this skill for work under `/Users/a399/Desktop/data/X-ray`. The canonical
+project contract is [../../docs/project-conventions.md](../../docs/project-conventions.md);
+the append-only operation record is [../../docs/project-ledger.md](../../docs/project-ledger.md).
 
-## Non-negotiable boundaries
+## Required Start
 
-- Keep the project independent from Shop and sibling repositories. `archive/` is local reference data only and must never enter source discovery, Docker contexts, packages, CI artifacts, or tests.
-- Use the dedicated PostgreSQL/Redis stack and fake or stub cloud/SSH providers for local verification. Real AWS, SWAS, SSH, public probes, production hosts, deletion, and IP release require explicit authorization.
-- Never print or persist private keys, cloud credentials, subscription tokens, raw URI payloads, or secret-bearing exception data. Use purpose-bound AEAD envelopes and redact logs/reports.
+Before any edit:
 
-## Delivery workflow
+1. Read `AGENTS.md`, `docs/project-conventions.md`,
+   `docs/project-ledger.md`, and the relevant linked reference files.
+2. Inspect branch, status, diff, listeners, dependency versions, current
+   progress, and the applicable plan.
+3. Create or reuse a `run_id`; append a ledger definition entry containing
+   scope, exclusions, authorization, assumptions, risks, and rollback.
 
-1. Inspect branch, status, listeners, dependency versions, current progress, and the applicable phase plan before editing.
-2. Implement a failing focused test, make the smallest compatible change, then run focused and regression gates.
-3. Record command, exit code, evidence path, status (`passed`, `failed`, `blocked`, `not-run`, or `risky_not_executed`), commit, tag, and rollback reference in `docs/progress.md`.
-4. Update `VERSION`, `CHANGELOG.md`, and `docs/version-record.md` for each phase. Review staged paths and use a phase tag or `git revert` for rollback; never force-push or hard-reset.
+Do not read `archive/` or sibling Shop runtime material. Do not print ignored
+environment files or secret-bearing output; record only redacted metadata.
 
-## Domain invariants
+## Execution
 
-- There is one database-enforced administrator. Password login creates only a short-lived MFA challenge; a current server-side session and session version authorize management APIs.
-- Side-effecting APIs require a UUID `Idempotency-Key`; dangerous actions require a fresh, target-bound preview and step-up authentication.
-- Cloud capability is evidence-based (`SUPPORTED`, `UNSUPPORTED`, `UNVERIFIED`). Accepted cloud writes are not treated as completed until read-after-write evidence exists.
-- Subscription access is token-digest based and fail-closed. A revoked token is permanently `410`; uncertain node revocation is visible as risk and never claimed successful.
-- Recovery starts in `MAINTENANCE`: public subscriptions are unavailable and workers cannot perform cloud writes until audit/revocation reconciliation and credential rotation are verified.
+1. Read before writing and record exact paths and scopes.
+2. Make the smallest compatible implementation. Code changes need a focused
+   test; documentation/process changes need the relevant validator and boundary
+   checks.
+3. Treat time as an explicit contract: authoritative clock, IANA timezone,
+   aware/naive parsing, UTC normalization, boundary convention, TTL/expiry,
+   retries, clock skew, DST/offset behavior, and boundary test vectors.
+4. Record each write, command, test, browser/runtime check, external limitation,
+   reuse path, and rollback path in `docs/project-ledger.md`.
+5. Record phase/gate evidence in `docs/progress.md`; record release/version/tag
+   facts in `docs/version-record.md`. Do not claim a phase release for a
+   process-only document change.
+6. Run proportional verification and classify every result honestly:
+   `passed`, `failed`, `blocked`, `not-run`, or `risky_not_executed`.
+7. Append a final ledger event after `git diff --check`, status inspection, and
+   relevant validators. Corrections append new events; they do not rewrite
+   history.
+
+## X-ray Safety Invariants
+
+- PostgreSQL is the source of truth; Redis/Celery work is reconstructible.
+- There is one database-enforced administrator. Password authentication creates
+  only a short-lived challenge unless an explicitly test-only local bypass is
+  enabled; production always requires MFA.
+- Server-side sessions, CSRF, session-version invalidation, TOTP/recovery,
+  purpose-separated AEAD envelopes, and secret redaction remain mandatory.
+- Every side-effecting API requires a UUID `Idempotency-Key`. Dangerous actions
+  require a fresh target-bound preview and step-up authentication.
+- Cloud capability is evidence-based: `SUPPORTED`, `UNSUPPORTED`, or
+  `UNVERIFIED`. Accepted cloud writes require read-after-write evidence.
+- Subscription access is token-digest based and fail-closed. Revoked tokens
+  remain permanently `410`; uncertain node revocation is visible as risk.
+- Recovery starts in `MAINTENANCE`; public subscriptions and cloud writes stay
+  blocked until audit/revocation reconciliation and credential rotation pass.
+
+## Local Evidence Boundary
+
+Use the dedicated PostgreSQL/Redis Compose stack and Fake/Stub cloud/SSH
+providers. Real AWS/SWAS, SSH, public Google probes, production TLS, production
+hosts, deletion, static-IP release, and device acceptance are separate external
+gates and remain `blocked`, `not-run`, or `risky_not_executed` without explicit
+authorization and evidence.
 
 ## References
 
-- Read [architecture.md](references/architecture.md) for module boundaries and shared interfaces.
-- Read [acceptance.md](references/acceptance.md) for status vocabulary and local/external evidence rules.
-- Read [versioning-and-recovery.md](references/versioning-and-recovery.md) for commits, tags, backups, and rollback safety.
+- [Project conventions](../../docs/project-conventions.md)
+- [Project ledger](../../docs/project-ledger.md)
+- [Architecture](references/architecture.md)
+- [Acceptance](references/acceptance.md)
+- [Versioning and recovery](references/versioning-and-recovery.md)
