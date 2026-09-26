@@ -8,6 +8,9 @@ if BASE_SECRET_KEY == "development-only-change-me":
     raise RuntimeError("XRAY_SECRET_KEY must be set in production")
 if not BASE_ALLOWED_HOSTS:
     raise RuntimeError("XRAY_ALLOWED_HOSTS must contain at least one host")
+
+# The password-only test bypass is never allowed in production.
+XRAY_DISABLE_TOTP = False
 if not os.getenv("XRAY_DATABASE_URL"):
     raise RuntimeError("XRAY_DATABASE_URL must be set in production")
 DEBUG = False

@@ -104,6 +104,10 @@ def password_login(request, username: str, password: str) -> dict:
         session_binding=_session_binding(request),
         expires_at=timezone.now() + timedelta(seconds=settings.MFA_CHALLENGE_SECONDS),
     )
+    if getattr(settings, "XRAY_DISABLE_TOTP", False):
+        response = _start_session(request, admin, challenge)
+        response.update(mfa_required=False, totp_setup_required=False)
+        return response
     request.session["mfa_challenge_id"] = str(challenge.pk)
     request.session.set_expiry(settings.MFA_CHALLENGE_SECONDS)
     return {

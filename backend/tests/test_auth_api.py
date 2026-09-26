@@ -1,5 +1,6 @@
 import pyotp
 import pytest
+from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -30,6 +31,19 @@ def test_password_only_cannot_access_management(admin, csrf_client):
     assert response.json()["authenticated"] if "authenticated" in response.json() else True
     assert csrf_client.get("/api/v1/auth/session").json()["authenticated"] is False
     assert csrf_client.get("/api/v1/system").status_code in (401, 403)
+
+
+@override_settings(XRAY_DISABLE_TOTP=True)
+def test_test_only_totp_bypass_starts_server_session(admin, csrf_client):
+    response = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    assert response.status_code == 200
+    assert response.json()["authenticated"] is True
+    assert response.json()["admin"]["username"] == admin.username
+    assert csrf_client.get("/api/v1/auth/session").json()["authenticated"] is True
 
 
 def test_first_login_binds_totp_and_returns_recovery_codes(admin, csrf_client):

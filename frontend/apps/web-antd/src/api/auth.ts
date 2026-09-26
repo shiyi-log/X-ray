@@ -9,7 +9,9 @@ export interface AdminSession {
 }
 
 export interface LoginChallenge {
-  challenge_id: string;
+  authenticated?: boolean;
+  admin?: { username: string };
+  challenge_id?: string;
   mfa_required: boolean;
   totp_setup_required: boolean;
   expires_at: string;

@@ -42,7 +42,9 @@ async function submitPassword() {
   try {
     const challenge = await session.passwordLogin(username.value, password.value);
     password.value = '';
-    if (challenge.totp_setup_required) {
+    if (challenge.authenticated) {
+      await finishAuthentication();
+    } else if (challenge.totp_setup_required) {
       await session.beginTotpSetup();
       phase.value = 'setup';
     } else {

@@ -45,7 +45,16 @@ export const useSessionStore = defineStore('session', {
     async passwordLogin(username: string, password: string): Promise<LoginChallenge> {
       this.clearSensitive();
       const challenge = await authApi.login(username, password);
-      this.sensitive.challengeId = challenge.challenge_id;
+      this.sensitive.challengeId = challenge.challenge_id || '';
+      if (challenge.authenticated) {
+        this.session = {
+          authenticated: true,
+          mfa_required: false,
+          admin: challenge.admin,
+          expires_at: challenge.expires_at,
+          recent_auth_until: null,
+        };
+      }
       return challenge;
     },
     async beginTotpSetup(): Promise<TotpSetup> {
