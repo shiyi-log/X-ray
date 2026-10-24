@@ -19,12 +19,21 @@ const FormItem = Form.Item;
 const columns = [
   { title: '节点', dataIndex: 'name', key: 'name' },
   { title: '平台/区域', key: 'provider' },
-  { title: '云原始状态', dataIndex: 'raw_cloud_state', key: 'raw_cloud_state' },
+  { title: '云端原始状态', dataIndex: 'raw_cloud_state', key: 'raw_cloud_state' },
   { title: '部署', dataIndex: 'provisioning_state', key: 'provisioning_state' },
   { title: '健康', dataIndex: 'health_state', key: 'health_state' },
   { title: '安全', dataIndex: 'security_state', key: 'security_state' },
-  { title: 'Generation', key: 'generation' },
+  { title: '配置代次', key: 'generation' },
 ];
+
+const providerLabels: Record<string, string> = {
+  aws_lightsail: 'AWS Lightsail',
+  aliyun_swas: '阿里云 SWAS',
+};
+
+function providerLabel(provider: string) {
+  return providerLabels[provider] ?? provider;
+}
 
 const router = useRouter();
 const { data, loading, error, reload } = useResource(resourcesApi.nodes);
@@ -99,7 +108,7 @@ async function createNode() {
               <div class="text-xs text-muted-foreground">{{ record.external_id || record.id }}</div>
             </div>
             <div v-else-if="column.key === 'provider'">
-              {{ record.provider }}
+              {{ providerLabel(record.provider) }}
               <div class="text-xs text-muted-foreground">{{ record.region }}</div>
             </div>
             <StatusBadge v-else-if="column.key === 'raw_cloud_state'" :value="record.raw_cloud_state || 'UNKNOWN'" />

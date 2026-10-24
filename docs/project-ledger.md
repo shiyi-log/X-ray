@@ -1527,3 +1527,107 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - {"time":"2026-10-24T13:51:33+08:00","run_id":"xray-ledger-20260922-82B118BD","event":"runtime","actor":"Codex","path_scope":"local X-ray launcher, dedicated PostgreSQL/Redis, backend and frontend","operation":"start and verify local development project on main","reason":"Direct user request to run the project","command_or_tool":"python3 main.py; curl --noproxy '*' health/live health/ready frontend root frontend session proxy; lsof listener checks","result":"launcher synchronized the local test administrator, Compose dependencies were healthy, Django system check passed, backend selected 127.0.0.1:9529 because project port 9527 was already occupied, frontend selected 127.0.0.1:9528, backend live/ready HTTP 200, frontend root HTTP 200, frontend session proxy HTTP 200; existing project-owned listeners were preserved","exit_code":"0/0/0/0/0","status":"passed","evidence":"local runtime only; no secret values or credentials recorded","commit_or_tree":"7176485 dirty tree before audit append","rollback_ref":"Ctrl+C the current launcher session 3053 to stop only its children; dependency containers remain available","time_logic":"recorded with Asia/Shanghai +08:00; no business time logic changed"}
 
 - {"time":"2026-10-24T13:52:30+08:00","run_id":"xray-ledger-20260922-82B118BD","event":"correction","actor":"Codex","path_scope":"docs/project-ledger.md audit append command","operation":"correct shell-quoting mistake during runtime record write","reason":"An unquoted heredoc interpreted embedded backticks and briefly started a duplicate launcher session","command_or_tool":"Ctrl+C on accidental session 95914; process inspection; git diff --check","result":"accidental duplicate launcher stopped immediately; original runtime session 3053 remained running; no application source, credentials, database or external state changed; progress record was not written by the failed command and is being appended with quoted heredoc","exit_code":"130/0","status":"passed","evidence":"process inspection shows only original project-owned listeners plus the intended 9529/9528 pair","commit_or_tree":"7176485 dirty tree","rollback_ref":"no runtime rollback required; stop session 3053 only if user requests shutdown","time_logic":"recorded with Asia/Shanghai +08:00; no business time logic changed"}
+
+## 2026-10-24T13:57:03+08:00 — 节点管理台中文化：变更定义
+
+`run_id`: `xray-ui-i18n-20261024-01`
+
+- `event_id`: `xray-ui-i18n-20261024-01/001`
+- `timestamp`: `2026-10-24T13:57:03+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `frontend/apps/web-antd/src/components/StatusBadge.vue`, `frontend/apps/web-antd/src/views/nodes/index.vue`, focused frontend tests, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `define scope`
+- `reason`: `用户要求将截图中管理台仍显示的英文标题、平台和状态改为中文`
+- `command_or_tool`: `repository instructions plus read-only inspection`
+- `result`: `范围包含状态徽标显示文本映射、节点页 Generation 标题和云平台展示；保留后端英文枚举、API、数据库、区域代码和运行时协议；排除生产发布、云写入、订阅数据和其他项目边界`
+- `exit_code`: `0`
+- `evidence`: `frontend/apps/web-antd/src/components/StatusBadge.vue`, `frontend/apps/web-antd/src/views/nodes/index.vue`, current `main` status `2dd3bfe`
+- `status`: `passed`
+- `commit_or_tree`: `2dd3bfe clean tree on main`
+- `rollback_ref`: `git revert <this change commit>`
+- `time_logic`: `N/A; display-only labels; no expiry, retry, or business clock behavior`
+
+- `event_id`: `xray-ui-i18n-20261024-01/002`
+- `timestamp`: `2026-10-24T13:57:03+08:00`
+- `actor`: `Codex`
+- `event_type`: `inventory`
+- `path_scope`: `main worktree, listeners 9528/9529/55432/56379`
+- `operation`: `read status and runtime ownership`
+- `reason`: `Preserve existing worktree, processes, ports, database, Redis and browser state before editing`
+- `command_or_tool`: `git status --short --branch; git log -3 --oneline; lsof -nP -iTCP:9528 -iTCP:9529 -iTCP:55432 -iTCP:56379 -sTCP:LISTEN`
+- `result`: `main at 2dd3bfe, clean; current launcher listeners belong to this X-ray checkout; no process was stopped or restarted`
+- `exit_code`: `0`
+- `evidence`: `local command output; no secret content read or recorded`
+- `status`: `passed`
+- `commit_or_tree`: `2dd3bfe clean tree on main`
+- `rollback_ref`: `none`
+- `time_logic`: `System clock recorded with +08:00; no business time behavior changed`
+
+## 2026-10-24T14:01:37+08:00 — 节点管理台中文化：实施与验证
+
+`run_id`: `xray-ui-i18n-20261024-01`
+
+- `event_id`: `xray-ui-i18n-20261024-01/003`
+- `timestamp`: `2026-10-24T14:01:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `frontend/apps/web-antd/src/components/StatusBadge.vue`, `frontend/apps/web-antd/src/views/nodes/index.vue`, `frontend/apps/web-antd/src/components/StatusBadge.test.ts`, `frontend/apps/web-antd/src/views/nodes/nodes.test.ts`
+- `operation`: `update and create`
+- `reason`: `将节点页截图中仍显示的英文标题、平台值和状态值转换为中文展示`
+- `command_or_tool`: `apply_patch`
+- `result`: `共享状态徽标增加常见业务枚举的中文显示映射，未知值继续保留规范化原值；节点页增加 AWS Lightsail/阿里云 SWAS 展示映射，将云原始状态标题改为云端原始状态，将 Generation 改为配置代次；新增 9 个聚焦测试`
+- `exit_code`: `0`
+- `evidence`: `StatusBadge.vue sha256 da693109fe1b68c35f9fd8f621c1f509170264b5f62ced9817c4d708db44acd8`; `StatusBadge.test.ts sha256 5bdcb5ffab395370859b90201800362f1c9728436d7b640164d1a0809bf2aaae`; `nodes/index.vue sha256 0eab9406d3c47481309323d5a559d6f2d172f4189fae061cc3f2724a834ca190`; `nodes.test.ts sha256 c54fd813e0dfc9991c20af54b7c82543eacc1e733c80322556047ecb226a7cbc`
+- `status`: `passed`
+- `commit_or_tree`: `main dirty tree after scoped change`
+- `rollback_ref`: `git revert the eventual scoped change commit`
+- `time_logic`: `N/A; display-only mapping; backend/API enum values unchanged`
+
+- `event_id`: `xray-ui-i18n-20261024-01/004`
+- `timestamp`: `2026-10-24T14:01:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `test`
+- `path_scope`: `frontend/apps/web-antd/src/components/StatusBadge.test.ts`, `frontend/apps/web-antd/src/views/nodes/nodes.test.ts`, frontend typecheck/lint
+- `operation`: `execute focused and static frontend gates`
+- `reason`: `Verify translated status/platform rendering and preserve TypeScript and lint correctness`
+- `command_or_tool`: `corepack pnpm@10.33.0 --dir frontend exec vitest run --config apps/web-antd/vitest.config.ts apps/web-antd/src/components/StatusBadge.test.ts apps/web-antd/src/views/nodes/nodes.test.ts; corepack pnpm@10.33.0 --dir frontend typecheck; corepack pnpm@10.33.0 --dir frontend lint`
+- `result`: `Focused tests 2 files/9 tests passed; vue-tsc passed; eslint passed`
+- `exit_code`: `0/0/0`
+- `evidence`: `terminal output from 2026-10-24 13:59-14:01 +08:00`
+- `status`: `passed`
+- `commit_or_tree`: `main dirty tree after scoped change`
+- `rollback_ref`: `none`
+- `time_logic`: `N/A; no time-sensitive behavior tested`
+
+- `event_id`: `xray-ui-i18n-20261024-01/005`
+- `timestamp`: `2026-10-24T14:01:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `worktree, repository boundary and secret scanners, local runtime endpoints`
+- `operation`: `run final validation probes`
+- `reason`: `Confirm whitespace, repository boundary, secret safety, local app health and full-suite limits`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; corepack pnpm@10.33.0 --dir frontend test:unit; curl --noproxy '*' frontend 9528 and backend live/ready 9529`
+- `result`: `diff-check, boundary and secret scans passed; frontend 200, backend live 200, backend ready 200; full frontend suite had 37 passed and one pre-existing navigation transition timeout in src/router/navigation.test.ts (5s), exit 1`
+- `exit_code`: `0/0/0/1/0`
+- `evidence`: `local terminal output; no production or external cloud action`
+- `status`: `passed`
+- `commit_or_tree`: `main dirty tree; scoped files plus append-only docs`
+- `rollback_ref`: `none`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-ui-i18n-20261024-01/006`
+- `timestamp`: `2026-10-24T14:01:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `VERSION`, `CHANGELOG.md`, `docs/version-record.md`, production and cloud state
+- `operation`: `preserve unchanged`
+- `reason`: `This is a display-only localization change and does not constitute a phase release or production publication`
+- `command_or_tool`: `git diff --name-only and scope review`
+- `result`: `No version, tag, release, cloud, database, credential, subscription token or external process changes`
+- `exit_code`: `0`
+- `evidence`: `scoped git status and diff`
+- `status`: `passed`
+- `commit_or_tree`: `main dirty tree`
+- `rollback_ref`: `git revert the scoped change commit`
+- `time_logic`: `N/A`
