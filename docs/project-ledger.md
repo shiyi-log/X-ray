@@ -1735,3 +1735,19 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `ef06acf clean tree on main before audit append`
 - `rollback_ref`: `none`
 - `time_logic`: `System clock recorded with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-node-pool-region-20261024-01/008`
+- `timestamp`: `2026-10-24T14:57:40+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `main worktree, docs/project-ledger.md, docs/progress.md, origin/main, local frontend/backend listeners`
+- `operation`: `append final audit evidence without rewriting prior ledger entries`
+- `reason`: `完成提交推送后的收尾记录，并保持台账追加式历史`
+- `command_or_tool`: `git restore --source=HEAD -- docs/project-ledger.md; append-only audit event; git diff --check; git status --short --branch`
+- `result`: `此前提交中的节点池事件保持原样；新增本收尾事件；docs/progress.md 仍记录多地区交付和既有前端超时；仅文档待提交，运行服务与远程 main 不变`
+- `exit_code`: `0/0/0`
+- `evidence`: `local Git output; no secret-bearing content`
+- `status`: `passed`
+- `commit_or_tree`: `8af942e plus pending audit-doc changes`
+- `rollback_ref`: `git revert the audit-doc commit only; implementation rollback remains git revert 8af942e`
+- `time_logic`: `System clock +08:00; no business time behavior changed`
