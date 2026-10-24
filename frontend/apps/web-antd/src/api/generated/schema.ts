@@ -586,7 +586,7 @@ export interface components {
                 readonly available: number;
                 readonly quota: number;
                 /** @enum {string} */
-                readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2" | "eu-west-1";
+                readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
                 readonly used: number;
             }[];
             readonly allow_create: boolean;
@@ -598,8 +598,8 @@ export interface components {
             readonly name: string;
             readonly quota: number;
             /** @enum {string} */
-            readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2" | "eu-west-1";
-            readonly regions: readonly ("ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2" | "eu-west-1")[];
+            readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+            readonly regions: readonly ("ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2")[];
             /** Format: date-time */
             readonly updated_at?: string;
             readonly used: number;

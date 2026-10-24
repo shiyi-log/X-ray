@@ -35,7 +35,7 @@ def test_normalize_region_defaults_blank_values_to_singapore():
     assert normalize_region("") == DEFAULT_REGION
     assert normalize_region("  ") == DEFAULT_REGION
     assert normalize_region(None) == DEFAULT_REGION
-    assert normalize_region("eu-west-1") == "eu-west-1"
+    assert normalize_region("ap-east-1") == "ap-east-1"
 
 
 def test_cloud_account_create_accepts_blank_region_and_uses_singapore():
@@ -60,11 +60,11 @@ def test_node_pool_create_and_patch_expose_normalized_region(cloud_account):
 
     created = client.post(
         "/api/v1/node-pools/",
-        {"name": "Singapore pool", "quota": 2, "region": "  eu-west-1  "},
+        {"name": "Hong Kong pool", "quota": 2, "region": "  ap-east-1  "},
         format="json",
     )
     assert created.status_code == 201
-    assert created.json()["region"] == "eu-west-1"
+    assert created.json()["region"] == "ap-east-1"
 
     pool_id = created.json()["id"]
     updated = client.patch(
@@ -85,7 +85,7 @@ def test_node_pool_create_and_patch_expose_normalized_region(cloud_account):
     )
     blocked = client.patch(
         f"/api/v1/node-pools/{pool_id}/",
-        {"region": "eu-west-1"},
+        {"region": "ap-east-1"},
         format="json",
     )
     assert blocked.status_code == 409
@@ -143,7 +143,7 @@ def test_node_create_accepts_omitted_region_and_uses_singapore(monkeypatch):
 def test_node_create_inherits_custom_pool_region_and_rejects_mismatch(cloud_account, monkeypatch):
     from apps.nodes.quota import reserve_node
 
-    pool = NodePool.objects.create(name=f"pool-{uuid4()}", region="eu-west-1", quota=1)
+    pool = NodePool.objects.create(name=f"pool-{uuid4()}", region="ap-east-1", quota=1)
     node = reserve_node(
         pool.pk,
         account_id=cloud_account.pk,
@@ -152,7 +152,7 @@ def test_node_create_inherits_custom_pool_region_and_rejects_mismatch(cloud_acco
         image_id="debian-12",
         operation_key=uuid4(),
     )
-    assert node.region == "eu-west-1"
+    assert node.region == "ap-east-1"
 
     with pytest.raises(DomainError) as caught:
         reserve_node(
@@ -296,7 +296,7 @@ def test_node_pool_rejects_unsupported_region_allocation():
         "/api/v1/node-pools/",
         {
             "name": "unsupported region pool",
-            "allocations": [{"region": "test-region", "quota": 1}],
+            "allocations": [{"region": "eu-west-1", "quota": 1}],
         },
         format="json",
     )

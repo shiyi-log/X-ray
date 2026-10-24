@@ -1,6 +1,11 @@
 import { DOMWrapper, flushPromises, mount } from '@vue/test-utils';
 
-import { resourcesApi, type NodePool, type Page } from '@/api/resources';
+import {
+  resourcesApi,
+  SUPPORTED_REGIONS,
+  type NodePool,
+  type Page,
+} from '@/api/resources';
 
 import NodePools from './index.vue';
 
@@ -14,6 +19,8 @@ function inputFor(dialog: DOMWrapper<Element>, labelText: string) {
 
 describe('node pool region allocation', () => {
   it('shows per-region allocation and submits multiple preset regions', async () => {
+    expect(SUPPORTED_REGIONS).not.toContain('eu-west-1');
+
     const page: Page<NodePool> = {
       items: [{
         id: 'pool-1', name: '新加坡池', region: 'ap-southeast-1', quota: 3,

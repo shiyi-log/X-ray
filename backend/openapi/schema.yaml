@@ -1424,7 +1424,6 @@ components:
           - ap-east-1
           - us-east-1
           - us-west-2
-          - eu-west-1
         regions:
           type: array
           items:
@@ -1435,7 +1434,6 @@ components:
             - ap-east-1
             - us-east-1
             - us-west-2
-            - eu-west-1
         allocations:
           type: array
           items:
@@ -1454,7 +1452,6 @@ components:
                 - ap-east-1
                 - us-east-1
                 - us-west-2
-                - eu-west-1
               quota:
                 type: integer
                 minimum: 1

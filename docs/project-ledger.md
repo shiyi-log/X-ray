@@ -1767,3 +1767,87 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `4cd1d95 clean before this final docs correction`
 - `rollback_ref`: `git revert 4cd1d95 for docs-only rollback; application rollback remains git revert 8af942e`
 - `time_logic`: `System clock +08:00; no business time behavior changed`
+
+## 2026-10-24T15:09:37+08:00 — 移除英国节点池预设地区：变更定义
+
+`run_id`: `xray-supported-regions-20261024-01`
+
+- `event_id`: `xray-supported-regions-20261024-01/001`
+- `timestamp`: `2026-10-24T15:09:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `backend/common/regions.py`, `frontend/apps/web-antd/src/api/resources.ts`, `backend/openapi/schema.yaml`, `frontend/apps/web-antd/src/api/generated/schema.ts`, focused region tests, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `define scope`
+- `reason`: `用户授权移除不支持的英国地区 eu-west-1`
+- `command_or_tool`: `rg` inventory and repository contract review
+- `result`: `从节点池预设地区目录、前端下拉选项和 OpenAPI 枚举中移除 eu-west-1；将合法地区测试改用仍支持的 ap-east-1；新增/保留 eu-west-1 作为不支持节点池分配的拒绝用例；不清理历史数据库记录、不修改云适配器实时 list_regions 能力、不触碰时区 Europe/London 选项`
+- `exit_code`: `0`
+- `evidence`: `main at 2f6e34f5cd39cfd032297578e75b310d7f9f1ac9; worktree clean before this task; exact search found only the listed contract/test occurrences`
+- `status`: `passed`
+- `commit_or_tree`: `2f6e34f clean tree on main`
+- `rollback_ref`: `git revert the scoped implementation commit; generated OpenAPI/TypeScript files revert with the same commit`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-supported-regions-20261024-01/002`
+- `timestamp`: `2026-10-24T15:14:38+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `backend/common/regions.py`, `frontend/apps/web-antd/src/api/resources.ts`, `backend/tests/test_region_defaults.py`, `frontend/apps/web-antd/src/views/node-pools/node-pool.test.ts`
+- `operation`: `remove unsupported preset region and update focused coverage`
+- `reason`: `Apply the authorized removal of eu-west-1 from node-pool presets`
+- `command_or_tool`: `apply_patch`
+- `result`: `eu-west-1 removed from backend/frontend supported-region constants; legal-region fixtures use ap-east-1; backend rejects eu-west-1 node-pool allocation; frontend asserts the preset list excludes eu-west-1`
+- `exit_code`: `0`
+- `evidence`: `git diff and focused source inspection`
+- `status`: `passed`
+- `commit_or_tree`: `2f6e34f plus scoped working-tree changes`
+- `rollback_ref`: `git revert the scoped implementation commit`
+- `time_logic`: `No business time logic changed`
+
+- `event_id`: `xray-supported-regions-20261024-01/003`
+- `timestamp`: `2026-10-24T15:14:38+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `backend/openapi/schema.yaml`, `frontend/apps/web-antd/src/api/generated/schema.ts`
+- `operation`: `regenerate API contract artifacts`
+- `reason`: `Keep OpenAPI and generated TypeScript enums consistent with SUPPORTED_REGIONS`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL=<redacted test-only value> uv run --project backend python backend/manage.py spectacular --file backend/openapi/schema.yaml --validate --settings=config.settings.test; corepack pnpm@10.33.0 --dir frontend generate:api`
+- `result`: `OpenAPI validation passed and generated TypeScript removed eu-west-1 from all NodePool region unions`
+- `exit_code`: `0/0`
+- `evidence`: `backend/openapi/schema.yaml and frontend/apps/web-antd/src/api/generated/schema.ts diff`
+- `status`: `passed`
+- `commit_or_tree`: `2f6e34f plus scoped working-tree changes`
+- `rollback_ref`: `git revert the scoped implementation commit`
+- `time_logic`: `No business time logic changed`
+
+- `event_id`: `xray-supported-regions-20261024-01/004`
+- `timestamp`: `2026-10-24T15:14:38+08:00`
+- `actor`: `Codex`
+- `event_type`: `test`
+- `path_scope`: `backend/tests/test_region_defaults.py`, `backend/tests/test_operation_fencing.py`, `frontend/apps/web-antd/src/views/node-pools/node-pool.test.ts`
+- `operation`: `focused regression verification`
+- `reason`: `Verify legal regions remain usable and eu-west-1 is rejected for node-pool allocation`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL=<redacted test-only value> uv run --project backend pytest -c backend/pyproject.toml backend/tests/test_region_defaults.py backend/tests/test_operation_fencing.py -q; corepack pnpm@10.33.0 --dir frontend exec vitest run --config apps/web-antd/vitest.config.ts apps/web-antd/src/views/node-pools/node-pool.test.ts; corepack pnpm@10.33.0 --dir frontend typecheck`
+- `result`: `backend 11 passed; frontend focused 1 passed; frontend typecheck passed`
+- `exit_code`: `0/0/0`
+- `evidence`: `local test command output; dedicated PostgreSQL only; no cloud calls`
+- `status`: `passed`
+- `commit_or_tree`: `2f6e34f plus scoped working-tree changes`
+- `rollback_ref`: `git revert the scoped implementation commit`
+- `time_logic`: `No business time logic changed`
+
+- `event_id`: `xray-supported-regions-20261024-01/005`
+- `timestamp`: `2026-10-24T15:14:38+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `OpenAPI artifacts, boundary/secret checks, changed files`
+- `operation`: `static and generated-artifact gates`
+- `reason`: `Confirm deterministic generated outputs and repository boundaries before commit`
+- `command_or_tool`: `two-pass spectacular generation and cmp; frontend generate:api and cmp; git diff --check; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; focused ESLint`
+- `result`: `OpenAPI generation deterministic; frontend generation idempotent; diff-check, boundary, secret scan and focused ESLint passed`
+- `exit_code`: `0/0/0/0/0/0`
+- `evidence`: `local command output; no secret-bearing content`
+- `status`: `passed`
+- `commit_or_tree`: `2f6e34f plus scoped working-tree changes`
+- `rollback_ref`: `git revert the scoped implementation commit`
+- `time_logic`: `No business time logic changed`

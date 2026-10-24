@@ -65,7 +65,6 @@ export const SUPPORTED_REGIONS = [
   'ap-east-1',
   'us-east-1',
   'us-west-2',
-  'eu-west-1',
 ] as const;
 
 const json = (method: string, body?: unknown, headers?: HeadersInit): RequestInit => ({

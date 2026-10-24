@@ -10,7 +10,6 @@ SUPPORTED_REGIONS = (
     "ap-east-1",
     "us-east-1",
     "us-west-2",
-    "eu-west-1",
 )
 
 
