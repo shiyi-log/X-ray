@@ -37,7 +37,7 @@ def test_reconcile_after_restore_locks_nodes_and_invalidates_old_worker_leases()
         encrypted_credentials={"test": "opaque"},
         identity_verified_at=django_timezone.now(),
     )
-    pool = NodePool.objects.create(name="restore-pool", quota=1)
+    pool = NodePool.objects.create(name="restore-pool", region="us-east-1", quota=1)
     key = uuid4()
     node = reserve_node(
         pool.pk,

@@ -11,7 +11,7 @@ from common.errors import DomainError
 from common.regions import normalize_region
 
 from .models import ManagedNode, NodePool
-from .quota import reserve_node, set_quota
+from .quota import reserve_node, set_allocations, set_quota
 from .serializers import node_pool_representation, node_representation
 
 
@@ -44,14 +44,34 @@ def pool_collection(request):
         )
     payload = json_payload(request)
     name = str(payload.get("name") or "").strip()
-    quota = int(payload.get("quota", 3))
-    if not name or quota < 1:
-        raise ValueError("name is required and quota must be at least 1")
-    pool = NodePool.objects.create(
-        name=name,
-        quota=quota,
-        allow_create=bool(payload.get("allow_create", True)),
-    )
+    if not name:
+        raise ValueError("name is required")
+    raw_allocations = payload.get("allocations")
+    if raw_allocations is None:
+        region = normalize_region(payload.get("region"))
+        quota = int(payload.get("quota", 3))
+        if quota < 1:
+            raise ValueError("quota must be at least 1")
+        allocations = [{"region": region, "quota": quota}]
+    else:
+        allocations = raw_allocations
+    if not isinstance(allocations, list) or not allocations:
+        raise ValueError("allocations must be a non-empty list")
+    if any(not isinstance(item, dict) for item in allocations):
+        raise ValueError("each allocation must be an object")
+    if any(int(item.get("quota", 0)) < 1 for item in allocations):
+        raise ValueError("allocation quota must be at least 1")
+    # Validate and persist the allocation rows atomically so invalid input
+    # cannot leave a partially created pool behind.
+    with transaction.atomic():
+        pool = NodePool.objects.create(
+            name=name,
+            region=normalize_region(allocations[0].get("region")),
+            quota=sum(int(item.get("quota", 0)) for item in allocations),
+            allow_create=bool(payload.get("allow_create", True)),
+        )
+        set_allocations(pool.pk, allocations)
+    pool.refresh_from_db()
     return JsonResponse(node_pool_representation(pool), status=201)
 
 
@@ -61,21 +81,42 @@ def pool_detail(request, pool_id):
     if request.method == "GET":
         return JsonResponse(node_pool_representation(pool))
     payload = json_payload(request)
-    unknown = set(payload) - {"name", "quota", "allow_create"}
+    unknown = set(payload) - {"name", "region", "quota", "allocations", "allow_create"}
     if unknown:
         raise ValueError(f"unsupported fields: {sorted(unknown)}")
-    if "quota" in payload:
+    if "allocations" in payload:
+        pool = set_allocations(pool.pk, payload["allocations"])
+    elif "quota" in payload:
         pool = set_quota(pool.pk, int(payload["quota"]))
     if "name" in payload:
         name = str(payload["name"]).strip()
         if not name:
             raise ValueError("name cannot be empty")
         pool.name = name
+    if "region" in payload and "allocations" not in payload:
+        region = normalize_region(payload["region"])
+        current = list(pool.region_allocations.all())
+        if len(current) > 1:
+            raise DomainError(
+                "MULTI_REGION_ALLOCATION_REQUIRED",
+                "多地区节点池必须通过 allocations 调整地区",
+                status_code=400,
+            )
+        current_quota = current[0].quota if current else pool.quota
+        if region != pool.region and pool.nodes.filter(consumes_quota=True).exists():
+            raise DomainError(
+                "POOL_REGION_IN_USE",
+                "节点池已有占用中的节点，不能更改地区",
+                status_code=409,
+            )
+        set_allocations(pool.pk, [{"region": region, "quota": current_quota}])
+        pool.refresh_from_db()
     if "allow_create" in payload:
         if not isinstance(payload["allow_create"], bool):
             raise ValueError("allow_create must be boolean")
         pool.allow_create = payload["allow_create"]
-    pool.save(update_fields=["name", "allow_create", "updated_at"])
+    pool.save(update_fields=["name", "region", "allow_create", "updated_at"])
+    pool.refresh_from_db()
     return JsonResponse(node_pool_representation(pool))
 
 
@@ -97,10 +138,18 @@ def node_collection(request):
     if any(not payload.get(field) for field in required):
         raise ValueError(f"required fields: {', '.join(required)}")
     with transaction.atomic():
+        pool = NodePool.objects.get(pk=_uuid(payload["pool_id"], "pool_id"))
+        requested_region = payload.get("region")
+        if requested_region is None or not str(requested_region).strip():
+            allocations = list(pool.region_allocations.all())
+            if len(allocations) <= 1:
+                requested_region = pool.region
+            else:
+                requested_region = None
         node = reserve_node(
             _uuid(payload["pool_id"], "pool_id"),
             account_id=_uuid(payload["account_id"], "account_id"),
-            region=normalize_region(payload.get("region")),
+            region=requested_region,
             plan_id=str(payload["plan_id"]),
             image_id=str(payload["image_id"]),
             operation_key=key,

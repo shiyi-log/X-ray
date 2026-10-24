@@ -56,7 +56,7 @@ def test_both_provider_kinds_use_same_lifecycle_contract(
     cloud_account.provider = provider
     cloud_account.external_account_id = f"fake-{provider}"
     cloud_account.save(update_fields=["provider", "external_account_id", "updated_at"])
-    pool = NodePool.objects.create(name=f"pool-{provider}", quota=1)
+    pool = NodePool.objects.create(name=f"pool-{provider}", region="test-region", quota=1)
     key = uuid4()
     node = reserve_node(
         pool.pk,

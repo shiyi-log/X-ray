@@ -1,16 +1,42 @@
 from __future__ import annotations
 
-from .models import ManagedNode, NodePool
+from .models import ManagedNode, NodePool, NodePoolRegionAllocation
+
+
+def _allocation_representation(allocation: NodePoolRegionAllocation, *, used: int) -> dict:
+    return {
+        "region": allocation.region,
+        "quota": allocation.quota,
+        "used": used,
+        "available": max(allocation.quota - used, 0),
+    }
 
 
 def node_pool_representation(pool: NodePool) -> dict:
-    used = pool.nodes.filter(consumes_quota=True).count()
+    allocations = list(pool.region_allocations.all())
+    if not allocations:
+        allocations = [
+            NodePoolRegionAllocation(
+                pool=pool, region=pool.region, quota=max(int(pool.quota or 1), 1)
+            )
+        ]
+    allocation_payload = []
+    for allocation in allocations:
+        used = pool.nodes.filter(
+            region=allocation.region, consumes_quota=True
+        ).count()
+        allocation_payload.append(_allocation_representation(allocation, used=used))
+    used = sum(item["used"] for item in allocation_payload)
+    quota = sum(item["quota"] for item in allocation_payload)
     return {
         "id": str(pool.pk),
         "name": pool.name,
-        "quota": pool.quota,
+        "region": allocations[0].region,
+        "regions": [item["region"] for item in allocation_payload],
+        "allocations": allocation_payload,
+        "quota": quota,
         "used": used,
-        "available": max(pool.quota - used, 0),
+        "available": max(quota - used, 0),
         "allow_create": pool.allow_create,
         "created_at": pool.created_at.isoformat(),
         "updated_at": pool.updated_at.isoformat(),

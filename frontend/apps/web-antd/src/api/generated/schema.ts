@@ -582,6 +582,13 @@ export interface components {
             readonly updated_at?: string;
         };
         readonly NodePool: {
+            readonly allocations: readonly {
+                readonly available: number;
+                readonly quota: number;
+                /** @enum {string} */
+                readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2" | "eu-west-1";
+                readonly used: number;
+            }[];
             readonly allow_create: boolean;
             readonly available: number;
             /** Format: date-time */
@@ -590,6 +597,9 @@ export interface components {
             readonly id: string;
             readonly name: string;
             readonly quota: number;
+            /** @enum {string} */
+            readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2" | "eu-west-1";
+            readonly regions: readonly ("ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2" | "eu-west-1")[];
             /** Format: date-time */
             readonly updated_at?: string;
             readonly used: number;

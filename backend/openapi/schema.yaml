@@ -1403,6 +1403,9 @@ components:
       required:
       - id
       - name
+      - region
+      - regions
+      - allocations
       - quota
       - used
       - available
@@ -1413,6 +1416,54 @@ components:
           format: uuid
         name:
           type: string
+        region:
+          type: string
+          enum:
+          - ap-southeast-1
+          - ap-northeast-1
+          - ap-east-1
+          - us-east-1
+          - us-west-2
+          - eu-west-1
+        regions:
+          type: array
+          items:
+            type: string
+            enum:
+            - ap-southeast-1
+            - ap-northeast-1
+            - ap-east-1
+            - us-east-1
+            - us-west-2
+            - eu-west-1
+        allocations:
+          type: array
+          items:
+            type: object
+            required:
+            - region
+            - quota
+            - used
+            - available
+            properties:
+              region:
+                type: string
+                enum:
+                - ap-southeast-1
+                - ap-northeast-1
+                - ap-east-1
+                - us-east-1
+                - us-west-2
+                - eu-west-1
+              quota:
+                type: integer
+                minimum: 1
+              used:
+                type: integer
+                minimum: 0
+              available:
+                type: integer
+                minimum: 0
         quota:
           type: integer
         used:

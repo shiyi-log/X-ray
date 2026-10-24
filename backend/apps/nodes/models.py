@@ -5,11 +5,13 @@ import uuid
 from django.db import models
 
 from apps.cloud_accounts.models import CloudAccount, CloudCredentialVersion
+from common.regions import DEFAULT_REGION
 
 
 class NodePool(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120, unique=True)
+    region = models.CharField(max_length=120, default=DEFAULT_REGION)
     quota = models.PositiveIntegerField(default=3)
     allow_create = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -20,6 +22,35 @@ class NodePool(models.Model):
             models.CheckConstraint(
                 condition=models.Q(quota__gte=1), name="node_pool_quota_positive"
             )
+        ]
+
+
+class NodePoolRegionAllocation(models.Model):
+    """Quota assigned to one supported region within a node pool.
+
+    ``NodePool.region`` and ``NodePool.quota`` remain as compatibility fields for
+    existing callers and old fixtures. New pool APIs use this table so a single
+    pool can distribute capacity across several regions.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pool = models.ForeignKey(
+        NodePool, on_delete=models.CASCADE, related_name="region_allocations"
+    )
+    region = models.CharField(max_length=120)
+    quota = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["region", "pk"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["pool", "region"], name="unique_node_pool_region_allocation"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(quota__gte=1), name="node_pool_region_quota_positive"
+            ),
         ]
 
 

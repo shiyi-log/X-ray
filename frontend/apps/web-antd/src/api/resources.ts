@@ -2,7 +2,15 @@ import type { components } from './generated/schema';
 import { apiRequest } from './request';
 
 export type CloudAccount = components['schemas']['CloudAccount'];
-export type NodePool = components['schemas']['NodePool'];
+export interface NodePoolAllocation {
+  region: string;
+  quota: number;
+  used?: number;
+  available?: number;
+}
+export type NodePool = components['schemas']['NodePool'] & {
+  allocations?: readonly NodePoolAllocation[];
+};
 export type ManagedNode = components['schemas']['ManagedNode'];
 export type Operation = components['schemas']['Operation'];
 export interface ProfilePolicy {
@@ -50,6 +58,16 @@ export interface Capability {
   live_verified: boolean;
 }
 
+/** Regions accepted by the node-pool allocation API. */
+export const SUPPORTED_REGIONS = [
+  'ap-southeast-1',
+  'ap-northeast-1',
+  'ap-east-1',
+  'us-east-1',
+  'us-west-2',
+  'eu-west-1',
+] as const;
+
 const json = (method: string, body?: unknown, headers?: HeadersInit): RequestInit => ({
   method,
   body: body === undefined ? undefined : JSON.stringify(body),
@@ -65,7 +83,10 @@ export const resourcesApi = {
   capabilities: (id: string) =>
     apiRequest<{ items: Capability[] }>(`/api/v1/cloud-accounts/${id}/capabilities/`),
   nodePools: () => apiRequest<Page<NodePool>>('/api/v1/node-pools/'),
-  createNodePool: (payload: { name: string; quota: number }) =>
+  createNodePool: (payload: {
+    name: string;
+    allocations: { region: string; quota: number }[];
+  }) =>
     apiRequest<NodePool>('/api/v1/node-pools/', json('POST', payload)),
   updateNodePool: (id: string, payload: Partial<NodePool>) =>
     apiRequest<NodePool>(`/api/v1/node-pools/${id}/`, json('PATCH', payload)),

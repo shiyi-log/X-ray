@@ -10,7 +10,7 @@ def test_stopped_node_still_consumes_quota_and_blocks_replacement(cloud_account)
     from apps.nodes.models import NodePool
     from apps.nodes.quota import reserve_node
 
-    pool = NodePool.objects.create(name="replacement-full", quota=1)
+    pool = NodePool.objects.create(name="replacement-full", region="us-east-1", quota=1)
     original = reserve_node(
         pool.pk,
         account_id=cloud_account.pk,

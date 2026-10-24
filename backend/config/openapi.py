@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from common.regions import SUPPORTED_REGIONS
+
 
 def _ref(name: str) -> dict:
     return {"$ref": f"#/components/schemas/{name}"}
@@ -137,10 +139,38 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             },
             "NodePool": {
                 "type": "object",
-                "required": ["id", "name", "quota", "used", "available", "allow_create"],
+                "required": [
+                    "id",
+                    "name",
+                    "region",
+                    "regions",
+                    "allocations",
+                    "quota",
+                    "used",
+                    "available",
+                    "allow_create",
+                ],
                 "properties": {
                     "id": {"type": "string", "format": "uuid"},
                     "name": {"type": "string"},
+                    "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                    "regions": {
+                        "type": "array",
+                        "items": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                    },
+                    "allocations": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["region", "quota", "used", "available"],
+                            "properties": {
+                                "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                                "quota": {"type": "integer", "minimum": 1},
+                                "used": {"type": "integer", "minimum": 0},
+                                "available": {"type": "integer", "minimum": 0},
+                            },
+                        },
+                    },
                     "quota": {"type": "integer"},
                     "used": {"type": "integer"},
                     "available": {"type": "integer"},

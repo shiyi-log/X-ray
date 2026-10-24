@@ -39,7 +39,7 @@ def prepared_node(admin, cloud_account):
     from apps.nodes.quota import reserve_node
     from apps.operations.services import OperationService
 
-    pool = NodePool.objects.create(name=f"pool-{uuid4()}", quota=3)
+    pool = NodePool.objects.create(name=f"pool-{uuid4()}", region="us-east-1", quota=3)
     key = uuid4()
     node = reserve_node(
         pool.pk,

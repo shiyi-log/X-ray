@@ -5,33 +5,78 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from django.db import transaction
 
 from common.errors import DomainError
-from common.regions import normalize_region
+from common.regions import is_supported_region, normalize_region
 
-from .models import ManagedNode, NodePool
+from .models import ManagedNode, NodePool, NodePoolRegionAllocation
+
+
+def ensure_pool_allocations(pool: NodePool) -> list[NodePoolRegionAllocation]:
+    """Return allocations, creating a legacy single-region allocation if needed."""
+
+    allocations = list(pool.region_allocations.all())
+    if allocations:
+        return allocations
+    allocation = NodePoolRegionAllocation.objects.create(
+        pool=pool,
+        region=normalize_region(pool.region),
+        quota=max(int(pool.quota or 1), 1),
+    )
+    return [allocation]
 
 
 def reserve_node(
     pool_id: UUID,
     *,
     account_id: UUID,
-    region: str,
+    region: str | None = None,
     plan_id: str,
     image_id: str,
     operation_key: UUID,
 ) -> ManagedNode:
     from apps.cloud_accounts.models import CloudAccount
 
-    region = normalize_region(region)
     with transaction.atomic():
         pool = NodePool.objects.select_for_update().get(pk=pool_id)
-        if not pool.allow_create:
-            raise DomainError("POOL_CREATION_DISABLED", "节点池已禁止创建", status_code=409)
         existing = ManagedNode.objects.filter(pool=pool, operation_key=operation_key).first()
         if existing:
             return existing
-        used = ManagedNode.objects.filter(pool=pool, consumes_quota=True).count()
-        if used >= pool.quota:
-            raise DomainError("POOL_QUOTA_EXCEEDED", "节点额度已用完", status_code=409)
+        allocations = ensure_pool_allocations(pool)
+        if region is None or not str(region).strip():
+            if len(allocations) != 1:
+                raise DomainError(
+                    "POOL_REGION_REQUIRED",
+                    "多地区节点池创建节点时必须指定地区",
+                    status_code=400,
+                )
+            requested_region = allocations[0].region
+        else:
+            requested_region = normalize_region(region)
+        allocation = next(
+            (item for item in allocations if item.region == requested_region), None
+        )
+        if allocation is None:
+            if len(allocations) == 1:
+                raise DomainError(
+                    "POOL_REGION_MISMATCH",
+                    "节点地区必须与节点池已分配地区一致",
+                    status_code=409,
+                )
+            raise DomainError(
+                "POOL_REGION_UNALLOCATED",
+                "该地区未在节点池中分配额度",
+                status_code=409,
+            )
+        allocation = NodePoolRegionAllocation.objects.select_for_update().get(pk=allocation.pk)
+        region = allocation.region
+        if not pool.allow_create:
+            raise DomainError("POOL_CREATION_DISABLED", "节点池已禁止创建", status_code=409)
+        used = ManagedNode.objects.filter(
+            pool=pool, region=region, consumes_quota=True
+        ).count()
+        if used >= allocation.quota:
+            raise DomainError(
+                "POOL_QUOTA_EXCEEDED", "该地区节点额度已用完", status_code=409
+            )
         account = CloudAccount.objects.select_for_update().get(pk=account_id)
         if not account.enabled:
             raise DomainError("CLOUD_ACCOUNT_DISABLED", "云账号已停用", status_code=409)
@@ -80,9 +125,91 @@ def set_quota(pool_id: UUID, quota: int) -> NodePool:
         raise DomainError("INVALID_QUOTA", "额度必须至少为 1", status_code=400)
     with transaction.atomic():
         pool = NodePool.objects.select_for_update().get(pk=pool_id)
+        allocations = ensure_pool_allocations(pool)
         used = ManagedNode.objects.filter(pool=pool, consumes_quota=True).count()
         if quota < used:
-            raise DomainError("QUOTA_BELOW_USAGE", "额度不能低于当前占用", status_code=409)
+            raise DomainError(
+                "QUOTA_BELOW_USAGE", "额度不能低于当前占用", status_code=409
+            )
+        # Legacy quota updates resize the single allocation. For multi-region
+        # pools, callers should use set_allocations so each region is explicit.
+        if len(allocations) != 1:
+            raise DomainError(
+                "MULTI_REGION_ALLOCATION_REQUIRED",
+                "多地区节点池必须分别调整各地区额度",
+                status_code=400,
+            )
+        allocation = allocations[0]
+        region_used = ManagedNode.objects.filter(
+            pool=pool, region=allocation.region, consumes_quota=True
+        ).count()
+        if quota < region_used:
+            raise DomainError(
+                "QUOTA_BELOW_USAGE", "额度不能低于当前占用", status_code=409
+            )
+        allocation.quota = quota
+        allocation.save(update_fields=["quota", "updated_at"])
         pool.quota = quota
-        pool.save(update_fields=["quota", "updated_at"])
+        pool.region = allocation.region
+        pool.save(update_fields=["quota", "region", "updated_at"])
+        return pool
+
+
+def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
+    """Replace a pool's region allocations after enforcing current usage."""
+
+    if not isinstance(raw_allocations, list) or not raw_allocations:
+        raise ValueError("allocations must be a non-empty list")
+    parsed: list[tuple[str, int]] = []
+    seen: set[str] = set()
+    for item in raw_allocations:
+        if not isinstance(item, dict):
+            raise ValueError("each allocation must be an object")
+        region = normalize_region(item.get("region"))
+        if not is_supported_region(region):
+            raise ValueError(f"unsupported region: {region}")
+        quota = int(item.get("quota", 0))
+        if quota < 1:
+            raise ValueError("allocation quota must be at least 1")
+        if region in seen:
+            raise ValueError("allocation regions must be unique")
+        seen.add(region)
+        parsed.append((region, quota))
+
+    with transaction.atomic():
+        pool = NodePool.objects.select_for_update().get(pk=pool_id)
+        current = {
+            region: ManagedNode.objects.filter(
+                pool=pool, region=region, consumes_quota=True
+            ).count()
+            for region in pool.nodes.values_list("region", flat=True).distinct()
+        }
+        for region, quota in parsed:
+            if quota < current.get(region, 0):
+                raise DomainError(
+                    "QUOTA_BELOW_USAGE",
+                    f"{region} 额度不能低于当前占用",
+                    status_code=409,
+                )
+        removed = set(current) - {region for region, _quota in parsed}
+        if removed:
+            raise DomainError(
+                "REGION_ALLOCATION_IN_USE",
+                "已有节点的地区不能移除分配",
+                status_code=409,
+            )
+        existing = {item.region: item for item in pool.region_allocations.select_for_update()}
+        for region, quota in parsed:
+            allocation = existing.get(region)
+            if allocation:
+                allocation.quota = quota
+                allocation.save(update_fields=["quota", "updated_at"])
+            else:
+                NodePoolRegionAllocation.objects.create(pool=pool, region=region, quota=quota)
+        stale_regions = set(existing) - {region for region, _quota in parsed}
+        if stale_regions:
+            pool.region_allocations.filter(region__in=stale_regions).delete()
+        pool.quota = sum(quota for _region, quota in parsed)
+        pool.region = parsed[0][0]
+        pool.save(update_fields=["quota", "region", "updated_at"])
         return pool

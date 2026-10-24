@@ -1564,6 +1564,58 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `rollback_ref`: `none`
 - `time_logic`: `System clock recorded with +08:00; no business time behavior changed`
 
+## 2026-10-24T14:51:30+08:00 — 节点池多地区分配：需求澄清与实现
+
+`run_id`: `xray-node-pool-region-20261024-01`
+
+- `event_id`: `xray-node-pool-region-20261024-01/003`
+- `timestamp`: `2026-10-24T14:51:30+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `backend/apps/nodes`, `backend/common/regions.py`, `backend/openapi/schema.yaml`, `frontend/apps/web-antd/src/views/node-pools`, `frontend/apps/web-antd/src/views/nodes`, generated API types
+- `operation`: `supersede the initial single-region interpretation`
+- `reason`: `用户明确说明一个节点池需要在多个预设地区分别分配数量；此前/001 的单 region 方案不符合该语义`
+- `command_or_tool`: `user clarification; read-only scope review`
+- `result`: `初步单地区字段方案废弃为实现方向；采用 NodePoolRegionAllocation 分配表，保留 NodePool.region/quota 作为兼容字段，新增预设地区白名单和多地区 API/UI`
+- `exit_code`: `0`
+- `evidence`: `用户澄清消息；当前 diff 与新增 0004 兼容迁移`
+- `status`: `passed`
+- `commit_or_tree`: `main dirty tree; scoped implementation pending commit`
+- `rollback_ref`: `git revert the implementation commit; database rollback requires the additive migration rollback review`
+- `time_logic`: `地区额度为静态配置，不引入时间、TTL 或重试规则`
+
+- `event_id`: `xray-node-pool-region-20261024-01/004`
+- `timestamp`: `2026-10-24T14:51:30+08:00`
+- `actor`: `Codex`
+- `event_type`: `write`
+- `path_scope`: `backend/apps/nodes/models.py`, `backend/apps/nodes/migrations/0003_nodepool_region.py`, `backend/apps/nodes/migrations/0004_nodepoolregionallocation.py`, `backend/apps/nodes/quota.py`, `backend/apps/nodes/serializers.py`, `backend/apps/nodes/views.py`, `backend/common/regions.py`, OpenAPI, frontend views/types/tests
+- `operation`: `implement multi-region node-pool allocation`
+- `reason`: `使一个节点池可以按多个预设地区分别配置节点数量，并让节点预留按地区独立消耗额度`
+- `command_or_tool`: `apply_patch; OpenAPI generation; frontend API generation`
+- `result`: `新增 NodePoolRegionAllocation 及旧数据回填迁移；创建/更新接口支持 allocations；响应提供 regions、各地区 quota/used/available；节点创建按 pool+region 校验；前端支持多行预设地区与数量、按池选择地区`
+- `exit_code`: `0`
+- `evidence`: `git diff; generated schema; migration 0004; focused tests`
+- `status`: `passed`
+- `commit_or_tree`: `main dirty tree; scoped implementation pending commit`
+- `rollback_ref`: `revert the scoped code commit; retain additive migration only if database rollback is separately approved`
+- `time_logic`: `N/A`
+
+- `event_id`: `xray-node-pool-region-20261024-01/005`
+- `timestamp`: `2026-10-24T14:51:30+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `backend focused node/quota tests; frontend node-pool/node tests; migration and OpenAPI contract`
+- `operation`: `run focused implementation gates`
+- `reason`: `验证多地区配额、兼容单地区调用、前端选择和生成类型`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL=redacted backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests/test_region_defaults.py backend/tests/test_quota_concurrency.py backend/tests/test_node_lifecycle.py backend/tests/test_node_replacement.py -q --reuse-db; manage.py migrate --check; makemigrations --check --dry-run; spectacular --validate; corepack pnpm@10.33.0 --dir frontend typecheck; vitest node-pool/nodes tests`
+- `result`: `backend 13 passed; migration check and makemigrations check passed; OpenAPI validate passed; frontend typecheck passed; focused frontend tests 2 passed; full frontend suite 38 passed and one pre-existing navigation transition timeout remains`
+- `exit_code`: `0/0/0/0/0/0/1`
+- `evidence`: `local dedicated PostgreSQL xray_test, generated schema, terminal output; no production/cloud writes`
+- `status`: `passed local focused; full frontend suite partial`
+- `commit_or_tree`: `main dirty tree`
+- `rollback_ref`: `none beyond scoped implementation rollback`
+- `time_logic`: `System clock +08:00; no business time behavior changed`
+
 ## 2026-10-24T14:01:37+08:00 — 节点管理台中文化：实施与验证
 
 `run_id`: `xray-ui-i18n-20261024-01`
@@ -1647,3 +1699,39 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `586a1d5 clean tree before final audit append`
 - `rollback_ref`: `git revert 586a1d5`
 - `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+## 2026-10-24T14:10:47+08:00 — 节点池地区分配：变更定义
+
+`run_id`: `xray-node-pool-region-20261024-01`
+
+- `event_id`: `xray-node-pool-region-20261024-01/001`
+- `timestamp`: `2026-10-24T14:10:47+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `backend/apps/nodes`, `backend/openapi/schema.yaml`, `backend/config/openapi.py`, `frontend/apps/web-antd/src/views/node-pools`, `frontend/apps/web-antd/src/views/nodes`, generated frontend API types, focused tests, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `define scope`
+- `reason`: `用户要求节点池可以分配地区`
+- `command_or_tool`: `repository instructions plus read-only inspection`
+- `result`: `节点池新增 region 权威字段，默认 ap-southeast-1；节点创建从所属节点池继承地区；节点池有占用节点时禁止切换到其他地区；同步 API、迁移、前端表单、展示和 focused tests`
+- `exit_code`: `0`
+- `evidence`: `NodePool currently lacks region; ManagedNode and node creation already carry region; current main commit ef06acf; worktree clean before this append`
+- `status`: `passed`
+- `commit_or_tree`: `ef06acf clean tree on main before audit append`
+- `rollback_ref`: `git revert the scoped implementation commit; database rollback requires the additive migration rollback review`
+- `time_logic`: `N/A; region is a normalized configuration string, no expiry or retry behavior`
+
+- `event_id`: `xray-node-pool-region-20261024-01/002`
+- `timestamp`: `2026-10-24T14:10:47+08:00`
+- `actor`: `Codex`
+- `event_type`: `inventory`
+- `path_scope`: `main worktree, local frontend/backend runtime and dedicated PostgreSQL/Redis`
+- `operation`: `read branch, status and runtime ownership`
+- `reason`: `Preserve the running project and unrelated processes before editing`
+- `command_or_tool`: `git status --short --branch; git log -3 --oneline --decorate; listener and health inspection`
+- `result`: `main at ef06acf with no pre-existing code changes; existing project runtime remains owned by the current launcher; no process, database, Redis or browser state was stopped or reset`
+- `exit_code`: `0`
+- `evidence`: `local metadata and redacted runtime output`
+- `status`: `passed`
+- `commit_or_tree`: `ef06acf clean tree on main before audit append`
+- `rollback_ref`: `none`
+- `time_logic`: `System clock recorded with +08:00; no business time behavior changed`

@@ -14,7 +14,6 @@ import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
 
-const DEFAULT_REGION = 'ap-southeast-1';
 const FormItem = Form.Item;
 const columns = [
   { title: '节点', dataIndex: 'name', key: 'name' },
@@ -42,13 +41,26 @@ const saving = ref(false);
 const formError = ref('');
 const pools = ref<NodePool[]>([]);
 const accounts = ref<CloudAccount[]>([]);
-const form = reactive({ pool_id: '', account_id: '', region: DEFAULT_REGION, plan_id: '', image_id: '' });
+const form = reactive({ pool_id: '', account_id: '', region: '', plan_id: '', image_id: '' });
 const empty = computed(() => !data.value?.items.length);
+function poolAllocations(item?: NodePool) {
+  if (!item) return [];
+  if (item.allocations?.length) return item.allocations;
+  return item.region ? [{ region: item.region, quota: item.quota, available: item.available }] : [];
+}
 const poolOptions = computed(() => pools.value.map((item) => ({
-  label: `${item.name}（可用 ${item.available}）`,
+  label: `${item.name}（${poolAllocations(item).map((allocation) => `${allocation.region} 可用 ${allocation.available ?? allocation.quota}`).join('、')}）`,
   value: item.id,
-  disabled: !item.allow_create || item.available < 1,
+  disabled: !item.allow_create || !poolAllocations(item).some((allocation) => (allocation.available ?? allocation.quota) > 0),
 })));
+const selectedPoolRegions = computed(() => {
+  const pool = pools.value.find((item) => item.id === form.pool_id);
+  return poolAllocations(pool).map((allocation) => ({
+    label: `${allocation.region}（可用 ${allocation.available ?? allocation.quota}）`,
+    value: allocation.region,
+    disabled: (allocation.available ?? allocation.quota) < 1,
+  }));
+});
 const accountOptions = computed(() => accounts.value.map((item) => ({
   label: item.name,
   value: item.id,
@@ -57,6 +69,7 @@ const accountOptions = computed(() => accounts.value.map((item) => ({
 async function openCreate() {
   open.value = true;
   formError.value = '';
+  form.region = '';
   try {
     const [poolPage, accountPage] = await Promise.all([
       resourcesApi.nodePools(),
@@ -120,7 +133,7 @@ async function createNode() {
         </Table>
       </PageState>
     </Card>
-    <Modal v-model:open="open" title="创建节点" :footer="null" :after-close="() => { form.region = DEFAULT_REGION; }">
+    <Modal v-model:open="open" title="创建节点" :footer="null" :after-close="() => { form.pool_id = ''; form.region = ''; }">
       <Form :model="form" layout="vertical" @finish="createNode">
         <Alert v-if="formError" class="mb-4" :message="formError" type="error" show-icon />
         <FormItem label="节点池" name="pool_id" :rules="[{ required: true, message: '请选择节点池' }]">
@@ -129,8 +142,8 @@ async function createNode() {
         <FormItem label="云账号" name="account_id" :rules="[{ required: true, message: '请选择云账号' }]">
           <Select v-model:value="form.account_id" :options="accountOptions" placeholder="请选择" />
         </FormItem>
-        <FormItem label="区域" name="region">
-          <Input v-model:value="form.region" placeholder="默认新加坡（ap-southeast-1），可留空" />
+        <FormItem label="地区" name="region" :rules="[{ required: true, message: '请选择预设地区' }]">
+          <Select v-model:value="form.region" :options="selectedPoolRegions" placeholder="请选择节点池地区" />
         </FormItem>
         <FormItem label="套餐 ID" name="plan_id" :rules="[{ required: true, message: '请输入套餐 ID' }]">
           <Input v-model:value="form.plan_id" />
