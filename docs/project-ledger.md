@@ -1751,3 +1751,19 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `8af942e plus pending audit-doc changes`
 - `rollback_ref`: `git revert the audit-doc commit only; implementation rollback remains git revert 8af942e`
 - `time_logic`: `System clock +08:00; no business time behavior changed`
+
+- `event_id`: `xray-node-pool-region-20261024-01/009`
+- `timestamp`: `2026-10-24T15:01:36+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `main, origin/main, docs/project-ledger.md, docs/progress.md, local runtime`
+- `operation`: `final clean-tree and remote-ref confirmation`
+- `reason`: `确认审计文档提交也已推送，交付状态和工作区最终一致`
+- `command_or_tool`: `git push origin main; git rev-parse HEAD; git ls-remote origin refs/heads/main; git status --short --branch`
+- `result`: `local HEAD 4cd1d956a486afd1f89cccd8e3001bac6bc67019 equals origin/main; worktree clean; local frontend/backend runtime remains running`
+- `exit_code`: `0/0/0/0`
+- `evidence`: `local Git output and remote ref readback; no production/cloud action`
+- `status`: `passed`
+- `commit_or_tree`: `4cd1d95 clean before this final docs correction`
+- `rollback_ref`: `git revert 4cd1d95 for docs-only rollback; application rollback remains git revert 8af942e`
+- `time_logic`: `System clock +08:00; no business time behavior changed`
