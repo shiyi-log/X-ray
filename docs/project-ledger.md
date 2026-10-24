@@ -1631,3 +1631,19 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main dirty tree`
 - `rollback_ref`: `git revert the scoped change commit`
 - `time_logic`: `N/A`
+
+- `event_id`: `xray-ui-i18n-20261024-01/007`
+- `timestamp`: `2026-10-24T14:03:27+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `main worktree, origin/main, local frontend/backend listeners`
+- `operation`: `final closeout inspection`
+- `reason`: `Complete the requested Chinese UI change, push it to main and leave the worktree clean while preserving the running project`
+- `command_or_tool`: `git diff --check; git status --short --branch; git rev-parse HEAD; git ls-remote origin refs/heads/main; curl --noproxy '*' frontend/live/ready; lsof listener check`
+- `result`: `commit 586a1d5918267cafe18e718f08826c7e14a6547c is present locally and on origin/main; diff-check passed; worktree was clean before this append; frontend 9528 and backend 9529 remain listening and return HTTP 200 for root/live/ready`
+- `exit_code`: `0/0/0/0/0`
+- `evidence`: `local terminal output; no production or external cloud action`
+- `status`: `passed`
+- `commit_or_tree`: `586a1d5 clean tree before final audit append`
+- `rollback_ref`: `git revert 586a1d5`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
