@@ -12,7 +12,7 @@ const testEnvironment = {
     process.env.XRAY_TEST_DATABASE_URL ||
     'postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/xray_test',
   XRAY_REDIS_URL: process.env.XRAY_REDIS_URL || 'redis://127.0.0.1:56379/0',
-  XRAY_CSRF_TRUSTED_ORIGINS: 'http://127.0.0.1:5178',
+  XRAY_CSRF_TRUSTED_ORIGINS: 'http://127.0.0.1:9528',
 };
 
 export default defineConfig({
@@ -24,7 +24,7 @@ export default defineConfig({
   retries: 0,
   reporter: [['list'], ['json', { outputFile: path.join(acceptanceRoot, 'playwright-report.json') }]],
   use: {
-    baseURL: 'http://127.0.0.1:5178',
+    baseURL: 'http://127.0.0.1:9528',
     channel: 'chrome',
     trace: 'off',
     screenshot: 'only-on-failure',
@@ -32,15 +32,15 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: '../backend/.venv/bin/python ../backend/manage.py runserver 127.0.0.1:8000 --noreload',
-      url: 'http://127.0.0.1:8000/health/live',
+      command: '../backend/.venv/bin/python ../backend/manage.py runserver 127.0.0.1:9527 --noreload',
+      url: 'http://127.0.0.1:9527/health/live',
       reuseExistingServer: false,
       timeout: 120_000,
       env: testEnvironment,
     },
     {
       command: 'pnpm dev',
-      url: 'http://127.0.0.1:5178/login',
+      url: 'http://127.0.0.1:9528/login',
       reuseExistingServer: false,
       timeout: 120_000,
       env: testEnvironment,

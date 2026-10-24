@@ -341,9 +341,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
 
     paths = {
         "/api/v1/auth/session": {
-            "get": _operation(
-                "auth_session_retrieve", response="AdminSession", security=False
-            )
+            "get": _operation("auth_session_retrieve", response="AdminSession", security=False)
         },
         "/api/v1/auth/login": {
             "post": _operation(
@@ -465,5 +463,108 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/overview": {"get": _operation("overview_retrieve", response="Overview")},
         "/api/v1/system": {"get": _operation("system_retrieve", response="SystemInfo")},
     }
+    policy_properties = {
+        "plan_id": {"type": "string", "format": "uuid", "nullable": True},
+        "expires_at": {"type": "string", "format": "date-time", "nullable": True},
+        "traffic_limit_bytes": {"type": "integer", "nullable": True},
+        "upload_bytes": {"type": "integer"},
+        "download_bytes": {"type": "integer"},
+        "usage_updated_at": {"type": "string", "format": "date-time", "nullable": True},
+        "entitlement_state": {"type": "string"},
+        "metering_coverage": {"type": "string"},
+        "access_sync_pending": {"type": "boolean"},
+    }
+    schemas["AccessProfile"]["properties"].update(policy_properties)
+    schemas["Subscription"]["properties"]["policy"] = _ref("AccessProfile")
+    schemas["SubscriptionPlan"] = {
+        "type": "object",
+        "properties": {
+            "id": {"type": "string", "format": "uuid"},
+            "name": {"type": "string"},
+            "duration_days": {"type": "integer", "nullable": True},
+            "traffic_limit_bytes": {"type": "integer", "nullable": True},
+            "enabled": {"type": "boolean"},
+        },
+    }
+    schemas["PaginatedSubscriptionPlanList"] = _page_schema("SubscriptionPlan")
+    paths.update(
+        {
+            "/api/v1/access-profiles/{profile_id}/": {
+                "get": _operation(
+                    "access_profiles_retrieve",
+                    response="AccessProfile",
+                    parameters=uuid("profile_id"),
+                ),
+                "patch": _operation(
+                    "access_profiles_update",
+                    response="AccessProfile",
+                    request="GenericObject",
+                    parameters=uuid("profile_id"),
+                ),
+            },
+            "/api/v1/subscriptions/plans/": {
+                "get": _operation(
+                    "subscription_plans_list", response="PaginatedSubscriptionPlanList"
+                ),
+                "post": _operation(
+                    "subscription_plans_create",
+                    response="SubscriptionPlan",
+                    request="GenericObject",
+                    status="201",
+                ),
+            },
+            "/api/v1/subscriptions/plans/{plan_id}/": {
+                "patch": _operation(
+                    "subscription_plans_update",
+                    response="SubscriptionPlan",
+                    request="GenericObject",
+                    parameters=uuid("plan_id"),
+                )
+            },
+            "/api/v1/subscriptions/catalog/": {
+                "get": _operation("subscription_protocols_list", response="GenericObject"),
+                "post": _operation(
+                    "subscription_protocols_create",
+                    response="GenericObject",
+                    request="GenericObject",
+                    status="201",
+                ),
+            },
+            "/api/v1/subscriptions/{subscription_id}/": {
+                "get": _operation(
+                    "subscriptions_retrieve",
+                    response="GenericObject",
+                    parameters=uuid("subscription_id"),
+                )
+            },
+            "/api/v1/subscriptions/{subscription_id}/assign/": {
+                "post": _operation(
+                    "subscriptions_assign",
+                    response="GenericObject",
+                    request="GenericObject",
+                    parameters=uuid("subscription_id"),
+                    status="202",
+                )
+            },
+            "/api/v1/subscriptions/{subscription_id}/publish/": {
+                "post": _operation(
+                    "subscriptions_publish",
+                    response="Subscription",
+                    parameters=uuid("subscription_id"),
+                )
+            },
+        }
+    )
+    idempotency = {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": True,
+        "schema": {"type": "string", "format": "uuid"},
+    }
+    for path, methods in paths.items():
+        if "/subscriptions/" in path or "/access-profiles/" in path:
+            for method, operation in methods.items():
+                if method in {"post", "patch"}:
+                    operation.setdefault("parameters", []).append(idempotency)
     result.setdefault("paths", {}).update(paths)
     return result

@@ -3,9 +3,9 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
-from django.utils import timezone
-
+from botocore.exceptions import ClientError
 from common.errors import DomainError
+from django.utils import timezone
 from providers.authorization import DenyWrites, StaticWriteAuthorizer
 from providers.aws_lightsail import AwsLightsailProvider
 from providers.base import AccountRef, MutationPermit, ResourceRef
@@ -110,3 +110,29 @@ def test_cross_region_resource_is_rejected_before_sdk():
         provider.get_instance(resource)
     assert caught.value.code == "RESOURCE_OWNERSHIP_MISMATCH"
     client.get_instance.assert_not_called()
+
+
+def test_instance_absence_maps_to_explicit_not_found():
+    ref = account()
+    lightsail = Mock()
+    lightsail.get_instance.side_effect = ClientError(
+        {"Error": {"Code": "NotFoundException", "Message": "not echoed"},
+         "ResponseMetadata": {"RequestId": "absence-request"}},
+        "GetInstance",
+    )
+    provider = AwsLightsailProvider(
+        ref, "ap-southeast-1", lightsail_client=lightsail, sts_client=Mock(),
+    )
+    with pytest.raises(DomainError) as caught:
+        provider.get_instance(ResourceRef(ref, "ap-southeast-1", "owned-test"))
+    assert caught.value.code == "RESOURCE_NOT_FOUND"
+    assert caught.value.status_code == 404
+    assert caught.value.details["request_id"] == "absence-request"
+
+
+def test_write_not_found_does_not_prove_resource_absence():
+    from providers.errors import map_provider_error
+
+    error = ClientError({"Error": {"Code": "NotFoundException"}}, "DeleteInstance")
+    mapped = map_provider_error("aws_lightsail", error, write_started=True)
+    assert mapped.code != "RESOURCE_NOT_FOUND"

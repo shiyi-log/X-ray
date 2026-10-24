@@ -22,7 +22,7 @@ jobs:
       XRAY_TEST_DATABASE_URL: postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/xray_test
       XRAY_REDIS_URL: redis://127.0.0.1:56379/0
       XRAY_TEST_SERVICES_EXTERNAL: "1"
-      XRAY_CSRF_TRUSTED_ORIGINS: http://127.0.0.1:5178
+      XRAY_CSRF_TRUSTED_ORIGINS: http://127.0.0.1:9528
       XRAY_BACKEND_TEST_IMAGE: xray-manager-backend:ci
       XRAY_FRONTEND_TEST_IMAGE: xray-manager-frontend:ci
       XRAY_BACKUP_TEST_IMAGE: xray-manager-backup-tools:ci

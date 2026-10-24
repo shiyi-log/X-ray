@@ -3,11 +3,28 @@ import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Plus, RefreshCw } from 'lucide-vue-next';
 
+import { Page } from '@vben/common-ui';
+
+import {
+  Alert, Button, Card, Form, Input, Modal, Select, Space, Table,
+} from 'ant-design-vue';
+
 import { resourcesApi, type CloudAccount, type NodePool } from '@/api/resources';
-import PageHeader from '@/components/PageHeader.vue';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
+
+const DEFAULT_REGION = 'ap-southeast-1';
+const FormItem = Form.Item;
+const columns = [
+  { title: '节点', dataIndex: 'name', key: 'name' },
+  { title: '平台/区域', key: 'provider' },
+  { title: '云原始状态', dataIndex: 'raw_cloud_state', key: 'raw_cloud_state' },
+  { title: '部署', dataIndex: 'provisioning_state', key: 'provisioning_state' },
+  { title: '健康', dataIndex: 'health_state', key: 'health_state' },
+  { title: '安全', dataIndex: 'security_state', key: 'security_state' },
+  { title: 'Generation', key: 'generation' },
+];
 
 const router = useRouter();
 const { data, loading, error, reload } = useResource(resourcesApi.nodes);
@@ -16,8 +33,17 @@ const saving = ref(false);
 const formError = ref('');
 const pools = ref<NodePool[]>([]);
 const accounts = ref<CloudAccount[]>([]);
-const form = reactive({ pool_id: '', account_id: '', region: '', plan_id: '', image_id: '' });
+const form = reactive({ pool_id: '', account_id: '', region: DEFAULT_REGION, plan_id: '', image_id: '' });
 const empty = computed(() => !data.value?.items.length);
+const poolOptions = computed(() => pools.value.map((item) => ({
+  label: `${item.name}（可用 ${item.available}）`,
+  value: item.id,
+  disabled: !item.allow_create || item.available < 1,
+})));
+const accountOptions = computed(() => accounts.value.map((item) => ({
+  label: item.name,
+  value: item.id,
+})));
 
 async function openCreate() {
   open.value = true;
@@ -35,6 +61,7 @@ async function openCreate() {
 }
 
 async function createNode() {
+  if (saving.value) return;
   saving.value = true;
   formError.value = '';
   try {
@@ -50,26 +77,60 @@ async function createNode() {
 </script>
 
 <template>
-  <PageHeader title="节点" subtitle="云状态、服务状态与安全状态分开展示">
-    <template #actions>
-      <button class="icon-button" title="刷新" aria-label="刷新" @click="reload"><RefreshCw :size="17" /></button>
-      <button class="command" @click="openCreate"><Plus :size="17" />创建节点</button>
+  <Page title="节点" description="云状态、服务状态与安全状态分开展示">
+    <template #title><h1 class="mb-2 text-lg font-semibold">节点</h1></template>
+    <template #extra>
+      <Space>
+        <Button title="刷新" aria-label="刷新" @click="reload">
+          <template #icon><RefreshCw :size="16" /></template>
+        </Button>
+        <Button type="primary" @click="openCreate">
+          <template #icon><Plus :size="16" /></template>
+          创建节点
+        </Button>
+      </Space>
     </template>
-  </PageHeader>
-  <PageState :loading="loading" :error="error" :empty="empty" empty-text="暂无节点" @retry="reload">
-    <div class="table-wrap"><table><thead><tr><th>节点</th><th>平台/区域</th><th>云原始状态</th><th>部署</th><th>健康</th><th>安全</th><th>Generation</th></tr></thead><tbody><tr v-for="item in data?.items" :key="item.id"><td><strong>{{ item.name }}</strong><small class="resource-id">{{ item.external_id || item.id }}</small></td><td>{{ item.provider }}<small class="resource-id">{{ item.region }}</small></td><td><StatusBadge :value="item.raw_cloud_state || 'UNKNOWN'" /></td><td><StatusBadge :value="item.provisioning_state" /></td><td><StatusBadge :value="item.health_state" /></td><td><StatusBadge :value="item.security_state" /></td><td>{{ item.applied_generation }} / {{ item.desired_generation }}</td></tr></tbody></table></div>
-  </PageState>
-  <a-modal v-model:open="open" title="创建节点" :footer="null">
-    <form class="dialog-form" @submit.prevent="createNode">
-      <div v-if="formError" class="form-error">{{ formError }}</div>
-      <label>节点池<select v-model="form.pool_id" required><option value="" disabled>请选择</option><option v-for="item in pools" :key="item.id" :value="item.id" :disabled="!item.allow_create || item.available < 1">{{ item.name }}（可用 {{ item.available }}）</option></select></label>
-      <label>云账号<select v-model="form.account_id" required><option value="" disabled>请选择</option><option v-for="item in accounts" :key="item.id" :value="item.id">{{ item.name }}</option></select></label>
-      <label>区域<input v-model="form.region" required /></label>
-      <label>套餐 ID<input v-model="form.plan_id" required /></label>
-      <label>镜像 ID<input v-model="form.image_id" required /></label>
-      <button class="command" :disabled="saving">{{ saving ? '提交中' : '提交创建操作' }}</button>
-    </form>
-  </a-modal>
+    <Card>
+      <PageState :loading="loading" :error="error" :empty="empty" empty-text="暂无节点" @retry="reload">
+        <Table :columns="columns" :data-source="data?.items || []" :pagination="false" :scroll="{ x: 'max-content' }" row-key="id">
+          <template #bodyCell="{ column, record }">
+            <div v-if="column.key === 'name'">
+              <strong>{{ record.name }}</strong>
+              <div class="text-xs text-muted-foreground">{{ record.external_id || record.id }}</div>
+            </div>
+            <div v-else-if="column.key === 'provider'">
+              {{ record.provider }}
+              <div class="text-xs text-muted-foreground">{{ record.region }}</div>
+            </div>
+            <StatusBadge v-else-if="column.key === 'raw_cloud_state'" :value="record.raw_cloud_state || 'UNKNOWN'" />
+            <StatusBadge v-else-if="column.key === 'provisioning_state'" :value="record.provisioning_state" />
+            <StatusBadge v-else-if="column.key === 'health_state'" :value="record.health_state" />
+            <StatusBadge v-else-if="column.key === 'security_state'" :value="record.security_state" />
+            <template v-else-if="column.key === 'generation'">{{ record.applied_generation }} / {{ record.desired_generation }}</template>
+          </template>
+        </Table>
+      </PageState>
+    </Card>
+    <Modal v-model:open="open" title="创建节点" :footer="null" :after-close="() => { form.region = DEFAULT_REGION; }">
+      <Form :model="form" layout="vertical" @finish="createNode">
+        <Alert v-if="formError" class="mb-4" :message="formError" type="error" show-icon />
+        <FormItem label="节点池" name="pool_id" :rules="[{ required: true, message: '请选择节点池' }]">
+          <Select v-model:value="form.pool_id" :options="poolOptions" placeholder="请选择" />
+        </FormItem>
+        <FormItem label="云账号" name="account_id" :rules="[{ required: true, message: '请选择云账号' }]">
+          <Select v-model:value="form.account_id" :options="accountOptions" placeholder="请选择" />
+        </FormItem>
+        <FormItem label="区域" name="region">
+          <Input v-model:value="form.region" placeholder="默认新加坡（ap-southeast-1），可留空" />
+        </FormItem>
+        <FormItem label="套餐 ID" name="plan_id" :rules="[{ required: true, message: '请输入套餐 ID' }]">
+          <Input v-model:value="form.plan_id" />
+        </FormItem>
+        <FormItem label="镜像 ID" name="image_id" :rules="[{ required: true, message: '请输入镜像 ID' }]">
+          <Input v-model:value="form.image_id" />
+        </FormItem>
+        <Button type="primary" html-type="submit" :loading="saving" block>{{ saving ? '提交中' : '提交创建操作' }}</Button>
+      </Form>
+    </Modal>
+  </Page>
 </template>
-
-<style scoped src="../styles/resource-page.css"></style>

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from botocore.exceptions import ClientError, EndpointConnectionError, ReadTimeoutError
-
 from common.errors import DomainError
 
 
@@ -26,6 +25,13 @@ def map_provider_error(provider: str, error: Exception, *, write_started: bool) 
             details=details,
         )
     code = (provider_code or "").lower()
+    if provider == "aws_lightsail" and code == "notfoundexception" and not write_started:
+        return DomainError(
+            "RESOURCE_NOT_FOUND",
+            "云资源不存在",
+            details=details,
+            status_code=404,
+        )
     if "access" in code or "permission" in code or "unauthorized" in code:
         return DomainError(
             "CLOUD_PERMISSION_DENIED",

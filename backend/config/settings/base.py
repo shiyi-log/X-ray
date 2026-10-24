@@ -139,3 +139,14 @@ LOGGING = {
         "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
+
+# Explicit node transport configuration; raw keys never enter settings or logs.
+XRAY_NODE_TRANSPORT_FACTORY = os.getenv("XRAY_NODE_TRANSPORT_FACTORY", "")
+XRAY_USAGE_FETCHER = os.getenv("XRAY_USAGE_FETCHER", "")
+XRAY_ALLOW_REGIONAL_DEFAULT_KEY = env_bool("XRAY_ALLOW_REGIONAL_DEFAULT_KEY", False)
+XRAY_PUBLIC_SUBSCRIPTION_BASE_URL = os.getenv("XRAY_PUBLIC_SUBSCRIPTION_BASE_URL", "")
+CELERY_BEAT_SCHEDULE = {
+    "subscription-usage-and-limits": {
+        "task": "apps.subscriptions.tasks.refresh_usage_and_limits", "schedule": 60.0,
+    },
+}

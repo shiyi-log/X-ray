@@ -5,10 +5,12 @@ import hashlib
 import io
 import json
 
+from common.errors import DomainError
+from cryptography.exceptions import UnsupportedAlgorithm
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 from django.db import transaction
 from django.utils import timezone
-
-from common.errors import DomainError
 
 from .models import HostKeyRecord, ManagedNode
 
@@ -85,6 +87,7 @@ class ParamikoApplyTransport:
         host: str,
         username: str,
         private_key: str,
+        certificate: str | None = None,
         port: int = 22,
         timeout: int = 15,
         host_keys: HostKeyService | None = None,
@@ -94,6 +97,7 @@ class ParamikoApplyTransport:
         self.host = host
         self.username = username
         self.private_key = private_key
+        self.certificate = certificate
         self.port = port
         self.timeout = timeout
         self.host_keys = host_keys or HostKeyService()
@@ -111,12 +115,55 @@ class ParamikoApplyTransport:
                 return key_type.from_private_key(io.StringIO(value))
             except Exception as exc:
                 errors.append(type(exc).__name__)
+        # AWS ephemeral EC keys may use PKCS#8, whose PEM header Paramiko does not accept.
+        if isinstance(value, str) and value.lstrip().startswith("-----BEGIN PRIVATE KEY-----"):
+            try:
+                key = serialization.load_pem_private_key(value.encode("ascii"), password=None)
+                if isinstance(key, ec.EllipticCurvePrivateKey) and isinstance(
+                    key.curve, (ec.SECP256R1, ec.SECP384R1, ec.SECP521R1)
+                ):
+                    normalized = key.private_bytes(
+                        serialization.Encoding.PEM,
+                        serialization.PrivateFormat.TraditionalOpenSSL,
+                        serialization.NoEncryption(),
+                    ).decode("ascii")
+                    return paramiko_module.ECDSAKey.from_private_key(io.StringIO(normalized))
+            except (
+                TypeError,
+                ValueError,
+                UnsupportedAlgorithm,
+                paramiko_module.SSHException,
+            ) as exc:
+                errors.append(type(exc).__name__)
         raise DomainError(
             "SSH_PRIVATE_KEY_INVALID",
             "SSH 私钥格式无效",
             status_code=400,
             details={"attempted_key_types": errors},
         )
+
+    def _authentication_key(self, paramiko_module):
+        key = self._load_private_key(paramiko_module, self.private_key)
+        if self.certificate is not None:
+            try:
+                if not isinstance(self.certificate, str):
+                    raise ValueError("SSH certificate required")
+                certificate = serialization.load_ssh_public_identity(
+                    self.certificate.encode("ascii")
+                )
+                if not isinstance(certificate, serialization.SSHCertificate):
+                    raise ValueError("SSH certificate required")
+                public = certificate.public_key().public_bytes(
+                    serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH
+                )
+                if base64.b64decode(public.split()[1]) != key.asbytes():
+                    raise ValueError("SSH certificate key mismatch")
+                key.load_certificate(self.certificate)
+            except (ValueError, TypeError, UnsupportedAlgorithm, paramiko_module.SSHException):
+                raise DomainError(
+                    "SSH_CERTIFICATE_INVALID", "SSH 证书无效或与私钥不匹配", status_code=400
+                ) from None
+        return key
 
     def apply(self, request: dict) -> dict:
         import paramiko
@@ -128,8 +175,13 @@ class ParamikoApplyTransport:
             transport.start_client(timeout=self.timeout)
             fingerprint = sha256_fingerprint(transport.get_remote_server_key())
             self.host_keys.verify(self.node_id, fingerprint)
-            key = self._load_private_key(paramiko, self.private_key)
-            transport.auth_publickey(self.username, key)
+            key = self._authentication_key(paramiko)
+            try:
+                transport.auth_publickey(self.username, key)
+            except paramiko.AuthenticationException:
+                raise DomainError(
+                    "SSH_AUTHENTICATION_FAILED", "SSH 身份验证失败", status_code=403
+                ) from None
             if not transport.is_authenticated():
                 raise DomainError(
                     "SSH_AUTHENTICATION_FAILED", "SSH 身份验证失败", status_code=403

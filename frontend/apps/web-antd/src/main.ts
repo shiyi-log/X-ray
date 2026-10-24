@@ -1,19 +1,20 @@
-import 'ant-design-vue/dist/reset.css';
-import '@xray/ui/tokens.css';
-import './styles.css';
+import { initPreferences } from '@vben/preferences';
+import { unmountGlobalLoading } from '@vben/utils';
 
-import { createPinia } from 'pinia';
-import { createApp } from 'vue';
-import { Modal } from 'ant-design-vue';
+import { overridesPreferences } from './preferences';
 
-import App from './App.vue';
-import { router } from './router';
-import { useSessionStore } from './stores/session';
+async function initApplication() {
+  const mode = import.meta.env.PROD ? 'prod' : 'dev';
+  // Apply the restored template defaults without deleting previous preference data.
+  const namespace = `xray-manager-v5.7.0-${mode}`;
 
-const app = createApp(App);
-const pinia = createPinia();
-app.use(pinia);
-app.use(Modal);
-app.use(router);
-useSessionStore(pinia).installUnauthorizedHandler();
-app.mount('#app');
+  await initPreferences({
+    namespace,
+    overrides: overridesPreferences,
+  });
+  const { bootstrap } = await import('./bootstrap');
+  await bootstrap(namespace);
+  unmountGlobalLoading();
+}
+
+void initApplication();

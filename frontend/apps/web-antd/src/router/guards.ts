@@ -9,11 +9,10 @@ export function installSessionGuards(router: Router) {
       try {
         await session.loadSession();
       } catch {
-        session.session = null;
-        session.loaded = true;
+        session.applySession(null);
       }
     }
-    if (to.meta.public && session.authenticated && to.name === 'login') {
+    if (to.meta.public && session.authenticated && to.path === '/login') {
       return { name: 'overview' };
     }
     if (!to.meta.public && !session.authenticated) {

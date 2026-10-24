@@ -8,6 +8,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.identity.services import require_admin, require_recent_step_up
 from common.errors import DomainError
+from common.regions import normalize_region
 from providers.base import SecretInput
 
 from .models import CloudAccount
@@ -129,7 +130,7 @@ def detail(request, account_id):
 def validate(request, account_id):
     try:
         payload = _payload(request)
-        identity = validate_account(account_id, region=str(payload.get("region") or ""))
+        identity = validate_account(account_id, region=normalize_region(payload.get("region")))
         return JsonResponse(
             {
                 "external_account_id": identity.external_account_id,
@@ -154,7 +155,7 @@ def rotate(request, account_id):
         account = rotate_credentials(
             account_id,
             credentials=SecretInput(provider=provider, fields=fields),
-            region=str(payload.get("region") or ""),
+            region=normalize_region(payload.get("region")),
             expected_version=payload.get("expected_version"),
         )
         return JsonResponse(CloudAccountSerializer.to_representation(account))
@@ -166,7 +167,7 @@ def rotate(request, account_id):
 @require_admin
 def capability_list(request, account_id):
     try:
-        values = capabilities(account_id, region=str(request.GET.get("region") or ""))
+        values = capabilities(account_id, region=normalize_region(request.GET.get("region")))
         return JsonResponse(
             {
                 "items": [

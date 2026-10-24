@@ -46,6 +46,19 @@ def test_test_only_totp_bypass_starts_server_session(admin, csrf_client):
     assert csrf_client.get("/api/v1/auth/session").json()["authenticated"] is True
 
 
+@override_settings(XRAY_ENV="production", XRAY_DISABLE_TOTP=True)
+def test_totp_bypass_flag_is_ignored_outside_test_environment(admin, csrf_client):
+    response = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get("authenticated") is not True
+    assert body["totp_setup_required"] is True
+
+
 def test_first_login_binds_totp_and_returns_recovery_codes(admin, csrf_client):
     login = csrf_client.post(
         "/api/v1/auth/login",

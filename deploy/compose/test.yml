@@ -2,7 +2,7 @@ name: xray-test
 
 # The test stack intentionally exposes only loopback ports. It contains no
 # application container: pytest runs on the host and connects to these two
-# isolated services using backend/.env.example.
+# isolated services using the root .env.example template.
 services:
   postgres:
     image: postgres:17.6-alpine

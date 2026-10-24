@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from apps.operations.services import OperationService
 from common.admin_api import admin_endpoint, json_payload, paginated_response
 from common.errors import DomainError
+from common.regions import normalize_region
 
 from .models import ManagedNode, NodePool
 from .quota import reserve_node, set_quota
@@ -92,14 +93,14 @@ def node_collection(request):
 
     payload = json_payload(request)
     key = _uuid(request.headers.get("Idempotency-Key"), "Idempotency-Key")
-    required = ("pool_id", "account_id", "region", "plan_id", "image_id")
+    required = ("pool_id", "account_id", "plan_id", "image_id")
     if any(not payload.get(field) for field in required):
         raise ValueError(f"required fields: {', '.join(required)}")
     with transaction.atomic():
         node = reserve_node(
             _uuid(payload["pool_id"], "pool_id"),
             account_id=_uuid(payload["account_id"], "account_id"),
-            region=str(payload["region"]),
+            region=normalize_region(payload.get("region")),
             plan_id=str(payload["plan_id"]),
             image_id=str(payload["image_id"]),
             operation_key=key,

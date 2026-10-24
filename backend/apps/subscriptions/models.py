@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import uuid
 
+from apps.nodes.models import ManagedNode, NodeProtocol
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-
-from apps.nodes.models import ManagedNode, NodeProtocol
 
 
 class AccessProfile(models.Model):
@@ -18,6 +17,12 @@ class AccessProfile(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120, unique=True)
+    plan = models.ForeignKey("SubscriptionPlan", null=True, blank=True, on_delete=models.PROTECT)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    traffic_limit_bytes = models.PositiveBigIntegerField(null=True, blank=True)
+    upload_bytes = models.PositiveBigIntegerField(default=0)
+    download_bytes = models.PositiveBigIntegerField(default=0)
+    usage_updated_at = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ACTIVE")
     publishing_frozen = models.BooleanField(default=False)
     revoked_at = models.DateTimeField(null=True, blank=True)
@@ -187,9 +192,7 @@ class SubscriptionRevision(models.Model):
 
 class PublicationBatch(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    excluded_node = models.ForeignKey(
-        ManagedNode, null=True, blank=True, on_delete=models.PROTECT
-    )
+    excluded_node = models.ForeignKey(ManagedNode, null=True, blank=True, on_delete=models.PROTECT)
     status = models.CharField(max_length=30, default="PREPARING")
     subscription_ids = models.JSONField(default=list)
     result = models.JSONField(default=dict, blank=True)
@@ -307,3 +310,37 @@ class SecretDeliveryReceipt(models.Model):
                 name="unique_subscription_delivery_epoch",
             )
         ]
+
+
+class SubscriptionPlan(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=120, unique=True)
+    traffic_limit_bytes = models.PositiveBigIntegerField(null=True, blank=True)
+    duration_days = models.PositiveIntegerField(null=True, blank=True)
+    enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class UsageCheckpoint(models.Model):
+    node = models.ForeignKey(ManagedNode, on_delete=models.PROTECT)
+    profile = models.ForeignKey(AccessProfile, on_delete=models.PROTECT)
+    epoch = models.CharField(max_length=120)
+    sequence = models.PositiveBigIntegerField(default=0)
+    upload_bytes = models.PositiveBigIntegerField(default=0)
+    download_bytes = models.PositiveBigIntegerField(default=0)
+    sampled_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["node", "profile", "epoch"], name="unique_usage_checkpoint"
+            )
+        ]
+
+
+class SubscriptionMutation(models.Model):
+    key = models.UUIDField(primary_key=True)
+    scope = models.CharField(max_length=160)
+    request_hash = models.CharField(max_length=64)
+    result = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)

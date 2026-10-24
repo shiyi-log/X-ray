@@ -4,11 +4,10 @@ import hashlib
 import secrets
 from uuid import UUID, uuid4
 
-from django.db import transaction
-from django.utils import timezone
-
 from common.crypto import configured_subscription_store
 from common.errors import DomainError
+from django.db import transaction
+from django.utils import timezone
 
 from .credentials import decrypt_material
 from .models import (
@@ -18,6 +17,7 @@ from .models import (
     Subscription,
     SubscriptionRevision,
 )
+from .policy import assert_entitled
 from .renderers import NoCompatibleEndpoints, render_subscription
 from .security_barrier import SecurityBarrier
 
@@ -26,9 +26,7 @@ FORMATS = ("shadowrocket", "clash", "mihomo", "v2ray")
 
 class NoPublishableEndpoints(DomainError):
     def __init__(self):
-        super().__init__(
-            "NO_PUBLISHABLE_ENDPOINTS", "没有已验证可发布的节点", status_code=422
-        )
+        super().__init__("NO_PUBLISHABLE_ENDPOINTS", "没有已验证可发布的节点", status_code=422)
 
 
 def _payload_aad(revision: SubscriptionRevision, format: str) -> bytes:
@@ -116,19 +114,13 @@ class Publisher:
             or subscription.profile.status != "ACTIVE"
             or subscription.profile.publishing_frozen
         ):
-            raise DomainError(
-                "SUBSCRIPTION_PUBLISHING_FROZEN", "订阅发布已冻结", status_code=409
-            )
-        endpoints = cls._endpoints(
-            subscription, excluded_node_ids=excluded_node_ids or set()
-        )
+            raise DomainError("SUBSCRIPTION_PUBLISHING_FROZEN", "订阅发布已冻结", status_code=409)
+        assert_entitled(subscription.profile)
+        endpoints = cls._endpoints(subscription, excluded_node_ids=excluded_node_ids or set())
         if not endpoints:
             raise NoPublishableEndpoints()
         number = (
-            subscription.revisions.order_by("-number")
-            .values_list("number", flat=True)
-            .first()
-            or 0
+            subscription.revisions.order_by("-number").values_list("number", flat=True).first() or 0
         ) + 1
         revision = SubscriptionRevision(
             id=uuid4(),
@@ -160,7 +152,8 @@ class Publisher:
         revision.payload_hashes = payload_hashes
         revision.unavailable_reasons = unavailable
         revision.node_versions = {
-            endpoint["node_id"]: {
+            endpoint["node_id"] + ":" + endpoint["credential_ref"]: {
+                "node_id": endpoint["node_id"],
                 "applied_generation": endpoint["applied_generation"],
                 "credential_ref": endpoint["credential_ref"],
                 "credential_version": endpoint["credential_version"],
@@ -180,9 +173,7 @@ class Publisher:
     def publish(cls, subscription_id: UUID) -> SubscriptionRevision:
         SecurityBarrier.assert_open(purpose="public_read")
         with transaction.atomic():
-            subscription = Subscription.objects.select_for_update().get(
-                pk=subscription_id
-            )
+            subscription = Subscription.objects.select_for_update().get(pk=subscription_id)
             subscription.profile = AccessProfile.objects.select_for_update().get(
                 pk=subscription.profile_id
             )
@@ -192,9 +183,7 @@ class Publisher:
     def invalidate_node(cls, node_id: UUID) -> PublicationBatch:
         with transaction.atomic():
             subscriptions = list(
-                Subscription.objects.select_for_update()
-                .filter(status="ACTIVE")
-                .order_by("pk")
+                Subscription.objects.select_for_update().filter(status="ACTIVE").order_by("pk")
             )
             profiles = {
                 profile.pk: profile
@@ -216,7 +205,10 @@ class Publisher:
                 subscription
                 for subscription in subscriptions
                 if subscription.current_revision_id
-                and str(node_id) in subscription.current_revision.node_versions
+                and any(
+                    key == str(node_id) or value.get("node_id") == str(node_id)
+                    for key, value in subscription.current_revision.node_versions.items()
+                )
             ]
             batch = PublicationBatch.objects.create(
                 excluded_node_id=node_id,

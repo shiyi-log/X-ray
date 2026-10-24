@@ -2,6 +2,8 @@
 import { computed, onScopeDispose, ref, watch } from 'vue';
 import { AlertTriangle, RefreshCw, X } from 'lucide-vue-next';
 
+import { Alert, Button, Descriptions, Form, Input, List, Modal, Space } from 'ant-design-vue';
+
 import type { ActionPreview } from '@/api/resources';
 
 interface ConfirmationPayload {
@@ -71,73 +73,66 @@ function submit() {
 </script>
 
 <template>
-  <div v-if="open" class="modal-layer" role="presentation" @mousedown.self="emit('close')">
-    <section class="danger-dialog" role="dialog" aria-modal="true" aria-labelledby="danger-title">
-      <header>
-        <span class="danger-icon"><AlertTriangle :size="20" /></span>
-        <div><h2 id="danger-title">强制撤销访问</h2><p>链接会立即失效，节点凭据随后逐节点验证。</p></div>
-        <button class="icon-button" type="button" aria-label="关闭" title="关闭" @click="emit('close')"><X :size="18" /></button>
-      </header>
-
-      <div v-if="errorCode === 'STEP_UP_REQUIRED'" class="error-band" role="alert">
-        近期身份验证已过期。请退出并重新完成密码与 MFA 验证后再次操作。
+  <Modal
+    :open="open"
+    :get-container="false"
+    :destroy-on-close="true"
+    :closable="false"
+    :width="620"
+    @cancel="emit('close')"
+  >
+    <template #title>
+      <div class="flex items-center justify-between gap-4">
+        <Space>
+          <AlertTriangle :size="20" />
+          <span id="danger-title">强制撤销访问</span>
+        </Space>
+        <Button type="text" aria-label="关闭" title="关闭" @click="emit('close')">
+          <template #icon><X :size="18" /></template>
+        </Button>
       </div>
-      <div v-else-if="errorMessage" class="error-band" role="alert">{{ errorMessage }}</div>
-
-      <div v-if="preview" class="impact-summary">
-        <div><span>目标</span><code>{{ preview.target_id }}</code></div>
-        <div><span>有效期</span><strong :class="{ expired }">{{ expiryText }}</strong></div>
-      </div>
-      <div v-else class="loading-preview">正在生成绑定当前状态的预览...</div>
-
-      <section v-if="impactedProfiles.length" class="impact-list">
-        <h3>共享凭据受影响身份</h3>
-        <p>共享协议会轮换同节点凭据，以下有效设备需要重新导入新凭据。</p>
-        <ul><li v-for="item in impactedProfiles" :key="item.id"><strong>{{ item.name }}</strong><code>{{ item.id }}</code></li></ul>
-      </section>
-
-      <label class="confirm-field">
-        <span>输入 <strong>{{ preview?.required_phrase }}</strong> 继续</span>
-        <input v-model="typedPhrase" aria-label="确认文本" autocomplete="off" :disabled="!preview || expired || busy" />
-      </label>
-
-      <footer>
-        <button v-if="expired" class="secondary-command" type="button" @click="emit('refresh')"><RefreshCw :size="16" />刷新预览</button>
-        <button class="secondary-command" type="button" @click="emit('close')">取消</button>
-        <button data-testid="danger-submit" class="danger-command" type="button" :disabled="!canSubmit" @click="submit">
+    </template>
+    <Space direction="vertical" class="w-full" :size="16">
+      <p class="text-muted-foreground">链接会立即失效，节点凭据随后逐节点验证。</p>
+      <Alert v-if="errorCode === 'STEP_UP_REQUIRED'" type="error" show-icon role="alert" message="近期身份验证已过期。请退出并重新完成密码与 MFA 验证后再次操作。" />
+      <Alert v-else-if="errorMessage" type="error" show-icon role="alert" :message="errorMessage" />
+      <Descriptions v-if="preview" bordered :column="1">
+        <Descriptions.Item label="目标"><code class="break-all">{{ preview.target_id }}</code></Descriptions.Item>
+        <Descriptions.Item label="有效期">
+          <Alert v-if="expired" type="error" :message="expiryText" />
+          <strong v-else>{{ expiryText }}</strong>
+        </Descriptions.Item>
+      </Descriptions>
+      <Alert v-else type="info" show-icon message="正在生成绑定当前状态的预览..." />
+      <Alert v-if="impactedProfiles.length" type="warning" show-icon message="共享凭据受影响身份" description="共享协议会轮换同节点凭据，以下有效设备需要重新导入新凭据。" />
+      <List v-if="impactedProfiles.length" bordered :data-source="impactedProfiles">
+        <template #renderItem="{ item }">
+          <List.Item>
+            <Space direction="vertical" :size="0">
+              <strong>{{ item.name }}</strong>
+              <code class="break-all text-muted-foreground">{{ item.id }}</code>
+            </Space>
+          </List.Item>
+        </template>
+      </List>
+      <Form layout="vertical">
+        <Form.Item>
+          <template #label>输入 <strong>{{ preview?.required_phrase }}</strong> 继续</template>
+          <Input v-model:value="typedPhrase" aria-label="确认文本" autocomplete="off" :disabled="!preview || expired || busy" />
+        </Form.Item>
+      </Form>
+    </Space>
+    <template #footer>
+      <Space wrap>
+        <Button v-if="expired" @click="emit('refresh')">
+          <template #icon><RefreshCw :size="16" /></template>
+          刷新预览
+        </Button>
+        <Button @click="emit('close')">取消</Button>
+        <Button data-testid="danger-submit" type="primary" danger :disabled="!canSubmit" :loading="busy" @click="submit">
           {{ busy ? '提交中' : '提交操作' }}
-        </button>
-      </footer>
-    </section>
-  </div>
+        </Button>
+      </Space>
+    </template>
+  </Modal>
 </template>
-
-<style scoped>
-.modal-layer { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(14 24 29 / 54%); }
-.danger-dialog { width: min(100%, 620px); max-height: calc(100vh - 40px); overflow: auto; border: 1px solid #e6c1bc; border-radius: 6px; background: white; box-shadow: var(--x-shadow); }
-header { display: grid; grid-template-columns: 38px 1fr 36px; gap: 12px; align-items: start; padding: 19px 20px; border-bottom: 1px solid var(--x-border); }
-.danger-icon { width: 36px; height: 36px; display: grid; place-items: center; color: white; border-radius: 5px; background: var(--x-danger); }
-h2, h3, p { margin: 0; letter-spacing: 0; }
-h2 { font-size: 17px; }
-header p { margin-top: 4px; color: var(--x-text-muted); font-size: 12px; }
-.error-band { margin: 16px 20px 0; padding: 10px 12px; color: var(--x-danger); background: #fff1f0; border-left: 3px solid var(--x-danger); font-size: 12px; }
-.impact-summary { display: grid; grid-template-columns: 1fr 1fr; margin: 18px 20px 0; border: 1px solid var(--x-border); }
-.impact-summary > div { min-width: 0; display: grid; gap: 5px; padding: 11px 12px; }
-.impact-summary > div + div { border-left: 1px solid var(--x-border); }
-.impact-summary span { color: var(--x-text-muted); font-size: 11px; }
-.impact-summary code { overflow: hidden; font-size: 11px; text-overflow: ellipsis; }
-.expired { color: var(--x-danger); }
-.loading-preview { margin: 18px 20px 0; padding: 14px; color: var(--x-text-muted); border: 1px solid var(--x-border); }
-.impact-list { margin: 14px 20px 0; padding: 13px; background: #fff8e8; border-left: 3px solid var(--x-warning); }
-.impact-list h3 { font-size: 13px; }
-.impact-list p { margin-top: 4px; color: #74570d; font-size: 12px; }
-.impact-list ul { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
-.impact-list li { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
-.impact-list code { max-width: 55%; overflow: hidden; color: var(--x-text-muted); text-overflow: ellipsis; }
-.confirm-field { display: grid; gap: 7px; margin: 18px 20px; font-size: 12px; }
-.confirm-field input { height: 38px; padding: 0 10px; border: 1px solid #cbd5dc; border-radius: 4px; font: 14px/1 var(--x-font); }
-footer { display: flex; justify-content: flex-end; gap: 9px; padding: 14px 20px; border-top: 1px solid var(--x-border); }
-.danger-command { min-height: 36px; padding: 0 14px; border: 1px solid var(--x-danger); border-radius: 5px; color: white; background: var(--x-danger); font: 600 13px/1 var(--x-font); cursor: pointer; }
-.danger-command:disabled { opacity: .5; cursor: not-allowed; }
-@media (max-width: 560px) { .modal-layer { padding: 0; align-items: end; } .danger-dialog { max-height: 92vh; border-radius: 6px 6px 0 0; } .impact-summary { grid-template-columns: 1fr; } .impact-summary > div + div { border-left: 0; border-top: 1px solid var(--x-border); } footer { flex-wrap: wrap; } footer button { flex: 1; } }
-</style>

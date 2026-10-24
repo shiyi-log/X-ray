@@ -57,6 +57,12 @@ expected_previous=$(jq -r '.expected_previous_generation' "$request_file")
 action=$(jq -r '.action' "$request_file")
 jq -c '.config' "$request_file" >"$candidate_file"
 chmod 600 "$candidate_file"
+if jq -e '[.inbounds[]?.streamSettings.tlsSettings.certificates[]? | has("certificateFile") or has("keyFile")] | any' "$candidate_file" >/dev/null; then
+  certificate_loader="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/inline-certificates.py"
+  if ! python3 "$certificate_loader" "$candidate_file" >/dev/null 2>&1; then
+    error_json CERTIFICATE_INVALID "managed TLS certificate is unavailable" 20
+  fi
+fi
 
 if command -v flock >/dev/null 2>&1; then
   exec 9>"$state_dir/apply.lock"
@@ -78,7 +84,7 @@ if (( generation <= current_generation || expected_previous != current_generatio
   error_json GENERATION_CONFLICT "configuration generation conflict" 30
 fi
 
-if ! "$xray_binary" run -test -config "$candidate_file" >/dev/null 2>&1; then
+if ! "$xray_binary" run -test -format json -config "$candidate_file" >/dev/null 2>&1; then
   error_json CONFIG_INVALID "xray rejected candidate configuration" 20
 fi
 

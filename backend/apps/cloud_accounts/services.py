@@ -9,6 +9,7 @@ from django.utils import timezone
 from apps.audit.services import AuditService
 from common.crypto import configured_secret_store
 from common.errors import DomainError
+from common.regions import normalize_region
 from providers.base import AccountIdentity, SecretInput
 from providers.registry import build_read_provider, provider_for_input
 
@@ -31,7 +32,7 @@ def _aad(account_id: UUID, version: int) -> bytes:
 
 
 def reader_for_input(credentials: SecretInput, region: str):
-    return provider_for_input(credentials, region)
+    return provider_for_input(credentials, normalize_region(region))
 
 
 def _identity_matches(account: CloudAccount, identity: AccountIdentity) -> bool:
@@ -42,6 +43,7 @@ def _identity_matches(account: CloudAccount, identity: AccountIdentity) -> bool:
 
 
 def create_account(*, name: str, credentials: SecretInput, region: str) -> CloudAccount:
+    region = normalize_region(region)
     if credentials.provider not in dict(CloudAccount.PROVIDER_CHOICES):
         raise DomainError("CLOUD_PROVIDER_UNSUPPORTED", "不支持的云厂商", status_code=400)
     identity = reader_for_input(credentials, region).validate_credentials()
@@ -105,6 +107,7 @@ def rotate_credentials(
     region: str,
     expected_version: int | None = None,
 ) -> CloudAccount:
+    region = normalize_region(region)
     account = CloudAccount.objects.get(pk=account_id)
     if credentials.provider != account.provider:
         raise DomainError("CLOUD_PROVIDER_MISMATCH", "云厂商不能在轮换时改变", status_code=400)
@@ -153,6 +156,7 @@ def rotate_credentials(
 
 
 def validate_account(account_id: UUID, *, region: str) -> AccountIdentity:
+    region = normalize_region(region)
     account = CloudAccount.objects.get(pk=account_id)
     credentials = _current_credentials(account)
     try:
@@ -186,5 +190,6 @@ def set_account_enabled(account_id: UUID, *, enabled: bool) -> CloudAccount:
 
 
 def capabilities(account_id: UUID, *, region: str):
+    region = normalize_region(region)
     provider = build_read_provider(account_id, region)
     return provider.get_capabilities(region)

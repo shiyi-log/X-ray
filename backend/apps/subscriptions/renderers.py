@@ -6,7 +6,7 @@ import json
 from urllib.parse import quote, urlencode
 
 import yaml
-
+from apps.nodes.protocols import PROTOCOL_CAPABILITIES
 from common.errors import DomainError
 
 from .compatibility import FORMAT_PROTOCOLS, Format
@@ -14,9 +14,7 @@ from .compatibility import FORMAT_PROTOCOLS, Format
 
 class NoCompatibleEndpoints(DomainError):
     def __init__(self):
-        super().__init__(
-            "NO_COMPATIBLE_ENDPOINTS", "该订阅格式没有兼容节点", status_code=422
-        )
+        super().__init__("NO_COMPATIBLE_ENDPOINTS", "该订阅格式没有兼容节点", status_code=422)
 
 
 def _host(value: str) -> str:
@@ -28,9 +26,7 @@ def _host(value: str) -> str:
 
 def _tls_query(endpoint: dict) -> dict:
     if endpoint.get("allow_insecure"):
-        raise DomainError(
-            "INSECURE_TLS_FORBIDDEN", "生产订阅禁止跳过 TLS 验证", status_code=422
-        )
+        raise DomainError("INSECURE_TLS_FORBIDDEN", "生产订阅禁止跳过 TLS 验证", status_code=422)
     if not endpoint.get("tls"):
         return {}
     values = {"security": "tls"}
@@ -47,9 +43,11 @@ def _uri(endpoint: dict) -> str:
     credential = endpoint["credential"]
     query = {"type": endpoint.get("transport") or "tcp", **_tls_query(endpoint)}
     if protocol == "shadowsocks":
-        userinfo = base64.urlsafe_b64encode(
-            f"{credential['method']}:{credential['password']}".encode()
-        ).decode().rstrip("=")
+        userinfo = (
+            base64.urlsafe_b64encode(f"{credential['method']}:{credential['password']}".encode())
+            .decode()
+            .rstrip("=")
+        )
         return f"ss://{userinfo}@{host}:{port}#{name}"
     if protocol == "socks5":
         username = quote(credential["username"], safe="")
@@ -67,14 +65,20 @@ def _uri(endpoint: dict) -> str:
             "net": endpoint.get("transport") or "tcp",
             "type": "none",
             "host": "",
-            "path": "",
+            "path": "xray"
+            if endpoint.get("transport") == "grpc"
+            else "/"
+            if endpoint.get("transport") == "ws"
+            else "",
             "tls": "tls" if endpoint.get("tls") else "",
             "sni": endpoint.get("server_name") or "",
         }
-        encoded = base64.b64encode(
-            json.dumps(payload, separators=(",", ":")).encode()
-        ).decode()
+        encoded = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
         return f"vmess://{encoded}"
+    if query["type"] == "ws":
+        query["path"] = "/"
+    if query["type"] == "grpc":
+        query["serviceName"] = "xray"
     if protocol == "vless":
         query["encryption"] = "none"
         return f"vless://{credential['id']}@{host}:{port}?{urlencode(query)}#{name}"
@@ -91,6 +95,7 @@ def _yaml_proxy(endpoint: dict, *, mihomo: bool) -> dict:
         "name": endpoint.get("name") or protocol,
         "type": protocol,
         "server": endpoint["host"],
+        "udp": PROTOCOL_CAPABILITIES[protocol].udp,
         "port": int(endpoint["port"]),
     }
     if protocol == "shadowsocks":
@@ -117,6 +122,13 @@ def _yaml_proxy(endpoint: dict, *, mihomo: bool) -> dict:
             proxy["client-fingerprint"] = "chrome"
     elif protocol == "trojan":
         proxy["password"] = credential["password"]
+    if protocol in {"vmess", "vless", "trojan"}:
+        transport = endpoint.get("transport") or "tcp"
+        proxy["network"] = transport
+        if transport == "ws":
+            proxy["ws-opts"] = {"path": "/"}
+        if transport == "grpc":
+            proxy["grpc-opts"] = {"grpc-service-name": "xray"}
     _tls_query(endpoint)
     if endpoint.get("tls"):
         proxy["tls"] = True
@@ -134,18 +146,14 @@ def render_subscription(
     if format not in FORMAT_PROTOCOLS:
         raise DomainError("SUBSCRIPTION_FORMAT_UNKNOWN", "订阅格式不支持", status_code=422)
     compatible = [
-        endpoint
-        for endpoint in endpoints
-        if endpoint.get("protocol") in FORMAT_PROTOCOLS[format]
+        endpoint for endpoint in endpoints if endpoint.get("protocol") in FORMAT_PROTOCOLS[format]
     ]
     if not compatible:
         raise NoCompatibleEndpoints()
     if format in {"shadowrocket", "v2ray"}:
         body = "\n".join(_uri(endpoint) for endpoint in compatible) + "\n"
         return base64.b64encode(body.encode())
-    proxies = [
-        _yaml_proxy(endpoint, mihomo=format == "mihomo") for endpoint in compatible
-    ]
+    proxies = [_yaml_proxy(endpoint, mihomo=format == "mihomo") for endpoint in compatible]
     document = {
         "x-public-version": public_version,
         "proxies": proxies,

@@ -1,14 +1,40 @@
 from __future__ import annotations
 
+from django.db.models import F
+
 
 def profile_representation(profile) -> dict:
+    from .policy import quota_state
+
     subscription = getattr(profile, "subscription", None)
-    credential_count = profile.node_credentials.filter(revoked_at__isnull=True).count()
+    credential_count = (
+        profile.node_credentials.filter(revoked_at__isnull=True)
+        .values("node_id", "protocol_id")
+        .distinct()
+        .count()
+    )
     return {
         "id": str(profile.pk),
         "name": profile.name,
         "status": profile.status,
         "publishing_frozen": profile.publishing_frozen,
+        "plan_id": str(profile.plan_id) if profile.plan_id else None,
+        "expires_at": profile.expires_at.isoformat() if profile.expires_at else None,
+        "traffic_limit_bytes": profile.traffic_limit_bytes,
+        "upload_bytes": profile.upload_bytes,
+        "download_bytes": profile.download_bytes,
+        "usage_updated_at": profile.usage_updated_at.isoformat()
+        if profile.usage_updated_at
+        else None,
+        "entitlement_state": quota_state(profile),
+        "metering_coverage": "PARTIAL"
+        if profile.node_credentials.filter(
+            revoked_at__isnull=True, protocol__protocol="socks5"
+        ).exists()
+        else "SUPPORTED",
+        "access_sync_pending": profile.node_credentials.filter(revoked_at__isnull=True)
+        .exclude(desired_generation=F("applied_generation"))
+        .exists(),
         "credential_count": credential_count,
         "subscription_id": str(subscription.pk) if subscription else None,
         "subscription_status": subscription.status if subscription else None,
@@ -25,6 +51,7 @@ def subscription_representation(subscription) -> dict:
         "profile_id": str(subscription.profile_id),
         "profile_name": subscription.profile.name,
         "profile_status": subscription.profile.status,
+        "policy": profile_representation(subscription.profile),
         "status": subscription.status,
         "token_epoch": subscription.token_epoch,
         "current_revision": revision.number if revision else None,

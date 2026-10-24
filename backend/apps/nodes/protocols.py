@@ -15,18 +15,12 @@ class ProtocolCapability:
 
 
 PROTOCOL_CAPABILITIES = {
-    "shadowsocks": ProtocolCapability(
-        True, True, ("shared", "profile"), ("profile",), ("tcp",)
-    ),
+    "shadowsocks": ProtocolCapability(True, True, ("shared", "profile"), ("profile",), ("tcp",)),
     "socks5": ProtocolCapability(True, True, ("profile",), ("profile",), ("tcp",)),
-    "vmess": ProtocolCapability(
-        True, False, ("profile",), ("profile",), ("tcp", "ws", "grpc")
-    ),
-    "vless": ProtocolCapability(
-        True, False, ("profile",), ("profile",), ("tcp", "ws", "grpc")
-    ),
+    "vmess": ProtocolCapability(True, True, ("profile",), ("profile",), ("tcp", "ws", "grpc")),
+    "vless": ProtocolCapability(True, True, ("profile",), ("profile",), ("tcp", "ws", "grpc")),
     "trojan": ProtocolCapability(
-        True, False, ("profile", "shared"), ("profile",), ("tcp", "ws", "grpc")
+        True, True, ("profile", "shared"), ("profile",), ("tcp", "ws", "grpc")
     ),
 }
 

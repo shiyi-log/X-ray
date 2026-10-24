@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from common.crypto import configured_subscription_store
+from common.errors import DomainError
 from django.db import DatabaseError
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from common.crypto import configured_subscription_store
-
+from .policy import assert_entitled
 from .security_barrier import PublishingBlocked, SecurityBarrier
 from .tokens import TokenGone, TokenService, TokenUnknown
 
@@ -21,6 +22,7 @@ class PublicSubscriptionReader:
     def read(raw_token: str, *, format: str) -> bytes:
         subscription = TokenService.resolve(raw_token)
         SecurityBarrier.assert_open(purpose="public_read")
+        assert_entitled(subscription.profile)
         revision = subscription.current_revision
         if revision is None or not revision.usable:
             raise RevisionUnavailable()
@@ -53,8 +55,19 @@ def public_subscription(request, raw_token: str):
         body, status = UNAVAILABLE_BODY, 410
     except TokenUnknown:
         body, status = UNAVAILABLE_BODY, 404
+    except DomainError:
+        body, status = UNAVAILABLE_BODY, 403
     except (PublishingBlocked, RevisionUnavailable, DatabaseError, ValueError, KeyError):
         body, status = UNAVAILABLE_BODY, 503
     if request.method == "HEAD":
         body = b""
-    return _response(body, status=status)
+    content_type = (
+        "application/yaml"
+        if requested_format in {"clash", "mihomo"} and status == 200
+        else "text/plain"
+    )
+    response = _response(body, status=status, content_type=content_type)
+    if status == 200:
+        response["profile-update-interval"] = "6"
+        response["Content-Disposition"] = 'attachment; filename="xray-subscription"'
+    return response

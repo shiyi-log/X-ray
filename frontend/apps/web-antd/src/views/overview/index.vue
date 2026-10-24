@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { Page } from '@vben/common-ui';
+
+import { Card, Col, List, ListItem, Row, Space, Statistic } from 'ant-design-vue';
+
 import { resourcesApi } from '@/api/resources';
-import PageHeader from '@/components/PageHeader.vue';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
@@ -17,56 +20,52 @@ const countLabels: Record<string, string> = {
 </script>
 
 <template>
-  <PageHeader title="总览" subtitle="控制面当前状态" />
-  <PageState :loading="loading" :error="error" @retry="reload">
-    <section class="security-band">
-      <span>安全屏障</span><StatusBadge :value="data?.security_mode" />
-    </section>
-    <section class="counts" aria-label="资源数量">
-      <div v-for="(value, key) in data?.counts" :key="key">
-        <span>{{ countLabels[key] || key }}</span><strong>{{ value }}</strong>
-      </div>
-    </section>
-    <div class="overview-grid">
-      <section>
-        <h2>最近操作</h2>
-        <PageState :empty="!data?.recent_operations?.length" empty-text="暂无操作">
-          <ul>
-            <li v-for="item in data?.recent_operations" :key="String(item.id)">
-              <RouterLink :to="`/operations/${item.id}`">{{ item.kind }}</RouterLink>
-              <StatusBadge :value="String(item.status)" />
-            </li>
-          </ul>
-        </PageState>
-      </section>
-      <section>
-        <h2>最近审计</h2>
-        <PageState :empty="!data?.recent_audit?.length" empty-text="暂无审计">
-          <ul>
-            <li v-for="item in data?.recent_audit" :key="String(item.id)">
-              <span>{{ item.action }}</span><StatusBadge :value="String(item.result)" />
-            </li>
-          </ul>
-        </PageState>
-      </section>
-    </div>
-  </PageState>
+  <Page title="总览" description="控制面当前状态">
+    <template #title>
+      <h1 class="mb-2 text-lg font-semibold">总览</h1>
+    </template>
+    <PageState :loading="loading" :error="error" @retry="reload">
+      <Space direction="vertical" size="middle" class="w-full">
+        <Card :bordered="false">
+          <Space>
+            <span>安全屏障</span>
+            <StatusBadge :value="data?.security_mode" />
+          </Space>
+        </Card>
+        <Row :gutter="[16, 16]" aria-label="资源数量">
+          <Col v-for="(value, key) in data?.counts" :key="key" :xs="12" :md="8" :xl="4">
+            <Card :bordered="false">
+              <Statistic :title="countLabels[key] || key" :value="value" />
+            </Card>
+          </Col>
+        </Row>
+        <Row :gutter="[16, 16]">
+          <Col :xs="24" :lg="12">
+            <Card title="最近操作" :bordered="false">
+              <PageState :empty="!data?.recent_operations?.length" empty-text="暂无操作">
+                <List>
+                  <ListItem v-for="item in data?.recent_operations" :key="String(item.id)">
+                    <RouterLink :to="`/operations/${item.id}`">{{ item.kind }}</RouterLink>
+                    <template #extra><StatusBadge :value="String(item.status)" /></template>
+                  </ListItem>
+                </List>
+              </PageState>
+            </Card>
+          </Col>
+          <Col :xs="24" :lg="12">
+            <Card title="最近审计" :bordered="false">
+              <PageState :empty="!data?.recent_audit?.length" empty-text="暂无审计">
+                <List>
+                  <ListItem v-for="item in data?.recent_audit" :key="String(item.id)">
+                    <span>{{ item.action }}</span>
+                    <template #extra><StatusBadge :value="String(item.result)" /></template>
+                  </ListItem>
+                </List>
+              </PageState>
+            </Card>
+          </Col>
+        </Row>
+      </Space>
+    </PageState>
+  </Page>
 </template>
-
-<style scoped>
-.security-band { height: 48px; display: flex; align-items: center; justify-content: space-between; margin-top: 18px; padding: 0 14px; border: 1px solid var(--x-border); background: white; font-weight: 600; }
-.counts { display: grid; grid-template-columns: repeat(6, minmax(110px, 1fr)); margin-top: 14px; border: 1px solid var(--x-border); background: white; }
-.counts div { min-height: 88px; display: flex; flex-direction: column; justify-content: center; padding: 14px 16px; border-right: 1px solid var(--x-border); }
-.counts div:last-child { border-right: 0; }
-.counts span { color: var(--x-text-muted); font-size: 12px; }
-.counts strong { margin-top: 6px; font-size: 24px; }
-.overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
-.overview-grid section { background: white; border: 1px solid var(--x-border); }
-.overview-grid h2 { margin: 0; padding: 15px 16px; border-bottom: 1px solid var(--x-border); font-size: 14px; }
-ul { margin: 0; padding: 0 16px; list-style: none; }
-li { min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--x-border); }
-li:last-child { border-bottom: 0; }
-a { color: var(--x-accent); text-decoration: none; }
-@media (max-width: 1050px) { .counts { grid-template-columns: repeat(3, 1fr); } .counts div:nth-child(3) { border-right: 0; } .counts div:nth-child(-n+3) { border-bottom: 1px solid var(--x-border); } }
-@media (max-width: 680px) { .counts { grid-template-columns: repeat(2, 1fr); } .counts div:nth-child(3) { border-right: 1px solid var(--x-border); } .counts div:nth-child(even) { border-right: 0; } .counts div:nth-child(-n+4) { border-bottom: 1px solid var(--x-border); } .overview-grid { grid-template-columns: 1fr; } }
-</style>

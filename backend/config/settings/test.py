@@ -21,5 +21,5 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "xray_test_session"
 CSRF_COOKIE_NAME = "xray_test_csrf"
-# Deliberately opt-in and test-only; production settings do not expose this bypass.
-XRAY_DISABLE_TOTP = env_bool("XRAY_DISABLE_TOTP", False)
+# Deliberately test-only; production settings force this to False.
+XRAY_DISABLE_TOTP = XRAY_ENV == "test" and env_bool("XRAY_DISABLE_TOTP", False)

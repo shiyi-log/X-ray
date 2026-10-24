@@ -2,11 +2,26 @@
 import { computed, reactive, ref } from 'vue';
 import { Plus, RefreshCw } from 'lucide-vue-next';
 
+import { Page } from '@vben/common-ui';
+
+import {
+  Alert, Button, Card, Form, Input, InputNumber, Modal, Space, Table,
+} from 'ant-design-vue';
+
 import { resourcesApi, type NodePool } from '@/api/resources';
-import PageHeader from '@/components/PageHeader.vue';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
+
+const FormItem = Form.Item;
+const columns = [
+  { title: '名称', dataIndex: 'name', key: 'name' },
+  { title: '额度', dataIndex: 'quota', key: 'quota' },
+  { title: '占用', dataIndex: 'used', key: 'used' },
+  { title: '可用', dataIndex: 'available', key: 'available' },
+  { title: '允许创建', dataIndex: 'allow_create', key: 'allow_create' },
+  { title: '操作', key: 'actions' },
+];
 
 const { data, loading, error, reload } = useResource(resourcesApi.nodePools);
 const open = ref(false);
@@ -16,6 +31,7 @@ const form = reactive({ name: '', quota: 3 });
 const empty = computed(() => !data.value?.items.length);
 
 async function createPool() {
+  if (saving.value) return;
   saving.value = true;
   formError.value = '';
   try {
@@ -42,37 +58,53 @@ async function toggle(item: NodePool) {
 </script>
 
 <template>
-  <PageHeader title="节点池" subtitle="配额包含未确认释放的资源">
-    <template #actions>
-      <button class="icon-button" title="刷新" aria-label="刷新" @click="reload">
-        <RefreshCw :size="17" />
-      </button>
-      <button class="command" @click="open = true"><Plus :size="17" />新建节点池</button>
+  <Page title="节点池" description="配额包含未确认释放的资源">
+    <template #title><h1 class="mb-2 text-lg font-semibold">节点池</h1></template>
+    <template #extra>
+      <Space>
+        <Button title="刷新" aria-label="刷新" @click="reload">
+          <template #icon><RefreshCw :size="16" /></template>
+        </Button>
+        <Button type="primary" @click="open = true">
+          <template #icon><Plus :size="16" /></template>
+          新建节点池
+        </Button>
+      </Space>
     </template>
-  </PageHeader>
-  <div v-if="formError" class="page-error">{{ formError }}</div>
-  <PageState
-    :loading="loading"
-    :error="error"
-    :empty="empty"
-    empty-text="暂无节点池"
-    @retry="reload"
-  >
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>名称</th><th>额度</th><th>占用</th><th>可用</th><th>允许创建</th><th></th></tr></thead>
-        <tbody><tr v-for="item in data?.items" :key="item.id"><td><strong>{{ item.name }}</strong><small class="resource-id">{{ item.id }}</small></td><td>{{ item.quota }}</td><td>{{ item.used }}</td><td>{{ item.available }}</td><td><StatusBadge :value="item.allow_create" /></td><td><button class="link-button" @click="toggle(item)">{{ item.allow_create ? '暂停创建' : '恢复创建' }}</button></td></tr></tbody>
-      </table>
-    </div>
-  </PageState>
-  <a-modal v-model:open="open" title="新建节点池" :footer="null">
-    <form class="dialog-form" @submit.prevent="createPool">
-      <div v-if="formError" class="form-error">{{ formError }}</div>
-      <label>名称<input v-model="form.name" required /></label>
-      <label>配额<input v-model.number="form.quota" type="number" min="1" required /></label>
-      <button class="command" :disabled="saving">{{ saving ? '保存中' : '创建' }}</button>
-    </form>
-  </a-modal>
+    <Alert v-if="formError" class="mb-4" :message="formError" type="error" show-icon />
+    <Card>
+      <PageState
+        :loading="loading"
+        :error="error"
+        :empty="empty"
+        empty-text="暂无节点池"
+        @retry="reload"
+      >
+        <Table :columns="columns" :data-source="data?.items || []" :pagination="false" :scroll="{ x: 'max-content' }" row-key="id">
+          <template #bodyCell="{ column, record }">
+            <div v-if="column.key === 'name'">
+              <strong>{{ record.name }}</strong>
+              <div class="text-xs text-muted-foreground">{{ record.id }}</div>
+            </div>
+            <StatusBadge v-else-if="column.key === 'allow_create'" :value="record.allow_create" />
+            <Button v-else-if="column.key === 'actions'" type="link" @click="toggle(record as NodePool)">
+              {{ record.allow_create ? '暂停创建' : '恢复创建' }}
+            </Button>
+          </template>
+        </Table>
+      </PageState>
+    </Card>
+    <Modal v-model:open="open" title="新建节点池" :footer="null">
+      <Form :model="form" layout="vertical" @finish="createPool">
+        <Alert v-if="formError" class="mb-4" :message="formError" type="error" show-icon />
+        <FormItem label="名称" name="name" :rules="[{ required: true, message: '请输入名称' }]">
+          <Input v-model:value="form.name" />
+        </FormItem>
+        <FormItem label="配额" name="quota" :rules="[{ required: true, type: 'number', min: 1, message: '配额至少为 1' }]">
+          <InputNumber v-model:value="form.quota" :min="1" :precision="0" class="w-full" />
+        </FormItem>
+        <Button type="primary" html-type="submit" :loading="saving" block>{{ saving ? '保存中' : '创建' }}</Button>
+      </Form>
+    </Modal>
+  </Page>
 </template>
-
-<style scoped src="../styles/resource-page.css"></style>

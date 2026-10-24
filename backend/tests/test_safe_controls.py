@@ -4,13 +4,12 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
-from django.utils import timezone
-from rest_framework.test import APIClient
-
 from apps.identity.models import SuperAdmin
 from apps.operations.models import ActionPreview, Operation
 from apps.subscriptions.models import AccessProfile, SubscriptionToken
 from apps.subscriptions.tokens import TokenGone, TokenService
+from django.utils import timezone
+from rest_framework.test import APIClient
 
 
 @pytest.fixture
@@ -44,7 +43,10 @@ def test_secret_delivery_is_returned_once_and_never_retrievable(recent_admin_cli
     profile = AccessProfile.objects.create(name="one-time-device")
 
     issued = client.post(
-        f"/api/v1/access-profiles/{profile.pk}/subscription/", {}, format="json"
+        f"/api/v1/access-profiles/{profile.pk}/subscription/",
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
     )
     assert issued.status_code == 201
     body = issued.json()
@@ -53,7 +55,10 @@ def test_secret_delivery_is_returned_once_and_never_retrievable(recent_admin_cli
     assert set(body["urls"]) == {"shadowrocket", "clash", "mihomo", "v2ray"}
 
     repeated = client.post(
-        f"/api/v1/access-profiles/{profile.pk}/subscription/", {}, format="json"
+        f"/api/v1/access-profiles/{profile.pk}/subscription/",
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
     )
     assert repeated.status_code == 409
     assert repeated.json()["code"] == "SECRET_ALREADY_DELIVERED"
@@ -120,9 +125,7 @@ def test_force_revoke_disables_link_before_operation_and_cancel_cannot_restore_i
     assert response.json()["link_revoked"] is True
     operation = Operation.objects.get(pk=response.json()["operation_id"])
     assert operation.can_cancel is False
-    current_token = SubscriptionToken.objects.get(
-        token_digest=profile.subscription.token_digest
-    )
+    current_token = SubscriptionToken.objects.get(token_digest=profile.subscription.token_digest)
     assert current_token.status == "REVOKED"
     with pytest.raises(TokenGone):
         TokenService.resolve(issued.raw_token)

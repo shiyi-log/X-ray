@@ -58,10 +58,16 @@ for data_file in geoip.dat geosite.dat; do
 done
 install -m 644 "$manifest" "$state_dir/installed-manifest.json"
 install -m 644 "$script_dir/licenses/MPL-2.0.txt" "$state_dir/XRAY-LICENSE.txt"
-printf '0\n' >"$state_dir/current-generation"
+if [[ ! -f "$state_dir/current-generation" ]]; then
+  printf '0\n' >"$state_dir/current-generation"
+fi
 chmod 600 "$state_dir/current-generation"
 
 if [[ "$skip_systemd" != "1" && "$os_name" == "linux" ]]; then
+  install -d -m 755 /opt/xray-manager
+  install -m 755 "$script_dir/apply-config.sh" /opt/xray-manager/apply-config.sh
+  install -m 755 "$script_dir/verify.sh" /opt/xray-manager/verify.sh
+  install -m 755 "$script_dir/inline-certificates.py" /opt/xray-manager/inline-certificates.py
   install -m 644 "$script_dir/xray.service" /etc/systemd/system/xray.service
   /bin/systemctl daemon-reload
   /bin/systemctl enable xray.service >/dev/null

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from common.regions import normalize_region
+
 from .models import CloudAccount
 
 
@@ -37,9 +39,9 @@ class CloudAccountSerializer:
         name = str(payload.get("name") or "").strip()
         provider = str(payload.get("provider") or "")
         credentials = payload.get("credentials")
-        region = str(payload.get("region") or "").strip()
-        if not name or not provider or not isinstance(credentials, dict) or not region:
-            raise ValueError("name, provider, credentials and region are required")
+        region = normalize_region(payload.get("region"))
+        if not name or not provider or not isinstance(credentials, dict):
+            raise ValueError("name, provider and credentials are required")
         return name, region, {"provider": provider, "fields": credentials}
 
     @classmethod

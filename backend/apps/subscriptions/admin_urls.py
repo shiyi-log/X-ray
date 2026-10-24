@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import admin_views
+from . import admin_views, management_api
 
 profile_urlpatterns = [
     path("", admin_views.profile_collection, name="access-profile-list"),
@@ -15,6 +15,11 @@ profile_urlpatterns = [
 
 subscription_urlpatterns = [
     path("", admin_views.subscription_collection, name="subscription-list"),
+    path("plans/", management_api.plans, name="subscription-plans"),
+    path("plans/<uuid:plan_id>/", management_api.plans, name="subscription-plan-detail"),
+    path("catalog/", management_api.catalog, name="subscription-catalog"),
+    path("<uuid:subscription_id>/", management_api.subscription_detail, name="subscription-detail"),
+    path("<uuid:subscription_id>/assign/", management_api.assign, name="subscription-assign"),
     path("<uuid:subscription_id>/rotate/", admin_views.rotate, name="subscription-rotate"),
     path("<uuid:subscription_id>/publish/", admin_views.publish, name="subscription-publish"),
 ]

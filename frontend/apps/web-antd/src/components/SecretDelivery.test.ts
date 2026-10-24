@@ -17,6 +17,32 @@ const delivery = {
 };
 
 describe('SecretDelivery', () => {
+  it.each([
+    { name: '遮罩', event: 'click', options: {}, closeSelector: '[aria-label="关闭"]' },
+    {
+      name: 'Esc', event: 'keydown', options: { key: 'Escape', keyCode: 27 },
+      closeSelector: '.ant-modal-footer button',
+    },
+  ])('$name 不会丢弃一次性交付内容，显式关闭才立即清空', async ({ event, options, closeSelector }) => {
+    const wrapper = mount(SecretDelivery, { props: { open: true, delivery } });
+    try {
+      await wrapper.get('.ant-modal-wrap').trigger(event, options);
+
+      expect(wrapper.emitted('close')).toBeUndefined();
+      expect(wrapper.text()).toContain(delivery.token);
+      await wrapper.get(closeSelector).trigger('click');
+
+      expect(wrapper.emitted('close')).toHaveLength(1);
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+      expect(wrapper.text()).not.toContain(delivery.token);
+      for (const url of Object.values(delivery.urls)) {
+        expect(wrapper.text()).not.toContain(url);
+      }
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('只显示传入内存内容，复制不会请求新版本', async () => {
     const writeText = vi.fn(async () => undefined);
     Object.defineProperty(navigator, 'clipboard', {

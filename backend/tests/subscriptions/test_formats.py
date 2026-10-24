@@ -4,7 +4,6 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import yaml
-
 from common.errors import DomainError
 
 
@@ -95,3 +94,21 @@ def test_allow_insecure_is_rejected_for_all_formats():
     with pytest.raises(DomainError) as caught:
         render_subscription("mihomo", endpoints=[insecure], public_version="r4")
     assert caught.value.code == "INSECURE_TLS_FORBIDDEN"
+
+
+@pytest.mark.parametrize("format", ["clash", "mihomo"])
+def test_yaml_subscriptions_enable_udp_for_every_compatible_protocol(format):
+    from apps.nodes.protocols import PROTOCOL_CAPABILITIES
+    from apps.subscriptions.compatibility import FORMAT_PROTOCOLS
+    from apps.subscriptions.renderers import render_subscription
+
+    document = yaml.safe_load(
+        render_subscription(
+            format,
+            endpoints=[endpoint(name) for name in PROTOCOL_CAPABILITIES],
+            public_version="udp-all",
+        )
+    )
+    proxies = document["proxies"]
+    assert len(proxies) == len(FORMAT_PROTOCOLS[format])
+    assert all(proxy["udp"] is True for proxy in proxies)

@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 
+import { useTabbarStore, useUserStore } from '@vben/stores';
+
 import { authApi, type AdminSession, type LoginChallenge, type TotpSetup } from '@/api/auth';
 import { clearSensitiveState, registerSensitiveClearer } from '@/api/request';
 
@@ -29,15 +31,26 @@ export const useSessionStore = defineStore('session', {
     username: (state) => state.session?.admin?.username || '',
   },
   actions: {
+    applySession(session: AdminSession | null) {
+      this.session = session;
+      this.loaded = true;
+      const username = session?.authenticated ? session.admin?.username : undefined;
+      useUserStore().setUserInfo(username ? {
+        avatar: '',
+        realName: username,
+        userId: username,
+        username,
+      } : null);
+    },
     clearSensitive() {
       this.sensitive = emptySensitiveState();
     },
     async loadSession() {
       this.loading = true;
       try {
-        this.session = await authApi.session();
-        this.loaded = true;
-        return this.session;
+        const session = await authApi.session();
+        this.applySession(session);
+        return session;
       } finally {
         this.loading = false;
       }
@@ -47,13 +60,13 @@ export const useSessionStore = defineStore('session', {
       const challenge = await authApi.login(username, password);
       this.sensitive.challengeId = challenge.challenge_id || '';
       if (challenge.authenticated) {
-        this.session = {
+        this.applySession({
           authenticated: true,
           mfa_required: false,
           admin: challenge.admin,
           expires_at: challenge.expires_at,
           recent_auth_until: null,
-        };
+        });
       }
       return challenge;
     },
@@ -65,7 +78,7 @@ export const useSessionStore = defineStore('session', {
     },
     async confirmTotp(code: string) {
       const result = await authApi.confirmTotp(this.sensitive.challengeId, code);
-      this.session = result;
+      this.applySession(result);
       this.sensitive.recoveryCodes = result.recovery_codes || [];
       this.sensitive.challengeId = '';
       this.sensitive.setupSecret = '';
@@ -74,13 +87,13 @@ export const useSessionStore = defineStore('session', {
     },
     async verifyTotp(code: string) {
       const result = await authApi.verifyTotp(this.sensitive.challengeId, code);
-      this.session = result;
+      this.applySession(result);
       this.clearSensitive();
       return result;
     },
     async useRecoveryCode(code: string) {
       const result = await authApi.recovery(this.sensitive.challengeId, code);
-      this.session = result;
+      this.applySession(result);
       this.clearSensitive();
       return result;
     },
@@ -88,12 +101,16 @@ export const useSessionStore = defineStore('session', {
       try {
         await authApi.logout();
       } finally {
+        useUserStore().setUserInfo(null);
+        useTabbarStore().$reset();
         this.$reset();
         clearSensitiveState();
       }
     },
     installUnauthorizedHandler() {
       registerSensitiveClearer(() => {
+        useUserStore().setUserInfo(null);
+        useTabbarStore().$reset();
         this.session = null;
         this.loaded = true;
         this.clearSensitive();

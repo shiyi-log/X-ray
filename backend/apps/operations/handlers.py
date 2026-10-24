@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from django.db import transaction
-
 from apps.nodes.lifecycle import NodeLifecycle
 from common.errors import DomainError
+from django.db import transaction
 
 from .models import Operation
 
@@ -36,10 +35,14 @@ def handle_operation(operation_id: str, *, revocation_service=None):
         revocation_service.run(operation.pk)
         operation.refresh_from_db()
         return {"operation_id": str(operation.pk), "status": operation.status}
+    if operation.kind == "node.access_sync":
+        from apps.subscriptions.access import AccessService
+
+        AccessService.sync(operation.pk)
+        operation.refresh_from_db()
+        return {"operation_id": str(operation.pk), "status": operation.status}
     if not operation.kind.startswith("node."):
-        raise DomainError(
-            "OPERATION_KIND_UNSUPPORTED", "不支持的操作类型", status_code=400
-        )
+        raise DomainError("OPERATION_KIND_UNSUPPORTED", "不支持的操作类型", status_code=400)
     action = operation.kind.removeprefix("node.")
     NodeLifecycle().dispatch(action, operation.target_id, operation_id=operation.pk)
     operation.refresh_from_db()

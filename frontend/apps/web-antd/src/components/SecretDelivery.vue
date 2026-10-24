@@ -2,6 +2,8 @@
 import { computed, onScopeDispose, ref, watch } from 'vue';
 import { Check, Clipboard, KeyRound, X } from 'lucide-vue-next';
 
+import { Alert, Button, Descriptions, Modal, Space } from 'ant-design-vue';
+
 import type { SecretDelivery as SecretDeliveryValue } from '@/api/resources';
 import { registerSensitiveClearer } from '@/api/request';
 
@@ -9,11 +11,13 @@ const props = defineProps<{ open: boolean; delivery: SecretDeliveryValue | null 
 const emit = defineEmits<{ close: [] }>();
 const secret = ref<SecretDeliveryValue | null>(null);
 const copied = ref('');
+const copyError = ref('');
 let timer: number | undefined;
 
 function wipe() {
   secret.value = null;
   copied.value = '';
+  copyError.value = '';
   if (timer) window.clearTimeout(timer);
   timer = undefined;
 }
@@ -45,7 +49,9 @@ onScopeDispose(() => {
 const formats = computed(() => Object.entries(secret.value?.urls || {}));
 
 async function copy(label: string, value: string) {
-  await navigator.clipboard.writeText(value);
+  copyError.value = '';
+  try { await navigator.clipboard.writeText(value); }
+  catch { copyError.value = '剪贴板不可用，请手动复制订阅链接。'; return; }
   copied.value = label;
   window.setTimeout(() => {
     if (copied.value === label) copied.value = '';
@@ -54,34 +60,61 @@ async function copy(label: string, value: string) {
 </script>
 
 <template>
-  <div v-if="open && secret" class="modal-layer" role="presentation">
-    <section class="secret-dialog" role="dialog" aria-modal="true" aria-labelledby="secret-title">
-      <header><span class="secret-icon"><KeyRound :size="20" /></span><div><h2 id="secret-title">一次性交付</h2><p>关闭或五分钟后清除，之后只能显式轮换。</p></div><button class="icon-button" type="button" aria-label="关闭" title="关闭" @click="close"><X :size="18" /></button></header>
-      <div class="warning-band">Token 与订阅 URL 不会写入浏览器存储，也无法从服务器再次读取。</div>
-      <section class="secret-value"><span>Token</span><code>{{ secret.token }}</code><button data-testid="copy-token" class="copy-button" type="button" @click="copy('token', secret.token)"><Check v-if="copied === 'token'" :size="16" /><Clipboard v-else :size="16" />{{ copied === 'token' ? '已复制' : '复制' }}</button></section>
-      <section class="format-list"><div v-for="[name, value] in formats" :key="name"><span>{{ name }}</span><code>{{ value }}</code><button class="icon-button" type="button" :aria-label="`复制 ${name} URL`" :title="`复制 ${name} URL`" @click="copy(name, value)"><Check v-if="copied === name" :size="16" /><Clipboard v-else :size="16" /></button></div></section>
-      <footer><button class="command" type="button" @click="close">我已安全保存并关闭</button></footer>
-    </section>
-  </div>
+  <Modal
+    v-if="open && secret"
+    :open="true"
+    :get-container="false"
+    :destroy-on-close="true"
+    :closable="false"
+    :mask-closable="false"
+    :keyboard="false"
+    :width="720"
+    @cancel="close"
+  >
+    <template #title>
+      <div class="flex items-center justify-between gap-4">
+        <Space>
+          <KeyRound :size="20" />
+          <span id="secret-title">一次性交付</span>
+        </Space>
+        <Button type="text" aria-label="关闭" title="关闭" @click="close">
+          <template #icon><X :size="18" /></template>
+        </Button>
+      </div>
+    </template>
+    <Space direction="vertical" class="w-full" :size="16">
+      <p class="text-muted-foreground">关闭或五分钟后清除，之后只能显式轮换。</p>
+      <Alert type="warning" show-icon message="Token 与订阅 URL 不会写入浏览器存储，也无法从服务器再次读取。" />
+      <Alert v-if="copyError" type="error" :message="copyError" />
+      <Alert type="info" message="Shadowrocket 选择 Shadowrocket 链接；Clash Meta 使用 Mihomo 链接（含 VLESS）；普通 Clash 不含 VLESS。在客户端添加订阅 URL 后更新即可。" />
+      <Descriptions :column="1" bordered layout="vertical">
+        <Descriptions.Item label="Token">
+          <div class="flex items-start justify-between gap-3">
+            <code class="min-w-0 break-all">{{ secret.token }}</code>
+            <Button data-testid="copy-token" @click="copy('token', secret.token)">
+              <template #icon>
+                <Check v-if="copied === 'token'" :size="16" />
+                <Clipboard v-else :size="16" />
+              </template>
+              {{ copied === 'token' ? '已复制' : '复制' }}
+            </Button>
+          </div>
+        </Descriptions.Item>
+        <Descriptions.Item v-for="[name, value] in formats" :key="name" :label="name">
+          <div class="flex items-start justify-between gap-3">
+            <code class="min-w-0 break-all">{{ value }}</code>
+            <Button :aria-label="`复制 ${name} URL`" :title="`复制 ${name} URL`" @click="copy(name, value)">
+              <template #icon>
+                <Check v-if="copied === name" :size="16" />
+                <Clipboard v-else :size="16" />
+              </template>
+            </Button>
+          </div>
+        </Descriptions.Item>
+      </Descriptions>
+    </Space>
+    <template #footer>
+      <Button type="primary" @click="close">我已安全保存并关闭</Button>
+    </template>
+  </Modal>
 </template>
-
-<style scoped>
-.modal-layer { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 20px; background: rgb(14 24 29 / 54%); }
-.secret-dialog { width: min(100%, 720px); max-height: calc(100vh - 40px); overflow: auto; border: 1px solid var(--x-border); border-radius: 6px; background: white; box-shadow: var(--x-shadow); }
-header { display: grid; grid-template-columns: 38px 1fr 36px; gap: 12px; align-items: start; padding: 19px 20px; border-bottom: 1px solid var(--x-border); }
-.secret-icon { width: 36px; height: 36px; display: grid; place-items: center; color: white; border-radius: 5px; background: var(--x-accent); }
-h2, p { margin: 0; letter-spacing: 0; }
-h2 { font-size: 17px; } header p { margin-top: 4px; color: var(--x-text-muted); font-size: 12px; }
-.warning-band { margin: 16px 20px 0; padding: 10px 12px; color: #74570d; background: #fff8e8; border-left: 3px solid var(--x-warning); font-size: 12px; }
-.secret-value { display: grid; grid-template-columns: 1fr auto; gap: 7px 10px; margin: 16px 20px; padding: 13px; border: 1px solid var(--x-border); background: #f7f9fa; }
-.secret-value span { grid-column: 1 / -1; color: var(--x-text-muted); font-size: 11px; }
-.secret-value code { min-width: 0; overflow-wrap: anywhere; font-size: 12px; }
-.copy-button { display: inline-flex; align-items: center; gap: 6px; padding: 0 9px; border: 1px solid var(--x-border); border-radius: 4px; color: var(--x-text); background: white; cursor: pointer; }
-.format-list { margin: 0 20px; border: 1px solid var(--x-border); }
-.format-list > div { min-height: 58px; display: grid; grid-template-columns: 86px minmax(0, 1fr) 36px; align-items: center; gap: 10px; padding: 8px 10px; border-bottom: 1px solid var(--x-border); }
-.format-list > div:last-child { border-bottom: 0; }
-.format-list span { text-transform: capitalize; font-size: 12px; font-weight: 650; }
-.format-list code { overflow: hidden; color: var(--x-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-footer { display: flex; justify-content: flex-end; padding: 16px 20px; }
-@media (max-width: 600px) { .modal-layer { padding: 0; align-items: end; } .secret-dialog { max-height: 92vh; border-radius: 6px 6px 0 0; } .format-list > div { grid-template-columns: 1fr 36px; } .format-list span { grid-column: 1 / -1; } }
-</style>

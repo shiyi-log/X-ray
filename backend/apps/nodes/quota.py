@@ -5,6 +5,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from django.db import transaction
 
 from common.errors import DomainError
+from common.regions import normalize_region
 
 from .models import ManagedNode, NodePool
 
@@ -20,6 +21,7 @@ def reserve_node(
 ) -> ManagedNode:
     from apps.cloud_accounts.models import CloudAccount
 
+    region = normalize_region(region)
     with transaction.atomic():
         pool = NodePool.objects.select_for_update().get(pk=pool_id)
         if not pool.allow_create:

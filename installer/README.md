@@ -12,3 +12,9 @@ generation or lock conflict, and 40 for a service restart/recovery failure.
 Security changes do not restore the previous configuration when restart
 fails. The control plane must quarantine the node and reconcile it before any
 reopen operation.
+
+On Linux with systemd enabled, installation also places the apply and verify
+helpers in `/opt/xray-manager`. Reinstalling preserves the current generation
+and configuration. The service uses a systemd dynamic user and receives the
+root-only configuration through `LoadCredential`; no static `xray` user or
+broader configuration file permissions are required.
