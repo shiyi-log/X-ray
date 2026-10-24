@@ -1851,3 +1851,19 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `2f6e34f plus scoped working-tree changes`
 - `rollback_ref`: `git revert the scoped implementation commit`
 - `time_logic`: `No business time logic changed`
+
+- `event_id`: `xray-supported-regions-20261024-01/006`
+- `timestamp`: `2026-10-24T15:17:08+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `main`, `origin/main`, `docs/project-ledger.md`, local frontend/backend listeners
+- `operation`: `commit, push and final delivery inspection`
+- `reason`: `Publish the authorized region-list change while preserving the running local project`
+- `command_or_tool`: `git commit -m "fix: remove unsupported UK node pool region"; git push origin main; git rev-parse HEAD; git ls-remote origin refs/heads/main; git status --short --branch; git diff --check; curl --noproxy '*' frontend/backend health endpoints; lsof listener inspection`
+- `result`: `commit 559c55b pushed to origin/main; local and remote refs match; frontend 9528 and backend 9529 return HTTP 200; worktree clean before this append; existing listeners preserved; GitHub push displayed an unrelated dependency vulnerability notice`
+- `exit_code`: `0/0/0/0/0/0/0`
+- `evidence`: `local Git, HTTP and listener output; no production/cloud/device action`
+- `status`: `passed`
+- `commit_or_tree`: `559c55b clean before this audit append`
+- `rollback_ref`: `git revert 559c55b; no database rollback required because no migration or data rewrite was made`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
