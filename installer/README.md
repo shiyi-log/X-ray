@@ -1,4 +1,37 @@
-# Xray Offline Installer
+# Xray Installer
+
+## One-command interactive install/update
+
+For a Linux host with systemd, run the interactive wrapper as root:
+
+```bash
+sudo bash installer/one-click.sh
+```
+
+It detects the CPU architecture, asks whether to install or update, downloads
+the exact artifact from `manifest.json`, verifies its filename/version/SHA-256,
+then delegates file installation to `install.sh`. An update keeps the existing
+configuration and generation state. If the service restart fails, the previous
+Xray binary and data files are restored when available.
+
+When the repository is published under an immutable tag, the same flow can be
+started with one command from a clean Linux host:
+
+```bash
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
+  https://raw.githubusercontent.com/shiyi-log/X-ray/v0.7.0/installer/one-click.sh \
+  | sudo bash
+```
+
+The remote wrapper downloads the helper files from the same ref. Use a release
+tag rather than `main` for repeatable installs. The Xray archive itself is
+always selected from the pinned manifest and checked by SHA-256; no `latest`
+release is resolved.
+
+The interactive wrapper installs only the Xray runtime and service helpers. It
+does not create subscription credentials, generate node configuration, or
+print secrets. Configuration is still applied through the structured JSON
+contract described below.
 
 The installer accepts only an operator-supplied archive whose filename,
 platform, version, and SHA-256 match `manifest.json`. It performs no network

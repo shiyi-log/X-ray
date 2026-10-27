@@ -2128,6 +2128,38 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `rollback_ref`: `revert cfdd110ed63de45b4f9779038ec8745b5ced8a23 if the scoped repair must be rolled back`
 - `time_logic`: `System clock with +08:00; no business time behavior changed`
 
+- `event_id`: `xray-one-click-installer-20261027-01/001`
+- `timestamp`: `2026-10-27T10:31:12+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `installer/one-click.sh`, `tests/installer/test_one_click.py`, `installer/README.md`, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `define an interactive one-command install/update wrapper around the existing offline installer`
+- `reason`: `Provide the requested shell interaction while preserving pinned artifacts, config generations and fail-closed service behavior`
+- `command_or_tool`: `repository installer/source/test/doc inspection; user request`
+- `result`: `In scope: a Linux root-run interactive wrapper with install/update selection, fixed manifest download, TLS-only transfer, SHA-256 verification, existing installer reuse, update rollback of the previous binary and structured output. Out of scope: production deployment, cloud writes, credentials, subscription configuration, database changes, release/tag publication and arbitrary latest-version resolution.`
+- `exit_code`: `0`
+- `evidence`: `installer/install.sh`, `installer/apply-config.sh`, `installer/verify.sh`, `installer/manifest.json`, existing installer tests and service unit`
+- `status`: `passed`
+- `commit_or_tree`: `0d9dca40fd351e0004dce7bb5518a13e756dd519 clean before installer changes`
+- `rollback_ref`: `revert the installer/test/docs commit; existing install.sh/apply-config.sh behavior remains the rollback baseline`
+- `time_logic`: `System clock with +08:00; download and service operations use bounded command timeouts where configured; no business expiry or TTL behavior changes`
+
+- `event_id`: `xray-one-click-installer-20261027-01/002`
+- `timestamp`: `2026-10-27T10:43:26+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `installer/one-click.sh`, `tests/installer`, `installer/README.md`, repository boundary and secret-scan scope
+- `operation`: `validate the interactive installer contract and regression surface`
+- `reason`: `Confirm install/update selection, pinned transfer, archive verification, state preservation coverage and repository boundaries before delivery`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL=<dedicated test DB> uv run --project backend pytest -c backend/pyproject.toml tests/installer -q`; `bash -n installer/one-click.sh`; `git diff --check`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; `shellcheck installer/one-click.sh`
+- `result`: `Installer suite passed 12 tests with 3 explicit skips: disposable Linux one-click runtime, fixed Xray binary and Linux systemd gates. Bash syntax, whitespace and boundary checks passed. ShellCheck was unavailable. Secret scan returned the same two pre-existing generic ledger false positives; no new credential or token finding was observed.`
+- `exit_code`: `0/3 skipped/0/0/1/127`
+- `evidence`: `pytest output; boundary output; diff check; redacted secret-scan summary; no raw secret matches persisted`
+- `status`: `passed`
+- `commit_or_tree`: `0d9dca40fd351e0004dce7bb5518a13e756dd519 plus installer changes`
+- `rollback_ref`: `revert the installer/test/docs commit; do not alter existing Xray configuration or generation state`
+- `time_logic`: `System clock with +08:00; installer network operations use bounded connect/read timeouts; no business expiry or TTL behavior changed`
+
 - `event_id`: `xray-dualstack-shadowrocket-20261027-01/011`
 - `timestamp`: `2026-10-27T10:09:15+08:00`
 - `actor`: `Codex`
