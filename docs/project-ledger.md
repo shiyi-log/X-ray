@@ -2111,3 +2111,35 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `9cf76db plus dirty working tree`
 - `rollback_ref`: `none; read-only network probes`
 - `time_logic`: `Each request used bounded connect/read timeouts; no business time behavior changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/010`
+- `timestamp`: `2026-10-27T10:09:15+08:00`
+- `actor`: `Codex`
+- `event_type`: `command`
+- `path_scope`: `14 scoped dual-stack, subscription, installer, test and project-convention files`
+- `operation`: `commit and push the coherent repair on the current main branch`
+- `reason`: `Publish the verified fix without switching or creating a branch`
+- `command_or_tool`: `git add -- <explicit scoped files>`; `git commit -m "fix: stabilize dual-stack Shadowrocket connectivity"`; `git push origin main`; `git rev-parse HEAD`; `git ls-remote origin refs/heads/main`; `git status --short --branch`
+- `result`: `Commit cfdd110ed63de45b4f9779038ec8745b5ced8a23 was created and pushed to origin/main. Local HEAD and refs/heads/main match the remote; the worktree is clean. GitHub returned an unrelated dependency-vulnerability notice; no release, tag, cloud write, deletion or permission change was performed.`
+- `exit_code`: `0`
+- `evidence`: `local HEAD, remote ref readback and clean status; no secret-bearing content recorded`
+- `status`: `passed`
+- `commit_or_tree`: `cfdd110ed63de45b4f9779038ec8745b5ced8a23 clean before this audit append`
+- `rollback_ref`: `revert cfdd110ed63de45b4f9779038ec8745b5ced8a23 if the scoped repair must be rolled back`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/011`
+- `timestamp`: `2026-10-27T10:09:15+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `append final commit/push closeout evidence`
+- `reason`: `Keep the durable project record aligned with the code that was just published`
+- `command_or_tool`: `apply_patch`
+- `result`: `Added the code commit/push evidence and the final dual-stack/Shadowrocket delivery row; earlier findings, including the AWS readback permission block and pre-existing scanner false positives, remain unchanged.`
+- `exit_code`: `0`
+- `evidence`: `the appended ledger event and progress row; no credentials, tokens, raw URIs or private keys recorded`
+- `status`: `passed`
+- `commit_or_tree`: `cfdd110ed63de45b4f9779038ec8745b5ced8a23 plus pending audit-doc changes`
+- `rollback_ref`: `revert only this docs-only append; preserve the code commit and prior audit history`
+- `time_logic`: `System clock with +08:00; documentation-only change; no business time behavior changed`
