@@ -19,14 +19,15 @@ started with one command from a clean Linux host:
 
 ```bash
 curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  https://raw.githubusercontent.com/shiyi-log/X-ray/v0.7.0/installer/one-click.sh \
+  https://raw.githubusercontent.com/shiyi-log/X-ray/3b78737d61e2c75d009c54f32d8a7afcc56e33b9/installer/one-click.sh \
   | sudo bash
 ```
 
-The remote wrapper downloads the helper files from the same ref. Use a release
-tag rather than `main` for repeatable installs. The Xray archive itself is
-always selected from the pinned manifest and checked by SHA-256; no `latest`
-release is resolved.
+The remote wrapper downloads the helper files from the same immutable commit.
+After a release tag is created, replace the commit ref with that tag or set
+`XRAY_INSTALLER_REF` explicitly. The Xray archive itself is always selected
+from the pinned manifest and checked by SHA-256; no `latest` release is
+resolved.
 
 The interactive wrapper installs only the Xray runtime and service helpers. It
 does not create subscription credentials, generate node configuration, or

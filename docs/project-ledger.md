@@ -2160,6 +2160,22 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `rollback_ref`: `revert the installer/test/docs commit; do not alter existing Xray configuration or generation state`
 - `time_logic`: `System clock with +08:00; installer network operations use bounded connect/read timeouts; no business expiry or TTL behavior changed`
 
+- `event_id`: `xray-one-click-installer-20261027-01/003`
+- `timestamp`: `2026-10-27T10:48:29+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `installer/one-click.sh`, `installer/README.md`, `tests/installer/test_one_click.py`
+- `operation`: `pin remote helper retrieval to the immutable installer commit`
+- `reason`: `Make the requested one-line command immediately usable before a future release tag is created, without falling back to mutable main`
+- `command_or_tool`: `apply_patch`
+- `result`: `Default remote ref changed from the not-yet-published v0.7.0 tag to commit 3b78737d61e2c75d009c54f32d8a7afcc56e33b9; documentation and the static contract test now use the same immutable ref.`
+- `exit_code`: `0`
+- `evidence`: `installer/one-click.sh`, `installer/README.md`, `tests/installer/test_one_click.py`
+- `status`: `passed`
+- `commit_or_tree`: `3b78737d61e2c75d009c54f32d8a7afcc56e33b9 plus pending ref-pin correction`
+- `rollback_ref`: `revert this ref-pin correction to restore the prior tag-default behavior; do not use mutable main for repeatable installs`
+- `time_logic`: `System clock with +08:00; no business expiry or TTL behavior changed`
+
 - `event_id`: `xray-dualstack-shadowrocket-20261027-01/011`
 - `timestamp`: `2026-10-27T10:09:15+08:00`
 - `actor`: `Codex`
