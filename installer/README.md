@@ -18,9 +18,9 @@ When the repository is published under an immutable tag, the same flow can be
 started with one command from a clean Linux host:
 
 ```bash
-curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  https://raw.githubusercontent.com/shiyi-log/X-ray/3529514101960252af7d94bdf3270260f6ba7464/installer/one-click.sh \
-  | sudo bash
+tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/0dc8abe524ef0509ee1eae3a81cc0aacda03a7c5/installer/one-click.sh \
+  && sudo bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
 ```
 
 The remote wrapper downloads the helper files from the same immutable commit.
