@@ -24,6 +24,16 @@ PROTOCOL_CAPABILITIES = {
     ),
 }
 
+DEFAULT_TRANSPORTS = {
+    # WebSocket is the stable default for the supported Shadowrocket path;
+    # callers may still explicitly request TCP when they need it.
+    "vless": "ws",
+}
+
+
+def default_transport(protocol: str) -> str:
+    return DEFAULT_TRANSPORTS.get(protocol, "tcp")
+
 
 def validate_protocol_config(protocol: str, config: dict) -> dict:
     try:
@@ -31,7 +41,7 @@ def validate_protocol_config(protocol: str, config: dict) -> dict:
     except KeyError as exc:
         raise DomainError("PROTOCOL_UNSUPPORTED", "不支持的节点协议", status_code=400) from exc
     scope = str(config.get("credential_scope") or "profile")
-    transport = str(config.get("transport") or "tcp")
+    transport = str(config.get("transport") or default_transport(protocol))
     if scope not in capability.credential_modes:
         raise DomainError("CREDENTIAL_SCOPE_UNSUPPORTED", "凭据作用域不受支持", status_code=400)
     if transport not in capability.transports:

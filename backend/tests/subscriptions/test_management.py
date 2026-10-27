@@ -2,6 +2,10 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.test import Client, override_settings
+from django.utils import timezone
+from rest_framework.test import APIClient
+
 from apps.identity.models import SuperAdmin
 from apps.nodes.models import NodeProtocol
 from apps.subscriptions.access import AccessService, build_node_config
@@ -10,9 +14,6 @@ from apps.subscriptions.models import AccessProfile
 from apps.subscriptions.policy import UsageService, quota_state, update_policy
 from apps.subscriptions.publishing import Publisher
 from apps.subscriptions.tokens import TokenService
-from django.test import Client, override_settings
-from django.utils import timezone
-from rest_framework.test import APIClient
 
 
 @pytest.fixture
@@ -189,6 +190,7 @@ def test_remove_assignment_invalidates_revision_and_applies_empty_access(ready_n
 @pytest.mark.django_db
 def test_yaml_transport_matches_generated_websocket_and_grpc():
     import yaml
+
     from apps.subscriptions.renderers import render_subscription
 
     from .test_formats import endpoint
@@ -484,6 +486,42 @@ def test_protocol_catalog_creation_and_tls_validation(ready_node, authenticated)
     assert write(client, path, payload).status_code == 400
     assert write(client, path, {**payload, "port": 21112, "protocol": "trojan"}).status_code == 400
     assert write(client, path, {**payload, "port": 10085}).status_code == 400
+
+
+@pytest.mark.django_db
+def test_protocol_catalog_defaults_vless_to_websocket_and_preserves_explicit_tcp(
+    ready_node, authenticated
+):
+    client, _ = authenticated
+    path = "/api/v1/subscriptions/catalog/"
+
+    defaulted = write(
+        client,
+        path,
+        {"node_id": str(ready_node.pk), "protocol": "vless", "port": 21113},
+    )
+    assert defaulted.status_code == 201
+    assert (
+        client.get(path).json()["items"][0]["transport"]
+        == "ws"
+    )
+
+    explicit = write(
+        client,
+        path,
+        {
+            "node_id": str(ready_node.pk),
+            "protocol": "vless",
+            "port": 21114,
+            "transport": "tcp",
+        },
+    )
+    assert explicit.status_code == 201
+    transports = {
+        item["id"]: item["transport"] for item in client.get(path).json()["items"]
+    }
+    assert transports[defaulted.json()["id"]] == "ws"
+    assert transports[explicit.json()["id"]] == "tcp"
 
 
 @pytest.mark.django_db

@@ -1,4 +1,4 @@
-from apps.nodes.protocols import PROTOCOL_CAPABILITIES, validate_protocol_config
+from apps.nodes.protocols import PROTOCOL_CAPABILITIES, default_transport, validate_protocol_config
 
 
 def test_capability_matrix_covers_five_protocols():
@@ -29,6 +29,12 @@ def test_individual_vless_identity_supports_targeted_revocation():
     result = validate_protocol_config("vless", {"transport": "tcp", "credential_scope": "profile"})
     assert result["supported"] is True
     assert result["individual_revocation"] is True
+
+
+def test_vless_defaults_to_websocket_for_client_compatibility():
+    assert default_transport("vless") == "ws"
+    assert default_transport("vmess") == "tcp"
+    assert validate_protocol_config("vless", {})["supported"] is True
 
 
 def test_all_transports_report_tcp_udp_and_individual_credentials():

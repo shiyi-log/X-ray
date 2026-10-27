@@ -1543,7 +1543,7 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `result`: `范围包含状态徽标显示文本映射、节点页 Generation 标题和云平台展示；保留后端英文枚举、API、数据库、区域代码和运行时协议；排除生产发布、云写入、订阅数据和其他项目边界`
 - `exit_code`: `0`
 - `evidence`: `frontend/apps/web-antd/src/components/StatusBadge.vue`, `frontend/apps/web-antd/src/views/nodes/index.vue`, current `main` status `2dd3bfe`
-- `status`: `passed`
+- `status`: `failed`
 - `commit_or_tree`: `2dd3bfe clean tree on main`
 - `rollback_ref`: `git revert <this change commit>`
 - `time_logic`: `N/A; display-only labels; no expiry, retry, or business clock behavior`
@@ -1867,3 +1867,247 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `559c55b clean before this audit append`
 - `rollback_ref`: `git revert 559c55b; no database rollback required because no migration or data rewrite was made`
 - `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-local-runtime-repair-20261025-01/001`
+- `timestamp`: `2026-10-25T17:10:30+08:00`
+- `actor`: `Codex`
+- `event_type`: `read`
+- `path_scope`: `README.md`, `AGENTS.md`, `docs/project-conventions.md`, `docs/progress.md` tail, `docs/project-ledger.md` tail, `main.py`, `Makefile`, `docs/development.md`, `backend/config/urls.py`, `frontend/apps/web-antd/vite.config.ts`, `.gitignore`; process/port inspection via `ps`, `lsof`, `curl`
+- `operation`: `inspect current project state before repairing the local runtime`
+- `reason`: `User requested "看一下这个项目", then "先修本地运行态"; establish actual state before touching processes`
+- `command_or_tool`: `git status --short --branch`; `git log --oneline`; `ps`; `lsof`; `curl --noproxy '*'` readiness/frontend/session probes; `docker-compose ps`
+- `result`: `Worktree clean, main == origin/main at 9cf76db; two orphan Django runservers (9527, 9529) and one orphan Vite (9530) owned by this repository; frontend 9530 proxied a backend that no longer listened and returned 502; Compose PostgreSQL/Redis healthy on 55432/56379`
+- `exit_code`: `0/0/0/0/0/0`
+- `evidence`: `listener/process output; HTTP 200 for both backend readiness probes and 502 only for the 9530 proxy; no secret or .env value read or echoed`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db clean working tree before this append`
+- `rollback_ref`: `not applicable (read-only)`
+- `time_logic`: `System clock with +08:00; no business time behavior touched`
+
+- `event_id`: `xray-local-runtime-repair-20261025-01/002`
+- `timestamp`: `2026-10-25T17:11:40+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_stop`
+- `path_scope`: `PIDs 22925, 52100, 76127 (process group 76127 incl. pnpm 76144 and vite 76163); local ports 9527, 9528, 9529, 9530`
+- `operation`: `SIGTERM the three confirmed project-owned orphan dev servers`
+- `reason`: `Two backend runservers and one Vite server were reparented to PID 1, stale for 1-2 days, and the surviving Vite proxy target was gone`
+- `command_or_tool`: `ps -o pid,ppid,pgid,etime,command`; `lsof -a -p <pid> -d cwd -Fn`; `lsof -nP -a -p <pid> -iTCP`; `kill -TERM 22925 52100 76127`; bounded wait loop
+- `result`: `Ownership confirmed by process command line under this repository and working directory; no established browser connection existed to 9527/9529/9530; all five PIDs exited; ports 9527-9530 free`
+- `exit_code`: `0`
+- `evidence`: `empty process list after the wait; no listener on 9527-9530; project Compose containers untouched`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db + pending ledger append`
+- `rollback_ref`: `restart the same launcher and port set; no database or cloud state changed`
+- `time_logic`: `System clock with +08:00; no time-based business rule read or changed`
+
+- `event_id`: `xray-local-runtime-repair-20261025-01/003`
+- `timestamp`: `2026-10-25T17:12:20+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_start`
+- `path_scope`: `main.py`; root `.env` (loaded, not echoed); `runtime/launcher-20261025.log` (mode 0600, ignored)
+- `operation`: `Start the single supported local launcher detached`
+- `reason`: `Recreate one coherent backend/frontend pair after clearing the stale listeners`
+- `command_or_tool`: `nohup python3 main.py > runtime/launcher-20261025.log 2>&1 &`; `ps` tree inspection
+- `result`: `Launcher PID 14956 started Compose dependencies, passed migration check and superadmin sync, then bound backend 127.0.0.1:9527 (PID 14964) and frontend 127.0.0.1:9528 (PID 15008); log line "X-ray ready" printed`
+- `exit_code`: `0`
+- `evidence`: `launcher log tail; process tree under this repository; ports 9527/9528 listening`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db + pending ledger append`
+- `rollback_ref`: `send SIGTERM to launcher PID 14956 and its two children; preserve Compose volumes`
+- `time_logic`: `System clock with +08:00; readiness poll bounded to 60s by the launcher`
+
+- `event_id`: `xray-local-runtime-repair-20261025-01/004`
+- `timestamp`: `2026-10-25T17:13:10+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `127.0.0.1:9527`, `127.0.0.1:9528`, `docs/project-ledger.md`, `docs/progress.md`, worktree
+- `operation`: `Verify the repaired local runtime and record the closeout`
+- `reason`: `Confirm the user-visible app works through the same frontend origin that owns the API proxy`
+- `command_or_tool`: `curl --noproxy '*' health/live, health/ready, frontend root, proxied session, /src/main.ts, /src/views/auth/login.vue`; `lsof`; `git status --short --branch`; `git diff --check`
+- `result`: `live 200; ready 200 with database and redis ok; frontend root 200; proxied session 200 from WSGIServer; Vite transformed main.ts and login.vue with 200; only 9527/9528 listen; 9529/9530 free`
+- `exit_code`: `0/0/0/0/0/0/0`
+- `evidence`: `HTTP status and body output; listener output; local-only runtime evidence, not cloud or production acceptance`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db + ledger and progress append only`
+- `rollback_ref`: `stop launcher PID 14956; revert this documentation append; no application source change`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-local-runtime-repair-20261025-01/005`
+- `timestamp`: `2026-10-25T17:14:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, worktree; Gitleaks report `runtime/gitleaks.json` (temporary, deleted after metadata-only classification)
+- `operation`: `static gates for the documentation append`
+- `reason`: `Closeout requires whitespace, boundary and secret evidence for the recorded writes`
+- `command_or_tool`: `git diff --check`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; pinned Gitleaks 8.24.3 JSON report with `--redact`; metadata-only inspection; `rm runtime/gitleaks.json`
+- `result`: `diff-check exit 0; boundary exit 0; secret scan exit 1 with one pre-existing finding: commit 559c55b, docs/project-ledger.md line 1843, rule generic-api-key, match text "OpenAPI artifacts, REDACTED" i.e. the ordinary prose "boundary/secret checks"; no credential, token, key or URI value found; this task did not introduce it and did not change .gitleaksignore`
+- `exit_code`: `0/0/1`
+- `evidence`: `REDACTED JSON metadata (rule, file, commit, line, entropy); raw match and secret were not printed or persisted; report file removed`
+- `status`: `passed with pre-existing secret-scan false positive recorded`
+- `commit_or_tree`: `9cf76db + ledger/progress append`
+- `rollback_ref`: `delete this ledger append and the progress row; no .gitleaksignore or scanner policy change was made`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-local-runtime-repair-20261025-01/006`
+- `timestamp`: `2026-10-25T17:15:09+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_start`
+- `path_scope`: `runtime/start_launcher.py` (ignored local helper), `main.py`, `runtime/launcher-20261025.log`, listeners 9527-9530
+- `operation`: `Relaunch the single local stack as its own session leader and record the final process/port state`
+- `reason`: `The first relaunch inherited the tool shell's process group; a session leader prevents a parent-shell exit from taking the stack down. Also corrects the final PID/port facts recorded in events 003 and 004, which were true only for the first attempt`
+- `command_or_tool`: `kill -TERM 14956 14954`; `port availability wait`; `printf ... > runtime/start_launcher.py`; `nohup python3 runtime/start_launcher.py >> runtime/launcher-20261025.log 2>&1 &`; `ps -o pid,ppid,pgid,etime,command`; `lsof -nP -iTCP:9527-9530 -sTCP:LISTEN`; `curl --noproxy '*'` live/ready/root/proxied-session/module probes
+- `result`: `Session leader confirmed at PID 16853 with PGID 16853; backend 127.0.0.1:9529 (PID 16857) and frontend 127.0.0.1:9528 (PID 16901); 9527 was still in TIME_WAIT from the stopped instance so the documented fallback selected 9529, while the browser-facing frontend kept the preferred 9528; all probes returned 200 (live, ready, root, proxied session, /src/main.ts, login.vue); 9527 and 9530 free; 9528 is the user-facing URL`
+- `exit_code`: `0/0/0/0/0/0/0`
+- `evidence`: `process tree, listener list, HTTP status output, launcher log tail; runtime-only evidence; no cloud, device or production action`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db + ledger/progress append; runtime helper and log are ignored local files`
+- `rollback_ref`: `kill -TERM -16853 and remove runtime/start_launcher.py; no tracked file or database change from this event`
+- `time_logic`: `System clock with +08:00; launcher readiness bounded to 60s; TIME_WAIT expiry is the reason 9527 was not reselected`
+
+## 2026-10-27 双栈节点与 Shadowrocket 稳定性修复
+
+`run_id`: `xray-dualstack-shadowrocket-20261027-01`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/001`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `read`
+- `path_scope`: `README.md`, `AGENTS.md`, `docs/project-conventions.md`, `docs/project-ledger.md`, `docs/progress.md`, changed backend/runtime/test files; current Git metadata
+- `operation`: `inspect repository instructions, baseline and pending changes`
+- `reason`: `Continue the user's authorized dual-stack repair and device retest on the current main branch`
+- `command_or_tool`: `git status --short --branch`; `git branch --show-current`; `git log -1 --oneline`; `sed`/`git diff` on relevant files
+- `result`: `Current branch is main at 9cf76db with pre-existing uncommitted repair and documentation changes; no branch switch or creation performed; no secrets or token contents read`
+- `exit_code`: `0`
+- `evidence`: `local command output; repository instructions and ledger format loaded`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `preserve unrelated dirty files; revert only this run's scoped edits if requested`
+- `time_logic`: `System clock with +08:00; no business time logic changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/002`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `AGENTS.md`, `docs/project-conventions.md`, `backend/providers/aws_lightsail.py`, `backend/apps/subscriptions/publishing.py`, `backend/apps/nodes/protocols.py`, `backend/apps/subscriptions/management_api.py`, `installer/apply-config.sh`, `runtime/phase2b_firewall.py`, `runtime/phase2c_ipv6.py`, `runtime/phase3_subscribe.py`, focused tests
+- `operation`: `apply dual-stack firewall, endpoint publication, service-start and VLESS transport compatibility fixes`
+- `reason`: `Root causes were the obsolete Lightsail IPv4 field, whole-set firewall replacement dropping the other address family, publishing only the first node address, transient systemd start-limit state, and VLESS/TCP instability on the tested Shadowrocket path`
+- `command_or_tool`: `apply_patch`
+- `result`: `Lightsail writes now merge cidrs/ipv6Cidrs/cidrListAliases; subscription publication emits separate v4/v6 endpoints and node-version keys; VLESS defaults to ws while explicit tcp remains supported; installer clears reset-failed before restart; runtime phases use the dual-stack provider path; project convention now requires direct work on current main unless the user explicitly requests branch operations`
+- `exit_code`: `0`
+- `evidence`: `scoped source and regression-test diff; no version, tag, release, push or production configuration change`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `revert the scoped source/test/document changes; no database migration or cloud rollback required`
+- `time_logic`: `System clock with +08:00; no business time logic changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/003`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `test`
+- `path_scope`: `backend/tests/test_protocol_capabilities.py`, `backend/tests/providers/test_aws_lightsail.py`, `backend/tests/subscriptions/test_publishing.py`, `backend/tests/subscriptions/test_management.py`, `tests/installer/test_apply_config_contract.py`
+- `operation`: `run focused regression suite`
+- `reason`: `Verify firewall field handling, dual-address publishing, VLESS default transport, API preservation of explicit tcp, and installer ordering`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL=<redacted test-only value> uv run --project backend pytest -c backend/pyproject.toml <focused test paths> -q`
+- `result`: `35 passed in the initial run (3.79s) and final rerun (4.05s); dedicated PostgreSQL test database used; no secret-bearing output recorded`
+- `exit_code`: `0`
+- `evidence`: `focused pytest output`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `revert only scoped implementation and test edits`
+- `time_logic`: `Tests use repository-managed aware clocks; no new time rule introduced`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/004`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime`
+- `path_scope`: `AWS Lightsail ap-southeast-1 test node; subscription profile shadowrocket-test-20261027-dualstack; public endpoint metadata only`
+- `operation`: `reuse authenticated cloud installation and protocol retest evidence from the preceding task continuation`
+- `reason`: `Confirm the newly created server reached a usable Xray generation before the local device acceptance`
+- `command_or_tool`: `preceding authenticated Lightsail create/readback/install/apply run; subscription revision and service probes`
+- `result`: `Test node xray-71974bfe-fce155a5 was recorded as READY/OPEN on Ubuntu 24.04 nano_3_0 with IPv4 and IPv6 addresses; Xray generation 3 and service active; revision 4 published. VLESS/TCP then produced Google 7/10 and YouTube 0/10, while the same IPv6 endpoint and credential with WebSocket produced Google 10/10 and YouTube 10/10. Remote direct IPv4/IPv6 and freedom-outbound controls succeeded, isolating the instability to VLESS/TCP transport compatibility`
+- `exit_code`: `0`
+- `evidence`: `preceding task's redacted cloud/device run output; no UUID, private key, full URI or token recorded`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `retain the test node unless separately authorized for deletion; no automatic cloud mutation in this continuation`
+- `time_logic`: `System clock with +08:00; service/readiness checks were bounded probes, no business TTL changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/005`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `127.0.0.1:1082`, `[::1]:1082`, Google and YouTube endpoints
+- `operation`: `repeat real Shadowrocket proxy acceptance from the local machine`
+- `reason`: `Verify the repaired WebSocket subscription remains stable after import and restart`
+- `command_or_tool`: `curl --noproxy '' -x http://127.0.0.1:1082 ...` repeated 10 times per endpoint; `lsof -nP -iTCP:1082 -sTCP:LISTEN`
+- `result`: `MacPacket listens on both IPv4 and IPv6 loopback; Google generate_204 returned 204 on 10/10, YouTube generate_204 returned 204 on 10/10, and YouTube homepage returned 200 on 10/10`
+- `exit_code`: `0`
+- `evidence`: `local curl status counts and listener output; device-side acceptance only`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `none; no local proxy configuration was changed by the probes`
+- `time_logic`: `Each request used bounded connect/read timeouts; no application time behavior changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/006`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `runtime/phase2*.py`, `runtime/phase3_subscribe.py`, `installer/apply-config.sh`, repository boundary and secret history
+- `operation`: `run syntax, whitespace, boundary, secret and lint gates`
+- `reason`: `Close the repair with static evidence without changing unrelated historical style`
+- `command_or_tool`: `python3 -m py_compile <runtime Python files>`; `bash -n installer/apply-config.sh`; `git diff --check`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; `uvx --from ruff==0.13.1 ruff check <scoped files>`
+- `result`: `Python syntax, Bash syntax, diff-check and boundary check passed. Secret scan returned exit 1 only for two pre-existing generic-api-key false positives in the historical ledger phrase "boundary/secret checks" (commits 559c55b and an older stash); no credential or token finding. Ruff returned exit 1 for five pre-existing I001 import-order findings; the new long line was corrected and no new E501 remained`
+- `exit_code`: `0/0/0/0/1/1`
+- `evidence`: `command output and redacted Gitleaks metadata; raw secret matches were not persisted`
+- `status`: `failed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `revert only this run's source/test/docs changes; do not rewrite historical ledger findings`
+- `time_logic`: `System clock with +08:00; no business time logic changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/007`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `AWS Lightsail instance readback`
+- `operation`: `attempt current-session read-only cloud verification`
+- `reason`: `Reconfirm the retained test node after the device probe`
+- `command_or_tool`: `boto3 lightsail.get_instance/get_instance_port_states in ap-southeast-1`
+- `result`: `Blocked by AWS AccessDeniedException: the current assumed instance role lacks lightsail:GetInstance; no write, restart, delete, credential change or permission bypass was attempted`
+- `exit_code`: `1`
+- `evidence`: `redacted botocore error type and action only; no credential material recorded`
+- `status`: `blocked`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `not applicable; read-only attempt`
+- `time_logic`: `System clock with +08:00; no time-based business behavior changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/008`
+- `timestamp`: `2026-10-27T02:31:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `delete`
+- `path_scope`: `runtime/subscription_token.txt`
+- `operation`: `delete temporary local subscription token after Shadowrocket import and acceptance`
+- `reason`: `Remove the sensitive one-time local artifact after the device no longer needed it`
+- `command_or_tool`: `apply_patch delete file`
+- `result`: `Token file removed; token value was never printed, committed or written to the ledger`
+- `exit_code`: `0`
+- `evidence`: `post-delete file existence check`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `do not restore the token; issue a new subscription token through the normal protected flow if another import is required`
+- `time_logic`: `System clock with +08:00; no business time behavior changed`
+
+- `event_id`: `xray-dualstack-shadowrocket-20261027-01/009`
+- `timestamp`: `2026-10-27T02:45:43+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `Shadowrocket MacPacket PID 41934; new node IPv6 endpoint; Google and YouTube through 127.0.0.1:1082`
+- `operation`: `prove the current device traffic reaches the newly created node and remains stable`
+- `reason`: `Close the remaining ambiguity between a successful local proxy response and the intended new server`
+- `command_or_tool`: `curl --noproxy '' -x http://127.0.0.1:1082` during `lsof -nP -a -p 41934 -iTCP -sTCP=ESTABLISHED`; 10 Google generate_204 requests and 10 YouTube homepage requests
+- `result`: `During an active YouTube request, MacPacket established IPv6 connections to 2406:da18:1e16:f200:427a:42f1:76d1:8bb3:80, matching the new server. The same current session returned Google 10/10 HTTP 204 and YouTube 10/10 HTTP 200`
+- `exit_code`: `0`
+- `evidence`: `redacted peer/status output; no credentials, URI or token content recorded`
+- `status`: `passed`
+- `commit_or_tree`: `9cf76db plus dirty working tree`
+- `rollback_ref`: `none; read-only network probes`
+- `time_logic`: `Each request used bounded connect/read timeouts; no business time behavior changed`

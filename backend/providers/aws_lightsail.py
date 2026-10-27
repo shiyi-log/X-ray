@@ -219,7 +219,7 @@ class AwsLightsailProvider:
         for item in response.get("portStates", []):
             from_port = item.get("fromPort")
             to_port = item.get("toPort")
-            for cidr in item.get("cidrList", []) or []:
+            for cidr in (item.get("cidrs") or item.get("cidrList") or []):
                 family = 6 if ":" in str(cidr) else 4
                 rules.append(
                     FirewallRule(
@@ -229,6 +229,17 @@ class AwsLightsailProvider:
                         source=str(cidr),
                         source_kind="cidr",
                         family=family,
+                    )
+                )
+            for cidr in item.get("ipv6Cidrs", []) or []:
+                rules.append(
+                    FirewallRule(
+                        protocol=str(item.get("protocol") or "all").lower(),
+                        port_from=int(from_port) if from_port is not None else None,
+                        port_to=int(to_port) if to_port is not None else None,
+                        source=str(cidr),
+                        source_kind="cidr",
+                        family=6,
                     )
                 )
             for alias in item.get("cidrListAliases", []) or []:
@@ -311,15 +322,28 @@ class AwsLightsailProvider:
         self, resource: ResourceRef, rules: tuple[FirewallRule, ...], *, permit: MutationPermit
     ) -> MutationResult:
         self._authorize_and_verify(resource, permit, "firewall")
-        port_infos = [
-            {
-                "fromPort": rule.port_from or 0,
-                "toPort": rule.port_to or 65535,
-                "protocol": rule.protocol,
-                "cidrList": [rule.source] if rule.source_kind == "cidr" else [],
-            }
-            for rule in rules
-        ]
+        # Lightsail replaces the complete rule set on each write.  Keep IPv4
+        # and IPv6 sources in the same port entry so a dual-stack rule update
+        # cannot silently remove the other address family.
+        grouped: dict[tuple[int, int, str], dict[str, object]] = {}
+        for rule in rules:
+            key = (rule.port_from or 0, rule.port_to or 65535, rule.protocol)
+            entry = grouped.setdefault(
+                key,
+                {
+                    "fromPort": key[0],
+                    "toPort": key[1],
+                    "protocol": key[2],
+                },
+            )
+            if rule.source_kind == "provider_alias":
+                field = "cidrListAliases"
+            elif rule.family == 6:
+                field = "ipv6Cidrs"
+            else:
+                field = "cidrs"
+            entry.setdefault(field, []).append(rule.source)
+        port_infos = list(grouped.values())
         try:
             response = self.lightsail.put_instance_public_ports(
                 instanceName=resource.resource_id, portInfos=port_infos

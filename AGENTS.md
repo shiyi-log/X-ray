@@ -44,7 +44,9 @@ The X-ray-specific execution skill is [skills/xray-manager/SKILL.md](skills/xray
 
 ## Git and Release
 
-- Work on `codex/xray-manager`; do not rewrite `main`, force-push, or hard-reset.
+- Work directly on the user's current branch (currently `main`); do not switch or
+  create a work branch unless the user explicitly requests branch operations.
+  Do not force-push or hard-reset.
 - Stage only the coherent requested change. Do not include `.env`, keys,
   databases, wallets, credentials, browser state, generated secrets, or
   unrelated dirty files.

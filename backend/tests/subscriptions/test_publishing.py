@@ -1,3 +1,4 @@
+import base64
 from copy import deepcopy
 
 import pytest
@@ -52,6 +53,29 @@ def test_non_ready_or_unapplied_node_is_not_published(publishable_subscription):
     node.save(update_fields=["provisioning_state", "updated_at"])
     with pytest.raises(NoPublishableEndpoints):
         Publisher.publish(subscription.pk)
+
+
+@pytest.mark.django_db
+def test_publish_includes_each_ready_node_address(publishable_subscription):
+    from apps.subscriptions.models import SubscriptionRevision
+    from apps.subscriptions.publishing import Publisher, decrypt_payload
+
+    _issued, subscription, node, _credential = publishable_subscription
+    node.addresses = [
+        {"value": "192.0.2.50", "family": 4, "kind": "static"},
+        {"value": "2001:db8::50", "family": 6, "kind": "static"},
+    ]
+    node.save(update_fields=["addresses", "updated_at"])
+
+    revision = Publisher.publish(subscription.pk)
+    payload = base64.b64decode(decrypt_payload(revision, "shadowrocket")).decode()
+    assert "192.0.2.50" in payload
+    assert "[2001:db8::50]" in payload
+    assert set(revision.node_versions) == {
+        f"{node.pk}:{_credential.pk}:v4",
+        f"{node.pk}:{_credential.pk}:v6",
+    }
+    assert SubscriptionRevision.objects.filter(pk=revision.pk, usable=True).exists()
 
 
 @pytest.mark.django_db

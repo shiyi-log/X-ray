@@ -4,12 +4,13 @@ import hashlib
 import json
 from uuid import UUID
 
+from django.db import transaction
+from django.http import JsonResponse
+
 from apps.identity.models import SuperAdmin
 from apps.nodes.models import NodeProtocol
 from common.admin_api import admin_endpoint, json_payload, paginated_response
 from common.errors import DomainError
-from django.db import transaction
-from django.http import JsonResponse
 
 from .models import Subscription, SubscriptionMutation, SubscriptionPlan
 from .policy import positive_integer
@@ -104,7 +105,7 @@ def catalog(request):
 
         def create():
             from apps.nodes.models import ManagedNode
-            from apps.nodes.protocols import validate_protocol_config
+            from apps.nodes.protocols import default_transport, validate_protocol_config
 
             allowed = {
                 "node_id",
@@ -121,7 +122,7 @@ def catalog(request):
                 pk=payload.get("node_id"), desired_state="PRESENT", security_state="OPEN"
             )
             name = payload.get("protocol")
-            transport = payload.get("transport", "tcp")
+            transport = payload.get("transport", default_transport(name))
             validate_protocol_config(name, {"transport": transport})
             port = positive_integer(payload.get("port"), "port", nullable=False)
             if (

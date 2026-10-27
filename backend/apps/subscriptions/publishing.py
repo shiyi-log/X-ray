@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import secrets
 from uuid import UUID, uuid4
 
-from common.crypto import configured_subscription_store
-from common.errors import DomainError
 from django.db import transaction
 from django.utils import timezone
+
+from common.crypto import configured_subscription_store
+from common.errors import DomainError
 
 from .credentials import decrypt_material
 from .models import (
@@ -73,33 +75,44 @@ class Publisher:
             ):
                 continue
             addresses = node.addresses if isinstance(node.addresses, list) else []
-            host = next(
-                (
-                    str(item.get("value"))
-                    for item in addresses
-                    if isinstance(item, dict) and item.get("value")
-                ),
-                "",
-            )
-            if not host:
-                continue
-            endpoints.append(
-                {
-                    "node_id": str(node.pk),
-                    "name": f"{subscription.profile.name}-{str(node.pk)[:8]}-{protocol.protocol}",
-                    "protocol": protocol.protocol,
-                    "host": host,
-                    "port": protocol.port,
-                    "transport": protocol.transport,
-                    "tls": protocol.tls_enabled,
-                    "server_name": protocol.server_name,
-                    "allow_insecure": False,
-                    "credential_ref": str(credential.pk),
-                    "credential_version": credential.version,
-                    "applied_generation": credential.applied_generation,
-                    "credential": decrypt_material(credential),
-                }
-            )
+            usable_addresses = []
+            seen_hosts = set()
+            for item in addresses:
+                if not isinstance(item, dict) or not item.get("value"):
+                    continue
+                host = str(item["value"])
+                if host in seen_hosts:
+                    continue
+                try:
+                    family = int(item.get("family") or ipaddress.ip_address(host).version)
+                except (TypeError, ValueError):
+                    continue
+                if family not in {4, 6}:
+                    continue
+                seen_hosts.add(host)
+                usable_addresses.append((family, host))
+            for family, host in usable_addresses:
+                endpoints.append(
+                    {
+                        "node_id": str(node.pk),
+                        "name": (
+                            f"{subscription.profile.name}-{str(node.pk)[:8]}-"
+                            f"{protocol.protocol}-v{family}"
+                        ),
+                        "protocol": protocol.protocol,
+                        "host": host,
+                        "port": protocol.port,
+                        "transport": protocol.transport,
+                        "tls": protocol.tls_enabled,
+                        "server_name": protocol.server_name,
+                        "allow_insecure": False,
+                        "credential_ref": str(credential.pk),
+                        "credential_version": credential.version,
+                        "address_family": family,
+                        "applied_generation": credential.applied_generation,
+                        "credential": decrypt_material(credential),
+                    }
+                )
         return endpoints
 
     @classmethod
@@ -152,11 +165,13 @@ class Publisher:
         revision.payload_hashes = payload_hashes
         revision.unavailable_reasons = unavailable
         revision.node_versions = {
-            endpoint["node_id"] + ":" + endpoint["credential_ref"]: {
+            f'{endpoint["node_id"]}:{endpoint["credential_ref"]}:v{endpoint["address_family"]}': {
                 "node_id": endpoint["node_id"],
                 "applied_generation": endpoint["applied_generation"],
                 "credential_ref": endpoint["credential_ref"],
                 "credential_version": endpoint["credential_version"],
+                "address_family": endpoint["address_family"],
+                "host": endpoint["host"],
             }
             for endpoint in endpoints
         }

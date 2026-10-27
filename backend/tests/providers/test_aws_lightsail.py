@@ -4,11 +4,12 @@ from uuid import uuid4
 
 import pytest
 from botocore.exceptions import ClientError
-from common.errors import DomainError
 from django.utils import timezone
+
+from common.errors import DomainError
 from providers.authorization import DenyWrites, StaticWriteAuthorizer
 from providers.aws_lightsail import AwsLightsailProvider
-from providers.base import AccountRef, MutationPermit, ResourceRef
+from providers.base import AccountRef, FirewallRule, MutationPermit, ResourceRef
 
 
 def account():
@@ -136,3 +137,90 @@ def test_write_not_found_does_not_prove_resource_absence():
     error = ClientError({"Error": {"Code": "NotFoundException"}}, "DeleteInstance")
     mapped = map_provider_error("aws_lightsail", error, write_started=True)
     assert mapped.code != "RESOURCE_NOT_FOUND"
+
+
+def test_configure_firewall_preserves_ipv4_and_ipv6_in_one_replacement():
+    ref = account()
+    resource = ResourceRef(ref, "ap-southeast-1", "node-1")
+    permit = MutationPermit(
+        uuid4(),
+        "op",
+        "firewall",
+        ref.id,
+        ref.external_account_id,
+        resource.region,
+        resource.resource_id,
+        timezone.now() + timedelta(minutes=1),
+        1,
+    )
+    lightsail = Mock()
+    lightsail.get_instance.return_value = {
+        "instance": {"name": "node-1", "state": "running", "tags": []}
+    }
+    lightsail.put_instance_public_ports.return_value = {
+        "ResponseMetadata": {"RequestId": "firewall-request"}
+    }
+    provider = AwsLightsailProvider(
+        ref,
+        resource.region,
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=StaticWriteAuthorizer(permit),
+    )
+
+    result = provider.configure_firewall(
+        resource,
+        (
+            FirewallRule("tcp", 80, 80, "0.0.0.0/0", "cidr", 4),
+            FirewallRule("tcp", 80, 80, "::/0", "cidr", 6),
+        ),
+        permit=permit,
+    )
+
+    assert result.request_id == "firewall-request"
+    lightsail.put_instance_public_ports.assert_called_once_with(
+        instanceName="node-1",
+        portInfos=[
+            {
+                "fromPort": 80,
+                "toPort": 80,
+                "protocol": "tcp",
+                "cidrs": ["0.0.0.0/0"],
+                "ipv6Cidrs": ["::/0"],
+            }
+        ],
+    )
+
+
+def test_get_firewall_reads_ipv4_ipv6_and_provider_alias_fields():
+    ref = account()
+    lightsail = Mock()
+    lightsail.get_instance_port_states.return_value = {
+        "portStates": [
+            {
+                "fromPort": 22,
+                "toPort": 22,
+                "protocol": "tcp",
+                "cidrs": ["192.0.2.10/32"],
+                "ipv6Cidrs": ["2001:db8::/64"],
+                "cidrListAliases": ["lightsail-connect"],
+            }
+        ],
+        "ResponseMetadata": {"RequestId": "readback-request"},
+    }
+    provider = AwsLightsailProvider(
+        ref,
+        "ap-southeast-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    snapshot = provider.get_firewall(ResourceRef(ref, "ap-southeast-1", "node-1"))
+
+    assert snapshot.request_id == "readback-request"
+    assert [(rule.family, rule.source_kind, rule.source) for rule in snapshot.rules] == [
+        (4, "cidr", "192.0.2.10/32"),
+        (6, "cidr", "2001:db8::/64"),
+        (4, "provider_alias", "lightsail-connect"),
+    ]

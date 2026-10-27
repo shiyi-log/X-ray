@@ -129,6 +129,9 @@ restart_service() {
   if [[ -n "$restart_binary" ]]; then
     "$restart_binary"
   else
+    # A freshly installed unit may have failed before its first config existed.
+    # Clear that transient start-limit state before the first real apply.
+    /bin/systemctl reset-failed xray >/dev/null 2>&1 || true
     /bin/systemctl restart xray
   fi
 }
