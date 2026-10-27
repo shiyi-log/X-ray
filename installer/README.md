@@ -19,7 +19,7 @@ started with one command from a clean Linux host:
 
 ```bash
 curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  https://raw.githubusercontent.com/shiyi-log/X-ray/3b78737d61e2c75d009c54f32d8a7afcc56e33b9/installer/one-click.sh \
+  https://raw.githubusercontent.com/shiyi-log/X-ray/3529514101960252af7d94bdf3270260f6ba7464/installer/one-click.sh \
   | sudo bash
 ```
 

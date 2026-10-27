@@ -2176,6 +2176,22 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `rollback_ref`: `revert this ref-pin correction to restore the prior tag-default behavior; do not use mutable main for repeatable installs`
 - `time_logic`: `System clock with +08:00; no business expiry or TTL behavior changed`
 
+- `event_id`: `xray-one-click-installer-20261027-01/004`
+- `timestamp`: `2026-10-27T10:48:29+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify`
+- `path_scope`: `installer/README.md`
+- `operation`: `correct the documented one-line command to the latest pushed wrapper commit`
+- `reason`: `Ensure copied documentation uses the ref-pin correction rather than the preceding script commit`
+- `command_or_tool`: `apply_patch`
+- `result`: `README now points to 3529514101960252af7d94bdf3270260f6ba7464, whose wrapper defaults helper retrieval to the immutable 3b78737d... ref.`
+- `exit_code`: `0`
+- `evidence`: `installer/README.md`
+- `status`: `passed`
+- `commit_or_tree`: `3529514101960252af7d94bdf3270260f6ba7464 plus pending documentation correction`
+- `rollback_ref`: `revert this documentation-only correction; retain the immutable helper ref in the script`
+- `time_logic`: `System clock with +08:00; no business expiry or TTL behavior changed`
+
 - `event_id`: `xray-dualstack-shadowrocket-20261027-01/011`
 - `timestamp`: `2026-10-27T10:09:15+08:00`
 - `actor`: `Codex`
