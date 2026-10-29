@@ -92,10 +92,11 @@ X-ray overlay，不来自上游演示应用。应用文件包含这些业务适�
 
 - Vben 默认头像、Logo 和公司链接被 `apps/web-antd/src/preferences.ts` 覆盖为
   本地 `src/assets/xray-logo.svg`、X-ray 名称和空站点链接。
-- Vben 的更新检查被关闭；因此 `CheckUpdates` 不会在本地应用中轮询远程地址。
+- Vben 的更新检查已开启；`CheckUpdates` 只对当前部署根路径发送同源 `HEAD` 请求，
+  比较 `ETag`/`Last-Modified`，不会轮询外部更新地址。
 - 应用使用官方 `@vben/vite-config`；app 配置显式关闭 PWA、import-map、Nitro
   mock 和其他不需要的发布插件，避免加载 PWA 远程图标或 CDN 模块；更新检查则由
-  `preferences.app.enableCheckUpdates=false` 关闭。
+  `preferences.app.enableCheckUpdates=true` 开启同源静态包版本检测。
 - 菜单图标直接使用 `lucide-vue-next` 本地组件，不通过 Iconify 远程 provider
   请求图标。
 

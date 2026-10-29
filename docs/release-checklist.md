@@ -1,4 +1,4 @@
-# v0.6 交付与发布检查表
+# v0.7 交付与发布检查表
 
 本清单区分“交付包可复现”和“生产已经上线”。只有独立服务器、域名/TLS、真实
 账号和恢复证据齐全后，生产矩阵项才可能从 `blocked` 改为 `passed`。
@@ -11,10 +11,13 @@
 - [x] `git diff --check`、暂存文件清单、Gitleaks 和 Shop/archive 边界通过。
 - [x] `CHANGELOG.md`、`docs/progress.md`、`docs/version-record.md` 已填写真实退出码和证据。
 - [x] `tests/acceptance/matrix.json` 与 `VERSION` 一致并通过 validator。
+- [x] GitHub Release 工作流会校验 `v${VERSION}`、上传安装器包和 `SHA256SUMS`。
+- [x] 一键安装器与管理台热更新均固定到同一不可变版本标签。
 
 ## 本地和预发布门禁
 
-- [x] `./scripts/check-local.sh` 完整退出 0，无跳过的固定运行时/动态镜像/恢复测试。
+- [ ] `./scripts/check-local.sh` 的 0.7.0 全量运行；0.6.0 的完整门禁作为上一版本基线保留。
+- [x] 0.7.0 安装器发布包测试、前端单测、类型检查、构建、边界和验收矩阵校验通过。
 - [x] production/staging Compose config 通过，只有 gateway 发布端口。
 - [x] backend/frontend 使用固定非 root 用户；backup-tools 由包装器强制调用方 UID:GID；运行时只读、丢弃 capabilities 且无秘密/archive。
 - [x] 固定 Xray 五协议、四订阅格式、强制撤销和真实浏览器全流程通过。
@@ -41,5 +44,5 @@
 ## 发布判定
 
 生产服务器、TLS、真实双云授权和生产恢复证据当前缺失，因此生产发布保持
-`blocked`。本地门禁、提交和 `v0.6.0-delivery` 标签只证明交付包可定位、可重放、
+`blocked`。本地门禁、提交和 `v0.7.0` 标签只证明交付包可定位、可重放、
 可回退，不代表已上线。

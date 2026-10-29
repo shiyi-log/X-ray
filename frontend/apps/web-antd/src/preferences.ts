@@ -7,7 +7,7 @@ export const overridesPreferences = defineOverridesPreferences({
     name: 'X-ray Manager',
     defaultAvatar: xrayLogo,
     defaultHomePath: '/overview',
-    enableCheckUpdates: false,
+    enableCheckUpdates: true,
   },
   copyright: {
     companyName: 'X-ray Manager',

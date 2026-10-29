@@ -19,15 +19,23 @@ started with one command from a clean Linux host:
 
 ```bash
 tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/0dc8abe524ef0509ee1eae3a81cc0aacda03a7c5/installer/one-click.sh \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.7.0/installer/one-click.sh \
   && sudo bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
 ```
 
-The remote wrapper downloads the helper files from the same immutable commit.
-After a release tag is created, replace the commit ref with that tag or set
-`XRAY_INSTALLER_REF` explicitly. The Xray archive itself is always selected
-from the pinned manifest and checked by SHA-256; no `latest` release is
-resolved.
+The remote wrapper downloads the helper files from the same immutable release
+tag. To run a non-interactive online update on an existing Linux host, keep the
+same bootstrap and set the action explicitly:
+
+```bash
+tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.7.0/installer/one-click.sh \
+  && sudo env XRAY_ONE_CLICK_ACTION=update XRAY_NONINTERACTIVE=1 bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
+```
+
+Set `XRAY_INSTALLER_REF` when intentionally selecting another immutable tag or
+commit. The Xray archive itself is always selected from the pinned manifest and
+checked by SHA-256; no `latest` release is resolved.
 
 The interactive wrapper installs only the Xray runtime and service helpers. It
 does not create subscription credentials, generate node configuration, or

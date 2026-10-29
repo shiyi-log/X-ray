@@ -1,0 +1,69 @@
+name: 发布 X-ray 版本
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 要发布的不可变版本标签
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: xray-release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: 检出发布标签
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref_name }}
+
+      - name: 校验版本与标签
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(<VERSION)
+          test "$RELEASE_TAG" = "v${version}"
+          test "$(git describe --tags --exact-match HEAD)" = "$RELEASE_TAG"
+
+      - name: 打包一键安装器
+        shell: bash
+        run: |
+          set -euo pipefail
+          XRAY_RELEASE_TAG="$RELEASE_TAG" ./scripts/package-installer-release.sh
+
+      - name: 发布 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(<VERSION)
+          notes_file=$(mktemp)
+          trap 'rm -f "$notes_file"' EXIT
+          awk -v version="$version" '
+            index($0, "## " version " - ") == 1 { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md >"$notes_file"
+          gh release create "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "X-ray ${version}" \
+            --notes-file "$notes_file" \
+            "dist/xray-installer-${version}.tar.gz" \
+            "dist/xray-installer-${version}-manifest.json" \
+            dist/SHA256SUMS

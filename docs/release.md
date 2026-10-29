@@ -6,13 +6,24 @@
 
 ```bash
 deploy/scripts/release.sh \
-  --version 0.6.0 \
+  --version 0.7.0 \
   --digest sha256:<backend-image-digest> \
   --config /etc/xray/config.env \
   --compose deploy/compose/production.yml
 ```
 
 `--digest` 必须与配置中的 backend 镜像完全一致，`--version` 必须与仓库 `VERSION` 一致。脚本不接受 tag-only 镜像。发布前的备份失败、迁移计划失败、worker 无法排空或迁移检查失败都会阻止镜像切换。
+
+## GitHub 版本发布与前端热更新
+
+向 `main` 合并后，在 `VERSION` 与前端包版本一致的提交上创建不可变标签
+`v0.7.0`。`.github/workflows/release.yml` 会校验标签与版本、打包
+`installer/`、生成 `SHA256SUMS`，并创建 GitHub Release。安装器远程入口和
+`XRAY_INSTALLER_REF` 必须使用同一个标签；不要改成 `main` 或 `latest`。
+
+管理台前端使用同源 `HEAD /` 请求比较 `ETag`/`Last-Modified`。生产切换到新的
+不可变 frontend 镜像后，已打开的管理台会提示刷新；这只代表浏览器静态包热更新，
+不会替代数据库迁移、备份、worker drain 或 `release.sh` 的完整生产发布流程。
 
 发布证据至少记录 Git commit/tag、两个镜像 digest、Compose config 摘要、备份 manifest、迁移计划、门禁结果和操作者审批。任何输出进入 `artifacts/acceptance/<version>/` 前都要脱敏。
 
