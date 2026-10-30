@@ -3056,3 +3056,22 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus preserved pre-existing dirty worktree changes; no commit, version or tag change.`
 - `rollback_ref`: `Remove only this run's unsupported-region validation/current-usage changes from quota.py and the added focused test from test_region_defaults.py; preserve earlier allow_create and unrelated dirty hunks. Audit entries remain append-only. No database or cloud rollback applies.`
 - `time_logic`: `Execution UTC 2026-10-30T17:56:25Z / Asia/Shanghai 2026-10-31T01:56:25+08:00; no runtime TTL, expiry, retry, or wall-clock behavior changed.`
+
+### 2026-10-31T03:00:39+08:00 — xray-v0.9.0-release-20261031-01 final verification
+
+- `event_id`: `xray-v0.9.0-release-20261031-01/002`
+- `run_id`: `xray-v0.9.0-release-20261031-01`
+- `timestamp`: `2026-10-31T03:00:39+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_verification_before_remote_release`
+- `path_scope`: `the coherent 0.9.0 staged files and artifacts; docs/cloud-test-authorization.md excluded and left unstaged`
+- `operation`: `完成 0.9.0 全量本地验收、修复旧浏览器测试契约、提交候选并准备远端发布`
+- `authorization`: `沿用 /001 中用户明确要求的 main 提交/推送、v0.9.0 annotated tag 和 GitHub Release 授权；不包括生产、真实云或 SSH 操作。`
+- `command_or_tool`: `dedicated PostgreSQL/Redis pytest; frontend unit/typecheck/lint/build; Playwright E2E at isolated 9551/9552; installer tests and release package; OpenAPI and TypeScript generated twice and compared; migration drift; uv lock; boundary; acceptance validator; diff checks; secret scan; staged-file review`
+- `result`: `Backend full suite 316 passed/7 skipped; frontend 65 passed; typecheck, lint, build passed; Chrome desktop/mobile E2E 7 passed; installer 13 passed/3 skipped; AWS adapter and long-operation lease focused tests 18 passed; OpenAPI SHA-256 d4ba890230cc771c8c1cab60bfc668d2f341b4495a24476c7e5b9843a9b13151 matched across two generations; generated TypeScript SHA-256 60952c82387f1506e1d3996da155e1abd9b9a22833d1117fff2d0cc921b5e9ce matched across two generations; migration drift, lock, boundary, acceptance and diff gates passed. Secret scan exit 1 with 2 historical ledger findings. Release package SHA-256 checks passed. First backend attempt without explicit XRAY_ENV=test exited 1; rerun in isolated test environment passed. One lifecycle test was updated to assert CLOUD_OPERATION_ID_UNOWNED when a snapshot-difference operation cannot be attributed; focused and full backend reruns passed. Staged commit 38a183b5d9a10b1d2e783049f49ab890f61a7bc5 created; unrelated cloud authorization edit remains unstaged.`
+- `exit_code`: `full backend 0; frontend unit/typecheck/lint/build 0/0/0/0; Playwright 0; installer 0; AWS focused 0; OpenAPI/schema deterministic comparisons 0/0; migration check 0; uv lock 0; boundary 0; acceptance 0; diff 0; secret scan 1 (2 historical findings); installer checksum 0; first misconfigured backend attempt 1, superseded by corrected full pass.`
+- `evidence`: `local command output in this task; artifacts/acceptance/0.9.0/ sanitized browser artifacts; tests/acceptance/matrix.json; current commit and staged-file list; no raw credentials, subscription tokens, or cloud resource identifiers recorded.`
+- `status`: `local code and package gates passed with documented skips; external GitHub readback pending; GitHub Actions, real AWS/SWAS, SSH, public probes, device and production deployment not-run or blocked; secret scan unresolved historical findings.`
+- `commit_or_tree`: `main commit 38a183b5d9a10b1d2e783049f49ab890f61a7bc5; docs/cloud-test-authorization.md remains an unrelated unstaged user change.`
+- `rollback_ref`: `v0.8.0 or git revert 38a183b5d9a10b1d2e783049f49ab890f61a7bc5; no migration applied to application databases and no cloud state changed.`
+- `time_logic`: `Execution UTC 2026-10-30T19:00:39Z / Asia/Shanghai 2026-10-31T03:00:39+08:00. Lifecycle waits use monotonic bounded timeouts and lease renewals covered by Fake tests; no external instance or timer changed.`

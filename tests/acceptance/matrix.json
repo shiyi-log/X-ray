@@ -78,7 +78,7 @@
           "exit_codes": [0, 0, 0, 0]
         }
       ],
-      "commit": "7a93596775a7da1ec08126e6c4e691c3c66b50e3",
+      "commit": "38a183b5d9a10b1d2e783049f49ab890f61a7bc5",
       "provider": null,
       "region": null,
       "cost": null,
@@ -98,7 +98,7 @@
           "timestamp": "2026-10-30T18:12:29+08:00"
         }
       ],
-      "commit": "7a93596775a7da1ec08126e6c4e691c3c66b50e3",
+      "commit": "38a183b5d9a10b1d2e783049f49ab890f61a7bc5",
       "provider": null,
       "region": null,
       "cost": null,
