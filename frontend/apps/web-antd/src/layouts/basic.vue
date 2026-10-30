@@ -26,15 +26,17 @@ async function handleLogout() {
 </script>
 
 <template>
-  <BasicLayout @clear-preferences-and-logout="handleLogout">
-    <template #user-dropdown>
-      <UserDropdown
-        :avatar="avatar"
-        :description="'X-ray Manager'"
-        :text="username"
-        @clear-preferences-and-logout="handleLogout"
-        @logout="handleLogout"
-      />
-    </template>
-  </BasicLayout>
+  <div class="xray-app">
+    <BasicLayout @clear-preferences-and-logout="handleLogout">
+      <template #user-dropdown>
+        <UserDropdown
+          :avatar="avatar"
+          :description="'X-ray 管理控制台'"
+          :text="username"
+          @clear-preferences-and-logout="handleLogout"
+          @logout="handleLogout"
+        />
+      </template>
+    </BasicLayout>
+  </div>
 </template>

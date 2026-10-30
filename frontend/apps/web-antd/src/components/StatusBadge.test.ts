@@ -8,6 +8,7 @@ describe('StatusBadge', () => {
     ['PROVISIONED', '已配置'],
     ['DELETED', '已删除'],
     ['OPEN', '开放'],
+    ['NORMAL', '正常'],
     ['TRUE', '是'],
     [false, '否'],
     [null, '未知'],

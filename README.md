@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-10-29：当前交付版本为 `0.7.0`。GitHub Release 提供不可变源码标签和一键安装器资产；节点侧支持通过同一标签执行 Xray 在线更新，管理台检测到新前端包后会提示刷新。专用本地门禁、外部云资源和生产部署状态以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
+2026-10-30：当前交付版本为 `0.8.0`。GitHub Release 提供不可变源码标签和一键安装器资产；节点侧支持通过同一标签执行 Xray 在线更新，管理台检测到新前端包后会提示刷新；本版同步更新登录与总览控制台界面。专用本地门禁、外部云资源和生产部署状态以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 

@@ -3,7 +3,7 @@ import path from 'node:path';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const authState = path.join(import.meta.dirname, '.playwright', 'admin.json');
-const acceptanceRoot = path.join(repositoryRoot, 'artifacts', 'acceptance', '0.7.0');
+const acceptanceRoot = path.join(repositoryRoot, 'artifacts', 'acceptance', '0.8.0');
 const testEnvironment = {
   ...process.env,
   DJANGO_SETTINGS_MODULE: 'config.settings.test',

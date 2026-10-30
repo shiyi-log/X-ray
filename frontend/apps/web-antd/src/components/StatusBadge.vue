@@ -11,6 +11,7 @@ const statusLabels: Record<string, string> = {
   READY: '就绪',
   OPEN: '开放',
   ACTIVE: '活跃',
+  NORMAL: '正常',
   SUCCEEDED: '成功',
   SUPPORTED: '支持',
   OK: '正常',
@@ -51,7 +52,7 @@ const statusLabels: Record<string, string> = {
 };
 const label = computed(() => statusLabels[normalized.value] ?? normalized.value);
 const color = computed(() => {
-  if (['READY', 'OPEN', 'ACTIVE', 'SUCCEEDED', 'SUPPORTED', 'OK', 'TRUE'].includes(normalized.value)) return 'success';
+  if (['READY', 'OPEN', 'ACTIVE', 'NORMAL', 'SUCCEEDED', 'SUPPORTED', 'OK', 'TRUE'].includes(normalized.value)) return 'success';
   if (['FAILED', 'REVOKED', 'UNSUPPORTED', 'REVOCATION_UNCONFIRMED', 'ISOLATION_UNCONFIRMED', 'FALSE'].includes(normalized.value)) return 'error';
   if (['RUNNING', 'PENDING', 'RETRY_PENDING', 'REVOKING', 'UNVERIFIED', 'MAINTENANCE', 'QUARANTINED'].includes(normalized.value)) return 'warning';
   return 'default';

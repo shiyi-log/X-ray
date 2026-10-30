@@ -126,7 +126,7 @@ async function acknowledgeRecoveryCodes() {
       :show-third-party-login="false"
       :submit-button-text="preferRecovery ? '继续使用恢复码' : '登录'"
       title="管理员登录"
-      sub-title="使用配置文件中的管理员账号登录"
+      sub-title="验证管理员账号后，按账户状态完成多因素校验。"
       @submit="submitPassword"
     />
     <template v-else>
@@ -134,7 +134,7 @@ async function acknowledgeRecoveryCodes() {
         <h1 class="mb-3 text-3xl font-bold tracking-tight">{{ title }}</h1>
         <p class="text-muted-foreground">{{ phase === 'recovery-codes' ? '这些恢复码关闭后不会再次显示' : '完成身份验证后进入控制台' }}</p>
       </header>
-      <Form v-if="phase !== 'recovery-codes'" layout="vertical" :model="{ code }" @finish="submitSecondFactor">
+      <Form v-if="phase !== 'recovery-codes'" class="xray-login-step" layout="vertical" :model="{ code }" @finish="submitSecondFactor">
         <Alert v-if="phase === 'setup'" class="mb-4" type="info" message="绑定密钥" :description="session.sensitive.setupSecret" />
         <Form.Item name="code" :label="phase === 'recovery' ? '恢复码' : '6 位动态验证码'" :rules="[{ required: true, message: '请输入验证码' }]">
           <Input

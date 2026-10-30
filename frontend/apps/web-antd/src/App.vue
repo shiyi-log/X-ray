@@ -18,7 +18,20 @@ const tokenTheme = computed(() => ({
     isDark.value ? theme.darkAlgorithm : theme.defaultAlgorithm,
     ...(preferences.app.compact ? [theme.compactAlgorithm] : []),
   ],
-  token: tokens,
+  token: {
+    ...tokens,
+    colorPrimary: isDark.value ? '#65c9b5' : '#087e78',
+    colorSuccess: isDark.value ? '#79c594' : '#397a55',
+    colorWarning: isDark.value ? '#e2ad63' : '#ad6819',
+    colorError: isDark.value ? '#e28a82' : '#b34742',
+    colorBgLayout: isDark.value ? '#151e23' : '#eef2f1',
+    colorBgContainer: isDark.value ? '#202b30' : '#ffffff',
+    colorText: isDark.value ? '#e7efed' : '#1c2b31',
+    colorTextSecondary: isDark.value ? '#a1b0b0' : '#63747a',
+    colorBorderSecondary: isDark.value ? '#34444a' : '#dbe4e2',
+    borderRadius: 6,
+    fontFamily: 'var(--x-font)',
+  },
 }));
 </script>
 

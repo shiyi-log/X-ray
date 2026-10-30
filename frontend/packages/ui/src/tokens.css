@@ -1,17 +1,38 @@
 :root {
-  --x-bg: #f5f7f9;
+  --x-bg: #eef2f1;
   --x-surface: #ffffff;
-  --x-surface-muted: #eef2f4;
-  --x-text: #17212b;
-  --x-text-muted: #64727f;
-  --x-border: #dce3e8;
-  --x-nav: #182127;
-  --x-nav-active: #26343c;
-  --x-accent: #087f8c;
-  --x-success: #2f7d4a;
-  --x-warning: #ad6800;
-  --x-danger: #b42318;
+  --x-surface-muted: #f4f7f6;
+  --x-text: #1c2b31;
+  --x-text-muted: #63747a;
+  --x-border: #dbe4e2;
+  --x-nav: #18272e;
+  --x-nav-active: #2a3d43;
+  --x-accent: #087e78;
+  --x-accent-soft: #e3f2ef;
+  --x-blue: #356d91;
+  --x-success: #397a55;
+  --x-warning: #ad6819;
+  --x-danger: #b34742;
   --x-radius: 6px;
-  --x-shadow: 0 8px 26px rgb(25 39 52 / 8%);
-  --x-font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --x-shadow: 0 1px 2px rgb(23 43 49 / 5%), 0 8px 24px rgb(23 43 49 / 4%);
+  --x-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --x-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dark {
+  --x-bg: #151e23;
+  --x-surface: #202b30;
+  --x-surface-muted: #26343a;
+  --x-text: #e7efed;
+  --x-text-muted: #a1b0b0;
+  --x-border: #34444a;
+  --x-nav: #18272e;
+  --x-nav-active: #2a3d43;
+  --x-accent: #65c9b5;
+  --x-accent-soft: #203c3a;
+  --x-blue: #83b6d2;
+  --x-success: #79c594;
+  --x-warning: #e2ad63;
+  --x-danger: #e28a82;
+  --x-shadow: 0 1px 2px rgb(0 0 0 / 12%), 0 8px 24px rgb(0 0 0 / 12%);
 }

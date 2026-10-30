@@ -8,6 +8,8 @@ import { initStores } from '@vben/stores';
 import { preferences } from '@vben/preferences';
 import '@vben/styles';
 import '@vben/styles/antd';
+import '@xray/ui/tokens.css';
+import './styles/xray.css';
 
 import App from './App.vue';
 import { initComponentAdapter } from './adapter/components';
