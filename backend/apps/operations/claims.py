@@ -70,6 +70,21 @@ def assert_current(claim: Claim) -> Operation:
     return operation
 
 
+def renew_claim(claim: Claim, *, lease_seconds: int = 60) -> Claim:
+    now = timezone.now()
+    with transaction.atomic():
+        operation = Operation.objects.select_for_update().get(pk=claim.operation_id)
+        assert_current(claim)
+        operation.lease_expires_at = now + timedelta(seconds=lease_seconds)
+        operation.save(update_fields=["lease_expires_at", "updated_at"])
+        return Claim(
+            operation.pk,
+            claim.owner,
+            claim.fence,
+            operation.lease_expires_at,
+        )
+
+
 def release_claim(claim: Claim, *, status: str | None = None) -> Operation:
     with transaction.atomic():
         operation = Operation.objects.select_for_update().get(pk=claim.operation_id)

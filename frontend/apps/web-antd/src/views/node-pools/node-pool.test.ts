@@ -9,26 +9,18 @@ import {
 
 import NodePools from './index.vue';
 
-function inputFor(dialog: DOMWrapper<Element>, labelText: string) {
-  const label = [...dialog.element.querySelectorAll('label')].find(
-    (item) => item.textContent === labelText,
-  );
-  expect(label, `missing label ${labelText}`).toBeDefined();
-  return dialog.get<HTMLInputElement>(`input[id="${label!.htmlFor}"]`);
-}
-
 describe('node pool region allocation', () => {
-  it('shows per-region allocation and submits multiple preset regions', async () => {
+  it('loads and preserves existing per-region allocations when saving', async () => {
     expect(SUPPORTED_REGIONS).not.toContain('eu-west-1');
 
     const page: Page<NodePool> = {
       items: [{
-        id: 'pool-1', name: '新加坡池', region: 'ap-southeast-1', quota: 3,
-        used: 1, available: 2, allow_create: true,
-        regions: ['ap-southeast-1', 'ap-northeast-1'],
+        id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 3,
+        used: 1, available: 2,
+        regions: ['ap-southeast-1', 'eu-west-1'],
         allocations: [
           { region: 'ap-southeast-1', quota: 2, used: 1, available: 1 },
-          { region: 'ap-northeast-1', quota: 1, used: 0, available: 1 },
+          { region: 'eu-west-1', quota: 2, used: 1, available: 1 },
         ],
       }],
       total: 1,
@@ -36,11 +28,8 @@ describe('node pool region allocation', () => {
       page_size: 20,
     };
     vi.spyOn(resourcesApi, 'nodePools').mockResolvedValue(page);
-    let submitted: { name: string; allocations: { region: string; quota: number }[] } | undefined;
-    const createPool = vi.spyOn(resourcesApi, 'createNodePool').mockImplementation(async (payload) => {
-      submitted = { ...payload, allocations: payload.allocations.map((item) => ({ ...item })) };
-      return page.items[0]!;
-    });
+    const updatePool = vi.spyOn(resourcesApi, 'updateNodePool').mockResolvedValue(page.items[0]!);
+    const createPool = vi.spyOn(resourcesApi, 'createNodePool').mockResolvedValue(page.items[0]!);
     const wrapper = mount(NodePools, {
       attachTo: document.body,
       global: { stubs: { transition: false, 'transition-group': false } },
@@ -48,22 +37,59 @@ describe('node pool region allocation', () => {
 
     try {
       await flushPromises();
-      expect(wrapper.text()).toContain('ap-southeast-1：1/2');
-      expect(wrapper.text()).toContain('ap-northeast-1：0/1');
-      await wrapper.findAll('button').find((item) => item.text() === '新建节点池')!.trigger('click');
+      expect(wrapper.text()).toContain('ap-southeast-1、eu-west-1');
+      expect(wrapper.text()).not.toContain('总额度');
+      expect(wrapper.text()).not.toContain('占用');
+      expect(wrapper.text()).not.toContain('可用');
+      expect(wrapper.text()).not.toContain('1/2');
+      expect(wrapper.text()).not.toContain('0/1');
+      expect(wrapper.text()).not.toContain('暂停创建');
+      await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
       await flushPromises();
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
-      await inputFor(dialog, '名称').setValue('多地区池');
-      await dialog.findAll('button').find((item) => item.text() === '添加地区')!.trigger('click');
+      expect(dialog.text()).toContain('地区分配');
+      expect(dialog.text()).toContain('eu-west-1（历史地区）');
+      expect(dialog.text()).not.toContain('名称');
       await dialog.get('form').trigger('submit');
-      await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
-      expect(submitted).toEqual({
-        name: '多地区池',
+      await vi.waitFor(() => expect(updatePool).toHaveBeenCalledTimes(1));
+      expect(updatePool).toHaveBeenCalledWith('pool-1', {
         allocations: [
-          { region: 'ap-southeast-1', quota: 3 },
-          { region: 'ap-northeast-1', quota: 1 },
+          { region: 'ap-southeast-1', quota: 2 },
+          { region: 'eu-west-1', quota: 2 },
         ],
       });
+      expect(createPool).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('creates the single pool only when no configuration exists', async () => {
+    const emptyPage: Page<NodePool> = { items: [], total: 0, page: 1, page_size: 20 };
+    vi.spyOn(resourcesApi, 'nodePools').mockResolvedValue(emptyPage);
+    const createPool = vi.spyOn(resourcesApi, 'createNodePool').mockResolvedValue({
+      id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 3,
+      used: 0, available: 3,
+      regions: ['ap-southeast-1'],
+      allocations: [{ region: 'ap-southeast-1', quota: 3, used: 0, available: 3 }],
+    });
+    const updatePool = vi.spyOn(resourcesApi, 'updateNodePool');
+    const wrapper = mount(NodePools, {
+      attachTo: document.body,
+      global: { stubs: { transition: false, 'transition-group': false } },
+    });
+
+    try {
+      await flushPromises();
+      await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
+      await flushPromises();
+      const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
+      await dialog.get('form').trigger('submit');
+      await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
+      expect(createPool).toHaveBeenCalledWith({
+        allocations: [{ region: 'ap-southeast-1', quota: 3 }],
+      });
+      expect(updatePool).not.toHaveBeenCalled();
     } finally {
       wrapper.unmount();
     }

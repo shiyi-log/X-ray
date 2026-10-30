@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: X-ray Manager API
-  version: 0.8.0
+  version: 0.9.0
   description: Private administrator API. Secrets are write-only or delivered once.
 paths:
   /api/v1/auth/session:
@@ -188,6 +188,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NodePool'
       security:
       - cookieAuth: []
       requestBody:
@@ -195,7 +201,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenericObject'
+              $ref: '#/components/schemas/NodePoolWriteRequest'
   /api/v1/node-pools/{pool_id}/:
     get:
       operationId: node_pools_retrieve
@@ -313,7 +319,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenericObject'
+                $ref: '#/components/schemas/OperationAccepted'
         '400':
           description: Invalid request
           content:
@@ -339,7 +345,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenericObject'
+              $ref: '#/components/schemas/NodeCreateRequest'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
   /api/v1/nodes/{node_id}/:
     get:
       operationId: nodes_retrieve
@@ -373,6 +386,67 @@ paths:
       parameters:
       - name: node_id
         in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/nodes/{node_id}/actions/{action}/:
+    post:
+      operationId: node_actions_create
+      responses:
+        '202':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAccepted'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NodeActionRequest'
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: action
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+          - start
+          - stop
+          - reboot
+          - delete
+          - reinstall
+          - quarantine
+      - name: Idempotency-Key
+        in: header
         required: true
         schema:
           type: string
@@ -1409,7 +1483,6 @@ components:
       - quota
       - used
       - available
-      - allow_create
       properties:
         id:
           type: string
@@ -1467,35 +1540,127 @@ components:
           type: integer
         available:
           type: integer
-        allow_create:
-          type: boolean
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
+    NodePoolAllocationInput:
+      type: object
+      required:
+      - region
+      - quota
+      additionalProperties: false
+      properties:
+        region:
+          type: string
+          enum:
+          - ap-southeast-1
+          - ap-northeast-1
+          - ap-east-1
+          - us-east-1
+          - us-west-2
+        quota:
+          type: integer
+          minimum: 1
+    NodePoolWriteRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        allocations:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/NodePoolAllocationInput'
+        region:
+          type: string
+          enum:
+          - ap-southeast-1
+          - ap-northeast-1
+          - ap-east-1
+          - us-east-1
+          - us-west-2
+        quota:
+          type: integer
+          minimum: 1
+      anyOf:
+      - required:
+        - allocations
+      - required:
+        - region
+      - required:
+        - quota
+    NodeCreateRequest:
+      type: object
+      required:
+      - account_id
+      - plan_id
+      - image_id
+      additionalProperties: false
+      properties:
+        account_id:
+          type: string
+          format: uuid
+        region:
+          type: string
+          enum:
+          - ap-southeast-1
+          - ap-northeast-1
+          - ap-east-1
+          - us-east-1
+          - us-west-2
+        plan_id:
+          type: string
+        image_id:
+          type: string
+    NodeActionRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        preview_id:
+          type: string
+          format: uuid
+        confirmation:
+          type: string
+    OperationAccepted:
+      type: object
+      required:
+      - operation_id
+      - status
+      - target_type
+      - target_id
+      properties:
+        operation_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        target_type:
+          type: string
+        target_id:
+          type: string
+          format: uuid
     ManagedNode:
       type: object
       required:
       - id
       - name
-      - pool_id
       - provider
       - region
       - provisioning_state
       - health_state
       - security_state
+      - traffic_upload_bytes
+      - traffic_download_bytes
+      - traffic_total_bytes
+      - traffic_state
+      - metering_coverage
       properties:
         id:
           type: string
           format: uuid
         name:
-          type: string
-        pool_id:
-          type: string
-          format: uuid
-        pool_name:
           type: string
         cloud_account_id:
           type: string
@@ -1516,6 +1681,29 @@ components:
           type: array
           items:
             type: object
+        traffic_upload_bytes:
+          type: integer
+          minimum: 0
+        traffic_download_bytes:
+          type: integer
+          minimum: 0
+        traffic_total_bytes:
+          type: integer
+          minimum: 0
+        traffic_sampled_at:
+          type: string
+          format: date-time
+          nullable: true
+        traffic_state:
+          type: string
+          enum:
+          - COLLECTED
+          - NO_DATA
+        metering_coverage:
+          type: string
+          enum:
+          - SUPPORTED
+          - PARTIAL
         raw_cloud_state:
           type: string
         desired_state:

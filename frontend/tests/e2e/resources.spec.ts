@@ -7,15 +7,15 @@ const fixedOperation = '11111111-1111-4111-8111-111111111111';
 test('刷新恢复会话、真实空状态与固定 Operation', async ({ page, context }) => {
   await page.goto('/overview');
   await page.reload();
-  await expect(page.getByText('当前管理员')).toBeVisible();
-  await expect(page.getByText('e2e-owner')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '总览' })).toBeVisible();
+  await expect(page.getByText('安全屏障', { exact: true })).toBeVisible();
   await page.goto('/cloud-accounts');
   await expect(page.getByText('暂无云账号')).toBeVisible();
   const sanitizedTrace = tracePath('resource-flow-sanitized.zip');
   await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
   await page.goto(`/operations/${fixedOperation}`);
   await expect(page.getByTestId('operation-id')).toHaveText(fixedOperation);
-  await expect(page.getByTestId('operation-state')).toContainText('RUNNING');
+  await expect(page.getByTestId('operation-state')).toContainText('运行中');
   await page.reload();
   await expect(page.getByTestId('operation-id')).toHaveText(fixedOperation);
   await page.screenshot({ path: screenshotPath('desktop-operation.png'), fullPage: true });

@@ -1,6 +1,6 @@
 {
-  "version": "0.8.0",
-  "generated_at": "2026-10-30T18:16:56+08:00",
+  "version": "0.9.0",
+  "generated_at": "2026-10-31T02:51:59+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -16,13 +16,13 @@
       "evidence": [
         {
           "kind": "vitest",
-          "command": "corepack pnpm@10.33.0 --dir frontend exec vitest run --config apps/web-antd/vitest.config.ts --testTimeout=15000",
+          "command": "corepack pnpm@10.33.0 --dir frontend test:unit",
           "exit_code": 0,
-          "tests": 46,
+          "tests": 65,
           "failures": 0,
           "skipped": 0,
           "timeout_ms": 15000,
-          "timestamp": "2026-10-30T18:08:02+08:00"
+          "timestamp": "2026-10-31T02:45:35+08:00"
         },
         {
           "kind": "frontend_checks",
@@ -35,27 +35,37 @@
         },
         {
           "kind": "pytest",
-          "command": "XRAY_TEST_DATABASE_URL=<dedicated test database> XRAY_REDIS_URL=<dedicated test Redis> uv run --project backend pytest -c backend/pyproject.toml tests/installer tests/deploy -q",
-          "tests": 35,
+          "command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<dedicated test database> XRAY_REDIS_URL=<dedicated test Redis> uv run --project backend pytest -c backend/pyproject.toml -q",
+          "tests": 316,
           "failures": 0,
           "errors": 0,
-          "skipped": 5,
-          "skip_reason": "fixed Xray binary, disposable Linux/systemd host, and image digests were not configured",
+          "skipped": 7,
+          "skip_reason": "fixed Xray binary, disposable Linux/systemd host, backup image and application image digests were not configured",
           "test_environment": "dedicated local PostgreSQL and Redis; connection values omitted",
           "exit_code": 0,
-          "timestamp": "2026-10-30T18:07:28+08:00"
+          "timestamp": "2026-10-31T02:52:00+08:00"
+        },
+        {
+          "kind": "browser_e2e",
+          "command": "XRAY_TEST_DATABASE_URL=<dedicated test database> XRAY_REDIS_URL=<dedicated test Redis> XRAY_BACKEND_PORT=9551 XRAY_FRONTEND_PORT=9552 corepack pnpm@10.33.0 --dir frontend test:e2e",
+          "exit_code": 0,
+          "tests": 7,
+          "failures": 0,
+          "skipped": 0,
+          "test_environment": "dedicated local PostgreSQL and Redis; Chrome desktop/mobile; connection values omitted",
+          "timestamp": "2026-10-31T02:44:31+08:00"
         },
         {
           "kind": "release_package",
-          "command": "bash scripts/package-installer-release.sh 0.8.0; shasum -a 256 -c SHA256SUMS",
+          "command": "bash scripts/package-installer-release.sh 0.9.0; shasum -a 256 -c SHA256SUMS",
           "exit_code": 0,
-          "github_release": "v0.8.0",
+          "github_release": "v0.9.0",
           "assets": [
             "SHA256SUMS",
-            "xray-installer-0.8.0-manifest.json",
-            "xray-installer-0.8.0.tar.gz"
+            "xray-installer-0.9.0-manifest.json",
+            "xray-installer-0.9.0.tar.gz"
           ],
-          "timestamp": "2026-10-30T18:14:25+08:00"
+          "timestamp": "2026-10-31T02:52:00+08:00"
         },
         {
           "kind": "static_gates",

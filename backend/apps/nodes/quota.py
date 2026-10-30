@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from django.db import transaction
+from django.db.models import Count
 
 from common.errors import DomainError
 from common.regions import is_supported_region, normalize_region
@@ -40,6 +41,8 @@ def reserve_node(
         existing = ManagedNode.objects.filter(pool=pool, operation_key=operation_key).first()
         if existing:
             return existing
+        if not pool.allow_create:
+            raise DomainError("POOL_CREATION_DISABLED", "节点池已禁止创建", status_code=409)
         allocations = ensure_pool_allocations(pool)
         if region is None or not str(region).strip():
             if len(allocations) != 1:
@@ -68,8 +71,6 @@ def reserve_node(
             )
         allocation = NodePoolRegionAllocation.objects.select_for_update().get(pk=allocation.pk)
         region = allocation.region
-        if not pool.allow_create:
-            raise DomainError("POOL_CREATION_DISABLED", "节点池已禁止创建", status_code=409)
         used = ManagedNode.objects.filter(
             pool=pool, region=region, consumes_quota=True
         ).count()
@@ -151,7 +152,8 @@ def set_quota(pool_id: UUID, quota: int) -> NodePool:
         allocation.save(update_fields=["quota", "updated_at"])
         pool.quota = quota
         pool.region = allocation.region
-        pool.save(update_fields=["quota", "region", "updated_at"])
+        pool.allow_create = True
+        pool.save(update_fields=["quota", "region", "allow_create", "updated_at"])
         return pool
 
 
@@ -166,8 +168,6 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
         if not isinstance(item, dict):
             raise ValueError("each allocation must be an object")
         region = normalize_region(item.get("region"))
-        if not is_supported_region(region):
-            raise ValueError(f"unsupported region: {region}")
         quota = int(item.get("quota", 0))
         if quota < 1:
             raise ValueError("allocation quota must be at least 1")
@@ -178,12 +178,23 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
 
     with transaction.atomic():
         pool = NodePool.objects.select_for_update().get(pk=pool_id)
-        current = {
-            region: ManagedNode.objects.filter(
-                pool=pool, region=region, consumes_quota=True
-            ).count()
-            for region in pool.nodes.values_list("region", flat=True).distinct()
+        current = dict(
+            ManagedNode.objects.filter(pool=pool, consumes_quota=True)
+            .values("region")
+            .annotate(usage=Count("pk"))
+            .values_list("region", "usage")
+        )
+        existing = {
+            item.region: item
+            for item in pool.region_allocations.select_for_update()
         }
+        for region, _quota in parsed:
+            if (
+                not is_supported_region(region)
+                and region not in existing
+                and region not in current
+            ):
+                raise ValueError(f"unsupported region: {region}")
         for region, quota in parsed:
             if quota < current.get(region, 0):
                 raise DomainError(
@@ -198,7 +209,6 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
                 "已有节点的地区不能移除分配",
                 status_code=409,
             )
-        existing = {item.region: item for item in pool.region_allocations.select_for_update()}
         for region, quota in parsed:
             allocation = existing.get(region)
             if allocation:
@@ -211,5 +221,6 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
             pool.region_allocations.filter(region__in=stale_regions).delete()
         pool.quota = sum(quota for _region, quota in parsed)
         pool.region = parsed[0][0]
-        pool.save(update_fields=["quota", "region", "updated_at"])
+        pool.allow_create = True
+        pool.save(update_fields=["quota", "region", "allow_create", "updated_at"])
         return pool

@@ -92,3 +92,48 @@ def test_invalidate_node_fails_closed_when_no_alternative_endpoint(
     assert revision.usable is False
     assert subscription.current_revision_id == revision.pk
     assert batch.status == "PARTIALLY_SUCCEEDED"
+
+
+@pytest.mark.django_db
+def test_address_refresh_republishes_with_new_ip_and_invalidates_old_revision(
+    publishable_subscription,
+):
+    from apps.subscriptions.publishing import Publisher, decrypt_payload
+
+    _issued, subscription, node, _credential = publishable_subscription
+    old_revision = Publisher.publish(subscription.pk)
+    node.addresses = [{"value": "198.51.100.77", "family": 4, "kind": "dynamic"}]
+    node.save(update_fields=["addresses", "updated_at"])
+
+    result = Publisher.refresh_node_address(node.pk)
+
+    old_revision.refresh_from_db()
+    subscription.refresh_from_db()
+    new_revision = subscription.current_revision
+    payload = base64.b64decode(decrypt_payload(new_revision, "shadowrocket")).decode()
+    assert result == {"published": 1, "failed": 0}
+    assert old_revision.usable is False
+    assert new_revision.pk != old_revision.pk
+    assert new_revision.usable is True
+    assert "198.51.100.77" in payload
+    assert "192.0.2.50" not in payload
+
+
+@pytest.mark.django_db
+def test_address_refresh_keeps_stale_ip_unusable_if_new_revision_cannot_be_published(
+    publishable_subscription,
+):
+    from apps.subscriptions.publishing import Publisher
+
+    _issued, subscription, node, _credential = publishable_subscription
+    old_revision = Publisher.publish(subscription.pk)
+    node.addresses = []
+    node.save(update_fields=["addresses", "updated_at"])
+
+    result = Publisher.refresh_node_address(node.pk)
+
+    old_revision.refresh_from_db()
+    subscription.refresh_from_db()
+    assert result == {"published": 0, "failed": 1}
+    assert old_revision.usable is False
+    assert subscription.current_revision_id == old_revision.pk

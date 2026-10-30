@@ -36,6 +36,32 @@ def test_maps_aws_identity_and_regions_without_network():
     assert provider.list_regions()[0].id == "ap-northeast-1"
 
 
+def test_maps_lightsail_state_object_to_its_name():
+    ref = account()
+    provider = AwsLightsailProvider(
+        ref,
+        "ap-southeast-1",
+        lightsail_client=Mock(),
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    instance = provider._map_instance(
+        {
+            "name": "node-1",
+            "state": {"code": 16, "name": "running"},
+            "publicIpAddress": "203.0.113.10",
+            "tags": [],
+        }
+    )
+
+    assert instance.state == "running"
+    assert instance.raw_state == "running"
+    assert [(address.value, address.family) for address in instance.addresses] == [
+        ("203.0.113.10", 4)
+    ]
+
+
 def test_bundle_pagination_preserves_unknown_price():
     ref = account()
     lightsail = Mock()
@@ -82,7 +108,17 @@ def test_accepted_stop_is_not_reported_completed():
             "tags": [{"key": "xray-manager", "value": "true"}],
         }
     }
-    lightsail.stop_instance.return_value = {"ResponseMetadata": {"RequestId": "request-1"}}
+    lightsail.stop_instance.return_value = {
+        "ResponseMetadata": {"RequestId": "request-1"},
+        "operations": [
+            {
+                "id": "operation-1",
+                "resourceName": "node-1",
+                "resourceType": "Instance",
+                "operationType": "StopInstance",
+            }
+        ],
+    }
     provider = AwsLightsailProvider(
         ref,
         resource.region,
@@ -93,7 +129,128 @@ def test_accepted_stop_is_not_reported_completed():
     result = provider.stop_instance(resource, permit=permit)
     assert result.outcome == "accepted"
     assert result.request_id == "request-1"
+    assert result.operation_id == "operation-1"
     assert lightsail.stop_instance.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("aws_status", "expected"),
+    [
+        ("NotStarted", "IN_PROGRESS"),
+        ("Started", "IN_PROGRESS"),
+        ("Succeeded", "SUCCEEDED"),
+        ("Completed", "SUCCEEDED"),
+        ("Failed", "FAILED"),
+    ],
+)
+def test_get_operation_status_maps_exact_reboot_operation(aws_status, expected):
+    ref = account()
+    resource = ResourceRef(ref, "ap-southeast-1", "node-1")
+    lightsail = Mock()
+    lightsail.get_operation.return_value = {
+        "operation": {
+            "id": "operation-1",
+            "resourceName": "node-1",
+            "resourceType": "Instance",
+            "operationType": "RebootInstance",
+            "status": aws_status,
+        }
+    }
+    provider = AwsLightsailProvider(
+        ref,
+        resource.region,
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+    )
+
+    assert provider.get_operation_status("operation-1", resource, action="reboot") == expected
+    lightsail.get_operation.assert_called_once_with(operationId="operation-1")
+
+
+def test_get_operation_status_rejects_another_resource():
+    ref = account()
+    resource = ResourceRef(ref, "ap-southeast-1", "node-1")
+    lightsail = Mock()
+    lightsail.get_operation.return_value = {
+        "operation": {
+            "id": "operation-1",
+            "resourceName": "another-node",
+            "resourceType": "Instance",
+            "operationType": "RebootInstance",
+            "status": "Succeeded",
+        }
+    }
+    provider = AwsLightsailProvider(
+        ref,
+        resource.region,
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+    )
+
+    with pytest.raises(DomainError) as caught:
+        provider.get_operation_status("operation-1", resource, action="reboot")
+
+    assert caught.value.code == "CLOUD_OPERATION_TARGET_MISMATCH"
+
+
+def test_list_operation_ids_snapshots_only_matching_action_across_pages():
+    ref = account()
+    resource = ResourceRef(ref, "ap-southeast-1", "node-1")
+    lightsail = Mock()
+    lightsail.get_operations_for_resource.side_effect = [
+        {
+            "operations": [
+                {
+                    "id": "existing-start",
+                    "resourceName": "node-1",
+                    "resourceType": "Instance",
+                    "operationType": "StartInstance",
+                },
+                {
+                    "id": "other-action",
+                    "resourceName": "node-1",
+                    "resourceType": "Instance",
+                    "operationType": "RebootInstance",
+                },
+            ],
+            "nextPageToken": "next",
+        },
+        {
+            "operations": [
+                {
+                    "id": "other-resource",
+                    "resourceName": "node-2",
+                    "resourceType": "Instance",
+                    "operationType": "StartInstance",
+                },
+                {
+                    "id": "existing-start-2",
+                    "resourceName": "node-1",
+                    "resourceType": "Instance",
+                    "operationType": "StartInstance",
+                },
+            ]
+        },
+    ]
+    provider = AwsLightsailProvider(
+        ref,
+        resource.region,
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+    )
+
+    assert provider.list_operation_ids(resource, action="start") == [
+        "existing-start",
+        "existing-start-2",
+    ]
+    assert lightsail.get_operations_for_resource.call_count == 2
+    assert lightsail.get_operations_for_resource.call_args_list[0].kwargs == {
+        "resourceName": "node-1"
+    }
+    assert lightsail.get_operations_for_resource.call_args_list[1].kwargs == {
+        "resourceName": "node-1",
+        "pageToken": "next",
+    }
 
 
 def test_cross_region_resource_is_rejected_before_sdk():

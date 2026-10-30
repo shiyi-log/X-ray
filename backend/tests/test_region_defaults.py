@@ -65,6 +65,15 @@ def test_node_pool_create_and_patch_expose_normalized_region(cloud_account):
     )
     assert created.status_code == 201
     assert created.json()["region"] == "ap-east-1"
+    assert created.json()["name"] == "IP"
+
+    updated_allocation = client.post(
+        "/api/v1/node-pools/",
+        {"allocations": [{"region": "ap-east-1", "quota": 3}]},
+        format="json",
+    )
+    assert updated_allocation.status_code == 200
+    assert NodePool.objects.count() == 1
 
     pool_id = created.json()["id"]
     updated = client.patch(
@@ -124,7 +133,6 @@ def test_node_create_accepts_omitted_region_and_uses_singapore(monkeypatch):
     response = client.post(
         "/api/v1/nodes/",
         {
-            "pool_id": str(pool.pk),
             "account_id": str(account.pk),
             "plan_id": "nano",
             "image_id": "debian-12",
@@ -164,6 +172,40 @@ def test_node_create_inherits_custom_pool_region_and_rejects_mismatch(cloud_acco
             operation_key=uuid4(),
         )
     assert caught.value.code == "POOL_REGION_MISMATCH"
+
+
+@pytest.mark.django_db
+def test_paused_pool_reopens_only_after_explicit_quota_edit(cloud_account):
+    from apps.nodes.quota import reserve_node, set_allocations
+
+    pool = NodePool.objects.create(
+        name=f"paused-{uuid4()}", region="ap-east-1", quota=2, allow_create=False
+    )
+    with pytest.raises(DomainError) as paused:
+        reserve_node(
+            pool.pk,
+            account_id=cloud_account.pk,
+            region="ap-east-1",
+            plan_id="nano",
+            image_id="debian-12",
+            operation_key=uuid4(),
+        )
+    assert paused.value.code == "POOL_CREATION_DISABLED"
+    assert not pool.region_allocations.exists()
+
+    reopened = set_allocations(
+        pool.pk, [{"region": "ap-east-1", "quota": 2}]
+    )
+    assert reopened.allow_create is True
+    node = reserve_node(
+        pool.pk,
+        account_id=cloud_account.pk,
+        region="ap-east-1",
+        plan_id="nano",
+        image_id="debian-12",
+        operation_key=uuid4(),
+    )
+    assert node.region == "ap-east-1"
 
 
 @pytest.mark.django_db
@@ -302,3 +344,73 @@ def test_node_pool_rejects_unsupported_region_allocation():
     )
     assert response.status_code == 400
     assert "unsupported region" in response.json()["message"]
+
+
+@pytest.mark.django_db
+def test_unsupported_region_allocation_is_preserved_only_for_existing_usage(cloud_account):
+    client = _authenticated_client()
+    pool = NodePool.objects.create(name=f"legacy-region-{uuid4()}", quota=3)
+
+    rejected = client.patch(
+        f"/api/v1/node-pools/{pool.pk}/",
+        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        format="json",
+    )
+    assert rejected.status_code == 400
+    assert "unsupported region" in rejected.json()["message"]
+
+    allocation = NodePoolRegionAllocation.objects.create(
+        pool=pool, region="eu-west-1", quota=3
+    )
+    retained_allocation = client.patch(
+        f"/api/v1/node-pools/{pool.pk}/",
+        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        format="json",
+    )
+    assert retained_allocation.status_code == 200
+    allocation.refresh_from_db()
+    assert allocation.quota == 2
+
+    from apps.nodes.quota import reserve_node
+
+    for _ in range(2):
+        reserve_node(
+            pool.pk,
+            account_id=cloud_account.pk,
+            region="eu-west-1",
+            plan_id="nano",
+            image_id="debian-12",
+            operation_key=uuid4(),
+        )
+
+    retained = client.patch(
+        f"/api/v1/node-pools/{pool.pk}/",
+        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        format="json",
+    )
+    assert retained.status_code == 200
+
+    below_usage = client.patch(
+        f"/api/v1/node-pools/{pool.pk}/",
+        {"allocations": [{"region": "eu-west-1", "quota": 1}]},
+        format="json",
+    )
+    assert below_usage.status_code == 409
+    assert below_usage.json()["code"] == "QUOTA_BELOW_USAGE"
+
+    removed = client.patch(
+        f"/api/v1/node-pools/{pool.pk}/",
+        {"allocations": [{"region": "ap-southeast-1", "quota": 1}]},
+        format="json",
+    )
+    assert removed.status_code == 409
+    assert removed.json()["code"] == "REGION_ALLOCATION_IN_USE"
+
+    allocation.delete()
+    legacy_usage = client.patch(
+        f"/api/v1/node-pools/{pool.pk}/",
+        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        format="json",
+    )
+    assert legacy_usage.status_code == 200
+    assert NodePoolRegionAllocation.objects.get(pool=pool).region == "eu-west-1"

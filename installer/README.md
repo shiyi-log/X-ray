@@ -20,7 +20,7 @@ host:
 
 ```bash
 tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.8.0/installer/one-click.sh \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.9.0/installer/one-click.sh \
   && sudo bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
 ```
 
@@ -30,7 +30,7 @@ same bootstrap and set the action explicitly:
 
 ```bash
 tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.8.0/installer/one-click.sh \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.9.0/installer/one-click.sh \
   && sudo env XRAY_ONE_CLICK_ACTION=update XRAY_NONINTERACTIVE=1 bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
 ```
 

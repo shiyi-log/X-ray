@@ -103,6 +103,9 @@ def test_management_collections_are_paginated_and_redacted(admin_client, resourc
         assert set(body) >= {"items", "total", "page", "page_size"}
         if expected_id:
             assert body["items"][0]["id"] == expected_id
+        if path == "/api/v1/nodes/":
+            assert "pool_id" not in body["items"][0]
+            assert body["items"][0]["traffic_state"] == "NO_DATA"
         assert "encrypted_credentials" not in response.content.decode()
         assert "test-only-opaque" not in response.content.decode()
 

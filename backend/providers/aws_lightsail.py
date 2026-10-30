@@ -52,7 +52,12 @@ class AwsLightsailProvider:
         import boto3
         from botocore.config import Config
 
-        config = Config(retries={"total_max_attempts": 1}, region_name=region)
+        config = Config(
+            connect_timeout=5,
+            read_timeout=5,
+            retries={"total_max_attempts": 1},
+            region_name=region,
+        )
         kwargs = {
             "region_name": region,
             "aws_access_key_id": fields["access_key_id"],
@@ -152,6 +157,14 @@ class AwsLightsailProvider:
 
     def _map_instance(self, item: dict[str, Any]) -> Instance:
         resource_id = str(item.get("name") or item.get("instanceName") or "")
+        raw_state = item.get("state")
+        if isinstance(raw_state, dict):
+            raw_state = raw_state.get("name") or raw_state.get("code")
+        if not raw_state:
+            raw_state = item.get("instanceState")
+        if isinstance(raw_state, dict):
+            raw_state = raw_state.get("name") or raw_state.get("code")
+        normalized_state = str(raw_state or "UNKNOWN")
         addresses = []
         if item.get("publicIpAddress"):
             addresses.append(Address(str(item["publicIpAddress"]), 4, "dynamic", resource_id))
@@ -168,8 +181,8 @@ class AwsLightsailProvider:
         return Instance(
             ref=ref,
             name=resource_id,
-            state=str(item.get("state") or item.get("instanceState") or "UNKNOWN"),
-            raw_state=str(item.get("state") or item.get("instanceState") or "UNKNOWN"),
+            state=normalized_state,
+            raw_state=normalized_state,
             addresses=tuple(addresses),
             tags=tags,
             observed_at=datetime.now(UTC),
@@ -277,9 +290,111 @@ class AwsLightsailProvider:
             response = getattr(self.lightsail, method)(instanceName=resource.resource_id)
         except Exception as exc:
             raise map_provider_error(self.provider, exc, write_started=True) from exc
-        return MutationResult(
-            "accepted", self._request_id(response), resource.resource_id, None, None
+        operation_type = {
+            "start": "StartInstance",
+            "stop": "StopInstance",
+            "reboot": "RebootInstance",
+            "delete": "DeleteInstance",
+        }.get(action)
+        operation_id = next(
+            (
+                str(item.get("id"))
+                for item in response.get("operations", [])
+                if item.get("id")
+                and item.get("resourceName") == resource.resource_id
+                and item.get("operationType") == operation_type
+            ),
+            None,
         )
+        return MutationResult(
+            "accepted",
+            self._request_id(response),
+            resource.resource_id,
+            None,
+            None,
+            operation_id,
+        )
+
+    def get_operation_status(
+        self, operation_id: str, resource: ResourceRef, *, action: str
+    ) -> str:
+        self._assert_region(resource)
+        expected_type = {
+            "start": "StartInstance",
+            "stop": "StopInstance",
+            "reboot": "RebootInstance",
+        }.get(action)
+        if not expected_type:
+            raise DomainError("CLOUD_OPERATION_TYPE_INVALID", "云操作类型不匹配", status_code=400)
+        try:
+            response = self.lightsail.get_operation(operationId=operation_id)
+        except Exception as exc:
+            raise map_provider_error(self.provider, exc, write_started=False) from exc
+        operation = response.get("operation") or {}
+        if (
+            operation.get("id") != operation_id
+            or operation.get("resourceName") != resource.resource_id
+            or operation.get("resourceType") != "Instance"
+            or operation.get("operationType") != expected_type
+        ):
+            raise DomainError(
+                "CLOUD_OPERATION_TARGET_MISMATCH", "云操作目标与请求不匹配", status_code=409
+            )
+        status = str(operation.get("status") or "").upper()
+        if status in {"SUCCEEDED", "COMPLETED"}:
+            return "SUCCEEDED"
+        if status == "FAILED":
+            return "FAILED"
+        if status in {"NOTSTARTED", "STARTED", "INPROGRESS"}:
+            return "IN_PROGRESS"
+        raise DomainError(
+            "CLOUD_OPERATION_STATE_UNKNOWN", "云操作状态无法确认", status_code=502
+        )
+
+    def _list_operations_for_resource(self, resource: ResourceRef) -> list[dict[str, Any]]:
+        self._assert_region(resource)
+        operations = []
+        page_token = None
+        for _ in range(5):
+            request = {"resourceName": resource.resource_id}
+            if page_token:
+                request["pageToken"] = page_token
+            try:
+                response = self.lightsail.get_operations_for_resource(**request)
+            except Exception as exc:
+                raise map_provider_error(self.provider, exc, write_started=False) from exc
+            page_operations = response.get("operations", [])
+            if not isinstance(page_operations, list):
+                raise DomainError(
+                    "CLOUD_OPERATION_LOOKUP_INVALID", "云操作记录格式无法确认", status_code=502
+                )
+            operations.extend(page_operations)
+            page_token = response.get("nextPageToken")
+            if not page_token:
+                break
+        if page_token:
+            raise DomainError(
+                "CLOUD_OPERATION_LOOKUP_INCOMPLETE", "云操作记录分页未完成", status_code=502
+            )
+        return operations
+
+    @staticmethod
+    def _lifecycle_operation_type(action: str) -> str:
+        operation_type = {"start": "StartInstance", "reboot": "RebootInstance"}.get(action)
+        if not operation_type:
+            raise DomainError("CLOUD_OPERATION_TYPE_INVALID", "云操作类型不匹配", status_code=400)
+        return operation_type
+
+    def list_operation_ids(self, resource: ResourceRef, *, action: str) -> list[str]:
+        expected_type = self._lifecycle_operation_type(action)
+        return [
+            str(operation["id"])
+            for operation in self._list_operations_for_resource(resource)
+            if operation.get("resourceName") == resource.resource_id
+            and operation.get("resourceType") == "Instance"
+            and operation.get("operationType") == expected_type
+            and operation.get("id")
+        ]
 
     def create_instance(self, request: CreateRequest, *, permit: MutationPermit) -> MutationResult:
         self.authorizer.assert_allowed(

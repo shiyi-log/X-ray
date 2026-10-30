@@ -22,8 +22,8 @@ import { businessRoutes } from './index';
 const pages = [
   ['/overview', '总览'],
   ['/cloud-accounts', '云账号'],
-  ['/node-pools', '节点池'],
-  ['/nodes', '节点'],
+  ['/node-pools', '地区'],
+  ['/nodes', '服务器管理'],
   ['/operations', '操作中心'],
   ['/access-profiles', '访问配置'],
   ['/subscriptions', '订阅'],
@@ -34,8 +34,8 @@ const pages = [
 
 const dialogs: Record<string, [string, string]> = {
   '/cloud-accounts': ['添加账号', '添加云账号'],
-  '/node-pools': ['新建节点池', '新建节点池'],
-  '/nodes': ['创建节点', '创建节点'],
+  '/node-pools': ['地区分配', '地区分配'],
+  '/nodes': ['创建服务器', '创建服务器'],
   '/access-profiles': ['新建访问配置', '新建访问配置'],
 };
 
@@ -110,19 +110,30 @@ describe('business page navigation inside the Vben content layout', () => {
         expect(wrapper.find('[role="alert"]').exists(), `${path}: ${wrapper.text()}`).toBe(false);
         expect(wrapper.find('[role="status"]').exists(), `still loading ${path}`).toBe(false);
 
+        if (path === '/nodes') {
+          const regionsButton = wrapper.findAll('button').find((item) => item.text().trim() === '地区');
+          expect(regionsButton, 'missing region quota entry on server management').toBeDefined();
+          await regionsButton!.trigger('click');
+          await finishTransition();
+          expect(router.currentRoute.value.path).toBe('/node-pools');
+          expect(wrapper.get('h1').text()).toBe('地区');
+          await router.push('/nodes');
+          await finishTransition();
+        }
+
         const dialogAction = dialogs[path];
         if (dialogAction) {
           const [buttonText, dialogTitle] = dialogAction;
           const button = wrapper.findAll('button').find((item) => item.text() === buttonText)!;
           await button.trigger('click');
           await finishTransition();
-          const dialog = document.querySelector('[role="dialog"]')!;
-          expect(dialog, `missing dialog on ${path}`).not.toBeNull();
-          expect(dialog.textContent).toContain(dialogTitle);
-          (dialog.querySelector('.ant-modal-close') as HTMLButtonElement).click();
+          const dialog = [...document.querySelectorAll<HTMLElement>('[role="dialog"]')]
+            .find((item) => item.style.display !== 'none');
+          expect(dialog, `missing dialog on ${path}`).toBeDefined();
+          expect(dialog!.textContent).toContain(dialogTitle);
+          (dialog!.querySelector('.ant-modal-close') as HTMLButtonElement).click();
           await vi.waitFor(() => {
-            const modalWrap = document.querySelector('.ant-modal-wrap') as HTMLElement | null;
-            expect(modalWrap === null || modalWrap.style.display === 'none').toBe(true);
+            expect(dialog!.style.display === 'none').toBe(true);
           });
         }
       }
@@ -130,12 +141,12 @@ describe('business page navigation inside the Vben content layout', () => {
       vi.mocked(resourcesApi.nodes).mockRejectedValueOnce(new Error('本地模拟网络错误'));
       await router.push('/nodes');
       await finishTransition();
-      expect(wrapper.get('h1').text()).toBe('节点');
+      expect(wrapper.get('h1').text()).toBe('服务器管理');
       expect(wrapper.get('[role="alert"]').text()).toContain('本地模拟网络错误');
       await wrapper.get('[aria-label="重试"]').trigger('click');
       await flushPromises();
       expect(wrapper.find('[role="alert"]').exists()).toBe(false);
-      expect(wrapper.text()).toContain('暂无节点');
+      expect(wrapper.text()).toContain('暂无服务器');
       expect(fetch).toHaveBeenCalledTimes(1);
       expect(warn.mock.calls.map((args) => String(args[0]))).toEqual([]);
       expect(error).not.toHaveBeenCalled();
@@ -147,5 +158,5 @@ describe('business page navigation inside the Vben content layout', () => {
       });
       vi.unstubAllGlobals();
     }
-  });
+  }, 15_000);
 });

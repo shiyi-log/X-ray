@@ -16,11 +16,19 @@ const props = withDefaults(
   defineProps<{
     open: boolean;
     preview: ActionPreview | null;
+    title?: string;
+    description?: string;
     busy?: boolean;
     errorCode?: string;
     errorMessage?: string;
   }>(),
-  { busy: false, errorCode: '', errorMessage: '' },
+  {
+    busy: false,
+    errorCode: '',
+    errorMessage: '',
+    title: '强制撤销访问',
+    description: '链接会立即失效，节点凭据随后逐节点验证。',
+  },
 );
 const emit = defineEmits<{
   close: [];
@@ -85,7 +93,7 @@ function submit() {
       <div class="flex items-center justify-between gap-4">
         <Space>
           <AlertTriangle :size="20" />
-          <span id="danger-title">强制撤销访问</span>
+          <span id="danger-title">{{ title }}</span>
         </Space>
         <Button type="text" aria-label="关闭" title="关闭" @click="emit('close')">
           <template #icon><X :size="18" /></template>
@@ -93,7 +101,7 @@ function submit() {
       </div>
     </template>
     <Space direction="vertical" class="w-full" :size="16">
-      <p class="text-muted-foreground">链接会立即失效，节点凭据随后逐节点验证。</p>
+      <p class="text-muted-foreground">{{ description }}</p>
       <Alert v-if="errorCode === 'STEP_UP_REQUIRED'" type="error" show-icon role="alert" message="近期身份验证已过期。请退出并重新完成密码与 MFA 验证后再次操作。" />
       <Alert v-else-if="errorMessage" type="error" show-icon role="alert" :message="errorMessage" />
       <Descriptions v-if="preview" bordered :column="1">

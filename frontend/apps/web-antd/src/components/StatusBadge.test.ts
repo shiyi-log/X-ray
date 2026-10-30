@@ -5,6 +5,11 @@ import StatusBadge from './StatusBadge.vue';
 describe('StatusBadge', () => {
   it.each([
     ['PENDING', '待处理'],
+    ['starting', '启动中'],
+    ['stopping', '停止中'],
+    ['rebooting', '重启中'],
+    ['shutting-down', '关机中'],
+    ['terminating', '终止中'],
     ['PROVISIONED', '已配置'],
     ['DELETED', '已删除'],
     ['OPEN', '开放'],

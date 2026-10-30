@@ -52,3 +52,29 @@ def collect_node(node, *, fetcher=None):
             )
         fetcher = import_string(path)
     return ingest_snapshot(node, fetcher(node))
+
+
+def collect_node_once(node_id: UUID | str, *, fetcher=None):
+    """Collect one explicitly selected ready node without applying global limits."""
+    from apps.nodes.models import ManagedNode
+
+    try:
+        node_id = UUID(str(node_id))
+    except (TypeError, ValueError) as exc:
+        raise DomainError("NODE_ID_INVALID", "节点标识无效", status_code=400) from exc
+
+    node = (
+        ManagedNode.objects.select_related("cloud_account", "cloud_credential_version")
+        .filter(pk=node_id)
+        .first()
+    )
+    if node is None:
+        raise DomainError("NODE_NOT_FOUND", "节点不存在", status_code=404)
+    if (
+        node.provisioning_state != "READY"
+        or node.desired_state != "PRESENT"
+        or node.security_state != "OPEN"
+        or not node.external_id
+    ):
+        raise DomainError("NODE_NOT_COLLECTABLE", "节点当前不可采集流量", status_code=409)
+    return collect_node(node, fetcher=fetcher)

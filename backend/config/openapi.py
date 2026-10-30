@@ -148,7 +148,6 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "quota",
                     "used",
                     "available",
-                    "allow_create",
                 ],
                 "properties": {
                     "id": {"type": "string", "format": "uuid"},
@@ -174,9 +173,64 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "quota": {"type": "integer"},
                     "used": {"type": "integer"},
                     "available": {"type": "integer"},
-                    "allow_create": {"type": "boolean"},
                     "created_at": {"type": "string", "format": "date-time"},
                     "updated_at": {"type": "string", "format": "date-time"},
+                },
+            },
+            "NodePoolAllocationInput": {
+                "type": "object",
+                "required": ["region", "quota"],
+                "additionalProperties": False,
+                "properties": {
+                    "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                    "quota": {"type": "integer", "minimum": 1},
+                },
+            },
+            "NodePoolWriteRequest": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "allocations": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": _ref("NodePoolAllocationInput"),
+                    },
+                    "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                    "quota": {"type": "integer", "minimum": 1},
+                },
+                "anyOf": [
+                    {"required": ["allocations"]},
+                    {"required": ["region"]},
+                    {"required": ["quota"]},
+                ],
+            },
+            "NodeCreateRequest": {
+                "type": "object",
+                "required": ["account_id", "plan_id", "image_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "account_id": {"type": "string", "format": "uuid"},
+                    "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                    "plan_id": {"type": "string"},
+                    "image_id": {"type": "string"},
+                },
+            },
+            "NodeActionRequest": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "preview_id": {"type": "string", "format": "uuid"},
+                    "confirmation": {"type": "string"},
+                },
+            },
+            "OperationAccepted": {
+                "type": "object",
+                "required": ["operation_id", "status", "target_type", "target_id"],
+                "properties": {
+                    "operation_id": {"type": "string", "format": "uuid"},
+                    "status": {"type": "string"},
+                    "target_type": {"type": "string"},
+                    "target_id": {"type": "string", "format": "uuid"},
                 },
             },
             "ManagedNode": {
@@ -184,18 +238,20 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                 "required": [
                     "id",
                     "name",
-                    "pool_id",
                     "provider",
                     "region",
                     "provisioning_state",
                     "health_state",
                     "security_state",
+                    "traffic_upload_bytes",
+                    "traffic_download_bytes",
+                    "traffic_total_bytes",
+                    "traffic_state",
+                    "metering_coverage",
                 ],
                 "properties": {
                     "id": {"type": "string", "format": "uuid"},
                     "name": {"type": "string"},
-                    "pool_id": {"type": "string", "format": "uuid"},
-                    "pool_name": {"type": "string"},
                     "cloud_account_id": {"type": "string", "format": "uuid"},
                     "cloud_account_name": {"type": "string"},
                     "provider": {"type": "string"},
@@ -204,6 +260,19 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "image_id": {"type": "string"},
                     "external_id": {"type": "string"},
                     "addresses": {"type": "array", "items": {"type": "object"}},
+                    "traffic_upload_bytes": {"type": "integer", "minimum": 0},
+                    "traffic_download_bytes": {"type": "integer", "minimum": 0},
+                    "traffic_total_bytes": {"type": "integer", "minimum": 0},
+                    "traffic_sampled_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": True,
+                    },
+                    "traffic_state": {"type": "string", "enum": ["COLLECTED", "NO_DATA"]},
+                    "metering_coverage": {
+                        "type": "string",
+                        "enum": ["SUPPORTED", "PARTIAL"],
+                    },
                     "raw_cloud_state": {"type": "string"},
                     "desired_state": {"type": "string"},
                     "provisioning_state": {"type": "string"},
@@ -393,7 +462,10 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/node-pools/": {
             "get": _operation("node_pools_list", response="PaginatedNodePoolList"),
             "post": _operation(
-                "node_pools_create", response="NodePool", request="GenericObject", status="201"
+                "node_pools_create",
+                response="NodePool",
+                request="NodePoolWriteRequest",
+                status="201",
             ),
         },
         "/api/v1/node-pools/{pool_id}/": {
@@ -412,11 +484,31 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/nodes/": {
             "get": _operation("nodes_list", response="PaginatedManagedNodeList"),
             "post": _operation(
-                "nodes_create", response="GenericObject", request="GenericObject", status="202"
+                "nodes_create", response="OperationAccepted", request="NodeCreateRequest", status="202"
             ),
         },
         "/api/v1/nodes/{node_id}/": {
             "get": _operation("nodes_retrieve", response="ManagedNode", parameters=uuid("node_id"))
+        },
+        "/api/v1/nodes/{node_id}/actions/{action}/": {
+            "post": _operation(
+                "node_actions_create",
+                response="OperationAccepted",
+                request="NodeActionRequest",
+                parameters=uuid("node_id")
+                + [
+                    {
+                        "name": "action",
+                        "in": "path",
+                        "required": True,
+                        "schema": {
+                            "type": "string",
+                            "enum": ["start", "stop", "reboot", "delete", "reinstall", "quarantine"],
+                        },
+                    }
+                ],
+                status="202",
+            )
         },
         "/api/v1/operations/": {
             "get": _operation("operations_list", response="PaginatedOperationList")
@@ -493,6 +585,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/overview": {"get": _operation("overview_retrieve", response="Overview")},
         "/api/v1/system": {"get": _operation("system_retrieve", response="SystemInfo")},
     }
+    paths["/api/v1/node-pools/"]["post"]["responses"]["200"] = _response("NodePool")
     policy_properties = {
         "plan_id": {"type": "string", "format": "uuid", "nullable": True},
         "expires_at": {"type": "string", "format": "date-time", "nullable": True},
@@ -592,7 +685,12 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "schema": {"type": "string", "format": "uuid"},
     }
     for path, methods in paths.items():
-        if "/subscriptions/" in path or "/access-profiles/" in path:
+        if (
+            "/subscriptions/" in path
+            or "/access-profiles/" in path
+            or path == "/api/v1/nodes/"
+            or "/api/v1/nodes/{node_id}/actions/" in path
+        ):
             for method, operation in methods.items():
                 if method in {"post", "patch"}:
                     operation.setdefault("parameters", []).append(idempotency)

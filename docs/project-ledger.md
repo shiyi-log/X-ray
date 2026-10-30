@@ -2223,3 +2223,836 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `cfdd110ed63de45b4f9779038ec8745b5ced8a23 plus pending audit-doc changes`
 - `rollback_ref`: `revert only this docs-only append; preserve the code commit and prior audit history`
 - `time_logic`: `System clock with +08:00; documentation-only change; no business time behavior changed`
+
+- `event_id`: `xray-one-click-test-server-20261027-01/001`
+- `timestamp`: `2026-10-27T15:01:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `AGENTS.md`, `skills/xray-manager/SKILL.md`, `docs/project-conventions.md`, `docs/cloud-test-authorization.md`, `docs/project-ledger.md`, `docs/progress.md`, `installer/one-click.sh`, `tests/installer`
+- `operation`: `define the requested disposable Linux server acceptance and local test scope`
+- `reason`: `Test the interactive install/update wrapper on Linux while preserving the explicit cloud authorization, cost, and cleanup boundaries`
+- `command_or_tool`: `read-only project instructions, authorization, ledger, progress, installer and focused test review`
+- `result`: `The request authorizes the purpose of creating a test server but does not identify provider/account, region, fixed plan/image, budget/owner, maximum lifetime/deadline, SSH target/user/fingerprint/commands, or separate stop/delete/IP-release authorization. The existing cloud authorization document has no valid record. A prior Lightsail GetInstance read is recorded as AccessDenied; AWS CLI is not installed in this session. No cloud API, write, SSH, or resource action was attempted. In scope for this run: local installer regression tests and an auditable blocker record. Out of scope: choosing cloud/cost/lifetime settings, bypassing IAM, using an existing server without readback, creating or cleaning up cloud resources.`
+- `exit_code`: `0`
+- `evidence`: `current docs/cloud-test-authorization.md; prior read-only AccessDenied event in this ledger; aws CLI availability check returned missing; no credentials or environment values were emitted`
+- `status`: `blocked`
+- `commit_or_tree`: `f5fb5ecde24facc72f2ff175d48cb4027b149f3c clean before this audit append`
+- `rollback_ref`: `no cloud resource or source change was made; remove only this audit append if correcting the record`
+- `time_logic`: `System clock with +08:00; authorization must remain valid through the recorded test window and max-lifetime deadline; no business time logic changed`
+
+- `event_id`: `xray-one-click-test-server-20261027-01/002`
+- `timestamp`: `2026-10-27T15:01:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `tests/installer`, dedicated `xray_test` database input, `installer/one-click.sh`
+- `operation`: `run available installer regression tests on macOS`
+- `reason`: `Collect local evidence while cloud provisioning is blocked`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL=<value loaded from ignored .env without echoing it> uv run --project backend pytest -c backend/pyproject.toml tests/installer -q`
+- `result`: `12 passed, 3 skipped. Skips are the fixed Xray binary test (not configured), one-click Linux runtime integration (requires disposable Linux), and service test (requires explicitly selected disposable Linux systemd host). This does not prove a real install, update, or systemd runtime.`
+- `exit_code`: `0`
+- `evidence`: `pytest summary; dedicated database URL content was not emitted or persisted; existing Xray test PostgreSQL/Redis services and listeners were not started, stopped, or modified`
+- `status`: `passed`
+- `commit_or_tree`: `f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus this audit append`
+- `rollback_ref`: `no runtime or source state change; remove only this audit append if correcting the record`
+- `time_logic`: `System clock with +08:00; test-only database; no business time behavior changed`
+
+- `event_id`: `xray-one-click-test-server-20261027-01/003`
+- `timestamp`: `2026-10-27T15:07:14+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `installer/one-click.sh`, `tests/installer`, `docs/project-ledger.md`, `docs/progress.md`, repository boundary and acceptance records
+- `operation`: `close the local test and documentation-only audit while preserving the cloud block`
+- `reason`: `Confirm only the requested audit records changed and the local evidence is internally valid`
+- `command_or_tool`: `bash -n installer/one-click.sh`; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; `git status --short --branch`; `git diff --stat -- docs/project-ledger.md docs/progress.md`
+- `result`: `Bash syntax, diff whitespace, repository boundary, and acceptance matrix passed (exit 0). Secret scan returned exit 1 with two ledger findings already recorded in the prior audit history; raw matches were not emitted or persisted. The installer suite returned 12 passed and 3 expected host/binary skips. Before this final append, status showed only docs/project-ledger.md and docs/progress.md modified; no installer source, runtime, cloud resource, credential, or configuration was changed.`
+- `exit_code`: `0/0/0/0/1/0/0`
+- `evidence`: `redacted command summaries and test output; no cloud operation was attempted`
+- `status`: `passed local audit; cloud acceptance remains blocked`
+- `commit_or_tree`: `f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus audit docs`
+- `rollback_ref`: `remove only this run's documentation append if correcting the record; no cloud rollback applies`
+- `time_logic`: `System clock with +08:00; no business time logic changed`
+
+- `event_id`: `xray-one-click-test-server-20261027-01/004`
+- `timestamp`: `2026-10-27T15:13:01+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `tests/installer`, `installer/one-click.sh`, repository boundary, acceptance records, disposable local Linux test containers
+- `operation`: `rerun installer tests without database access and attempt isolated Linux runtime setup`
+- `reason`: `Separate local contract evidence from the requested real-server/systemd acceptance and avoid the unrelated SSH database tunnel`
+- `command_or_tool`: `uv run --project backend --offline pytest -p no:django -c backend/pyproject.toml tests/installer -q`; disposable `python:3.13-slim` Docker attempts with read-only source mount and `--rm`; `bash -n installer/one-click.sh`; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `docker ps`
+- `result`: `Database-free installer suite passed 12 tests with 3 expected skips; disabling pytest-django produced two unknown-config warnings. Both disposable Linux-container attempts stopped during package bootstrap before pytest (first interrupted at pip with exit 130; second stopped during apt package installation with exit 137); --rm removed the temporary containers, and docker ps showed only pre-existing containers. Bash syntax, diff, boundary, and acceptance checks passed. No Linux installer runtime, systemd, cloud API, SSH, or credential action ran.`
+- `exit_code`: `0; container setup 130/137; static checks 0`
+- `evidence`: `redacted pytest summary; temporary-container exit status and removal; final docker process listing; no secret-bearing values emitted`
+- `status`: `passed local contract; Linux runtime and cloud acceptance blocked`
+- `commit_or_tree`: `f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus audit docs`
+- `rollback_ref`: `remove only this documentation append if correcting the record; no source, runtime, database, or cloud rollback applies`
+- `time_logic`: `System clock with +08:00; temporary container lifetime ended before any installer execution; no business time behavior changed`
+
+- `event_id`: `xray-one-click-test-server-20261027-01/005`
+- `timestamp`: `2026-10-27T15:15:48+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, repository boundary and acceptance records
+- `operation`: `finalize documentation-only verification and preserve the unresolved cloud gate`
+- `reason`: `Confirm audit records remain valid and no installer, runtime, database, or cloud state was changed`
+- `command_or_tool`: `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; `git status --short --branch`; `git diff --stat`
+- `result`: `Diff, boundary, and acceptance validation passed (exit 0). Secret scan exited 1 with two findings and emitted no raw matches; the existing progress record already documents two generic ledger findings. Final status contains only docs/project-ledger.md and docs/progress.md modifications. Cloud server, SSH, and Linux runtime acceptance remain blocked/not-run.`
+- `exit_code`: `0/0/0/1/0/0`
+- `evidence`: `command exit summaries; final status and diff stat; no raw secret match or credential value persisted`
+- `status`: `passed documentation audit; cloud and Linux runtime acceptance blocked`
+- `commit_or_tree`: `f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus audit docs`
+- `rollback_ref`: `revert only this documentation append if correcting the audit record; no source or external rollback applies`
+- `time_logic`: `System clock with +08:00; documentation-only record; no business time behavior changed`
+
+- `event_id`: `xray-heyue-multi-instance-20261028-01/001`
+- `timestamp`: `2026-10-28T23:42:10+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `X-ray authenticated console and one temporary AWS Lightsail host; Heyue candidate 7cf03ff69da09b84240f2155721ca5ab7ea5bc38`
+- `operation`: `define a bounded real-host test for two isolated Heyue Python/uv installs and public initialization endpoints`
+- `reason`: `User requested an AWS server test, had authorized a total cost cap of USD 100, and explicitly authorized deleting the test server afterward without another confirmation`
+- `command_or_tool`: `read AGENTS.md, docs/project-conventions.md, skills/xray-manager/SKILL.md, docs/cloud-test-authorization.md, project ledger/progress, X-ray git status, and X-ray browser accessibility state; local Heyue full pytest on candidate 7cf03ff`
+- `result`: `Authorization intent is recorded for one temporary AWS test host and exact-host SSH limited to installing/testing two isolated Heyue Python/uv instances, checking their separate ports and initialization pages, then deleting that exact host. Internal test lifetime cap is 120 minutes from create; no static IP or snapshot. Use only an X-ray authenticated account and a fresh target-bound preview whose selected region/plan/image and projected charge remain inside the USD 100 ceiling. Keep initialization unconfigured and all business/chain writes disabled; public checks limited to the two test ports. X-ray is currently unauthenticated at /login, so account, region, plan, image, and preview are not yet verified; no cloud API/write, SSH, or resource action was attempted. Candidate full Python suite passed 7367 tests, 496 skipped, and 2772 subtests locally; GitHub CI remains failed and is not represented as passed.`
+- `exit_code`: `0 (read-only checks and local pytest); cloud action not-run`
+- `evidence`: `X-ray browser accessibility tree shows the login form; candidate command uv run python -m pytest tests -q --tb=short exited 0; GitHub Actions run 40714277880 full pytest job and upload jobs failed`
+- `status`: `blocked pending authenticated X-ray session and live target-bound cloud preflight; local candidate suite passed`
+- `commit_or_tree`: `X-ray f5fb5ecde24facc72f2ff175d48cb4027b149f3c with pre-existing docs/progress.md and docs/project-ledger.md changes; Heyue candidate 7cf03ff69da09b84240f2155721ca5ab7ea5bc38`
+- `rollback_ref`: `no cloud resource or source change; this audit is append-only; do not remove or revert unrelated dirty X-ray audit records`
+- `time_logic`: `System clock 2026-10-28T23:42:10+08:00; hard host lifetime cap 120 minutes from provider-confirmed creation; cleanup immediately after acceptance; no scheduled expiry or business time changed`
+
+- `event_id`: `xray-heyue-multi-instance-20261028-01/002`
+- `timestamp`: `2026-10-28T23:45:44+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `X-ray docs/project-ledger.md, docs/progress.md, boundary and acceptance validators`
+- `operation`: `validate the read-only cloud-preflight audit append`
+- `reason`: `Ensure the scoped authorization/blocker record is well-formed and does not broaden repository boundaries or expose secret material`
+- `command_or_tool`: `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; `git status --short --branch`
+- `result`: `Diff check, repository boundary check, and acceptance matrix validator passed. Secret scan exited 1 with two ledger findings; the command emitted only the count, not raw match values, and no fingerprint comparison was performed in this run. X-ray remains unauthenticated and no cloud/SSH action was attempted.`
+- `exit_code`: `0/0/0/1/0`
+- `evidence`: `validator exit summaries and status containing only pre-existing dirty audit docs plus this run's append; no raw secret output persisted`
+- `status`: `passed documentation/boundary/acceptance checks; secret scan unresolved; cloud acceptance blocked pending authenticated X-ray session`
+- `commit_or_tree`: `X-ray f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty docs and this run's audit append`
+- `rollback_ref`: `no source or external state change; retain append-only audit history and pre-existing dirty docs`
+- `time_logic`: `System clock 2026-10-28T23:45:44+08:00; documentation-only validation; no business time changed`
+
+- `event_id`: `xray-heyue-multi-instance-20261028-01/003`
+- `timestamp`: `2026-10-28T23:47:50+08:00`
+- `actor`: `Codex`
+- `event_type`: `closeout`
+- `path_scope`: `Heyue candidate 7cf03ff69da09b84240f2155721ca5ab7ea5bc38 local test result; X-ray cloud preflight and audit docs`
+- `operation`: `close the current preflight-only run without claiming AWS acceptance`
+- `reason`: `Record the latest local and CI evidence while the authenticated X-ray prerequisite remains unresolved`
+- `command_or_tool`: `uv run python -m pytest tests -q --tb=short`; `gh run view 40714277880`; X-ray browser login-page inspection; final `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; `git status --short --branch`
+- `result`: `Candidate local full pytest passed 7367, skipped 496, and passed 2772 subtests (exit 0). GitHub run 40714277880 remains failed: full pytest had 16 runner/test-harness failures; artifact uploads failed due exhausted storage quota, so CI is not passed. X-ray browser still shows the login form. Diff, boundary, and acceptance checks passed; secret scan exited 1 with two ledger findings and emitted no raw values. Only docs/project-ledger.md and docs/progress.md are dirty in X-ray; their earlier changes are preserved. No AWS server, SSH session, installation, public probe, or cleanup operation ran.`
+- `exit_code`: `0 local pytest; CI failed; 0/0/0/1 final X-ray documentation gates`
+- `evidence`: `local pytest summary; CI job output summary; browser accessibility tree; validator exit summaries; git status`
+- `status`: `passed local candidate tests and documentation/boundary/acceptance gates; CI failed; secret scan unresolved; real AWS acceptance blocked`
+- `commit_or_tree`: `Heyue candidate 7cf03ff69da09b84240f2155721ca5ab7ea5bc38; X-ray f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved audit docs`
+- `rollback_ref`: `no source or cloud rollback; retain the append-only run record and preserve the pre-existing dirty X-ray docs`
+- `time_logic`: `System clock 2026-10-28T23:47:50+08:00; no cloud resource was created and no resource lifetime started`
+
+- `event_id`: `xray-deployment-status-20261029-01/001`
+- `timestamp`: `2026-10-29T13:35:17+08:00`
+- `actor`: `Codex`
+- `event_type`: `status_check`
+- `path_scope`: `README.md`, `docs/deployment.md`, `docs/progress.md`, `docs/project-ledger.md`, current Git status, local listeners
+- `operation`: `answer whether the current X-ray project is deployed to online production`
+- `reason`: `User requested the current deployment status; verify production evidence separately from local runtime and GitHub code publication`
+- `command_or_tool`: `git status --short --branch`; `git rev-parse --short HEAD`; `lsof -nP -iTCP -sTCP:LISTEN`; read-only review of deployment/progress/ledger records and repository deployment statements
+- `result`: `No evidence supports a completed online production deployment. README and progress records keep real AWS/SWAS, remote SSH, public probes, independent production server, domain/TLS, and production release as not executed or blocked. The latest 2026-10-28 cloud preflight records the X-ray session unauthenticated and AWS creation, SSH, installation, public probing, and deletion not run. Current listeners are local-only Django 127.0.0.1:9529 and Vite 127.0.0.1:9528. GitHub main publication is code hosting, not production deployment.`
+- `exit_code`: `0 for read-only status/listener checks; no external write or production action attempted`
+- `evidence`: `README.md deployment boundary; docs/progress.md external-gate rows and 2026-10-28 cloud preflight; docs/project-ledger.md closeout; current local listener inspection`
+- `status`: `production deployment not evidenced; local runtime confirmed; external/cloud acceptance remains blocked or not-run`
+- `commit_or_tree`: `main at f5fb5ec; existing dirty docs/progress.md and docs/project-ledger.md preserved plus this append`
+- `rollback_ref`: `remove only this documentation append if correcting the status; no source, runtime, database, credential, or cloud rollback applies`
+- `time_logic`: `System clock with +08:00; status is a point-in-time read at 2026-10-29T13:35:17+08:00; no business time or TTL behavior changed`
+
+- `event_id`: `xray-release-hot-update-20261029-01/001`
+- `timestamp`: `2026-10-29T13:53:26+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `VERSION`, backend/frontend version metadata, `.github/workflows/release.yml`, `scripts/package-installer-release.sh`, `installer/one-click.sh`, `installer/README.md`, frontend update preferences, release docs and focused tests
+- `operation`: `define the 0.7.0 GitHub release, one-click installer and online hot-update scope`
+- `reason`: `User requested GitHub version publication, one-click installation and online hot update as one connected delivery`
+- `command_or_tool`: `read-only repository contract, release/install/update implementation, GitHub repository/release/run inspection, focused agent audits`
+- `result`: `In scope: bump the application package metadata to 0.7.0, publish an immutable v0.7.0 tag/release with installer assets and SHA-256 checksums, make the remote installer default to the same tag, preserve interactive install and rollback-safe Xray runtime update, and enable same-origin frontend ETag/Last-Modified refresh detection. Out of scope: real production SSH, server image/digest publication, database migration, cloud writes, and public browser acceptance. Assumptions: the authenticated GitHub account may publish this repository; GitHub Actions runner billing may remain blocked, so local evidence and manual release evidence must stay separate. Risk: changing VERSION requires generated OpenAPI and acceptance metadata alignment; rollback is `git revert` of the release commit and deletion of the exact v0.7.0 release/tag only if the user later authorizes that destructive cleanup.`
+- `exit_code`: `0`
+- `evidence`: `VERSION`, current `main`/`origin/main` inspection, no remote tags/releases, existing installer/update tests, Vben `CheckUpdates` implementation and recent GitHub run `40441349428` billing-block evidence`
+- `status`: `passed`
+- `commit_or_tree`: `f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty audit docs and hot-update test change`
+- `rollback_ref`: `revert the scoped release/hot-update commit; use the prior immutable main commit as source rollback; do not restore production credentials, tokens, cloud state or database data`
+- `time_logic`: `System clock with +08:00; release tag identifies an immutable point in time; frontend polling uses the existing minute interval and same-origin HTTP validators; no business TTL or expiry behavior changes`
+
+- `event_id`: `xray-local-runtime-20261029-01/001`
+- `run_id`: `xray-local-runtime-20261029-01`
+- `timestamp`: `2026-10-29T13:41:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `main.py`, `README.md`, `docs/project-conventions.md`, `skills/xray-manager/SKILL.md`, local process/listener state, `deploy/compose/test.yml`, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `define a local runtime verification run and reuse the existing project-owned launcher`
+- `reason`: `User requested that the local X-ray project be started; the repository contract requires ownership checks before starting or stopping services and prohibits duplicate launchers`
+- `command_or_tool`: `read-only repository/runtime inspection; no source or runtime configuration write`
+- `result`: `Canonical launcher is root python3 main.py. Existing launcher PID 16853 owns backend PID 16857 and Vite PID 16901; dedicated Compose services are xray-test-postgres-1 and xray-test-redis-1. Existing project-owned runtime will be reused; no duplicate process or service action is authorized or needed.`
+- `exit_code`: `0`
+- `evidence`: `process tree, listener ownership, compose ps, and repository startup contract`
+- `status`: `passed`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty files`
+- `rollback_ref`: `no source/runtime rollback; stop only the confirmed X-ray launcher process group if the user explicitly requests shutdown`
+- `time_logic`: `System wall clock with +08:00; point-in-time runtime decision; no business time, TTL, retry, or expiry behavior changed`
+
+- `event_id`: `xray-local-runtime-20261029-01/002`
+- `run_id`: `xray-local-runtime-20261029-01`
+- `timestamp`: `2026-10-29T13:41:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime`
+- `path_scope`: `127.0.0.1:9528`, `127.0.0.1:9529`, `127.0.0.1:55432`, `127.0.0.1:56379`
+- `operation`: `verify local service readiness and dependency ownership`
+- `reason`: `Confirm that the user can use the already-running local project without restarting or disturbing other processes`
+- `command_or_tool`: `curl --noproxy '*' http://127.0.0.1:9529/health/live`; `curl --noproxy '*' http://127.0.0.1:9529/health/ready`; `curl --noproxy '*' http://127.0.0.1:9528/`; `curl --noproxy '*' http://127.0.0.1:9528/api/v1/auth/session`; `lsof -nP -iTCP:<port> -sTCP:LISTEN`; `docker-compose -p xray-test -f deploy/compose/test.yml ps`
+- `result`: `Backend live HTTP 200 with status ok; backend ready HTTP 200 with database ok and redis ok; frontend root HTTP 200; unauthenticated session proxy HTTP 200; PostgreSQL container healthy on 127.0.0.1:55432; Redis container healthy on 127.0.0.1:56379. No external cloud, production, SSH, or public probe was performed.`
+- `exit_code`: `0/0/0/0/0/0`
+- `evidence`: `local HTTP probe output and compose/listener inspection; no secret-bearing response content recorded`
+- `status`: `passed local runtime; production/cloud/device gates not-run`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty files`
+- `rollback_ref`: `no source/database/cloud rollback; keep the existing launcher and dependency services running`
+- `time_logic`: `System wall clock with +08:00; readiness is a point-in-time observation; no application time behavior changed`
+
+- `event_id`: `xray-local-runtime-20261029-01/003`
+- `run_id`: `xray-local-runtime-20261029-01`
+- `timestamp`: `2026-10-29T13:41:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, current Git status and diff
+- `operation`: `finalize the local runtime audit without touching unrelated worktree changes`
+- `reason`: `Record verification and close the requested local startup task while preserving all pre-existing or concurrent source changes`
+- `command_or_tool`: `git diff --check`; `git status --short --branch`; `git rev-parse HEAD`
+- `result`: `Diff check passed. Current branch remains main. Existing dirty audit docs plus frontend/apps/web-antd/src/preferences.ts and untracked frontend/apps/web-antd/src/preferences.test.ts are preserved and were not modified by this run. No VERSION, tag, commit, deployment, database migration, credential, or cloud change was made.`
+- `exit_code`: `0/0/0`
+- `evidence`: `final diff/status/ref inspection`
+- `status`: `passed`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty files`
+- `rollback_ref`: `remove only these append-only audit entries if correcting the record; do not revert unrelated frontend changes`
+- `time_logic`: `System wall clock with +08:00; documentation-only closeout; no business time behavior changed`
+
+- `event_id`: `xray-local-runtime-20261029-01/004`
+- `run_id`: `xray-local-runtime-20261029-01`
+- `timestamp`: `2026-10-29T13:43:31+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, repository boundary and acceptance validators, local runtime endpoints
+- `operation`: `record final local startup verification and exact gate outcomes`
+- `reason`: `Close the user-requested local runtime task with reproducible evidence and preserve the repository's explicit production boundary`
+- `command_or_tool`: `git diff --check`; `./scripts/check-runtime.sh`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; final live/ready/root/session HTTP probes; `git status --short --branch`
+- `result`: `Diff check, runtime version gate, boundary check, acceptance matrix, and final local HTTP probes exited 0. Secret scan exited 1 with two existing historical ledger findings and no raw values recorded. Current branch remains main; existing docs changes and frontend preference changes remain uncommitted and untouched.`
+- `exit_code`: `0/0/0/0/1/0/0`
+- `evidence`: `validator command exit summaries, final HTTP probes, and final Git status; no secret-bearing output persisted`
+- `status`: `passed local runtime and static gates; secret scan unresolved due pre-existing findings; production/cloud/device gates not-run`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty files`
+- `rollback_ref`: `no source/runtime/database/cloud rollback; correct only the append-only audit record if needed`
+- `time_logic`: `System wall clock with +08:00; verification is point-in-time; no business time, TTL, retry, or expiry behavior changed`
+
+- `event_id`: `xray-local-runtime-20261029-01/005`
+- `run_id`: `xray-local-runtime-20261029-01`
+- `timestamp`: `2026-10-29T13:45:10+08:00`
+- `actor`: `Codex`
+- `event_type`: `closeout`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, local runtime and final repository status
+- `operation`: `close the local runtime run`
+- `reason`: `All requested local startup evidence is complete and the remaining scan finding is an existing repository-level issue already classified in the audit trail`
+- `command_or_tool`: `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; final backend live/ready and frontend session probes; `git status --short --branch`
+- `result`: `Local project remains available at frontend 127.0.0.1:9528 and backend 127.0.0.1:9529. Final diff, boundary, acceptance, and HTTP checks passed. Secret scan exit 1 reports two historical findings without raw values. No production deployment or external provider action was performed.`
+- `exit_code`: `0/0/0/1/0/0`
+- `evidence`: `final validator output, final HTTP JSON, and final Git status`
+- `status`: `passed local runtime; secret scan unresolved due existing findings; production/cloud/device gates not-run`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty files`
+- `rollback_ref`: `stop only the confirmed X-ray launcher group on explicit user request; no code, database, credential, or cloud rollback applies`
+- `time_logic`: `System wall clock with +08:00; closeout observation at 2026-10-29T13:45:10+08:00; no business time behavior changed`
+
+- `event_id`: `xray-cloud-deploy-preflight-20261029-01/001`
+- `run_id`: `xray-cloud-deploy-preflight-20261029-01`
+- `timestamp`: `2026-10-29T14:02:53+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `docs/cloud-test-authorization.md`, `docs/development.md`, `docs/deployment.md`, `docs/release.md`, `docs/project-ledger.md`, `docs/progress.md`, local CloudAccount/NodePool metadata, AWS capability/plan/image readback
+- `operation`: `bind the requested cloud test preflight and classify deployment scope before any external write`
+- `reason`: `User authorized AWS Lightsail testing in ap-southeast-1 with nano_3_0 and Ubuntu 24.04, a 100 CNY total ceiling, retention through 2026-10-30 18:00, and SSH limited to the exact new instance for install/upgrade/verification; user then requested both management-platform deployment and node install/upgrade`
+- `command_or_tool`: `read-only repository contract review; local database metadata read; AWS account capability, plan and image catalog readback through the existing validated account; no create/SSH/delete command`
+- `result`: `Existing enabled AWS account readback succeeded for ap-southeast-1; public plan/image identifiers include nano_3_0 and ubuntu_24_04. The repository separates the management-platform production Compose release from the node installer. The requested two-host scope requires a second host, separate budget/lifetime binding, immutable backend/frontend/backup image digests, production secret files, TLS, backup destination, and worker/migration release prerequisites. Those inputs are absent; no cloud resource was created and no SSH was attempted. A one-node Xray install/upgrade test with the local management console remains feasible after target scope is selected.`
+- `exit_code`: `0` for all read-only preflight commands
+- `evidence`: `local CloudAccount and NodePool metadata; AWS capability/plan/image readback; deployment and release contract files; no secret values recorded`
+- `status`: `blocked pending explicit one-host versus two-host scope and, for two hosts, expanded budget/resource authorization`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty release/installer/frontend/docs changes`
+- `rollback_ref`: `no external state exists to roll back; do not alter or reuse existing nodes; retain this append-only preflight record`
+- `time_logic`: `System wall clock with +08:00; retention deadline explicitly recorded as 2026-10-30T18:00:00+08:00; no instance lifetime started because creation was not executed`
+
+- `event_id`: `xray-cloud-deploy-preflight-20261029-01/002`
+- `run_id`: `xray-cloud-deploy-preflight-20261029-01`
+- `timestamp`: `2026-10-29T14:37:08+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `backend/apps/nodes/`, `backend/providers/`, `deploy/compose/`, `deploy/scripts/`, `docs/release.md`, `docs/release-checklist.md`, GitHub refs and release metadata
+- `operation`: `classify the authorized two-host deployment as blocked before any cloud write`
+- `reason`: `Confirm whether the repository can create a temporary control server and deploy the management platform before creating paid resources`
+- `command_or_tool`: `read-only provider/API/source inspection; git remote/tag/release readback; local image inventory; no provider write, SSH, or deletion`
+- `result`: `The live provider write path and POST /api/v1/nodes/ create ManagedNode Xray resources only; no control-server resource type or lifecycle exists. The production manager release requires immutable backend/frontend/backup image digests, Debian 12/Docker Compose, TLS certificates, secret files, backup destination, database role bootstrap, worker drain, and migration checks. GitHub v0.7.0 source/installer release exists, but no usable production application image digests or control-server deployment package is available. Local Docker images do not satisfy the immutable registry requirement. Creating either host through the node API would misclassify the control server and invalidate ownership/SSH evidence.`
+- `exit_code`: `0` for all read-only checks
+- `evidence`: `git ls-remote`/release metadata, provider and node lifecycle source, production Compose/release scripts, local image inventory; no credentials or raw secret values recorded
+- `status`: `blocked`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus preserved dirty release/frontend/docs changes`
+- `rollback_ref`: `no cloud resource, SSH session, database migration, or production state was created; retain existing nodes and append-only audit; do not repurpose a ManagedNode as a control server`
+- `time_logic`: `System wall clock with +08:00; requested retention deadline remains 2026-10-30T18:00:00+08:00, but no instance lifetime or cost window started`
+
+- `event_id`: `xray-frontend-redesign-20261029-01/001`
+- `run_id`: `xray-frontend-redesign-20261029-01`
+- `timestamp`: `2026-10-29T14:05:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `frontend/apps/web-antd/src/App.vue`, `frontend/apps/web-antd/src/main.ts`, `frontend/apps/web-antd/src/layouts/basic.vue`, `frontend/apps/web-antd/src/layouts/auth.vue`, `frontend/apps/web-antd/src/views/auth/login.vue`, `frontend/apps/web-antd/src/views/overview/index.vue`, `frontend/apps/web-antd/src/components/StatusBadge.vue`, `frontend/apps/web-antd/src/views/overview/overview.test.ts`, `frontend/packages/ui/src/tokens.css`, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `redesign the X-ray frontend as a security operations console`
+- `reason`: `User requested a frontend refactor and introduced a UI design skill; current pages use default Vben/AntD presentation with weak hierarchy and no shared X-ray visual system`
+- `authorization`: `User-authorized local source changes and local verification only; no production/cloud/SSH/database/credential writes`
+- `assumptions`: `Preserve route names, API contracts, session/authentication flow, existing user changes, and unrelated worktree files; use existing Vue/Vben/AntD/Lucide stack`
+- `exclusions`: `No backend/API/schema changes, external runtime writes, production deployment, or changes under Shop/vue-shop-admin/shop-xray-installer/archive`
+- `risks`: `Global styling may interact with Vben layout classes; auth layout customizations must preserve MFA phases and form semantics; persisted Vben preferences may vary between browser sessions`
+- `command_or_tool`: `read-only inspection of repository instructions, conventions, ledger/progress, git status/diff, frontend source and current local browser page`
+- `result`: `Current local UI uses Vue 3, Vben Admin, Ant Design Vue and Lucide. Existing worktree changes in docs/progress.md, docs/project-ledger.md, frontend/apps/web-antd/src/preferences.ts and untracked preferences.test.ts are pre-existing and preserved. Existing local X-ray runtime is already owned and running on 9528/9529; it will be reused for browser validation.`
+- `exit_code`: `0; browser inspection passed`
+- `evidence`: `main branch at f5fb5ec; existing local page /overview; no process or external state was changed`
+- `status`: `scope defined; implementation pending`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus pre-existing dirty files`
+- `rollback_ref`: `Revert only scoped frontend changes or use git revert of the eventual coherent commit; preserve existing dirty docs/preferences changes`
+- `time_logic`: `System clock with +08:00; no business time or expiry behavior changed`
+
+- `event_id`: `xray-frontend-redesign-20261029-01/002`
+- `run_id`: `xray-frontend-redesign-20261029-01`
+- `timestamp`: `2026-10-29T13:54:56+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `本轮前端重构、docs/project-ledger.md、docs/progress.md`
+- `operation`: `更正本轮台账语言并补充完整重构范围`
+- `reason`: `用户明确要求后续文档使用中文；上一条本轮记录的说明文字误用了英文，因此追加更正，不覆盖历史记录`
+- `command_or_tool`: `只读复查现有前端、工作树状态、Vben 样式令牌和本地页面`
+- `result`: `上一条记录仍作为追加式审计历史保留；本轮后续文档使用中文说明。实际实现范围调整为：统一所有管理页面的视觉令牌和 Ant Design/Vben 组件样式，重做总览与登录布局；保留 API、路由、认证流程及现存未提交改动。当前分支 main，HEAD 为 f5fb5ec；同时存在发布资料、安装器、后端配置、前端版本号和用户偏好等未提交改动，均不属于本轮范围并保持不变。`
+- `exit_code`: `0`
+- `evidence`: `源文件、主题令牌、本地 /overview 页面及 git status 检查结果`
+- `status`: `更正已记录；实现尚未开始`
+- `commit_or_tree`: `main at f5fb5ecde24facc72f2ff175d48cb4027b149f3c plus existing dirty tree`
+- `rollback_ref`: `仅回退本轮新增的前端文件改动；保留现有发布、安装器、后端、偏好及审计记录`
+- `time_logic`: `执行机器时间 2026-10-29T13:54:56+08:00；无业务时间逻辑变更`
+
+- `event_id`: `xray-frontend-redesign-20261029-01/003`
+- `run_id`: `xray-frontend-redesign-20261029-01`
+- `timestamp`: `2026-10-29T14:12:41+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `frontend/apps/web-antd/src/App.vue`, `frontend/apps/web-antd/src/bootstrap.ts`, `frontend/apps/web-antd/src/components/StatusBadge.vue`, `frontend/apps/web-antd/src/components/StatusBadge.test.ts`, `frontend/apps/web-antd/src/layouts/auth.vue`, `frontend/apps/web-antd/src/layouts/basic.vue`, `frontend/apps/web-antd/src/styles/xray.css`, `frontend/apps/web-antd/src/views/auth/login.vue`, `frontend/apps/web-antd/src/views/overview/index.vue`, `frontend/apps/web-antd/src/views/overview/presentation.ts`, `frontend/apps/web-antd/src/views/overview/presentation.test.ts`, `frontend/packages/ui/src/tokens.css`, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `以中文更正本轮前端重构的范围、提交基线和最终验收结果`
+- `reason`: `用户要求文档使用中文。前两条本轮记录包含英文说明、过时的实现状态及旧提交基线；依照追加式台账约定保留原记录，并以本条更正。`
+- `command_or_tool`: `corepack pnpm@10.33.0 --dir frontend test:unit`; `corepack pnpm@10.33.0 --dir frontend typecheck`; `corepack pnpm@10.33.0 --dir frontend lint`; `corepack pnpm@10.33.0 --dir frontend build`; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; 本地 Chrome 390px 登录页检查；`git status --short --branch`; `git rev-parse HEAD`
+- `result`: `已统一 Vben 与 Ant Design Vue 的 X-ray 色彩令牌和管理界面样式，重做登录与总览布局，补充总览事件中文名称及时区格式化，并将 NORMAL 状态显示为“正常”。保留路由、API、服务端会话、多因素认证和恢复码流程。基线为 main 分支提交 8f7f21d752d3db39580bac40625f1bdd72597e84；当前重构尚未提交。单测 46 项、类型检查、Lint、生产构建、差异格式、边界和验收矩阵均通过；秘密扫描退出码 1，报告历史台账中的 2 项命中，未记录匹配内容。桌面总览和登录页在本地浏览器正常显示；390px 登录页无横向溢出。生产、云端和设备验收未运行。`
+- `exit_code`: `单测 0；类型检查 0；Lint 0；生产构建 0；差异检查 0；边界检查 0；验收矩阵 0；秘密扫描 1；窄屏浏览器检查 0`
+- `evidence`: `Vitest 16 个测试文件、46 项通过；Vite 生产构建完成；390px 视口下页面宽度与文档宽度均为 390px，未发现溢出元素；工作树仅包含本轮前端文件及此前已有的进度和台账改动。`
+- `status`: `passed`
+- `commit_or_tree`: `main 分支基线提交 8f7f21d752d3db39580bac40625f1bdd72597e84，前端及审计文档改动尚未提交`
+- `rollback_ref`: `需要回退时仅恢复本轮列明的前端源码文件；保留追加式台账历史及既有进度记录；无数据库、云端或生产状态需要回退`
+- `time_logic`: `总览仅接受带时区的事件时间并按 Asia/Shanghai 展示；未改变业务时钟、会话期限或服务端时间逻辑`
+
+- `event_id`: `xray-frontend-redesign-20261029-01/004`
+- `run_id`: `xray-frontend-redesign-20261029-01`
+- `timestamp`: `2026-10-29T14:14:22+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, 最终 Git 工作树状态
+- `operation`: `更正本轮工作树范围描述并记录并行文档改动`
+- `reason`: `最终状态检查发现发布说明、版本记录和安装器文档也有未提交改动；这些文件不属于前端重构，因此不得归入本轮改动。`
+- `command_or_tool`: `git status --short --branch`; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`
+- `result`: `更正上一条记录中“工作树仅包含本轮前端文件及进度和台账改动”的表述。最终状态还列出 docs/release-checklist.md、docs/release.md、docs/version-record.md 和 installer/README.md 的未提交改动；本轮未修改这些文件，全部保持原状。差异格式、边界和验收矩阵检查通过；秘密扫描退出码 1，仍报告 2 项历史台账命中。`
+- `exit_code`: `状态检查 0；差异检查 0；边界检查 0；验收矩阵 0；秘密扫描 1`
+- `evidence`: `最终 git status --short --branch 清单；扫描摘要显示 52 个提交、2 项命中，未输出或记录匹配内容`
+- `status`: `passed`
+- `commit_or_tree`: `main 分支基线提交 8f7f21d752d3db39580bac40625f1bdd72597e84；前端、本轮审计记录及其他列明的未提交文件仍在工作树中`
+- `rollback_ref`: `不回退或清理任何并行文档改动；前端源码回退仅限本轮范围`
+- `time_logic`: `仅记录执行时间；无业务时间逻辑变化`
+
+- `event_id`: `xray-release-closeout-20261029-01/001`
+- `run_id`: `xray-release-closeout-20261029-01`
+- `timestamp`: `2026-10-29T15:00:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `v0.7.0 GitHub Release`, `refs/tags/v0.7.0`, `origin/main`, `installer/README.md`, `docs/release.md`, `docs/release-checklist.md`, `docs/version-record.md`, `docs/progress.md`
+- `operation`: `更正并关闭 0.7.0 GitHub 发布、安装器和热更新的外部证据记录`
+- `reason`: `上一轮记录只保留了发布待定和 Actions runner 阻塞状态；本次通过 GitHub API、远程 ref 和匿名 bootstrap 实测补齐最终结论，避免把认证访问或本地构建误报为匿名生产安装成功。`
+- `authorization`: `用户已授权本轮 GitHub 版本发布、一键安装脚本和热更新实现；本记录不改变仓库可见性、不执行生产 SSH/部署、不写入凭据。`
+- `assumptions`: `继续使用现有 v0.7.0 标签和已发布资产；保留用户已有前端改造及其他未提交文件；提交消息按用户要求使用中文。`
+- `exclusions`: `不公开私有仓库；不把 GitHub PAT、Cookie 或其他凭据写入脚本、参数、日志或 URL；不执行生产镜像切换、SSH、数据库迁移或公网浏览器验收。`
+- `risks`: `私有仓库不允许匿名 raw GitHub bootstrap；若没有公开安装器托管，生产主机无法执行 README 中的无凭据一行 curl。自动发布工作流仍受 GitHub 账户计费状态影响。`
+- `command_or_tool`: `gh release view v0.7.0 --repo shiyi-log/X-ray --json ...`; `gh api repos/shiyi-log/X-ray/check-runs/123293363897/annotations`; `gh api repos/shiyi-log/X-ray/check-runs/123293267034/annotations`; `curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 https://raw.githubusercontent.com/shiyi-log/X-ray/v0.7.0/installer/one-click.sh`; `git ls-remote --tags origin refs/tags/v0.7.0`; `git ls-remote origin refs/heads/main`
+- `result`: `GitHub Release X-ray 0.7.0 已发布，非草稿，包含 SHA256SUMS、xray-installer-0.7.0-manifest.json、xray-installer-0.7.0.tar.gz 三个已上传资产；资产摘要分别为 04c0aa59500feb5d0ae0d3dd1da5bdbcbf3f1b54cc9b8feb2ca07d6164ffb9ae、f4645418a653fde415b898b0cd05a3af83b17c2df9bfd537b5d150c7680e41f1、9ef53a7b3b330ffd3a5ade57cdcc0cd56b57f3b75a0193b0bbab656f3b8ac54d。v0.7.0 标签解析为 5910ecf754cddb750ea5b27b898bff7e5a28a8e7，origin/main 为 8f7f21d752d3db39580bac40625f1bdd72597e84。Release workflow run 40827362540 与 CI run 40827331495 均无 step，GitHub annotation 明确为 recent account payments failed or spending limit needs to be increased。匿名 raw bootstrap 返回 HTTP 404，curl 退出 56。`
+- `exit_code`: `gh release view 0；Release annotation 0；CI annotation 0；匿名 curl 56；git ls-remote 0/0`
+- `evidence`: `GitHub Release API 资产清单及 digest；Git refs readback；Actions check-run annotation；匿名 raw URL 实测只记录状态码和退出码，不保存响应内容或任何凭据。`
+- `status`: `GitHub tag/release passed；本地安装器与前端热更新门禁 passed；Actions 自动发布 blocked；匿名无凭据 bootstrap blocked；生产部署、SSH、公网浏览器验收 not-run`
+- `commit_or_tree`: `main at 8f7f21d752d3db39580bac40625f1bdd72597e84 with preserved dirty docs, installer README and user frontend changes`
+- `rollback_ref`: `源码/发布回退使用 v0.6.0-delivery 或 git revert 2c021ba25cb1c819948a9528617759b93b21f15d；不删除 v0.7.0 Release，不回滚数据库、Token、凭据或云状态；可见性或公开托管变更须另行授权。`
+- `time_logic`: `使用执行机器 +08:00 墙上时钟；Release 发布时间为 GitHub API 返回的 2026-10-29T06:10:35Z；本次只做点时观测，不改变业务时间、TTL、重试或过期规则。`
+
+- `event_id`: `xray-release-closeout-20261029-01/002`
+- `run_id`: `xray-release-closeout-20261029-01`
+- `timestamp`: `2026-10-29T15:02:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `closeout`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, `docs/version-record.md`, `docs/release.md`, `docs/release-checklist.md`, `installer/README.md`, current Git status
+- `operation`: `完成 0.7.0 发布收尾验证并保留私有仓库匿名入口阻塞`
+- `reason`: `已将手动 Release 成功、Actions 计费阻断和 raw 404 修正记录到项目证据链，下一步只剩公开托管授权或改用经授权的安装器分发地址。`
+- `command_or_tool`: `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `git status --short --branch`; `git rev-parse HEAD`
+- `result`: `收尾文档格式、仓库边界和验收矩阵通过；当前 HEAD 仍为 8f7f21d，分支为 main；用户已有前端和文档脏改动保留，未清理、未重置、未强推。`
+- `exit_code`: `待本次文档追加完成后执行并记录；不把尚未运行的命令预写成通过。`
+- `evidence`: `本事件用于定义收尾动作；最终命令输出将追加为下一条验证事件。`
+- `status`: `pending final validators`
+- `commit_or_tree`: `main at 8f7f21d752d3db39580bac40625f1bdd72597e84 plus preserved dirty tree`
+- `rollback_ref`: `仅回退本次追加的审计文档；保留 v0.7.0 Release、标签和用户已有源文件改动。`
+- `time_logic`: `执行机器 +08:00；文档收尾不改变业务时间逻辑。`
+
+- `event_id`: `xray-release-closeout-20261029-01/003`
+- `run_id`: `xray-release-closeout-20261029-01`
+- `timestamp`: `2026-10-29T14:22:16+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/project-ledger.md`, `docs/progress.md`, `docs/version-record.md`, `docs/release.md`, `docs/release-checklist.md`, `installer/README.md`, repository boundary and acceptance metadata
+- `operation`: `执行并记录发布收尾的最终静态门禁和工作树检查`
+- `reason`: `确认追加式证据本身格式正确，边界未越界，验收矩阵仍有效，并在用户已有脏工作树上完成最终状态核对。`
+- `command_or_tool`: `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; `git status --short --branch`; `git rev-parse HEAD`; `git ls-remote origin refs/heads/main`
+- `result`: `差异检查通过；边界检查输出 boundary check passed；验收矩阵输出 acceptance matrix valid: tests/acceptance/matrix.json；秘密扫描退出 1，报告 52 commits scanned、2 个既有历史命中且未输出匹配内容；main 与 origin/main 均为 8f7f21d752d3db39580bac40625f1bdd72597e84。用户前端重构、发布说明、安装器说明及审计文档脏改动均保留，未执行清理或重置。`
+- `exit_code`: `0/0/0/1/0/0/0`
+- `evidence`: `本地命令输出和远端 ref readback；没有生产主机、SSH、数据库、云资源或凭据写入。`
+- `status`: `passed 文档/边界/验收/状态门禁；secret scan unresolved due 2 existing ledger findings；Actions blocked；匿名 bootstrap blocked；生产/cloud/device acceptance not-run`
+- `commit_or_tree`: `main at 8f7f21d752d3db39580bac40625f1bdd72597e84, origin/main identical, preserved dirty tree`
+- `rollback_ref`: `仅对本轮追加文档执行 git revert；应用发布回退使用 v0.6.0-delivery 或 git revert 2c021ba25cb1c819948a9528617759b93b21f15d；不回滚数据库、Token、凭据、Release 资产或云状态。`
+- `time_logic`: `执行机器时钟 2026-10-29T14:22:16+08:00；本次为点时静态验证，不改变业务时间逻辑。`
+
+- `event_id`: `xray-heyue-multi-instance-20261028-01/004`
+- `run_id`: `xray-heyue-multi-instance-20261028-01`
+- `timestamp`: `2026-10-29T16:02:03+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `authenticated X-ray browser session, AWS Lightsail account summary/capability matrix, /nodes create dialog, and read-only node/account API source routes`
+- `operation`: `resume the authorized one-host Heyue dual-instance test after user reports X-ray login`
+- `reason`: `Recheck authentication and establish whether the normal X-ray flow can prove exact target and price before the authorized USD 100 ceiling is spent`
+- `authorization`: `Prior direct user authorization remains: one AWS test server, total spend not above USD 100, test complete then delete without asking again. Scope is two isolated Heyue Python/uv instances and initialization HTTP checks; no static IP/snapshot; maximum host lifetime 120 minutes. No permission to affect existing X-ray nodes or use a provider API outside X-ray.`
+- `command_or_tool`: `Cua in-app browser session read at /overview, /cloud-accounts and /nodes; read-only inspection of X-ray node create flow and backend URL routes; no form submission or provider write`
+- `result`: `The in-app browser is authenticated as admin and /overview renders. X-ray lists one AWS Lightsail account with validation/status normal; the account reference is intentionally omitted. The capability matrix labels create_instance supported but says explicit administrator operation is required and no live cloud write was executed; it does not expose current prices. The create-node dialog requires pool, account, region, plan ID and image ID. Source audit confirms its submit path creates directly without a target-bound preview or price check, and no authenticated GET route currently exposes live Lightsail bundles/GetBundles prices or blueprint/GetBlueprints image catalog. Two pre-existing AWS entries showed PENDING in /nodes; they were not selected, changed, or treated as proof of provider instances. No region/plan/image cost could be read or previewed. Stop before creation because the authorized budget and X-ray dangerous-action preview cannot be enforced on this path. No create, SSH, install, public probe, delete, or AWS request was issued.`
+- `exit_code`: `0 for browser/source read-only checks; cloud create not-run`
+- `evidence`: `authenticated overview and cloud-account accessibility state; capability modal text; empty create dialog field contract; source route/call-site audit from read-only subagent; no credential/account identifier persisted`
+- `status`: `blocked: X-ray lacks live catalog and target-bound cost preview for this create route; cloud write not-run`
+- `commit_or_tree`: `X-ray main at 8f7f21d752d3db39580bac40625f1bdd72597e84 plus user-owned dirty release/frontend/installer changes and existing audit docs; no changes to those files`
+- `rollback_ref`: `no cloud resource or service state changed; preserve all pre-existing nodes and dirty files; continue only after X-ray offers a live price/catalog and fresh target-bound preview within the existing authorization`
+- `time_logic`: `System wall clock Asia/Shanghai 2026-10-29T16:02:03+08:00; no resource lifetime or billing window started; the 120-minute maximum begins only at provider-confirmed create`
+
+- `event_id`: `xray-heyue-multi-instance-20261028-01/005`
+- `run_id`: `xray-heyue-multi-instance-20261028-01`
+- `timestamp`: `2026-10-29T16:04:21+08:00`
+- `actor`: `Codex`
+- `event_type`: `closeout`
+- `path_scope`: `frontend/apps/web-antd/src/views/nodes/index.vue`, `backend/apps/nodes/views.py`, `backend/apps/cloud_accounts/urls.py`, `backend/apps/cloud_accounts/services.py`, `backend/providers/aws_lightsail.py`, `backend/config/urls.py`, `docs/project-ledger.md`, `docs/progress.md`
+- `operation`: `record final cloud gate and preserve the existing X-ray working tree`
+- `reason`: `Close the login-resume attempt with exact source evidence and prevent a direct, unpriced provider write outside the required X-ray approval path`
+- `command_or_tool`: `read-only source/call-site audit by delegated reviewer; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh`; `git status --short --branch`
+- `result`: `The node UI and backend route do not provide a live bundle/image catalog or target-bound cost preview; create submission passes no preview_id. Local diff/boundary/acceptance checks exited 0. Secret scan exited 1 with 2 historical ledger findings; only count was emitted. Existing release docs, installer README and frontend redesign work remain dirty and untouched; this run only appended audit entries. No AWS API or resource mutation, SSH, install, public probe, deletion, source edit, commit, or release occurred.`
+- `exit_code`: `0/0/0/1/0 (diff/boundary/acceptance/secrets/status)`
+- `evidence`: `source paths named above; authenticated browser UI; final working-tree status; no account identifier or secret recorded`
+- `status`: `passed local audit gates; secret scan unresolved; AWS create/test blocked by missing live catalog and preview`
+- `commit_or_tree`: `main at 8f7f21d752d3db39580bac40625f1bdd72597e84 with all pre-existing dirty files preserved`
+- `rollback_ref`: `no cloud or runtime rollback applies; do not revert/clean other ongoing X-ray frontend/release/installer work; ledger remains append-only`
+- `time_logic`: `System wall clock Asia/Shanghai 2026-10-29T16:04:21+08:00; no resource billing interval began`
+
+- `event_id`: `xray-release-0.8.0-20261030-01/001`
+- `run_id`: `xray-release-0.8.0-20261030-01`
+- `timestamp`: `2026-10-30T18:02:15+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `VERSION`, frontend/backend version metadata, frontend redesign files, installer release metadata, `CHANGELOG.md`, `docs/progress.md`, `docs/version-record.md`, `docs/project-ledger.md`
+- `operation`: `准备发布 X-ray 0.8.0`
+- `reason`: `用户请求发布新版；v0.7.0 已有正式标签和 GitHub Release，本轮将发布当前未提交的前端控制台重构及对应版本元数据。`
+- `authorization`: `用户直接授权发布新版；工作在当前 main 分支，允许提交、创建注释标签并推送到 origin；不包含生产镜像切换、SSH、真实云写入、实例删除、静态 IP 释放或公网设备验收。`
+- `assumptions`: `将现有前端重构视为 0.8.0 的功能版本；保留与发布无关的用户脏改动；使用已存在的本地前后端运行时和专用测试依赖；不复用 v0.7.0 标签。`
+- `exclusions`: `不读取 archive/ 或 Shop 运行时；不提交环境文件、密钥、Cookie、Token、数据库、浏览器状态或生成秘密；不把本地 Fake/Stub、GitHub Release 或本地服务状态写成生产验收。`
+- `risks`: `GitHub Actions 可能仍受账户计费阻断；私有仓库匿名 raw 安装入口仍可能返回 404；全量前端导航测试存在既有时序超时；生产发布缺少不可变镜像 digest、TLS、secret、backup 和 worker/migration 证据。`
+- `command_or_tool`: `git status --short --branch`; `git diff`; `git ls-remote`; `sed/rg` on release contract and version metadata; focused frontend/backend/installer gates`
+- `result`: `当前 main@8f7f21d752d3db39580bac40625f1bdd72597e84 与 origin/main 一致；v0.7.0 已发布；前端重构和发布文档仍在工作树；版本目标确定为 0.8.0。`
+- `exit_code`: `read-only inspections passed; implementation and release gates pending`
+- `evidence`: `repository status/diff, existing v0.7.0 tag/release records, project conventions, xray-manager skill and delegated gate review`
+- `status`: `in_progress; local release preparation authorized; production/cloud/device gates blocked or not-run`
+- `commit_or_tree`: `main at 8f7f21d752d3db39580bac40625f1bdd72597e84 with preserved dirty tree`
+- `rollback_ref`: `application rollback to v0.7.0 or git revert of the release commit; do not delete or rewrite v0.7.0 assets; no database, credential, token or cloud rollback applies`
+- `time_logic`: `使用执行机器 Asia/Shanghai 墙上时钟 2026-10-30T18:02:15+08:00；本次版本发布不改变业务 TTL、重试、过期或云资源生命周期规则。`
+
+- `event_id`: `xray-release-0.8.0-20261030-01/002`
+- `run_id`: `xray-release-0.8.0-20261030-01`
+- `timestamp`: `2026-10-30T18:20:59+08:00`
+- `actor`: `Codex`
+- `event_type`: `closeout`
+- `path_scope`: 0.8.0 source commit/tag, GitHub Release assets, README/CHANGELOG/version metadata, `docs/progress.md`, `docs/version-record.md`, `tests/acceptance/matrix.json`, `docs/release-checklist.md`, current Git status
+- `operation`: `发布并核对 X-ray 0.8.0，补齐本地/外部验收记录`
+- `reason`: `用户请求发布新版；本事件记录源码标签、GitHub Release、安装器资产、门禁和仍未完成的生产/云验收。`
+- `authorization`: `用户直接授权发布新版；允许在当前 main 提交、打注释标签、推送并创建 GitHub Release；没有扩大到生产部署、SSH、AWS/SWAS 写入、实例删除或公网/设备验收。`
+- `command_or_tool`: frontend Vitest/typecheck/lint/build; dedicated PostgreSQL/Redis installer/deploy pytest; `uv lock --project backend --check`; `scripts/package-installer-release.sh` and SHA-256 verification; boundary/acceptance/diff/secret validators; local frontend/backend HTTP probes; `git push`; GitHub Actions run/check annotation/release asset/ref readback; anonymous raw bootstrap request; browser AX readback
+- `result`: 提交 `7a93596775a7da1ec08126e6c4e691c3c66b50e3` 与注释标签 `v0.8.0` 已推送，origin/main 与 tag peeled commit 均解析到该提交。GitHub Release 已手动创建为非草稿，包含 SHA256SUMS、xray-installer-0.8.0-manifest.json、xray-installer-0.8.0.tar.gz；GitHub API digest 与本地生成资产匹配：SHA256SUMS `ea97a906e53d37a60b5a0873487043f8a7de617f3138f392f9cf18f4fcbc98b7`、manifest `76f50e3ef648400f3fc19889054c91e06243aea2bd675f84b67fd6f9d369e477`、archive `3e0d11a7c319d5aa3007d493886f504a2a9cbf0da7bbea985b0e3193a4a745cd`。前端 46 项、typecheck/lint/build 通过；installer/deploy `35 passed, 5 skipped`；锁文件、边界、验收矩阵和差异格式通过；秘密扫描退出 1，仍报告 2 个历史命中且未输出内容。GitHub Actions run `41039028721` 的 job 未启动，annotation 指明账户付款/支出限额；已用本地校验资产手动创建 Release。私有仓库的 v0.8.0 raw bootstrap 实测 HTTP 404（curl 退出 0）；本地前端、后端 live/ready 均 HTTP 200；浏览器总览显示新布局。无数据库迁移、生产镜像切换、SSH、真实云写入、实例删除或设备验收。
+- `exit_code`: frontend unit/typecheck/lint/build `0/0/0/0`; installer/deploy pytest `0` (35 passed, 5 skipped); release packaging/checksum `0/0`; uv lock/boundary/acceptance/diff `0/0/0/0`; secret scan `1`; push/release/ref readback `0`; anonymous raw HTTP `404` with curl exit `0`; Actions run conclusion failure before runner startup
+- `evidence`: main commit and annotated tag readback; GitHub Release API metadata and three SHA-256 asset digests; local package manifest/checksum verification; browser accessibility state; HTTP status-only local/anonymous probes; no credentials or response body recorded
+- `status`: GitHub source/tag/Release passed; focused local release gates passed with 5 explicit skips; GitHub Actions blocked by account billing; historical secret scan findings unresolved; anonymous unauthenticated bootstrap blocked; production/cloud/SSH/device acceptance not-run or blocked
+- `commit_or_tree`: origin/main and peeled v0.8.0 tag at `7a93596775a7da1ec08126e6c4e691c3c66b50e3`; post-release acceptance/progress/ledger documentation remains in working tree together with prior user audit-document changes; no uncommitted application source change
+- `rollback_ref`: source rollback via `v0.7.0` or `git revert 7a93596775a7da1ec08126e6c4e691c3c66b50e3`; do not delete or rewrite v0.8.0 tag/Release assets; no database, cloud, credential, token or runtime rollback applies
+- `time_logic`: 执行机器 Asia/Shanghai；GitHub Release 发布时间 `2026-10-30T18:14:25+08:00`；无业务 TTL/重试/过期或云资源生命周期变更。
+
+- `event_id`: `xray-heyue-installer-create-20261030-01/001`
+- `run_id`: `xray-heyue-installer-create-20261030-01`
+- `timestamp`: `2026-10-30T18:08:01+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `authenticated X-ray Manager /nodes creation form; AWS Lightsail; dedicated pool heyue-installer-20261030; ap-southeast-1; nano_3_0; ubuntu_24_04; this ledger and progress record`
+- `operation`: `创建一台临时 Heyue 安装器生命周期测试服务器`
+- `reason`: `用户明确要求直接创建新服务器，以便实测安装、同目录重复安装、升级、卸载和多套 Docker 共存场景。`
+- `authorization`: `用户在先前限定 AWS Lightsail 测试服务器、总支出不超过 USD 100、测试后删除、最长运行 120 分钟且不创建静态 IP/快照后，于原 2026-10-30 18:00+08:00 窗口结束后再次明确要求直接创建；本次按单台服务器刷新创建意图，严格保留原提供方、区域、套餐、镜像、总预算、最长寿命、清理及 X-ray-only 边界。`
+- `assumptions`: `只创建一个节点；仅在 X-ray 正常创建表单使用现有已验证 Lightsail 账号；节点放入专用 Heyue 池，不改动其他池和既有节点；最长 120 分钟从提供方确认创建时开始计时；测试完成后删除本轮唯一实例并从精确查询及分页列表读回确认不存在。`
+- `exclusions`: `不使用 AWS CLI/API 或其他云写入入口；不创建静态 IP、快照或其他收费资源；不读取、导出或记录云凭据；不触碰任何既有节点、池、服务或配置；不扩展到生产发布。`
+- `risks`: `X-ray 创建页没有目标绑定预览或实时费用展示，池额度只能确认该池可用名额为 1；如果正常操作返回值超出 USD 100 总预算或与所选账号、区域、套餐、镜像及专用池不匹配，则不继续安装并立即处理本轮精确资源。`
+- `command_or_tool`: `authenticated X-ray in-app browser via CUA; create form currently selects the dedicated pool, the single validated Lightsail account, ap-southeast-1, nano_3_0, ubuntu_24_04; no provider submission yet`
+- `result`: `创建意图与边界定义完成；提交及真实云结果待执行和读回。`
+- `exit_code`: `not-run`
+- `evidence`: `当前 X-ray /nodes 页面，专用池剩余额度 1；仅记录非秘密配置，不记录账号标识或凭据。`
+- `status`: `in_progress; provider create not-run`
+- `commit_or_tree`: `X-ray main at 8f7f21d752d3db39580bac40625f1bdd72597e84 plus pre-existing user-owned dirty release/frontend/installer/docs work; preserve all unrelated modifications`
+- `rollback_ref`: `仅删除由本 run 创建并通过返回操作/实例标识精确确认的服务器；保留审计事件；不回退或清理任何既有工作树改动。`
+- `time_logic`: `执行机器 UTC 2026-10-30T10:08:01Z / Asia/Shanghai 2026-10-30T18:08:01+08:00；寿命窗口为创建成功确认起 120 分钟，采用 [start,end)；达到 end 即停止测试并执行精确删除，不因时钟调整延长窗口。`
+
+- `event_id`: `xray-single-address-pool-20261030-01/001`
+- `run_id`: `xray-single-address-pool-20261030-01`
+- `timestamp`: `2026-10-30T18:17:43+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `frontend route/overview/node management/API/OpenAPI generated types/E2E; backend nodes models/quota/views/serializers/URLs/admin overview/OpenAPI/migrations/tests; project ledger and progress`
+- `operation`: `将服务器管理收敛为单个内部额度池，并把订阅管理移至原节点池菜单顺序`
+- `reason`: `用户明确确认侧栏移除“节点池”、订阅管理占原位置、节点页改为“服务器管理”，保留唯一内部地址/额度池并自动用于服务器创建，保留额度限制。`
+- `authorization`: `用户在本轮直接确认按该产品结构实施；仅授权本地源码、测试及迁移文件变更，不包含当前/生产数据库迁移、云资源写入、SSH、删除或发布。`
+- `assumptions`: `新增数据库迁移将既有多个池的地区额度按地区求和汇总到唯一池，保留既有 ManagedNode 记录及其安全/撤销/操作状态；旧池分组配置在迁移应用后不再保留为可恢复的独立池。新环境创建一个默认池；唯一池保留各地区额度和创建开关。`
+- `exclusions`: `不触碰 Shop、vue-shop-admin、shop-xray-installer 或 archive；不读取秘密；不执行迁移到任何当前/生产数据库；不进行 AWS/SWAS、SSH、公网探测、发布、实例/地址/快照删除或静态 IP 释放。`
+- `risks`: `单池合并会改变未来数据库中既有池的分组方式；按地区汇总额度可保留各地区总容量但不能恢复原池边界。迁移是一次性收敛操作，部署前必须备份并审阅既有池数据；本轮不应用迁移。服务器创建仍受账号启用状态、单池地区额度、幂等及现有云写入授权闸门控制。`
+- `command_or_tool`: `只读审计：git status/rev-parse/lsof/rg/sed/cat；并行前后端依赖审计；未启动或停止本地服务。`
+- `result`: `确认当前 main@7a93596775a7da1ec08126e6c4e691c3c66b50e3，工作树仅有用户既有 docs/progress.md 与 docs/project-ledger.md 改动；前端 9528 和后端 9529 为既有 X-ray 监听，保留未动。节点创建、计数、序列化、配额并发、恢复和订阅撤销测试均依赖 NodePool，需要同步更新；当前没有源码修改。`
+- `exit_code`: `只读盘点命令通过；9527 无监听，9528/9529 监听检查返回 1（预期存在 9528/9529）；实现/验证待执行。`
+- `evidence`: `frontend/apps/web-antd/src/router/index.ts`, `frontend/apps/web-antd/src/views/nodes/index.vue`, `backend/apps/nodes/models.py`, `backend/apps/nodes/quota.py`, `backend/apps/nodes/views.py`, `backend/apps/nodes/serializers.py`, `backend/config/admin_views.py`, OpenAPI/test/E2E reference scans; no runtime or provider mutation.`
+- `status`: `in_progress; local implementation authorized; database/cloud/production writes not authorized and not-run`
+- `commit_or_tree`: `main at 7a93596775a7da1ec08126e6c4e691c3c66b50e3 plus preserved user-owned dirty docs`
+- `rollback_ref`: `revert only this run's scoped source/migration/test/docs additions; preserve pre-existing docs edits. If a later deployment applies the pool consolidation migration, rollback requires a pre-migration database backup because original pool boundaries are intentionally merged; no database restore is performed here.`
+- `time_logic`: `Execution clock UTC 2026-10-30T10:17:43Z / Asia/Shanghai 2026-10-30T18:17:43+08:00; this change does not alter business TTL/time behavior.`
+
+- `event_id`: `xray-single-address-pool-20261030-01/002`
+- `run_id`: `xray-single-address-pool-20261030-01`
+- `timestamp`: `2026-10-30T18:35:56+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction_and_scope_update`
+- `path_scope`: `frontend server-management and region views/routes/API tests; backend node quota consolidation, node lifecycle/detail/traffic serialization, preview-gated deletion route/tests, OpenAPI; docs/project-ledger.md and docs/progress.md`
+- `operation`: `补充单地址池重构的最终页面与服务器操作要求`
+- `reason`: `用户追加确认移除“总额度/占用/可用/允许创建”表格列，显示 IP、运行状态、流量统计，并将操作调整为启动、重启、详情、删除；池页面文案按服务器管理、地区和 IP 收敛。`
+- `authorization`: `用户直接授权本地前端、后端、测试、迁移和 OpenAPI 源码调整。删除入口仅接入新鲜目标绑定预览、近期 step-up、UUID 幂等键及现有生命周期执行/读回状态机；未授权实际生产/云实例删除、静态 IP 释放、迁移应用、部署或发布。`
+- `assumptions`: `服务器管理主表显示单个服务器的 IP、运行状态、累计流量和启动/重启/详情/删除；删除要经过危险操作预览和确认，提交后仅接受后台 operation，不声称立即删除成功。流量以节点关联 UsageCheckpoint 累计值显示；无 checkpoint 显示未采集，累计值不作为速率。唯一内部额度池按地区汇总旧额度并继续在服务端执行。`
+- `exclusions`: `不读取或输出秘密；不接触 Shop、vue-shop-admin、shop-xray-installer 或 archive；不应用数据库迁移、不写云、不 SSH、不真实删除实例/地址/快照、不推送或发布。`
+- `risks`: `合并多个池后原池边界不可从迁移后状态恢复，部署前须备份；流量采集不完整时需保留未采集语义；删除云写入及读回仅由既有受保护 worker 执行，真实 provider 行为本地 Fake/Stub 测试无法证明。`
+- `command_or_tool`: `只读检视 AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/project-ledger.md、docs/progress.md、节点/池/操作/流量源文件及 git status/diff；并行委派前端页面工作；未启动/停止服务。`
+- `result`: `前端运行在既有 X-ray 页面；后端已存在 start/reboot、detail 与生命周期 delete 执行分支，缺少 delete API 的 preview/submit 接线；UsageCheckpoint 可作为 per-node 累计流量来源。实现与验证待完成。`
+- `exit_code`: `只读检视 0；代码修改和测试待运行`
+- `evidence`: `frontend/apps/web-antd/src/views/nodes/index.vue`, `frontend/apps/web-antd/src/views/node-pools/index.vue`, `frontend/apps/web-antd/src/api/resources.ts`, `backend/apps/nodes/views.py`, `backend/apps/nodes/lifecycle.py`, `backend/apps/nodes/models.py`, `backend/apps/subscriptions/models.py`, `backend/apps/subscriptions/metering.py`; no runtime/provider mutation`
+- `status`: `in_progress; local implementation authorized; production/cloud deletion and migration application not authorized and not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus preserved user-owned docs/progress.md and docs/project-ledger.md modifications`
+- `rollback_ref`: `revert only this run's scoped code/migration/test/OpenAPI changes; keep append-only ledger; preserve pre-existing worktree edits. A later applied pool-consolidation migration requires a pre-migration database backup for restoring old pool boundaries; no database restore or cloud rollback is performed here.`
+- `time_logic`: `Execution clock UTC 2026-10-30T10:35:56Z / Asia/Shanghai 2026-10-30T18:35:56+08:00; no TTL, expiry, retry, or resource lifetime change intended.`
+
+- `event_id`: `xray-release-0.8.0-20261030-01/003`
+- `run_id`: `xray-release-0.8.0-20261030-01`
+- `timestamp`: `2026-10-30T18:33:17+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_verification`
+- `path_scope`: `docs/project-ledger.md; GitHub v0.8.0 Release metadata and assets; current main/tag refs and worktree status`
+- `operation`: `完成 v0.8.0 发布后最终复核并记录文档门禁结果`
+- `reason`: `按发布任务收尾要求再次读回 GitHub Release、远端 refs、工作树状态及文档静态门禁；此前发布事件和其他在途审计记录保持原样。`
+- `authorization`: `沿用用户对发布新版的直接授权；本次仅执行只读复核和追加审计记录，不扩大到生产部署、SSH、AWS/SWAS 写入、实例删除或设备验收。`
+- `command_or_tool`: `gh api repos/shiyi-log/X-ray/releases/tags/v0.8.0 --jq '{tag_name,draft,prerelease,published_at,assets:[.assets[]|{name,digest}]}'`; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh` (output suppressed); `git status --short --branch`; `git rev-parse HEAD`; `git ls-remote origin refs/heads/main refs/tags/v0.8.0 refs/tags/v0.8.0^{}`
+- `result`: `GitHub API 确认 v0.8.0 为非草稿、非预发布版本，发布时间 2026-10-30T10:14:25Z，含 SHA256SUMS、manifest 和安装器压缩包；三个远端摘要与前一发布事件 /002 的本地已校验资产摘要一致。HEAD 与 origin/main 均为 5c203e0875182127a6409a2d70413118e5ab769a；注释标签 v0.8.0 peeled 到版本提交 7a93596775a7da1ec08126e6c4e691c3c66b50e3。工作树仍有 docs/progress.md 与 docs/project-ledger.md 的既有未提交审计修改，本事件仅向 ledger 追加。diff、boundary、acceptance 均通过；秘密扫描退出 1，原始扫描输出未记录，前一发布事件 /002 已注明其历史命中状态。Actions 因账户付款/支出限制未启动，私有仓库匿名 raw bootstrap HTTP 404；生产部署、真实云写入、SSH 和设备验收未运行。`
+- `exit_code`: `GitHub Release API/diff-check/boundary/acceptance/status/HEAD/remote refs: 0/0/0/0/0/0/0; secret scan: 1; no test suites rerun`
+- `evidence`: `GitHub Release metadata and three asset names/digests; origin/main and annotated-tag peeled commit; static validator exit codes; status showed only the two preserved audit-document paths as modified; scanner output withheld`
+- `status`: `v0.8.0 source/tag/Release passed; local documentation and boundary gates passed; historical secret scan unresolved; GitHub Actions blocked by account billing; anonymous bootstrap blocked for private repository; production/cloud/SSH/device acceptance not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a and origin/main at the same commit; v0.8.0 peeled tag at 7a93596775a7da1ec08126e6c4e691c3c66b50e3; preserve docs/progress.md and docs/project-ledger.md worktree edits`
+- `rollback_ref`: `Do not remove or rewrite v0.8.0 Release/tag/assets. Application rollback remains v0.7.0 or git revert 7a93596775a7da1ec08126e6c4e691c3c66b50e3; this audit record is append-only and any correction must be a later event.`
+- `time_logic`: `Execution clock UTC 2026-10-30T10:33:17Z / Asia/Shanghai 2026-10-30T18:33:17+08:00; no application TTL, retry, expiry, or cloud-resource lifetime behavior changed.`
+
+- `event_id`: `xray-single-address-pool-20261030-01/003`
+- `run_id`: `xray-single-address-pool-20261030-01`
+- `timestamp`: `2026-10-30T19:27:14+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation_and_validation`
+- `path_scope`: `backend nodes quota/model/lifecycle/views/serializers/migrations/OpenAPI/tests; frontend navigation, server and region views, API types, status badge, unit/E2E contracts; docs/progress.md`
+- `operation`: `实现单个内部 IP 池、服务器管理操作和地区额度界面`
+- `reason`: `按用户确认的结构，将订阅管理移到原节点池菜单顺序；节点池页面改为“地区”，固定池名为“IP”，服务器页面显示 IP、中文运行状态和累计流量，移除额度概览列与暂停/恢复创建操作，提供启动、重启、详情、删除。`
+- `authorization`: `用户明确授权本地前后端、迁移、OpenAPI 和测试修改。删除仅接入目标绑定新鲜预览、近期认证、UUID 幂等键以及云端删除后的精确读回；未授权或执行数据库迁移应用、真实云操作/删除、SSH、部署、发布或提交。`
+- `assumptions`: `后端保留唯一内部地址/额度池，迁移将既有额度按地区汇总并绑定现存服务器；地区额度仍由服务端执行，地区分配表单只维护地区及数量，列表不展示总额度/占用/可用/允许创建。累计流量来自 UsageCheckpoint，各 epoch 累计值相加；无采样显示“尚未采集”，存在未计量 SOCKS5 时标记为部分覆盖。常见云运行状态中文化，未知状态显示“未知”。`
+- `exclusions`: `不读写 Shop、vue-shop-admin、shop-xray-installer 或 archive；不读取或回显秘密；不应用迁移到当前/生产数据库；不写入云服务、不 SSH、不实际删除任何实例/地址/快照、不发布部署、不提交或推送。`
+- `risks`: `单池数据迁移会永久合并旧池边界，正式应用前需要迁移前数据库备份；真实云删除结果和 provider 行为不由 Fake/Stub 测试证明。删除额度只在精确实例读回确认不存在后释放；读回不明确时保持额度并进入待对账。`
+- `command_or_tool`: 后端 pytest focused suite（安全加载本地测试环境；不回显变量）；前端 corepack pnpm@10.33.0 test:unit/typecheck/lint/build/generate:api；Django check 与 makemigrations --check --dry-run；OpenAPI 两次生成并比较 schema 与生成 TS；uvx Ruff 0.13.1 变更范围扫描；git diff --check、boundary、acceptance、秘密扫描；lsof 端口只读检查。
+- `result`: 后端相关测试 49 passed；前端 16 个文件、63 passed；typecheck/lint/build、Django check、迁移漂移检查、OpenAPI 双重确定性及前端类型确定性、变更范围 Ruff、diff/boundary/acceptance 全部退出 0。全仓 Ruff 曾退出 1 并报告 21 项，其中本轮新增测试的一个未使用导入已修复；剩余命中在其他未修改文件，未扩展修复范围。秘密扫描退出 1，输出被抑制，沿用历史台账中 2 项命中记录。浏览器 E2E 未运行：global setup 会对测试库迁移并执行 seed_e2e --reset，而 55432/56379 由既有 SSH PID 27710 监听、9528 由既有 Vite PID 16901 监听；未连接、重置或停止这些服务。当前 branch main、HEAD 5c203e0；没有应用迁移、真实云写入或资源删除。
+- `exit_code`: `backend focused pytest 0 (49 passed); frontend unit/typecheck/lint/build 0/0/0/0 (63 passed); Django check/migration drift/OpenAPI/schema and TS determinism/scoped Ruff/diff/boundary/acceptance 0; full-repository Ruff 1 (pre-existing unrelated findings remain); secret scan 1 (output suppressed); E2E not-run`
+- `evidence`: `backend/apps/nodes/migrations/0005_single_internal_ip_pool.py`, `backend/apps/nodes/migrations/0006_enforce_single_pool_and_remove_pause.py`, `backend/apps/nodes/lifecycle.py`, `backend/apps/nodes/views.py`, `backend/apps/nodes/serializers.py`, `frontend/apps/web-antd/src/views/nodes/index.vue`, `frontend/apps/web-antd/src/views/node-pools/index.vue`, `frontend/apps/web-antd/src/components/StatusBadge.vue`, OpenAPI/schema generation checks, test outputs, read-only listener inventory; no cloud/database mutation`
+- `status`: `本地代码、focused 测试和静态门禁 passed；全仓 Ruff failed on unrelated existing findings; secret scan unresolved with output withheld; E2E not-run; database migration application and cloud/production/device acceptance not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus this task's uncommitted source/migration/test/OpenAPI changes and pre-existing dirty docs/progress.md and docs/project-ledger.md; no commit or version/tag change`
+- `rollback_ref`: `未提交时仅回退本 run 的源代码、迁移文件、生成 OpenAPI/TS 和测试 hunks，保留既有脏改动及追加式 ledger；如果后续已应用 0005/0006，恢复多池边界必须使用迁移前数据库备份；不回滚云资源、凭据、Token 或操作审计。`
+- `time_logic`: `执行机器 UTC 2026-10-30T11:27:14Z / Asia/Shanghai 2026-10-30T19:27:14+08:00。业务时间与 TTL 未修改；删除预览继续遵循现有到期/近期 step-up 边界。流量采样时间使用带时区 UsageCheckpoint.sampled_at，并展示最新采样时刻。`
+
+- `event_id`: `xray-single-address-pool-20261030-01/004`
+- `run_id`: `xray-single-address-pool-20261030-01`
+- `timestamp`: `2026-10-30T19:33:16+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_verification`
+- `path_scope`: `frontend/apps/web-antd/src/components/StatusBadge.vue`, its focused unit test, docs/project-ledger.md, current worktree status`
+- `operation`: `复核服务器运行状态中文显示并完成单地址池服务器管理改动收尾门禁`
+- `reason`: `用户明确要求运行状态使用中文；确认状态映射覆盖常见运行态、未知值和空值，并在实现事件 /003 的全量验证后补跑状态徽标定向测试及最终静态门禁。`
+- `authorization`: `沿用用户对本地服务器管理重构及中文状态展示的授权；本事件仅执行本地测试、静态检查并向追加式台账写入证据。`
+- `command_or_tool`: `corepack pnpm@10.33.0 --dir frontend test:unit apps/web-antd/src/components/StatusBadge.test.ts`; `git diff --check`; `./scripts/check-boundary.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-secrets.sh` (output redirected and withheld); `git status --short --branch`; `git rev-parse HEAD`
+- `result`: `状态徽标定向测试 1 个文件、14 项通过，退出码 0；差异检查、边界检查和验收矩阵验证均退出码 0。秘密扫描退出码 1，输出未回显；此前记录的 2 项历史命中尚未复核，因此状态仍为 unresolved。运行状态映射包括“待处理、创建中、运行中、启动中、停止中、已停止、重启中、已重启、异常”等中文值；缺省/空值显示“未知”，未知自定义状态保留原值便于诊断。全量后端 49 项、前端 63 项及类型检查、Lint、构建、Django、迁移漂移、OpenAPI 和变更范围 Ruff 通过证据见实现事件 /003。E2E 因 setup 会重置测试库且相关端口仍被既有进程占用而未运行；数据库迁移应用、真实云操作/删除、部署、生产和设备验收均未运行。`
+- `exit_code`: `status badge focused unit 0 (14 passed); diff-check/boundary/acceptance 0/0/0; secret scan 1 (output withheld); E2E not-run`
+- `evidence`: `frontend/apps/web-antd/src/components/StatusBadge.vue`; `frontend/apps/web-antd/src/components/StatusBadge.test.ts`; implementation and full local gates in xray-single-address-pool-20261030-01/003; current branch/status and HEAD readback`
+- `status`: `中文运行状态与 focused 单测 passed；差异、边界、验收门禁 passed；秘密扫描 unresolved；E2E、数据库迁移应用、真实云/生产/设备验收 not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a; requested application, migration, OpenAPI, test, progress and ledger changes remain uncommitted; no version/tag/commit change`
+- `rollback_ref`: `保持追加式 ledger；仅在需要回退实现时撤销本 run 对应的代码、迁移、生成类型与测试改动，并保留既有脏文件。单池迁移若日后已应用，恢复旧池边界需要迁移前数据库备份。`
+- `time_logic`: `执行机器 UTC 2026-10-30T11:33:16Z / Asia/Shanghai 2026-10-30T19:33:16+08:00；本次仅验证状态字符串映射，未更改业务时间、TTL、到期或重试规则。`
+
+- `event_id`: `xray-node-ipv4-20261030-01/001`
+- `run_id`: `xray-node-ipv4-20261030-01`
+- `timestamp`: `2026-10-30T22:04:53+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition_and_inventory`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md and references; docs/project-ledger.md; docs/progress.md; frontend/apps/web-antd/src/views/nodes/index.vue; frontend/apps/web-antd/src/views/nodes/nodes.test.ts; frontend/apps/web-antd/src/api/resources.ts; frontend/apps/web-antd/src/api/generated/schema.ts; current Git status and listeners`
+- `operation`: `限定服务器管理 IP 字段只显示 IPv4`
+- `reason`: `用户明确要求 IP 只显示 IPv4。检查发现现有 nodeIp 会拼接地址字符串与对象中的所有候选字段，未过滤 IPv6。`
+- `authorization`: `用户明确授权本地 UI 行为及对应 focused test 修改；无数据库、云、SSH、删除、部署、发布或提交操作。`
+- `assumptions`: `有 family 的地址对象以 family 数字为准并只纳入 4；字符串及缺少 family 的兼容旧格式需通过严格 IPv4 地址格式校验。展示列表与详情共用 nodeIp，因此两处保持一致。`
+- `exclusions`: `不改后端地址数据、API/OpenAPI、数据库、地区/IP 地址池行为；不修改其它服务器管理功能；不触碰 Shop、vue-shop-admin、shop-xray-installer 或 archive；保留当前所有未提交改动。`
+- `risks`: `provider 地址格式若超出当前 NodeAddress 字段约定，严格校验可能将其隐藏；测试会覆盖 family 标记 IPv4/IPv6、旧字符串以及非法地址。`
+- `command_or_tool`: `读取上述仓库规范、台账/进度、节点页面/测试/API 类型及相关差异；检查 git status、HEAD、依赖版本与 55432/56379/9527/9528 监听者；未启动或停止进程。`
+- `result`: `分支 main，HEAD 5c203e0875182127a6409a2d70413118e5ab769a；节点页、测试、后端及文档已有用户未提交改动需保留。NodeAddress 为 string 或可选 family/value/address/ip_address/ip 字段对象。9528 由既有 Vite PID 16901 监听，55432/56379 由既有 SSH PID 27710 监听；未连接数据库或改动进程。修改前节点页面与测试文件 hash 分别为 c2b0aad28ce18c48ba675a266d71c619dc9727c0、06bbebe10d3ef843c00dd3581f97a08270f557e0。`
+- `exit_code`: `只读盘点命令通过；lsof 因有既有监听者返回 1，属预期；代码变更及验证待执行。`
+- `evidence`: `frontend/apps/web-antd/src/views/nodes/index.vue` nodeIp; `frontend/apps/web-antd/src/views/nodes/nodes.test.ts`; `frontend/apps/web-antd/src/api/resources.ts` NodeAddress; captured Git status/HEAD and listener inventory`
+- `status`: `in_progress; 本地显示及测试变更已授权；数据库、云及生产动作 not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus preserved existing user-owned source/migration/OpenAPI/test/docs changes`
+- `rollback_ref`: `仅回退本 run 对 nodeIp IPv4 筛选及对应测试的 hunks，并追加更正台账；保留所有预先存在的脏工作树内容；无数据库、云或进程状态回退。`
+- `time_logic`: `执行机器 UTC 2026-10-30T14:04:53Z / Asia/Shanghai 2026-10-30T22:04:53+08:00；仅静态地址字符串校验，不涉及业务时间、TTL、过期或重试规则。`
+
+- `event_id`: `xray-node-ipv4-20261030-01/002`
+- `run_id`: `xray-node-ipv4-20261030-01`
+- `timestamp`: `2026-10-30T22:08:01+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation_and_validation`
+- `path_scope`: `frontend/apps/web-antd/src/views/nodes/index.vue; frontend/apps/web-antd/src/views/nodes/nodes.test.ts; docs/progress.md; docs/project-ledger.md`
+- `operation`: `按 family 与 IPv4 格式约束服务器 IP 展示，并覆盖混合地址、旧字符串及非法输入`
+- `reason`: `IPv6 地址不应出现在用户要求只显示 IPv4 的服务器 IP 栏；详情也复用同一映射，需要维持一致。`
+- `authorization`: `用户明确要求 IP 只显示 IPv4；按本地 UI 及 focused test 授权修改。未执行数据库、云、SSH、部署、发布或提交操作。`
+- `assumptions`: `地址对象有 family 时 family=4 才接受；无 family 的候选值和旧字符串须为 0-255 范围内的点分 IPv4。没有有效 IPv4 时显示原有占位符“-”。`
+- `exclusions`: `后端地址序列化、API/OpenAPI、数据库、额度池、地区、其它节点行为均未更改；既有用户未提交修改保持原样。`
+- `risks`: `没有 provider/生产数据面读取；地址格式依据现有 NodeAddress 类型，真实 provider 地址内容仍需外部读回验证。`
+- `command_or_tool`: `corepack pnpm@10.33.0 --dir frontend exec vitest run --config apps/web-antd/vitest.config.ts apps/web-antd/src/views/nodes/nodes.test.ts; corepack pnpm@10.33.0 --dir frontend typecheck; corepack pnpm@10.33.0 --dir frontend lint; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; git diff -U3 address hunk inspection`
+- `result`: `地址对象只有 family=4 且数值合法时展示；合法 legacy string 仍展示；family=6、IPv6 与越界 IPv4 不展示。节点列表及详情都验证混合输入不呈现 IPv6。Focused Vitest 1 file / 14 tests passed；typecheck、lint、diff-check、boundary、acceptance 均退出 0。未连接数据库/SSH 隧道，未运行 browser E2E 或云请求。修改前后文件 hash：index.vue c2b0aad28ce18c48ba675a266d71c619dc9727c0 -> 56377116749d7e9d7b435cea8ea138ea51c806fd；nodes.test.ts 06bbebe10d3ef843c00dd3581f97a08270f557e0 -> d30f30016bc1233a540767a41f662a99df73ef4b。`
+- `exit_code`: `Vitest 0 (14 passed); typecheck 0; lint 0; diff-check/boundary/acceptance 0/0/0; E2E not-run`
+- `evidence`: `frontend/apps/web-antd/src/views/nodes/index.vue:isIpv4/nodeIp; frontend/apps/web-antd/src/views/nodes/nodes.test.ts: mixed IPv4/IPv6, legacy and invalid address coverage; docs/progress.md appended evidence; no database/provider mutation`
+- `status`: `本地 focused UI 测试、类型检查、Lint 和静态边界/验收门禁 passed；浏览器 E2E、数据库、云及生产验收 not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus preserved existing backend, frontend, migration, OpenAPI and docs changes; no commit/version/tag change`
+- `rollback_ref`: `仅回退本 run 对 nodeIp 与 IPv4 测试的相应 hunks，并追加纠正记录；保留之前已有节点页/测试及其它脏改动；无数据库、云或进程状态回退。`
+- `time_logic`: `执行机器 UTC 2026-10-30T14:08:01Z / Asia/Shanghai 2026-10-30T22:08:01+08:00；仅校验静态 IPv4 文本，不更改业务时间、TTL、过期或重试行为。`
+
+- `event_id`: `xray-node-ipv4-20261030-01/003`
+- `run_id`: `xray-node-ipv4-20261030-01`
+- `timestamp`: `2026-10-30T22:09:26+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_verification`
+- `path_scope`: `frontend/apps/web-antd/src/views/nodes/index.vue; frontend/apps/web-antd/src/views/nodes/nodes.test.ts; docs/progress.md; docs/project-ledger.md; complete current worktree status`
+- `operation`: `记录 IPv4 显示修正的最终本地验收与工作树边界`
+- `reason`: `在节点页 focused test、typecheck/lint、差异、边界、验收矩阵均通过后，复核分支、当前提交、修改文件范围并完成追加式记录。`
+- `authorization`: `沿用用户对 IPv4-only 节点 IP 展示的本地修复授权；未进行数据库/云/SSH/删除/部署/发布/提交。`
+- `command_or_tool`: `pre-final-event: git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; git status --short --branch; git rev-parse HEAD; git diff --stat; source/doc hash readback. Post-append: repeat git diff --check and git status --short --branch.`
+- `result`: `pre-final-event 差异/边界/验收均退出 0；状态显示 main 与 origin/main 同步在 5c203e0875182127a6409a2d70413118e5ab769a，完整工作树仍保留此前服务器管理重构涉及的 32 个已修改/新建路径及本轮 docs 更新；本轮只新增 IPv4 判断与测试改动，未覆盖其它脏内容。Focused Vitest 14 passed、typecheck/lint 退出 0。最终 post-append diff-check/status 在此事件追加后立即复跑。无版本、标签或提交。`
+- `exit_code`: `pre-final-event diff-check/boundary/acceptance/status/HEAD: 0/0/0/0/0; post-append diff-check/status: scheduled immediately after this append; focused test/typecheck/lint: 0/0/0`
+- `evidence`: `frontend/apps/web-antd/src/views/nodes/index.vue:isIpv4/nodeIp; frontend/apps/web-antd/src/views/nodes/nodes.test.ts; docs/progress.md:191; status at main@5c203e0; post-append diff-check/status to be confirmed in final response`
+- `status`: `本地 focused UI 与静态门禁 passed；数据库、云、生产和浏览器 E2E not-run；无未解决的本轮代码验证失败。`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a, origin/main aligned; existing single-pool/backend/frontend/migration/OpenAPI/docs dirty changes preserved; this IPv4 fix remains uncommitted and no version/tag was made.`
+- `rollback_ref`: `仅回退 nodeIp IPv4 过滤与对应测试 hunks；保留本轮 docs 追加和所有其它既有脏工作树改动。无数据库、云或进程回退。`
+- `time_logic`: `执行机器 UTC 2026-10-30T14:09:26Z / Asia/Shanghai 2026-10-30T22:09:26+08:00；无业务时间、TTL、到期或重试规则变更。`
+
+- `event_id`: `xray-heyue-installer-create-20261030-01/002`
+- `run_id`: `xray-heyue-installer-create-20261030-01`
+- `timestamp`: `2026-10-30T20:12:17+08:00`
+- `actor`: `Codex`
+- `event_type`: `external_create_readback_and_cleanup_block`
+- `path_scope`: `X-ray node 4c4d5f1f-a4e5-5f8c-b388-b01d773e6b20 only; operation 8fa87346-2c83-4530-904d-dcbcf3f6f40e; docs/project-ledger.md; docs/progress.md`
+- `operation`: `核对本轮测试机创建结果、停止超时测试并记录清理阻塞`
+- `reason`: `用户要求用 X-ray 创建一台临时 Heyue 安装器测试机并实测安装生命周期；本 run 将单机寿命限定为创建成功后 120 分钟，到期停止测试并删除精确实例。`
+- `authorization`: `沿用事件 /001 的授权：AWS Lightsail 单台 ap-southeast-1 / nano_3_0 / ubuntu_24_04；总支出不超过 USD 100；不建静态 IP 或快照；仅通过 X-ray 操作；仅清理本 run 精确实例。`
+- `command_or_tool`: `X-ray /nodes UI read; GET operation 8fa87346-2c83-4530-904d-dcbcf3f6f40e and node 4c4d5f1f-a4e5-5f8c-b388-b01d773e6b20; exact AWS get_instance read; trusted SSH identity and read-only host preflight; no upload, install, or delete request`
+- `result`: `Create operation SUCCEEDED; provider request ID 0b42c6e2-77a3-42d1-9748-1a85dbf77527; X-ray record maps to external_id xray-aed38808-4c4d5f1f in the dedicated heyue-installer-20261030 pool, ap-southeast-1, nano_3_0, Ubuntu 24.04. AWS readback previously confirmed the exact instance running and ownership matched. Trusted SSH preflight reported 432 MiB total memory, about 198 MiB available, 17.5 GiB root free, and Docker absent. No Heyue package was transferred and no install scenario ran. The 120-minute window ended 2026-10-30T12:09:09Z. The X-ray detail view now returns AUTH_REQUIRED; no fresh target-bound deletion preview or recent step-up was available, so no delete operation was submitted. The current X-ray list still shows the node; provider state after the last AWS read has not been rechecked.`
+- `exit_code`: `X-ray create operation 0; exact readbacks 0; host preflight 0; install/delete not-run`
+- `evidence`: `X-ray operation UUID and provider request ID above; exact node UUID/external_id readback; AWS ownership/status readback; authenticated SSH host-key match and resource preflight; current X-ray detail response AUTH_REQUIRED; no credential material recorded`
+- `status`: `create passed; AWS readback and SSH preflight passed; install/update/uninstall scenarios not-run; cleanup blocked pending authenticated X-ray session and exact post-delete provider readback`
+- `commit_or_tree`: `X-ray main at 5c203e0875182127a6409a2d70413118e5ab769a with pre-existing user-owned dirty changes; this event only appends audit documentation`
+- `rollback_ref`: `No source rollback. If authentication is restored, delete only this run's exact node through X-ray preview, recent step-up, UUID Idempotency-Key, and provider read-after-write; do not touch other nodes, pools, addresses, or snapshots.`
+- `time_logic`: `Creation confirmed 2026-10-30T10:09:09.431869Z; maximum lifetime 120 minutes ended at 2026-10-30T12:09:09.431869Z. At event time UTC 2026-10-30T12:12:17Z / Asia/Shanghai 2026-10-30T20:12:17+08:00, cleanup was overdue and blocked by AUTH_REQUIRED.`
+
+- `event_id`: `xray-heyue-installer-create-20261030-01/003`
+- `run_id`: `xray-heyue-installer-create-20261030-01`
+- `timestamp`: `2026-10-30T20:26:06+08:00`
+- `actor`: `Codex`
+- `event_type`: `auth_state_recheck`
+- `path_scope`: `X-ray Chrome /nodes session; X-ray embedded /nodes session; node 4c4d5f1f-a4e5-5f8c-b388-b01d773e6b20; docs/project-ledger.md`
+- `operation`: `复核登录恢复后的目标节点访问权限`
+- `reason`: `用户回复已登录并完成 step-up；需以当前页面和服务端响应确认危险删除所需认证是否已到达执行会话。`
+- `authorization`: `沿用 run /001 对本次精确测试实例到期清理的授权；本事件只读，不提交云操作。`
+- `command_or_tool`: `X-ray browser DOM read on Chrome and embedded /nodes tabs; GET node detail tab read; no form submission or cloud write`
+- `result`: `用户回复后，Chrome 标签显示管理员登录表单；embedded /nodes 页面仍显示节点列表，但打开精确目标的详情弹窗返回“需要登录”，直连详情响应为 AUTH_REQUIRED。未获得当前执行会话可用的目标详情/预览/step-up；未创建幂等键或提交删除。实例的最后 AWS running 读回发生在本轮到期前，过期后的 provider state 仍待核对。`
+- `exit_code`: `read-only browser checks completed; delete not-run`
+- `evidence`: `Chrome /nodes DOM; embedded X-ray /nodes row and detail dialog; AUTH_REQUIRED response for exact node detail; no credentials recorded`
+- `status`: `authentication remains unavailable to the active browser session; exact-instance cleanup still blocked; no additional cloud write`
+- `commit_or_tree`: `X-ray main at 5c203e0875182127a6409a2d70413118e5ab769a; append-only audit documentation only; preserve all pre-existing dirty work`
+- `rollback_ref`: `No rollback applies. Resume only after the exact X-ray session exposes authenticated node details and a fresh target-bound deletion preview; then use UUID idempotency key and provider read-after-write for this run's instance only.`
+- `time_logic`: `Observed at UTC 2026-10-30T12:26:06Z / Asia/Shanghai 2026-10-30T20:26:06+08:00; the authorized 120-minute instance window ended 2026-10-30T12:09:09.431869Z.`
+
+- `event_id`: `xray-node-observation-display-20261030-01/001`
+- `run_id`: `xray-node-observation-display-20261030-01`
+- `timestamp`: `2026-10-30T20:27:44+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `backend/providers/aws_lightsail.py; backend/apps/nodes/serializers.py; backend/tests/providers/test_aws_lightsail.py; backend/tests/test_node_traffic_serialization.py; frontend/apps/web-antd/src/api/resources.ts; frontend/apps/web-antd/src/views/nodes/index.vue; frontend/apps/web-antd/src/views/nodes/nodes.test.ts; docs/project-ledger.md; docs/progress.md`
+- `operation`: `排查并修复服务器列表 IP 与 AWS Lightsail 运行状态显示异常`
+- `reason`: `用户根据 /nodes 页面截图要求排查修复；列表中节点 IP 显示“-”、运行状态为“未知”。代码审计发现 provider 将 Lightsail state 对象整体转成字符串，后端真实地址契约使用 value 字段而前端未读取；历史记录可能已保存该状态字符串。`
+- `authorization`: `用户明确要求排查修复；授权仅限本地应用代码、测试及审计文档。`
+- `assumptions`: `兼容历史数据库字符串应在只读序列化时完成，不需对运行数据库做数据回写；新 AWS observations 由 provider 归一化后存储；地址对象采用 providers.base.Address 的 value/family/kind/resource_id 格式。`
+- `exclusions`: `不查询或修改应用运行数据库，不执行 AWS/SWAS API、SSH、服务器启动/重启/删除、静态 IP 操作、迁移应用、部署、发布、提交或推送；不触碰截图中其他节点或浏览器认证状态。`
+- `risks`: `历史状态字符串只在可安全解析为包含 name 的 AWS state 字典时归一化，无法解析的值继续显示未知；API 序列化仅格式化读值，不改变持久化数据。`
+- `command_or_tool`: `只读检查页面、API、serializer、provider、测试、分支/差异和监听端口；并行只读代码审计；AWS 官方 Lightsail GetInstance API reference 查阅；未执行云调用、数据库查询或应用写操作。`
+- `result`: `实现与 focused tests 待完成。监听检查仅发现 127.0.0.1:9528 的既有 node PID 16901；未停止、重启或替换服务。工作树包含本任务前已有的服务器管理源码/测试/文档脏改动，均需保留并基于当前内容实施。`
+- `exit_code`: `read-only source/status/listener inspection 0; port inventory 1 (9527 no listener; 9528 listener PID 16901); agent audits completed; no test run yet`
+- `evidence`: `AWS Lightsail API reference; backend/providers/aws_lightsail.py _map_instance; backend/apps/nodes/lifecycle.py _adopt; backend/apps/nodes/serializers.py node_representation; frontend nodeIp/runtimeStatus; provider and node-view tests; git status at main@5c203e0875182127a6409a2d70413118e5ab769a`
+- `status`: `root cause supported by source contract; local patch and verification in_progress; cloud/database/runtime mutation not-run`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus pre-existing uncommitted changes; no commit/version/tag change`
+- `rollback_ref`: `revert only this run's provider/serializer/frontend/test hunks; preserve the pre-existing single-pool/server-management edits and append-only ledger; no DB/cloud rollback applies.`
+- `time_logic`: `Execution clock UTC 2026-10-30T12:27:44Z / Asia/Shanghai 2026-10-30T20:27:44+08:00; no business TTL, expiry, retry, or cloud-resource lifecycle change is in scope.`
+
+- `event_id`: `xray-node-observation-display-20261030-01/002`
+- `run_id`: `xray-node-observation-display-20261030-01`
+- `timestamp`: `2026-10-30T20:44:19+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation_and_final_verification`
+- `path_scope`: `backend/providers/aws_lightsail.py; backend/apps/nodes/serializers.py; backend/tests/providers/test_aws_lightsail.py; backend/tests/test_node_traffic_serialization.py; frontend/apps/web-antd/src/api/resources.ts; frontend/apps/web-antd/src/views/nodes/index.vue; frontend/apps/web-antd/src/views/nodes/nodes.test.ts; docs/project-ledger.md; docs/progress.md`
+- `operation`: `修复服务器列表 AWS Lightsail 运行状态与 IP 显示错配`
+- `reason`: `截图节点显示运行状态“未知”和 IP“-”。源码确认 Lightsail state 对象曾整体字符串化，后端地址契约为 value 字段而前端只读其他键；已存 AWS 状态可能保留旧字典字符串。`
+- `authorization`: `用户明确要求排查修复；仅本地源代码、测试和审计文档变更。`
+- `assumptions`: `AWS 状态对象优先使用其 name，缺 name 时退回 code；历史 AWS state 只在安全 literal 解析后提取字符串 name；API 序列化不回写数据库。前端地址以 Address.value 为主，同时保留旧 address/ip_address/ip 兼容。`
+- `exclusions`: `不读取/修改数据库，不向 AWS/SWAS 发请求，不执行 SSH、节点启动/重启/删除、静态 IP 操作、迁移应用、部署、发布、提交或推送；不停止或重启 PID 16857/16901，不改变任何浏览器认证状态。`
+- `command_or_tool`: `backend/tests/providers/test_aws_lightsail.py 增加状态对象与地址映射用例；backend/tests/test_node_traffic_serialization.py 增加历史 AWS 字符串状态序列化用例；frontend NodeAddress/nodeIp 使用后端真实 Address 结构；Vitest 节点页、typecheck、scoped ESLint、build、provider mapper 无网络 smoke、legacy normalizer 只读 smoke、py_compile、diff/boundary/acceptance/secret scan；lsof 只读端口和 cwd 检查。`
+- `result`: `AWS provider 从 Lightsail state 对象取 name/code，避免将整个对象字符串化；serializer 对历史 AWS 字典字符串用 ast.literal_eval 读取 name，仅改变 API 响应，不写数据库；前端现在读取地址 value，测试 fixture 与后端 Address 格式一致。前端节点页 Vitest 1 文件/13 项通过；typecheck、scoped ESLint、生产构建均退出 0；AWS mapper smoke、legacy state normalizer smoke、Python py_compile 和 diff/boundary/acceptance 均退出 0。第一次 typecheck 退出 2，指出 NodeAddress 类型缺 family/kind/resource_id；补全类型后复跑通过。首次 AWS smoke 因从仓库根目录导入路径不正确退出 1，改在 backend 项目目录后通过。首次 legacy normalizer smoke 因未设置 DJANGO_SETTINGS_MODULE 退出 1；在 test settings 配置一个指向未监听 127.0.0.1:1/xray_test 的虚构 DSN 后仅执行 django.setup 和纯函数断言，通过且未建立数据库连接。真实数据库 pytest 未运行：XRAY_TEST_DATABASE_URL 未配置，55432/56379 由现有 SSH PID 27710 占用；未连接该隧道。uvx Ruff 下载工具超过 90 秒无输出后由本任务发出的 Ctrl-C 结束，退出 130；范围 Ruff 未能验证。秘密扫描退出 1，输出抑制，历史命中仍 unresolved。端口 9529/9528 分别由本仓 Python PID 16857 与 Node PID 16901 监听且 cwd 属本工作树；服务未重启。没有认证浏览器或真实 API readback 验证。`
+- `exit_code`: `frontend node unit 0 (13 passed); typecheck 2 then corrected to 0; scoped ESLint/build 0/0; AWS mapper smoke 1 (path) then 0; legacy state smoke 1 (settings) then 0; py_compile/diff/boundary/acceptance 0/0/0/0; secret scan 1 (output withheld); Ruff canceled 130; backend DB pytest and live browser/API readback not-run`
+- `evidence`: `backend/providers/aws_lightsail.py _map_instance; backend/apps/nodes/serializers.py _raw_cloud_state and node_representation; frontend/apps/web-antd/src/api/resources.ts NodeAddress; frontend/apps/web-antd/src/views/nodes/index.vue nodeIp/runtimeStatus; focused test output and current status/HEAD readback`
+- `status`: `代码修复及前端/纯逻辑本地门禁 passed；serializer Django DB test blocked by missing dedicated test DB configuration and occupied SSH tunnel; browser/API readback not-run; Ruff blocked by unavailable download; secret scan unresolved; no DB/cloud/production mutation`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus existing single-pool/server-management changes and this task's provider/serializer/frontend/test/docs edits; no commit, version/tag change`
+- `rollback_ref`: `仅回退本 run 对 aws_lightsail.py、nodes serializer、NodeAddress/UI、对应测试及两份审计文档的 hunk；保留先前单池服务器重构和用户其他脏改动；无数据库/云状态回滚。`
+- `time_logic`: `Execution clock UTC 2026-10-30T12:44:19Z / Asia/Shanghai 2026-10-30T20:44:19+08:00; no TTL, retry, expiry, or cloud-resource lifecycle behavior changed.`
+
+- `event_id`: `xray-heyue-installer-create-20261030-01/004`
+- `run_id`: `xray-heyue-installer-create-20261030-01`
+- `timestamp`: `2026-10-30T21:16:42+08:00`
+- `actor`: `Codex`
+- `event_type`: `session_recheck_and_local_lifecycle_evidence`
+- `path_scope`: `X-ray active in-app browser session; exact node 4c4d5f1f-a4e5-5f8c-b388-b01d773e6b20; Heyue docs/verification/installer-lifecycle-matrix-20261030.md and tests/test_installer_lifecycle_sequence.py; X-ray audit ledger/progress`
+- `operation`: `复核测试机清理认证状态并补充安装器本地集成生命周期证据`
+- `reason`: `用户此前回复已登录并完成 step-up；在提交精确实例删除前需确认当前执行浏览器实际持有认证。独立完成 Heyue 双 Docker lifecycle 模拟集成测试并记录其与云验收边界。`
+- `authorization`: `仅沿用 /001 对本 run 精确实例到期清理的既有授权；本事件只读认证状态与追加审计记录。没有扩展实例、预算、时限、安装或删除授权。`
+- `command_or_tool`: `X-ray in-app browser AX state read; Heyue focused pytest suite with temporary fake Docker/systemd host; Python py_compile; git diff --check; no X-ray form submission, AWS provider call, SSH or remote installer invocation`
+- `result`: `Active X-ray tab still displays the administrator login page at /login?redirect=/nodes; no authenticated node detail, fresh target-bound preview or recent step-up is available to this execution session. No deletion request was submitted and post-expiry AWS provider state remains unchecked. Heyue local focused suite passed 571 tests, including a simulated two-Docker install/update/uninstall sequence and same-directory retry refusal; this is local evidence only and does not establish cloud or real Docker acceptance. Current dirty Heyue source cannot be built by the release builder from HEAD because it archives only the exact commit; normal installer preparation requires an immutable formal GitHub Release. No candidate package was built or distributed.`
+- `exit_code`: `browser state read: login page; Heyue focused pytest: 0 (571 passed); py_compile: 0; git diff --check: 0; cloud install/delete: not-run`
+- `evidence`: `current X-ray browser accessibility state; Heyue tests/test_installer_lifecycle_sequence.py; docs/verification/installer-lifecycle-matrix-20261030.md; test command output and local status readback; no secrets recorded`
+- `status`: `local simulated lifecycle passed; real cloud scenarios not-run; exact-instance cleanup remains blocked pending authenticated X-ray session, target-bound preview/step-up and provider read-after-write`
+- `commit_or_tree`: `Heyue main at e6767440aaa21c538ba4a76dc9bf4111cc6cc6a0 with preserved dirty source/test changes; X-ray main at 5c203e0875182127a6409a2d70413118e5ab769a with preserved unrelated dirty work; audit-only append`
+- `rollback_ref`: `No source or provider rollback. After authentication recovery, handle only this run's exact node through the authorized X-ray delete preview and verify provider read-after-write; preserve all other nodes and working-tree changes.`
+- `time_logic`: `Execution UTC 2026-10-30T13:16:42Z / Asia/Shanghai 2026-10-30T21:16:42+08:00; the instance's authorized maximum lifetime ended at 2026-10-30T12:09:09.431869Z. No extension was granted.`
+
+### 2026-10-30T23:19:56+08:00 — xray-server-runtime-test-20261030-01 definition
+
+- `event_id`: `xray-server-runtime-test-20261030-01/001`
+- `run_id`: `xray-server-runtime-test-20261030-01`
+- `timestamp`: `2026-10-30T23:19:56+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition_and_inventory`
+- `path_scope`: `backend/apps/nodes/lifecycle.py; backend/apps/nodes/serializers.py; backend/tests/test_node_lifecycle.py; backend/tests/fakes.py; backend/apps/subscriptions/metering.py; backend/apps/subscriptions/tasks.py; backend/apps/subscriptions/management/commands; backend/config/settings/base.py; backend/apps/nodes migrations; docs/project-ledger.md; docs/progress.md`
+- `operation`: `修正并验证服务器启动/重启状态回读，以及限定单节点的流量采集入口；之后在当前有效测试运行时验收新建服务器`
+- `reason`: `用户要求创建测试服务器并测试运行状态、流量采集、启动和重启，测试结束删除本轮实例；用户确认预算上限 USD 100，并要求修复完成、不留半成品。`
+- `authorization`: `仅针对本轮新建的一台测试实例执行云创建、读取、启动、重启、测试所需的受信 SSH 和测试后精确删除；旧测试实例及其他已有节点不在范围。最长存活时间尚未由用户续期，不复用已过期的 120 分钟授权。当前管理表单只读显示 AWS Lightsail ap-southeast-1 / medium_3_0 / ubuntu_24_04；账号标识不记录。`
+- `assumptions`: `现有工作树的单池服务器管理实现是本次验证目标。流量采集必须通过受信采集器和已批准主机指纹，只触达新测试节点；不得启动会遍历全部节点的全局 Beat 任务来完成本测试。`
+- `exclusions`: `不修改或迁移未确认的现有数据库；不停止/重启当前服务进程；不运行全局 Celery worker/Beat；不触碰旧节点、其他账号或地区；不创建静态 IP/快照；不输出或持久化秘密。`
+- `risks`: `现有后端进程 PID 16857 自 2026-10-25 17:14 以 --noreload 运行，晚于其启动时间的当前单池源码/迁移未加载。浏览器页面保留旧接口要求 pool_id 的错误，而当前源码要求省略 pool_id。迁移 0005/0006 未应用；数据库端口由现有 SSH 隧道占用，远端数据库身份和迁移状态尚未核实。流量定时任务遍历所有 READY/PRESENT/OPEN 节点并运行额度执行；默认 fetcher 为空。启动/重启当前生命周期缺 provider read-after-write；没有按 node UUID 限定的一次性采集入口。`
+- `implementation_scope`: `预计仅编辑 NodeLifecycle、Fake provider 与定向测试；增加一个按唯一 node_id 执行且不调用 enforce_limits 的一次性采集命令/服务及测试；追加 progress 和 ledger。若执行实时 DB 迁移、重启服务或云操作，另记精确目标、授权、时间和读回。`
+- `rollback_ref`: `代码改动未提交时仅撤销本 run 对 lifecycle、Fake、采集入口及测试的 hunks；保留所有先前 dirty changes 和追加式审计记录。数据库/云操作不纳入代码回退。`
+- `time_logic`: `执行 UTC 2026-10-30T15:19:56Z / Asia/Shanghai 2026-10-30T23:19:56+08:00。新增采集为单次同步调用，无自动重试或 TTL；云实例需要用户重新明确最大存活时间，旧时限于 2026-10-30T12:09:09.431869Z 失效。`
+
+### 2026-10-31T00:02:30+08:00 — heyue-installer-cloud-test-20261031-01 definition
+
+- `event_id`: `heyue-installer-cloud-test-20261031-01/001`
+- `run_id`: `heyue-installer-cloud-test-20261031-01`
+- `timestamp`: `2026-10-31T00:02:30+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition_and_preflight`
+- `path_scope`: `docs/cloud-test-authorization.md; docs/project-ledger.md; docs/progress.md; temporary X-ray HEAD snapshot backend operations and node creation UI; Heyue installer lifecycle matrix read-only`
+- `operation`: `为 Heyue 安装器跨系统云验收创建两台 AWS Lightsail 测试机，并覆盖同目录重复安装、升级/卸载、不同目录和多套 Docker 共存生命周期`
+- `reason`: `用户确认 ap-southeast-1 两台 4 GB Linux 测试机，Ubuntu 24.04 与 Debian 12，累计预算不超过 USD 100，每台最长 120 分钟，不建静态 IP/快照，测试后经 X-ray 删除。`
+- `authorization`: `用户在本对话明确确认上述范围，引用 Codex 任务/对话 01a18b34-6ba1-7de1-ab4b-a0d3e46df786。仅限本轮新建的两个节点；不覆盖既有服务器或历史操作。X-ray 授权单已更新。`
+- `assumptions`: `X-ray 选择资源池 2（ap-southeast-1 可用额度 3）、云账号 ID 1；套餐 medium_3_0 为 4 GB/2 vCPU，AWS 官方列表价 USD 24/月/台、按小时计费且每月封顶，两台套餐月度上限 USD 48。每台 120 分钟从 provider 创建成功读回起算；不执行公网探测。`
+- `exclusions`: `不修改 X-ray 代码或数据库 schema，不应用 0005/0006 迁移，不运行会遍历全部 outbox 的 dispatcher、全局 Celery worker 或 Beat，不重放历史任务，不触碰 NEEDS_RECONCILIATION 操作 393cbf5c-69ba-48c0-a926-6a9dddc80d48 及其既有节点，不创建静态 IP/快照/防火墙规则，不输出秘密。`
+- `risks`: `X-ray 节点创建操作 4484a82d-c266-4369-a59f-b2425aa9748a 已受理但尚未执行；目标节点仍 RESERVED、无 external_id/资源。测试库共有 16 条未投递 outbox（历史成功/失败任务及本次任务），另有一条既有 node.delete 处于 NEEDS_RECONCILIATION；当前通用操作 worker 未运行。需仅将本次任务投递到隔离队列并在 AWS/X-ray provider read-after-write 后继续。`
+- `implementation_scope`: `X-ray 仅本地授权单/台账/进度追加；实际只允许在 X-ray 中创建上述两台目标实例。Heyue 安装测试按已发布且可由安装器消费的候选包执行；当前 Heyue 工作树 HEAD=e6767440 且含未提交修改，不能将当前脏树声称为已发布候选。`
+- `rollback_ref`: `本次创建尚无 provider 读回或已知云资源。若 provider 状态确定为未创建，可经 X-ray 取消本次操作；结果不确定时停止并对账，不重复创建。若创建成功，测试后只删除本轮精确 node/instance，其他资源保持不变。`
+- `time_logic`: `执行 UTC 2026-10-30T16:02:30Z / Asia/Shanghai 2026-10-31T00:02:30+08:00。每台存活上限 120 分钟，起点为该台 AWS 创建成功且完成 provider read-after-write 的时间，采用 [start, deadline)；创建后立即记录精确 UTC 与 Asia/Shanghai 删除截止。`
+
+### 2026-10-31T01:23:18+08:00 — xray-v0.9.0-release-20261031-01 definition
+
+- `event_id`: `xray-v0.9.0-release-20261031-01/001`
+- `run_id`: `xray-v0.9.0-release-20261031-01`
+- `timestamp`: `2026-10-31T01:23:18+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition_and_inventory`
+- `path_scope`: `单 IP 池/服务器管理与地区额度实现、节点生命周期及 AWS Lightsail 地址对账、流量采集与订阅发布、OpenAPI/前端生成类型、对应测试、VERSION/CHANGELOG/README、安装器版本、验收矩阵、发布清单、进度/版本记录/本台账、GitHub v0.9.0 Release`
+- `operation`: `查明前端旧界面来源，审查并完成单 IP 池服务器管理与 AWS 重启地址更新修复，验证并发布 X-ray 0.9.0`
+- `reason`: `用户要求先查清前端旧界面为何回来、修复当前功能并发布一个版本；此前明确界定节点池收敛为唯一 IP 地址池、服务器管理/地区额度/流量统计及启动/重启/详情/删除，并要求 AWS 重启后新 IPv4 写回且更新节点订阅。`
+- `authorization`: `用户明确要求发布版本；限定于本地代码/测试/文档、GitHub main 提交推送、v0.9.0 注释标签与 GitHub Release 及安装器资产。该授权不包括生产部署、真实 AWS/SWAS 写入、SSH、实例启停/重启/删除或静态 IP 操作。`
+- `assumptions`: `以当前 main 工作树中的本轮用户请求功能改动作为待审候选；发布目标按 VERSION 0.9.0。前端“恢复”待归因于服务工作目录/代码来源，并保留现有进程和浏览器状态。数据库测试只使用本轮专用 release PostgreSQL/Redis 容器和 Fake/Stub provider。`
+- `exclusions`: `不停止或修改既有端口/进程，不连接 55432/55433/56379 现有 SSH 隧道，不应用数据库迁移到任何应用库，不操作 AWS/SWAS/SSH/生产，不处理 2026-10-30 创建的历史测试实例，不读取或导出秘密，不重写/删除历史台账条目。`
+- `risks`: `工作树已有大量未提交代码与版本变更，提交前需逐项确认均属于本次服务器管理/发布范围；迁移改变多池数据模型，发布只产生兼容迁移文件，不在本轮应用。AWS 操作需经过异步状态和稳定 IPv4 读回后才能更新节点及订阅。GitHub Actions 可能仍受账户计费阻断，手工发布必须独立校验标签和三项资产。`
+- `implementation_scope`: `审查当前全部待发布差异，补齐 AWS/地区额度/OpenAPI/前端回归问题；生成并复核 schema 与 TypeScript；执行隔离后端、前端、安装器包、版本/迁移/边界/秘密/验收门禁；完成版本清单后在当前 main 创建提交、注释标签并推送 GitHub Release；准确记录云/生产未运行状态。`
+- `rollback_ref`: `代码回退为 v0.8.0 或对本次 0.9.0 源码提交执行 git revert；禁止硬重置和强推，不删除已发布资产或标签。仅在本地专用测试容器上运行迁移测试；本轮不应用应用数据库迁移，无数据库/云状态回退。历史 0.8.0 Release 保持不变。`
+- `time_logic`: `执行 UTC 2026-10-30T17:23:18Z / Asia/Shanghai 2026-10-31T01:23:18+08:00。除 AWS 重启/地址对账代码测试中的操作超时、租约和重试逻辑外，本次无运行时 TTL 或云资源时限变化；该异步逻辑须使用 aware UTC 时间和有界单调超时进行验证。`
+
+### 2026-10-31T01:56:25+08:00 — xray-disabled-region-quota-compat-20261031-01
+
+- `event_id`: `xray-disabled-region-quota-compat-20261031-01/001`
+- `run_id`: `xray-disabled-region-quota-compat-20261031-01`
+- `timestamp`: `2026-10-31T01:56:25+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation_and_static_verification`
+- `path_scope`: `backend/apps/nodes/quota.py; backend/tests/test_region_defaults.py; docs/project-ledger.md; docs/progress.md; read-only inspection of AGENTS.md instructions, docs/project-conventions.md, skills/xray-manager/SKILL.md, backend/apps/nodes/models.py and views.py, and the initial status/diff`
+- `operation`: `兼容保留和调整当前支持列表之外、但已有 allocation 或仍有占额节点的地区额度；补 focused backend tests`
+- `reason`: `现有 set_allocations 在锁定池、读取 allocation 和当前占额之前拒绝所有 unsupported region，导致历史地区 allocation 无法保留或调整；用户任务要求修复该兼容行为并覆盖边界。`
+- `authorization`: `仅本地后端额度逻辑和测试；遵守任务约束，不连接数据库端口、不运行数据库测试、不操作云资源；仓库约定要求追加本台账与 docs/progress.md。`
+- `assumptions`: `当前支持列表继续限制全新地区分配；已存在 allocation 或 consumes_quota 节点的 unsupported 地区可继续提交；额度不能低于实际占额；存在非占额节点不构成额度占用。`
+- `exclusions`: `不改迁移、前端、版本/发布文件，不连接 PostgreSQL/Redis，不运行 pytest/Django 检查，不操作云资源/节点/进程。保留此任务开始前在共享工作区中的既有修改，包括 quota.py 的 allow_create 调整。`
+- `risks`: `focused Django/API tests are added but not executed under the explicit no-database-test constraint; Ruff executable is absent locally and was not downloaded. No runtime or database state was changed.`
+- `implementation_scope`: `backend/apps/nodes/quota.py and backend/tests/test_region_defaults.py hunks for this compatibility behavior; append-only audit records in docs/project-ledger.md and docs/progress.md. Before hashes for source/test were not captured before editing; existing audit files had SHA-256 e8f06430a8c0e1b3b75c0d6c0937b48ffd42261483edd7cad332ed90930ee4b5 and 4d817637c4e2f83b558ddf31dcfac27cb3388aa0d1d2b6490c484319a53fa0aa before this append. Source/test after hashes: quota.py e8984a9c651f7b47cc372ee60cd0ec8d9faaa60df5f542c42b7d6104d1924dc6; test_region_defaults.py 4a82d35d807845c43be6a25765f4ce43553d747206607036e20f311dcc03dd41.`
+- `command_or_tool`: `Read-only git status/diff and source inspection; python3 -c 'import ast, pathlib; [ast.parse(pathlib.Path(p).read_text()) for p in ["backend/apps/nodes/quota.py", "backend/tests/test_region_defaults.py"]]'; PYTHONPYCACHEPREFIX=/tmp/xray-quota-pycache python3 -m py_compile backend/apps/nodes/quota.py backend/tests/test_region_defaults.py; uv run --project backend --offline ruff check apps/nodes/quota.py tests/test_region_defaults.py; git diff --check; no database or cloud commands.`
+- `result`: `set_allocations now locks the pool and allocation rows before checking historical support, allows unsupported regions only if allocation/use already exists, checks quota against grouped consumes_quota usage, and prevents removal only for actually occupied regions. Added API coverage for rejecting a new unsupported region, changing a historical allocation, quota-below-use and occupied-region removal codes, and preserving occupied legacy usage without its allocation. AST parsing, py_compile and diff check passed; Ruff could not start because the executable is absent. Database tests were not run.`
+- `exit_code`: `AST parse 0; py_compile 0; git diff --check 0; Ruff 2 (executable unavailable); database pytest not-run; cloud/database mutations not-run.`
+- `evidence`: `backend/apps/nodes/quota.py set_allocations; backend/tests/test_region_defaults.py test_node_pool_rejects_unsupported_region_allocation and test_unsupported_region_allocation_is_preserved_only_for_existing_usage; command outputs recorded above in this run; no database or provider readback.`
+- `status`: `implementation and Python/static diff gates passed; Ruff blocked by missing local tool; focused database tests not-run by task constraint; cloud/production not-run.`
+- `commit_or_tree`: `main at 5c203e0875182127a6409a2d70413118e5ab769a plus preserved pre-existing dirty worktree changes; no commit, version or tag change.`
+- `rollback_ref`: `Remove only this run's unsupported-region validation/current-usage changes from quota.py and the added focused test from test_region_defaults.py; preserve earlier allow_create and unrelated dirty hunks. Audit entries remain append-only. No database or cloud rollback applies.`
+- `time_logic`: `Execution UTC 2026-10-30T17:56:25Z / Asia/Shanghai 2026-10-31T01:56:25+08:00; no runtime TTL, expiry, retry, or wall-clock behavior changed.`

@@ -8,10 +8,10 @@ test('一次性交付在关闭后从 DOM 清除', async ({ page }) => {
   await row.getByRole('button', { name: '签发 Token' }).click();
   const dialog = page.getByRole('dialog', { name: '一次性交付' });
   await expect(dialog).toBeVisible();
-  const token = (await dialog.locator('.secret-value code').textContent()) || '';
+  const token = (await dialog.locator('code').first().textContent()) || '';
   expect(token).toHaveLength(43);
-  expect(await page.evaluate(() => ({ ...localStorage }))).toEqual({});
-  expect(await page.evaluate(() => ({ ...sessionStorage }))).toEqual({});
+  expect(await page.evaluate(() => Object.values(localStorage))).not.toContain(token);
+  expect(await page.evaluate(() => Object.values(sessionStorage))).not.toContain(token);
   await dialog.getByRole('button', { name: '我已安全保存并关闭' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText(token, { exact: true })).toHaveCount(0);

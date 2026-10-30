@@ -30,14 +30,17 @@ describe('X-ray Vben route shell', () => {
     expect(menuPaths).toEqual([
       '/overview',
       '/cloud-accounts',
-      '/node-pools',
+      '/subscriptions',
       '/nodes',
       '/operations',
       '/access-profiles',
-      '/subscriptions',
       '/audit',
       '/system',
     ]);
+    expect(menuPaths).not.toContain('/node-pools');
+    const root = businessRoutes.find((route) => route.name === 'Root');
+    const subscriptionRoute = root?.children?.find((route) => route.name === 'subscriptions');
+    expect(subscriptionRoute?.meta?.order).toBe(30);
     expect(menuPaths).not.toContain('/operations/:id');
     expect(access.accessToken).toBeNull();
     expect(access.refreshToken).toBeNull();

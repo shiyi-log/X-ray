@@ -21,6 +21,17 @@ def _uuid(value, field: str) -> UUID:
         raise ValueError(f"{field} must be a UUID") from exc
 
 
+def _node_delete_snapshot(node: ManagedNode) -> dict:
+    return {
+        "external_id": node.external_id,
+        "region": node.region,
+        "account_id": str(node.cloud_account_id),
+        "addresses": list(node.addresses or []),
+        "desired_state": node.desired_state,
+        "desired_generation": node.desired_generation,
+    }
+
+
 @admin_endpoint("GET")
 def collection(request):
     values = Operation.objects.filter(admin=request.xray_admin).order_by("-created_at", "pk")
@@ -98,6 +109,21 @@ def preview(request):
             "security_state": node.security_state,
         }
         phrase = "确认重装" if kind == "node.reinstall" else "确认隔离"
+    elif kind == "node.delete":
+        node = ManagedNode.objects.get(pk=target_id)
+        if not node.external_id or node.desired_state == "DELETED":
+            raise DomainError(
+                "NODE_NOT_PROVISIONED", "服务器尚无可删除的云实例", status_code=409
+            )
+        expected_params = {
+            "region": node.region,
+            "account_id": str(node.cloud_account_id),
+        }
+        if params and params != expected_params:
+            raise DomainError("PREVIEW_STALE", "删除目标参数不匹配", status_code=409)
+        params = expected_params
+        snapshot = _node_delete_snapshot(node)
+        phrase = "确认删除服务器"
     else:
         raise DomainError("PREVIEW_KIND_UNSUPPORTED", "不支持的危险操作预览", status_code=400)
     value = ActionPreviewService.create(

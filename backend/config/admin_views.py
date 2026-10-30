@@ -2,7 +2,7 @@ from django.http import JsonResponse
 
 from apps.audit.models import AuditEvent
 from apps.cloud_accounts.models import CloudAccount
-from apps.nodes.models import ManagedNode, NodePool
+from apps.nodes.models import ManagedNode
 from apps.operations.models import Operation
 from apps.subscriptions.models import AccessProfile, SecurityState, Subscription
 from common.admin_api import admin_endpoint
@@ -15,7 +15,6 @@ def overview(request):
         {
             "counts": {
                 "cloud_accounts": CloudAccount.objects.count(),
-                "node_pools": NodePool.objects.count(),
                 "nodes": ManagedNode.objects.count(),
                 "operations_active": Operation.objects.exclude(
                     status__in=Operation.TERMINAL_STATUSES

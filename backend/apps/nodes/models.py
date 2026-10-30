@@ -10,6 +10,7 @@ from common.regions import DEFAULT_REGION
 
 class NodePool(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    singleton_key = models.PositiveSmallIntegerField(default=1, unique=True, editable=False)
     name = models.CharField(max_length=120, unique=True)
     region = models.CharField(max_length=120, default=DEFAULT_REGION)
     quota = models.PositiveIntegerField(default=3)
@@ -19,6 +20,9 @@ class NodePool(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(
+                condition=models.Q(singleton_key=1), name="node_pool_singleton_key_one"
+            ),
             models.CheckConstraint(
                 condition=models.Q(quota__gte=1), name="node_pool_quota_positive"
             )

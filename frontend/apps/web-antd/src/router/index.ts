@@ -4,7 +4,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import {
   Activity,
   Cloud,
-  Layers3,
   LayoutDashboard,
   Network,
   Rss,
@@ -56,13 +55,13 @@ export const businessRoutes: RouteRecordRaw[] = [
         path: 'node-pools',
         name: 'node-pools',
         component: () => import('@/views/node-pools/index.vue'),
-        meta: { title: '节点池', icon: Layers3, order: 30 },
+        meta: { title: '地区', hideInMenu: true },
       },
       {
         path: 'nodes',
         name: 'nodes',
         component: () => import('@/views/nodes/index.vue'),
-        meta: { title: '节点', icon: Server, order: 40 },
+        meta: { title: '服务器管理', icon: Server, order: 40 },
       },
       {
         path: 'operations',
@@ -86,7 +85,7 @@ export const businessRoutes: RouteRecordRaw[] = [
         path: 'subscriptions',
         name: 'subscriptions',
         component: () => import('@/views/subscriptions/index.vue'),
-        meta: { title: '订阅管理', icon: Rss, order: 70 },
+        meta: { title: '订阅管理', icon: Rss, order: 30 },
       },
       {
         path: 'audit',

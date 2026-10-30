@@ -4,12 +4,14 @@ from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.utils import timezone
+from rest_framework.test import APIClient
+
 from apps.identity.models import SuperAdmin
+from apps.nodes.models import ManagedNode
 from apps.operations.models import ActionPreview, Operation
 from apps.subscriptions.models import AccessProfile, SubscriptionToken
 from apps.subscriptions.tokens import TokenGone, TokenService
-from django.utils import timezone
-from rest_framework.test import APIClient
 
 
 @pytest.fixture
@@ -34,6 +36,69 @@ def _preview(client: APIClient, profile: AccessProfile, *, params: dict | None =
             "params": params or {"profile_id": str(profile.pk)},
         },
         format="json",
+    )
+
+
+def _provisioned_node(node: ManagedNode) -> ManagedNode:
+    node.external_id = f"fake-instance-{node.pk}"
+    node.addresses = [{"value": "192.0.2.10", "family": 4, "kind": "dynamic"}]
+    node.provisioning_state = "PROVISIONED"
+    node.save(update_fields=["external_id", "addresses", "provisioning_state", "updated_at"])
+    return node
+
+
+def _reserved_node(cloud_account, *, pool=None) -> ManagedNode:
+    from apps.nodes.models import NodePool
+    from apps.nodes.quota import reserve_node
+
+    if pool is None:
+        pool = NodePool.objects.create(
+            name=f"delete-pool-{uuid4()}", region="us-east-1", quota=3
+        )
+    return reserve_node(
+        pool.pk,
+        account_id=cloud_account.pk,
+        region="us-east-1",
+        plan_id="nano",
+        image_id="debian-12",
+        operation_key=uuid4(),
+    )
+
+
+def _node_delete_preview(client: APIClient, node: ManagedNode):
+    return client.post(
+        "/api/v1/operations/previews/",
+        {"kind": "node.delete", "target_id": str(node.pk), "params": {}},
+        format="json",
+    )
+
+
+def _submit_node_delete(
+    client: APIClient,
+    node: ManagedNode,
+    *,
+    preview_id: str,
+    confirmation: str = "确认删除服务器",
+    key: str | None = None,
+):
+    headers = {"HTTP_IDEMPOTENCY_KEY": key} if key is not None else {}
+    return client.post(
+        f"/api/v1/nodes/{node.pk}/actions/delete/",
+        {"preview_id": preview_id, "confirmation": confirmation},
+        format="json",
+        **headers,
+    )
+
+
+def _submit_node_action(client: APIClient, node: ManagedNode, action: str):
+    payload = {}
+    if action == "delete":
+        payload = {"preview_id": str(uuid4()), "confirmation": "确认删除服务器"}
+    return client.post(
+        f"/api/v1/nodes/{node.pk}/actions/{action}/",
+        payload,
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
     )
 
 
@@ -154,3 +219,179 @@ def test_force_revoke_requires_recent_step_up(recent_admin_client):
     )
     assert response.status_code == 403
     assert response.json()["code"] == "STEP_UP_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_node_delete_preview_binds_identity_and_accepts_confirmed_operation(
+    recent_admin_client, cloud_account
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+
+    preview_response = _node_delete_preview(client, node)
+    assert preview_response.status_code == 201
+    preview_body = preview_response.json()
+    assert preview_body["kind"] == "node.delete"
+    assert preview_body["required_phrase"] == "确认删除服务器"
+    assert preview_body["snapshot"] == {
+        "external_id": node.external_id,
+        "region": node.region,
+        "account_id": str(node.cloud_account_id),
+        "addresses": node.addresses,
+        "desired_state": node.desired_state,
+        "desired_generation": node.desired_generation,
+    }
+
+    key = str(uuid4())
+    response = _submit_node_delete(
+        client, node, preview_id=preview_body["id"], key=key
+    )
+    assert response.status_code == 202
+    operation = Operation.objects.get(pk=response.json()["operation_id"])
+    assert operation.kind == "node.delete"
+    assert operation.target_id == node.pk
+    assert operation.params == {
+        "region": node.region,
+        "account_id": str(node.cloud_account_id),
+        "confirmation": "确认删除服务器",
+    }
+    assert str(operation.idempotency_key) == key
+    assert str(operation.preview_id) == preview_body["id"]
+    assert operation.preview.consumed_at is not None
+    assert ManagedNode.objects.get(pk=node.pk).consumes_quota is True
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("action", ["start", "reboot", "delete"])
+@pytest.mark.parametrize("state", ["unprovisioned", "deleted"])
+def test_node_cloud_actions_reject_unavailable_instances(
+    recent_admin_client, cloud_account, action, state
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    if state == "deleted":
+        _provisioned_node(node)
+        node.desired_state = "DELETED"
+        node.save(update_fields=["desired_state", "updated_at"])
+
+    response = _submit_node_action(client, node, action)
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "NODE_NOT_PROVISIONED"
+    assert not Operation.objects.filter(kind=f"node.{action}", target_id=node.pk).exists()
+
+
+@pytest.mark.django_db
+def test_node_delete_requires_preview_confirmation_recent_step_up_and_uuid_key(
+    recent_admin_client, cloud_account
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    key = str(uuid4())
+
+    missing_preview = client.post(
+        f"/api/v1/nodes/{node.pk}/actions/delete/",
+        {"confirmation": "确认删除服务器"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=key,
+    )
+    assert missing_preview.status_code == 409
+    assert missing_preview.json()["code"] == "PREVIEW_REQUIRED"
+
+    preview = _node_delete_preview(client, node).json()
+    missing_key = _submit_node_delete(client, node, preview_id=preview["id"])
+    assert missing_key.status_code == 400
+    invalid_key = _submit_node_delete(
+        client, node, preview_id=preview["id"], key="not-a-uuid"
+    )
+    assert invalid_key.status_code == 400
+    wrong_confirmation = _submit_node_delete(
+        client, node, preview_id=preview["id"], confirmation="删除服务器", key=key
+    )
+    assert wrong_confirmation.status_code == 409
+    assert wrong_confirmation.json()["code"] == "CONFIRMATION_MISMATCH"
+
+    session = client.session
+    session["recent_auth_until"] = (timezone.now() - timedelta(seconds=1)).isoformat()
+    session.save()
+    stale_step_up = _submit_node_delete(
+        client, node, preview_id=preview["id"], key=str(uuid4())
+    )
+    assert stale_step_up.status_code == 403
+    assert stale_step_up.json()["code"] == "STEP_UP_REQUIRED"
+    assert not Operation.objects.filter(kind="node.delete", target_id=node.pk).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("mutation", ["expired", "state_changed"])
+def test_node_delete_rejects_expired_or_stale_snapshot(
+    recent_admin_client, cloud_account, mutation
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    preview_body = _node_delete_preview(client, node).json()
+    preview = ActionPreview.objects.get(pk=preview_body["id"])
+    if mutation == "expired":
+        preview.expires_at = timezone.now() - timedelta(seconds=1)
+        preview.save(update_fields=["expires_at"])
+        expected_code = "PREVIEW_EXPIRED"
+    else:
+        node.refresh_from_db()
+        node.desired_state = "STOPPED"
+        node.save(update_fields=["desired_state", "updated_at"])
+        expected_code = "PREVIEW_STALE"
+
+    response = _submit_node_delete(
+        client, node, preview_id=preview_body["id"], key=str(uuid4())
+    )
+    assert response.status_code == 409
+    assert response.json()["code"] == expected_code
+    assert not Operation.objects.filter(kind="node.delete", target_id=node.pk).exists()
+
+
+@pytest.mark.django_db
+def test_node_delete_preview_cannot_be_reused_for_another_node(
+    recent_admin_client, cloud_account
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    other = _reserved_node(cloud_account, pool=node.pool)
+    _provisioned_node(other)
+    preview = _node_delete_preview(client, node).json()
+
+    response = _submit_node_delete(
+        client, other, preview_id=preview["id"], key=str(uuid4())
+    )
+    assert response.status_code == 409
+    assert response.json()["code"] == "PREVIEW_BINDING_MISMATCH"
+    assert not Operation.objects.filter(kind="node.delete", target_id=other.pk).exists()
+
+
+@pytest.mark.django_db
+def test_node_delete_idempotency_key_replays_same_request_and_rejects_changed_request(
+    recent_admin_client, cloud_account
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    preview = _node_delete_preview(client, node).json()
+    key = str(uuid4())
+
+    first = _submit_node_delete(client, node, preview_id=preview["id"], key=key)
+    replay = _submit_node_delete(client, node, preview_id=preview["id"], key=key)
+    conflict = _submit_node_delete(
+        client,
+        node,
+        preview_id=preview["id"],
+        confirmation="其他确认",
+        key=key,
+    )
+    assert first.status_code == replay.status_code == 202
+    assert replay.json()["operation_id"] == first.json()["operation_id"]
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "IDEMPOTENCY_CONFLICT"
+    assert Operation.objects.filter(kind="node.delete", target_id=node.pk).count() == 1

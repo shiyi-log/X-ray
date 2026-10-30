@@ -8,10 +8,32 @@ export interface NodePoolAllocation {
   used?: number;
   available?: number;
 }
-export type NodePool = components['schemas']['NodePool'] & {
+export type NodePool = Omit<
+  components['schemas']['NodePool'],
+  'allocations' | 'region' | 'regions'
+> & {
   allocations?: readonly NodePoolAllocation[];
+  region: string;
+  regions?: readonly string[];
 };
-export type ManagedNode = components['schemas']['ManagedNode'];
+export type NodeAddress = string | {
+  address?: string;
+  family?: number;
+  ip?: string;
+  ip_address?: string;
+  kind?: string;
+  resource_id?: string;
+  type?: string;
+  value?: string;
+};
+export type ManagedNode = Omit<components['schemas']['ManagedNode'], 'addresses' | 'pool_id' | 'pool_name'> & {
+  addresses?: readonly NodeAddress[];
+  traffic_download_bytes?: number;
+  traffic_sampled_at?: string | null;
+  traffic_state?: 'NO_DATA' | 'COLLECTED' | string;
+  traffic_total_bytes?: number;
+  traffic_upload_bytes?: number;
+};
 export type Operation = components['schemas']['Operation'];
 export interface ProfilePolicy {
   plan_id: string | null; expires_at: string | null; traffic_limit_bytes: number | null;
@@ -58,7 +80,7 @@ export interface Capability {
   live_verified: boolean;
 }
 
-/** Regions accepted by the node-pool allocation API. */
+/** Regions accepted by the node creation API. */
 export const SUPPORTED_REGIONS = [
   'ap-southeast-1',
   'ap-northeast-1',
@@ -83,13 +105,25 @@ export const resourcesApi = {
     apiRequest<{ items: Capability[] }>(`/api/v1/cloud-accounts/${id}/capabilities/`),
   nodePools: () => apiRequest<Page<NodePool>>('/api/v1/node-pools/'),
   createNodePool: (payload: {
-    name: string;
     allocations: { region: string; quota: number }[];
   }) =>
     apiRequest<NodePool>('/api/v1/node-pools/', json('POST', payload)),
-  updateNodePool: (id: string, payload: Partial<NodePool>) =>
+  updateNodePool: (id: string, payload: {
+    allocations: { region: string; quota: number }[];
+  }) =>
     apiRequest<NodePool>(`/api/v1/node-pools/${id}/`, json('PATCH', payload)),
   nodes: () => apiRequest<Page<ManagedNode>>('/api/v1/nodes/'),
+  nodeDetail: (id: string) => apiRequest<ManagedNode>(`/api/v1/nodes/${id}/`),
+  nodeAction: (
+    id: string,
+    action: 'start' | 'reboot' | 'delete',
+    payload: { preview_id?: string; confirmation?: string } = {},
+    idempotencyKey: string = crypto.randomUUID(),
+  ) =>
+    apiRequest<OperationAccepted>(
+      `/api/v1/nodes/${id}/actions/${action}/`,
+      json('POST', payload, { 'Idempotency-Key': idempotencyKey }),
+    ),
   createNode: (payload: Record<string, unknown>, idempotencyKey: string) =>
     apiRequest<OperationAccepted>(
       '/api/v1/nodes/',

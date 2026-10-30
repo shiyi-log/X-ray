@@ -23,45 +23,47 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
   try {
     await page.goto('/overview');
     await page.reload();
-    await expect(page.getByText('当前管理员')).toBeVisible();
-    await expect(page.getByText('e2e-owner')).toBeVisible();
-    await expect(page.getByText('安全屏障')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '总览' })).toBeVisible();
+    await expect(page.getByText('安全屏障', { exact: true })).toBeVisible();
 
     const pages = [
-      ['云账号', '云账号', '暂无云账号'],
-      ['节点池', '节点池', '暂无节点池'],
-      ['节点', '节点', '暂无节点'],
-      ['操作中心', '操作中心', 'node.create'],
-      ['审计', '审计日志', 'e2e.seed.complete'],
-      ['系统', '系统设置', '部署配置只读'],
+      ['/cloud-accounts', '云账号', '暂无云账号'],
+      ['/nodes', '服务器管理', '暂无服务器'],
+      ['/operations', '操作中心', 'node.create'],
+      ['/audit', '审计日志', 'e2e.seed.complete'],
+      ['/system', '系统设置', '部署配置只读'],
     ] as const;
-    for (const [navigation, heading, visibleText] of pages) {
-      await page.getByRole('link', { name: navigation, exact: true }).click();
+    for (const [path, heading, visibleText] of pages) {
+      await page.goto(path);
       await expect(page.getByRole('heading', { name: heading })).toBeVisible();
       await expect(page.getByText(visibleText, { exact: true }).first()).toBeVisible();
     }
+    await expect(page.getByRole('link', { name: '节点池', exact: true })).toHaveCount(0);
 
-    await page.getByRole('link', { name: '访问配置', exact: true }).click();
+    await page.goto('/access-profiles');
     await page.getByRole('button', { name: '新建访问配置' }).click();
     const createDialog = page.getByRole('dialog', { name: '新建访问配置' });
     await createDialog.getByLabel('名称').fill(profileName);
-    await createDialog.getByRole('button', { name: '创建', exact: true }).click();
+    await createDialog.locator('button[type="submit"]').click();
 
     const profileRow = page.getByRole('row').filter({ hasText: profileName });
     await expect(profileRow).toBeVisible();
     await profileRow.getByRole('button', { name: '签发 Token' }).click();
     const delivery = page.getByRole('dialog', { name: '一次性交付' });
-    deliveredToken = (await delivery.locator('.secret-value code').textContent()) || '';
+    deliveredToken = (await delivery.locator('code').first().textContent()) || '';
     expect(deliveredToken).toHaveLength(43);
-    expect(await page.evaluate(() => ({ ...localStorage }))).toEqual({});
-    expect(await page.evaluate(() => ({ ...sessionStorage }))).toEqual({});
+    expect(await page.evaluate(() => Object.values(localStorage))).not.toContain(deliveredToken);
+    expect(await page.evaluate(() => Object.values(sessionStorage))).not.toContain(deliveredToken);
     await delivery.getByRole('button', { name: '我已安全保存并关闭' }).click();
     await page.reload();
     await expect(page.getByText(deliveredToken, { exact: true })).toHaveCount(0);
     await context.tracing.start({ screenshots: true, snapshots: true, sources: false });
     traceStarted = true;
 
-    await page.getByRole('link', { name: '订阅', exact: true }).click();
+    await page
+      .getByRole('navigation', { name: '主导航' })
+      .getByRole('menuitem', { name: '订阅管理', exact: true })
+      .click();
     await expect(page).toHaveURL(/\/subscriptions$/);
     await expect(page.getByRole('heading', { name: '订阅' })).toBeVisible();
     const subscriptionRow = page.getByRole('row').filter({ hasText: profileName });

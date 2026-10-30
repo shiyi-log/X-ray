@@ -159,6 +159,7 @@ class MutationResult:
     resource_id: str | None
     raw_state: str | None
     provider_code: str | None
+    operation_id: str | None = None
 
 
 class WriteAuthorizer(Protocol):

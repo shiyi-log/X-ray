@@ -5,29 +5,22 @@ import { Plus, RefreshCw, Trash2 } from 'lucide-vue-next';
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert, Button, Card, Form, Input, InputNumber, Modal, Select, Space, Table,
+  Alert, Button, Card, Form, InputNumber, Modal, Select, Space, Table,
 } from 'ant-design-vue';
 
 import {
   resourcesApi,
   SUPPORTED_REGIONS,
   type NodePool,
-  type NodePoolAllocation,
 } from '@/api/resources';
 import PageState from '@/components/PageState.vue';
-import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
 
 const DEFAULT_REGION = 'ap-southeast-1';
 const FormItem = Form.Item;
 const columns = [
-  { title: '名称', dataIndex: 'name', key: 'name' },
-  { title: '地区分配', key: 'allocations' },
-  { title: '总额度', dataIndex: 'quota', key: 'quota' },
-  { title: '占用', dataIndex: 'used', key: 'used' },
-  { title: '可用', dataIndex: 'available', key: 'available' },
-  { title: '允许创建', dataIndex: 'allow_create', key: 'allow_create' },
-  { title: '操作', key: 'actions' },
+  { title: 'IP', dataIndex: 'name', key: 'name' },
+  { title: '地区', key: 'allocations' },
 ];
 
 interface AllocationDraft {
@@ -39,22 +32,52 @@ const { data, loading, error, reload } = useResource(resourcesApi.nodePools);
 const open = ref(false);
 const saving = ref(false);
 const formError = ref('');
-const form = reactive<{ name: string; allocations: AllocationDraft[] }>({
-  name: '',
+const editingPoolId = ref<string | null>(null);
+const form = reactive<{ allocations: AllocationDraft[] }>({
   allocations: [{ region: DEFAULT_REGION, quota: 3 }],
 });
 const empty = computed(() => !data.value?.items.length);
-const regionOptions = computed(() => SUPPORTED_REGIONS.map((region) => ({
-  label: region,
-  value: region,
-})));
+const regionOptions = computed(() => {
+  const configured = data.value?.items[0];
+  const configuredRegions = configured?.allocations?.map((item) => item.region)
+    ?? (configured?.region ? [configured.region] : []);
+  const supported = new Set<string>(SUPPORTED_REGIONS);
+  const historicalRegions = [...new Set(configuredRegions)]
+    .filter((region) => !supported.has(region));
+  return [
+    ...SUPPORTED_REGIONS.map((region) => ({ label: region, value: region })),
+    ...historicalRegions.map((region) => ({
+      label: `${region}（历史地区）`,
+      value: region,
+    })),
+  ];
+});
 
 function resetForm() {
-  form.name = '';
+  editingPoolId.value = null;
   form.allocations.splice(0, form.allocations.length, {
     region: DEFAULT_REGION,
     quota: 3,
   });
+}
+
+function openEditor() {
+  formError.value = '';
+  const existing = data.value?.items[0];
+  editingPoolId.value = existing?.id ?? null;
+  if (existing) {
+    const allocations = existing.allocations?.length
+      ? existing.allocations
+      : [{ region: existing.region, quota: existing.quota }];
+    form.allocations.splice(
+      0,
+      form.allocations.length,
+      ...allocations.map((item) => ({ region: item.region, quota: item.quota })),
+    );
+  } else {
+    resetForm();
+  }
+  open.value = true;
 }
 
 function addAllocation() {
@@ -77,15 +100,9 @@ function optionsFor(index: number) {
   }));
 }
 
-function allocationLabel(allocation: NodePoolAllocation) {
-  const used = allocation.used ?? 0;
-  return `${allocation.region}：${used}/${allocation.quota}`;
-}
-
-function allocationSummary(item: NodePool) {
-  if (item.allocations?.length) return item.allocations.map(allocationLabel).join('、');
-  if (item.region) return `${item.region}：${item.used}/${item.quota}`;
-  return '未配置';
+function regionSummary(item: NodePool) {
+  const regions = item.allocations?.map((allocation) => allocation.region) ?? item.regions;
+  return regions?.length ? regions.join('、') : item.region || '未配置';
 }
 
 async function createPool() {
@@ -96,48 +113,43 @@ async function createPool() {
   }));
   const regions = allocations.map((item) => item.region);
   if (
-    !form.name.trim()
-    || allocations.some((item) => !item.region || !Number.isInteger(item.quota) || item.quota < 1)
+    allocations.some((item) => !item.region || !Number.isInteger(item.quota) || item.quota < 1)
     || new Set(regions).size !== regions.length
   ) {
-    formError.value = '请填写名称，并为每个预设地区配置大于 0 的唯一额度';
+    formError.value = '请为每个预设地区配置大于 0 的唯一额度';
     return;
   }
   saving.value = true;
   formError.value = '';
   try {
-    await resourcesApi.createNodePool({ name: form.name.trim(), allocations });
+    if (editingPoolId.value) {
+      await resourcesApi.updateNodePool(editingPoolId.value, { allocations });
+    } else {
+      await resourcesApi.createNodePool({ allocations });
+    }
     resetForm();
     open.value = false;
     await reload();
   } catch (caught) {
-    formError.value = caught instanceof Error ? caught.message : '创建失败';
+    formError.value = caught instanceof Error ? caught.message : '保存失败';
   } finally {
     saving.value = false;
   }
 }
 
-async function toggle(item: NodePool) {
-  try {
-    await resourcesApi.updateNodePool(item.id, { allow_create: !item.allow_create });
-    await reload();
-  } catch (caught) {
-    formError.value = caught instanceof Error ? caught.message : '保存失败';
-  }
-}
 </script>
 
 <template>
-  <Page title="节点池" description="按预设地区分别分配节点额度">
-    <template #title><h1 class="mb-2 text-lg font-semibold">节点池</h1></template>
+  <Page title="地区" description="管理服务器创建地区配置">
+    <template #title><h1 class="mb-2 text-lg font-semibold">地区</h1></template>
     <template #extra>
       <Space>
         <Button title="刷新" aria-label="刷新" @click="reload">
           <template #icon><RefreshCw :size="16" /></template>
         </Button>
-        <Button type="primary" @click="open = true">
+        <Button type="primary" @click="openEditor">
           <template #icon><Plus :size="16" /></template>
-          新建节点池
+          地区分配
         </Button>
       </Space>
     </template>
@@ -147,7 +159,7 @@ async function toggle(item: NodePool) {
         :loading="loading"
         :error="error"
         :empty="empty"
-        empty-text="暂无节点池"
+        empty-text="暂无地区配置"
         @retry="reload"
       >
         <Table :columns="columns" :data-source="data?.items || []" :pagination="false" :scroll="{ x: 'max-content' }" row-key="id">
@@ -156,22 +168,15 @@ async function toggle(item: NodePool) {
               <strong>{{ record.name }}</strong>
               <div class="text-xs text-muted-foreground">{{ record.id }}</div>
             </div>
-            <div v-else-if="column.key === 'allocations'">{{ allocationSummary(record as NodePool) }}</div>
-            <StatusBadge v-else-if="column.key === 'allow_create'" :value="record.allow_create" />
-            <Button v-else-if="column.key === 'actions'" type="link" @click="toggle(record as NodePool)">
-              {{ record.allow_create ? '暂停创建' : '恢复创建' }}
-            </Button>
+            <div v-else-if="column.key === 'allocations'">{{ regionSummary(record as NodePool) }}</div>
           </template>
         </Table>
       </PageState>
     </Card>
-    <Modal v-model:open="open" title="新建节点池" :footer="null" @cancel="resetForm">
+    <Modal v-model:open="open" title="地区分配" :footer="null" @cancel="resetForm">
       <Form :model="form" layout="vertical" @finish="createPool">
         <Alert v-if="formError" class="mb-4" :message="formError" type="error" show-icon />
-        <FormItem label="名称" name="name" :rules="[{ required: true, message: '请输入名称' }]">
-          <Input v-model:value="form.name" />
-        </FormItem>
-        <FormItem label="地区分配" required>
+        <FormItem label="地区" required>
           <div v-for="(allocation, index) in form.allocations" :key="index" class="mb-2 flex items-center gap-2">
             <Select
               v-model:value="allocation.region"
@@ -201,7 +206,7 @@ async function toggle(item: NodePool) {
             添加地区
           </Button>
         </FormItem>
-        <Button type="primary" html-type="submit" :loading="saving" block>{{ saving ? '保存中' : '创建' }}</Button>
+        <Button type="primary" html-type="submit" :loading="saving" block>{{ saving ? '保存中' : '保存' }}</Button>
       </Form>
     </Modal>
   </Page>

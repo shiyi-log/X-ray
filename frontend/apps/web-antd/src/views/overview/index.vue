@@ -2,7 +2,6 @@
 import { computed } from 'vue';
 import {
   Activity,
-  Boxes,
   Cloud,
   Network,
   RefreshCw,
@@ -38,7 +37,6 @@ const { data, loading, error, reload } = useResource(resourcesApi.overview);
 
 const metrics = [
   { key: 'cloud_accounts', label: '云账号', to: '/cloud-accounts', icon: Cloud },
-  { key: 'node_pools', label: '节点池', to: '/node-pools', icon: Boxes },
   { key: 'nodes', label: '节点', to: '/nodes', icon: Server },
   { key: 'operations_active', label: '进行中操作', to: '/operations', icon: Activity },
   { key: 'access_profiles', label: '访问配置', to: '/access-profiles', icon: Network },

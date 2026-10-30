@@ -195,6 +195,55 @@ class Publisher:
             return cls._publish_locked(subscription)
 
     @classmethod
+    def refresh_node_address(cls, node_id: UUID) -> dict[str, int]:
+        """Republish affected subscriptions and fail closed on stale node addresses."""
+        with transaction.atomic():
+            subscriptions = list(
+                Subscription.objects.select_for_update()
+                .filter(status="ACTIVE")
+                .order_by("pk")
+            )
+            profiles = {
+                profile.pk: profile
+                for profile in AccessProfile.objects.select_for_update()
+                .filter(
+                    pk__in=[value.profile_id for value in subscriptions],
+                    status="ACTIVE",
+                )
+                .order_by("pk")
+            }
+            affected = []
+            node_id_text = str(node_id)
+            for subscription in subscriptions:
+                if subscription.profile_id not in profiles:
+                    continue
+                subscription.profile = profiles[subscription.profile_id]
+                revision = subscription.current_revision
+                if revision is None:
+                    continue
+                if any(
+                    key == node_id_text or value.get("node_id") == node_id_text
+                    for key, value in revision.node_versions.items()
+                ):
+                    affected.append(subscription)
+
+            SubscriptionRevision.objects.filter(
+                pk__in=[value.current_revision_id for value in affected], usable=True
+            ).update(usable=False, invalidated_at=timezone.now())
+
+            published = 0
+            failed = 0
+            for subscription in affected:
+                try:
+                    with transaction.atomic():
+                        SecurityBarrier.assert_open(purpose="public_read")
+                        cls._publish_locked(subscription)
+                    published += 1
+                except Exception:
+                    failed += 1
+            return {"published": published, "failed": failed}
+
+    @classmethod
     def invalidate_node(cls, node_id: UUID) -> PublicationBatch:
         with transaction.atomic():
             subscriptions = list(

@@ -198,6 +198,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/nodes/{node_id}/actions/{action}/": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["node_actions_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/operations/": {
         readonly parameters: {
             readonly query?: never;
@@ -565,21 +581,40 @@ export interface components {
             readonly id: string;
             readonly image_id?: string;
             readonly last_error_code?: string;
+            /** @enum {string} */
+            readonly metering_coverage: "SUPPORTED" | "PARTIAL";
             readonly name: string;
             readonly observation_error?: string;
             /** Format: date-time */
             readonly observed_at?: string | null;
             readonly plan_id?: string;
-            /** Format: uuid */
-            readonly pool_id: string;
-            readonly pool_name?: string;
             readonly provider: string;
             readonly provisioning_state: string;
             readonly raw_cloud_state?: string;
             readonly region: string;
             readonly security_state: string;
+            readonly traffic_download_bytes: number;
+            /** Format: date-time */
+            readonly traffic_sampled_at?: string | null;
+            /** @enum {string} */
+            readonly traffic_state: "COLLECTED" | "NO_DATA";
+            readonly traffic_total_bytes: number;
+            readonly traffic_upload_bytes: number;
             /** Format: date-time */
             readonly updated_at?: string;
+        };
+        readonly NodeActionRequest: {
+            readonly confirmation?: string;
+            /** Format: uuid */
+            readonly preview_id?: string;
+        };
+        readonly NodeCreateRequest: {
+            /** Format: uuid */
+            readonly account_id: string;
+            readonly image_id: string;
+            readonly plan_id: string;
+            /** @enum {string} */
+            readonly region?: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
         };
         readonly NodePool: {
             readonly allocations: readonly {
@@ -589,7 +624,6 @@ export interface components {
                 readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
                 readonly used: number;
             }[];
-            readonly allow_create: boolean;
             readonly available: number;
             /** Format: date-time */
             readonly created_at?: string;
@@ -604,6 +638,17 @@ export interface components {
             readonly updated_at?: string;
             readonly used: number;
         };
+        readonly NodePoolAllocationInput: {
+            readonly quota: number;
+            /** @enum {string} */
+            readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+        };
+        readonly NodePoolWriteRequest: {
+            readonly allocations?: readonly components["schemas"]["NodePoolAllocationInput"][];
+            readonly quota?: number;
+            /** @enum {string} */
+            readonly region?: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+        } | unknown | unknown | unknown;
         readonly Operation: {
             readonly can_cancel: boolean;
             /** Format: date-time */
@@ -628,6 +673,14 @@ export interface components {
             readonly target_type: string;
             /** Format: date-time */
             readonly updated_at?: string;
+        };
+        readonly OperationAccepted: {
+            /** Format: uuid */
+            readonly operation_id: string;
+            readonly status: string;
+            /** Format: uuid */
+            readonly target_id: string;
+            readonly target_type: string;
         };
         readonly OperationStep: {
             readonly attempt: number;
@@ -1367,10 +1420,19 @@ export interface operations {
         };
         readonly requestBody: {
             readonly content: {
-                readonly "application/json": components["schemas"]["GenericObject"];
+                readonly "application/json": components["schemas"]["NodePoolWriteRequest"];
             };
         };
         readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["NodePool"];
+                };
+            };
             /** @description OK */
             readonly 201: {
                 headers: {
@@ -1561,13 +1623,15 @@ export interface operations {
     readonly nodes_create: {
         readonly parameters: {
             readonly query?: never;
-            readonly header?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
             readonly path?: never;
             readonly cookie?: never;
         };
         readonly requestBody: {
             readonly content: {
-                readonly "application/json": components["schemas"]["GenericObject"];
+                readonly "application/json": components["schemas"]["NodeCreateRequest"];
             };
         };
         readonly responses: {
@@ -1577,7 +1641,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["GenericObject"];
+                    readonly "application/json": components["schemas"]["OperationAccepted"];
                 };
             };
             /** @description Invalid request */
@@ -1627,6 +1691,62 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["ManagedNode"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly node_actions_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly action: "start" | "stop" | "reboot" | "delete" | "reinstall" | "quarantine";
+                readonly node_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["NodeActionRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OperationAccepted"];
                 };
             };
             /** @description Invalid request */

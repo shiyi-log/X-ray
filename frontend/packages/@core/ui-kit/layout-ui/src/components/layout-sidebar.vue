@@ -306,6 +306,8 @@ onUnmounted(() => {
   ></div>
   <aside
     ref="asideRef"
+    role="navigation"
+    aria-label="主导航"
     :style="style"
     class="fixed left-0 top-0 h-full transition-all duration-150"
     :class="theme"

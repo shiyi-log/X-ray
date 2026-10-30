@@ -573,6 +573,20 @@ const idMainContent = ELEMENT_ID_MAIN_CONTENT;
           <template #toggle-button>
             <VbenIconButton
               v-if="showHeaderToggleButton"
+              :aria-label="
+                props.isMobile
+                  ? '打开导航'
+                  : showSidebar
+                    ? '收起导航'
+                    : '展开导航'
+              "
+              :title="
+                props.isMobile
+                  ? '打开导航'
+                  : showSidebar
+                    ? '收起导航'
+                    : '展开导航'
+              "
               class="my-0 mr-1 rounded-md"
               @click="handleHeaderToggle"
             >
