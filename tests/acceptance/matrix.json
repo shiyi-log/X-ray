@@ -1,6 +1,6 @@
 {
   "version": "0.9.0",
-  "generated_at": "2026-10-31T03:03:47+08:00",
+  "generated_at": "2026-10-31T03:10:35+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -43,7 +43,7 @@
           "skip_reason": "fixed Xray binary, disposable Linux/systemd host, backup image and application image digests were not configured",
           "test_environment": "dedicated local PostgreSQL and Redis; connection values omitted",
           "exit_code": 0,
-          "timestamp": "2026-10-31T03:03:47+08:00"
+          "timestamp": "2026-10-31T02:51:59+08:00"
         },
         {
           "kind": "browser_e2e",
@@ -65,7 +65,20 @@
             "xray-installer-0.9.0-manifest.json",
             "xray-installer-0.9.0.tar.gz"
           ],
-          "timestamp": "2026-10-31T02:52:00+08:00"
+          "timestamp": "2026-10-31T03:03:47+08:00"
+        },
+        {
+          "kind": "github_release",
+          "tag": "v0.9.0",
+          "commit": "583df4f739184b8af85737deacec93d3f75f624a",
+          "draft": false,
+          "exit_code": 0,
+          "timestamp": "2026-10-31T03:10:35+08:00",
+          "assets": [
+            {"name": "SHA256SUMS", "sha256": "eba228c936cd2871c6a6deeab4b75ff7efac527e080d524cef8ea4b899c55661"},
+            {"name": "xray-installer-0.9.0-manifest.json", "sha256": "bb05cc11f55163a69d7fa573956ab1938a3225a7143aaa4ce71812a2448b97bc"},
+            {"name": "xray-installer-0.9.0.tar.gz", "sha256": "1e0f3bfcd299652d4f9594f04ecdad63941e311976eb0fe2dc65d206ef3d4280"}
+          ]
         },
         {
           "kind": "static_gates",
@@ -91,14 +104,16 @@
       "evidence": [
         {
           "kind": "github_actions",
-          "run_id": "41039028721",
+          "run_id": "41112317512",
           "conclusion": "failure",
           "job_started": false,
-          "reason": "account billing or spending limit blocked runner startup",
-          "timestamp": "2026-10-30T18:12:29+08:00"
+          "runner_id": 0,
+          "steps_started": 0,
+          "reason": "GitHub job completed before runner allocation; no workflow steps ran. Release was published manually from locally verified assets.",
+          "timestamp": "2026-10-31T03:06:34+08:00"
         }
       ],
-      "commit": "38a183b5d9a10b1d2e783049f49ab890f61a7bc5",
+      "commit": "583df4f739184b8af85737deacec93d3f75f624a",
       "provider": null,
       "region": null,
       "cost": null,

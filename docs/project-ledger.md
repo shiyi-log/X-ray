@@ -3075,3 +3075,22 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main commit 38a183b5d9a10b1d2e783049f49ab890f61a7bc5; docs/cloud-test-authorization.md remains an unrelated unstaged user change.`
 - `rollback_ref`: `v0.8.0 or git revert 38a183b5d9a10b1d2e783049f49ab890f61a7bc5; no migration applied to application databases and no cloud state changed.`
 - `time_logic`: `Execution UTC 2026-10-30T19:00:39Z / Asia/Shanghai 2026-10-31T03:00:39+08:00. Lifecycle waits use monotonic bounded timeouts and lease renewals covered by Fake tests; no external instance or timer changed.`
+
+### 2026-10-31T03:10:35+08:00 — xray-v0.9.0-release-20261031-01 remote release verification
+
+- `event_id`: `xray-v0.9.0-release-20261031-01/003`
+- `run_id`: `xray-v0.9.0-release-20261031-01`
+- `timestamp`: `2026-10-31T03:10:35+08:00`
+- `actor`: `Codex`
+- `event_type`: `remote_release_and_asset_verification`
+- `path_scope`: `GitHub shiyi-log/X-ray main, annotated tag v0.9.0, GitHub Actions run 41112317512, GitHub Release v0.9.0 and three installer assets; docs/progress.md, docs/version-record.md, docs/release-checklist.md, tests/acceptance/matrix.json`
+- `operation`: `推送 0.9.0 代码与标签，核验自动发布结果；runner 未分配后手动发布并校验资产`
+- `authorization`: `沿用 /001 用户明确要求发布版本的授权，包含 main 推送、annotated tag 和 GitHub Release/安装器资产；不包含生产部署、云写入或 SSH。`
+- `command_or_tool`: `git push origin main; git push origin v0.9.0; gh run view 41112317512; gh api repos/shiyi-log/X-ray/actions/jobs/124257409928; gh release create/edit/view v0.9.0; gh api asset metadata; git ls-remote origin; local asset SHA-256/checksum comparison`
+- `result`: `远端 main 与 v0.9.0 peeled tag 均指向 583df4f739184b8af85737deacec93d3f75f624a。GitHub Actions 结束为 failure，job runner_id=0 且 steps=[]，说明未分配 runner、workflow 未执行；没有将其记为通过。使用已由发布包测试与 SHA256SUMS 验证、manifest 绑定该 tag commit 的本地资产创建正式非草稿 Release v0.9.0。GitHub 返回的 SHA256SUMS、manifest 与 tar.gz 摘要分别为 eba228c936cd2871c6a6deeab4b75ff7efac527e080d524cef8ea4b899c55661、bb05cc11f55163a69d7fa573956ab1938a3225a7143aaa4ce71812a2448b97bc、1e0f3bfcd299652d4f9594f04ecdad63941e311976eb0fe2dc65d206ef3d4280，均与本地文件一致。Release 正文二次读取确认换行正常。真实云、SSH、生产未执行。`
+- `exit_code`: `main push 0; tag push 0; action status query 0 (run conclusion failure before runner allocation); manual release create/edit 0; release metadata/assets query 0; local/remote ref readback 0; checksum comparison 0.`
+- `evidence`: `GitHub run 41112317512 and job 124257409928 readback (runner_id=0, no steps); GitHub Release API tag/draft/assets/digest fields; peeled tag and main refs; local dist/SHA256SUMS verification; no credentials recorded.`
+- `status`: `GitHub Release and all three assets passed remote verification; GitHub Actions runner allocation blocked; real AWS/SWAS, SSH, public probes, device and production deployment not-run; two historical secret-scan ledger findings remain unresolved.`
+- `commit_or_tree`: `release tag v0.9.0 points to 583df4f739184b8af85737deacec93d3f75f624a; main was pushed at that commit. Current post-release audit documentation changes are being recorded separately; docs/cloud-test-authorization.md remains an unrelated unstaged user change.`
+- `rollback_ref`: `Application rollback uses v0.8.0 or git revert 38a183b5d9a10b1d2e783049f49ab890f61a7bc5; preserve v0.9.0 tag/release evidence and never roll back database security state or cloud state.`
+- `time_logic`: `Execution UTC 2026-10-30T19:10:35Z / Asia/Shanghai 2026-10-31T03:10:35+08:00. No time-dependent runtime behavior or external instance lifecycle changed.`

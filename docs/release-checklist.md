@@ -14,6 +14,7 @@
 - [x] `tests/acceptance/matrix.json` 与 `VERSION` 一致并通过 validator。
 - [x] GitHub Release 工作流会校验 `v${VERSION}`、上传安装器包和 `SHA256SUMS`。
 - [x] 一键安装器与管理台热更新均固定到同一不可变版本标签。
+- [x] `v0.9.0` 已推送并创建正式 GitHub Release；三个资产的远端 SHA-256 与本地包匹配。
 - [ ] 匿名生产主机一键拉取：当前仓库为 private，需公开仓库或经授权的公开安装器托管。
 
 ## 本地和预发布门禁
