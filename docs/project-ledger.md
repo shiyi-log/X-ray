@@ -3094,3 +3094,23 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `release tag v0.9.0 points to 583df4f739184b8af85737deacec93d3f75f624a; main was pushed at that commit. Current post-release audit documentation changes are being recorded separately; docs/cloud-test-authorization.md remains an unrelated unstaged user change.`
 - `rollback_ref`: `Application rollback uses v0.8.0 or git revert 38a183b5d9a10b1d2e783049f49ab890f61a7bc5; preserve v0.9.0 tag/release evidence and never roll back database security state or cloud state.`
 - `time_logic`: `Execution UTC 2026-10-30T19:10:35Z / Asia/Shanghai 2026-10-31T03:10:35+08:00. No time-dependent runtime behavior or external instance lifecycle changed.`
+
+### 2026-10-31T03:20:25+08:00 — xray-v0.9.0-release-20261031-01 frontend source diagnosis
+
+- `event_id`: `xray-v0.9.0-release-20261031-01/004`
+- `run_id`: `xray-v0.9.0-release-20261031-01`
+- `timestamp`: `2026-10-31T03:20:25+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_source_diagnosis_and_isolated_preview`
+- `path_scope`: `local listeners 9528/9529/9530/9560/9561; current repository frontend Vite config; dedicated test database/Redis containers; docs/progress.md and docs/project-ledger.md`
+- `operation`: `确认用户看到旧界面的服务来源，并在独立端口启动已发布代码工作树的本地预览`
+- `reason`: `用户此前反馈前端旧界面再次出现；端口/工作目录混用会让用户浏览到临时目录的过期前端，即使仓库源码已更新。`
+- `authorization`: `本任务授权修复并发布 0.9.0；本次仅只读检查现存进程并在确认空闲的 9560/9561 启动本工作树服务。没有停止、重启或改写任何既存进程/服务。`
+- `command_or_tool`: `lsof -nP -iTCP:{9528,9529,9530,9560,9561} -sTCP:LISTEN; lsof process cwd; read frontend/apps/web-antd/vite.config.ts; start Django with XRAY_ENV=test on 9561 and Vite with XRAY_FRONTEND_PORT=9560/XRAY_BACKEND_PORT=9561; curl /health/live and /login`
+- `result`: `Root cause: 9528 Vite PID 37335 serves /private/tmp/xray-test-ui.Xu2UhL/frontend/apps/web-antd; 9529 backend PID 37288 also runs from /private/tmp/xray-test-ui.Xu2UhL. 9530 Vite PID 45513 serves the current repository frontend while 9529 serves the temporary backend, so the active development processes had mixed worktree origins. Vite supports an XRAY_BACKEND_PORT override; the 9530 process's environment was not inspected. This was a process/workdir mismatch, not a source rollback. Left all existing services untouched. Started current worktree preview Vite PID 72060 on 127.0.0.1:9560 and Django PID 72012 on 127.0.0.1:9561, with XRAY_ENV=test, dedicated release PostgreSQL 55447 and Redis 56447 only. `/login` returned HTTP 200 and `/health/live` returned HTTP 200. The preview is local test mode; no production configuration or database was used.`
+- `exit_code`: `listener/cwd inspection 0; current Vite startup session 0/running; current Django startup session 0/running; /login 0 (HTTP 200); /health/live 0 (HTTP 200).`
+- `evidence`: `lsof listener and cwd output; frontend/apps/web-antd/vite.config.ts proxy config; curl responses; process IDs/ports recorded above; no secret or cookie values read.`
+- `status`: `old UI cause confirmed; current repository preview healthy on isolated ports; old processes preserved; production deployment and acceptance not-run.`
+- `commit_or_tree`: `main at bffe3c95b8a95f1aaa7f166c6d3553e0f7c06636 with audit-only changes to docs/progress.md and this ledger; unrelated docs/cloud-test-authorization.md user modification remains untouched.`
+- `rollback_ref`: `No source or external state rollback. Stop only current preview PIDs 72060/72012 after checking ownership if cleanup is requested; preserve old processes unless separately directed.`
+- `time_logic`: `Execution UTC 2026-10-30T19:20:25Z / Asia/Shanghai 2026-10-31T03:20:25+08:00. No business TTL, retry, expiry, cloud-resource, or database behavior changed.`
