@@ -8,7 +8,8 @@
 - [x] `VERSION`、backend OpenAPI、三个 frontend package 版本一致。
 - [x] `backend/uv.lock`、`frontend/pnpm-lock.yaml` 无漂移，Vben commit/许可证已记录。
 - [x] OpenAPI 连续生成两次无差异，生成的 TypeScript 无差异。
-- [x] `git diff --check`、暂存文件清单、Gitleaks 和 Shop/archive 边界通过。
+- [x] `git diff --check`、暂存文件清单和 Shop/archive 边界通过。
+- [ ] Gitleaks 无新增命中：当前扫描仍报告 2 个既有历史台账命中，未输出匹配内容。
 - [x] `CHANGELOG.md`、`docs/progress.md`、`docs/version-record.md` 已填写真实退出码和证据。
 - [x] `tests/acceptance/matrix.json` 与 `VERSION` 一致并通过 validator。
 - [x] GitHub Release 工作流会校验 `v${VERSION}`、上传安装器包和 `SHA256SUMS`。
