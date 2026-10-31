@@ -3502,3 +3502,26 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main at 7f986337dd4cf89a8ef49dd3c7024dd5ad8d3782 before this fix commit; docs/cloud-test-authorization.md remains the user's unrelated uncommitted modification.`
 - `rollback_ref`: `Revert only backend/config/settings/test.py and its focused auth test, then restart the local runtime; no database, session, credential, cloud or production rollback applies.`
 - `time_logic`: `Observed at 2026-10-31T18:08:09+08:00. HTTP probes used bounded requests; no authentication TTL, CSRF expiry, MFA challenge or business time rule changed.`
+
+### 2026-10-31T18:11:22+08:00 — xray-login-csrf-origin-20261031-01 final closeout
+
+- `event_id`: `xray-login-csrf-origin-20261031-01/002`
+- `run_id`: `xray-login-csrf-origin-20261031-01`
+- `timestamp`: `2026-10-31T18:11:22+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_verification_and_delivery`
+- `path_scope`: `backend/config/settings/test.py; backend/tests/test_auth_api.py; docs/project-ledger.md; docs/progress.md; origin/main`
+- `operation`: `提交并推送本地登录 CSRF Origin 修复，完成最终运行态和远端分支核验`
+- `reason`: `修复已通过本地认证回归和带浏览器 Origin 的运行探针，需要记录可回退提交和最终工作树状态。`
+- `authorization`: `沿用本轮用户对登录问题修复和本地 X-ray 服务重启的授权；仅推送当前 main 的相干修复与审计文档。`
+- `assumptions`: `远端 `origin/main` 是本项目当前发布分支；本次不创建新版本标签或执行生产发布。`
+- `exclusions`: `未提交 `docs/cloud-test-authorization.md` 的用户修改；未执行 AWS、SSH、生产部署或外部设备验收。`
+- `implementation_scope`: `提交 `e69d36c`，推送 `origin/main`，读回远端 ref，确认本地 9527/9528 监听与带 Origin 的一键登录。`
+- `command_or_tool`: `git add/commit; git push origin main; git status; git rev-parse; git ls-remote; lsof/ps; bounded curl with CSRF cookie/token and Origin header.`
+- `result`: `Commit `e69d36c` pushed successfully and `origin/main` reads the same commit. The worktree retains only the user's pre-existing `docs/cloud-test-authorization.md` modification. Current-checkout Django PID 23807 owns 127.0.0.1:9527 and Vite PID 23855 owns 127.0.0.1:9528; readiness is HTTP 200; Origin-bound local one-click login is HTTP 200 with `authenticated=true`.`
+- `exit_code`: `commit 0; push 0; remote ref readback 0; listener/process inspection 0; readiness and Origin-bound login probes 0.`
+- `evidence`: `Only commit/ref identifiers, local PIDs, loopback ports, endpoint status and worktree path were recorded; no credentials, cookies, tokens, environment values or secret-bearing output.`
+- `status`: `delivered and locally verified; cloud, production, SSH and device acceptance not-run.`
+- `commit_or_tree`: `main and origin/main at `e69d36cab6dea57063d02c4d90fbc150165b85f9`; unrelated user modification remains uncommitted.`
+- `rollback_ref`: `Use `git revert e69d36c` for application rollback; restart only the confirmed local X-ray services if runtime rollback is requested. No database, credential, cloud or production rollback applies.`
+- `time_logic`: `Observed at 2026-10-31T18:11:22+08:00. Final HTTP probes used bounded requests; no business timing or authentication expiry changed.`
