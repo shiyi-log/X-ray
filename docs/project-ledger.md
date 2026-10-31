@@ -3479,3 +3479,26 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main at fdef6c04266021727325f38a692ac4011df50bbc; docs/cloud-test-authorization.md remains the user's unrelated uncommitted modification and is excluded from the evidence commit.`
 - `rollback_ref`: `Documentation-only evidence append; runtime rollback is limited to stopping the two confirmed X-ray processes if explicitly requested. No database, credential, cloud or production rollback applies.`
 - `time_logic`: `Observed at 2026-10-31T16:22:59+08:00. HTTP probes used a five-second maximum timeout; no application business TTL or authentication expiry changed.`
+
+### 2026-10-31T18:08:09+08:00 — xray-login-csrf-origin-20261031-01 fix and runtime validation
+
+- `event_id`: `xray-login-csrf-origin-20261031-01/001`
+- `run_id`: `xray-login-csrf-origin-20261031-01`
+- `timestamp`: `2026-10-31T18:08:09+08:00`
+- `actor`: `Codex`
+- `event_type`: `bugfix_and_runtime_validation`
+- `path_scope`: `backend/config/settings/test.py; backend/tests/test_auth_api.py; current X-ray local runtime; docs/project-ledger.md; docs/progress.md`
+- `operation`: `修复本地登录页面因前端 Origin 与后端 CSRF trusted origins 不一致导致的请求校验失败，并重启当前 X-ray 本地服务验证`
+- `reason`: `浏览器截图显示登录页返回“请求校验失败，请刷新页面后重试”。复现确认前端运行在 `http://127.0.0.1:9528`，旧后端进程的测试配置只信任旧端口 `9529`，带当前 Origin 的 POST 被 Django 返回 `403 CSRF_FAILED`。`
+- `authorization`: `用户明确要求排除并修复当前登录页面问题；范围限于本地测试设置、认证回归测试和已确认属于 X-ray 的本地服务重启，不包含云、生产、凭据或其他项目进程。`
+- `assumptions`: `测试环境允许将固定开发端口 `9528` 与 `localhost:9528` 作为默认可信来源；根启动器在动态选端口时继续覆盖 `XRAY_CSRF_TRUSTED_ORIGINS`，生产设置不继承测试默认值。`
+- `exclusions`: `未放宽生产 CSRF、MFA、session、step-up 或其他后端安全约束；未修改前端认证逻辑；未执行真实云/SSH/生产操作；未读取或记录秘密、Cookie 或密码。`
+- `implementation_scope`: `测试设置合并既有环境变量来源并追加 loopback `9528` 默认值；认证测试增加带 `Origin: http://127.0.0.1:9528` 的登录回归；重启当前工作树后端/前端并执行同 Origin HTTP 验证。`
+- `command_or_tool`: `apply_patch; Django check with dedicated xray_test settings; backend auth pytest with XRAY_DISABLE_TOTP=0; frontend pnpm test:unit; owned-process restart via main.py; bounded curl with CSRF cookie/token and Origin header; git diff/status.`
+- `result`: `Before restart, the reproduced login POST returned HTTP 403 with code `CSRF_FAILED`. After loading the fix and restarting current-checkout services, the same Origin-bound password request returned HTTP 401 `AUTH_INVALID` (CSRF passed), and the Origin-bound local one-click login returned HTTP 200 with `authenticated=true`. Backend auth tests: 14 passed; frontend unit suite: 17 files / 71 tests passed; Django check passed; diff check passed. Current services remain on 127.0.0.1:9527/9528 from this checkout.`
+- `exit_code`: `pre-fix reproduction 0 with HTTP 403; post-fix local-login probe 0 with HTTP 200; backend auth pytest 0; frontend unit tests 0; Django check 0; git diff --check 0.`
+- `evidence`: `Recorded only endpoint origins, redacted status/code results, test counts, local process scope and repository paths; no credential, cookie, token, password, environment value or secret-bearing exception recorded.`
+- `status`: `local login CSRF regression fixed and verified; production, cloud, SSH, device and external acceptance not-run.`
+- `commit_or_tree`: `main at 7f986337dd4cf89a8ef49dd3c7024dd5ad8d3782 before this fix commit; docs/cloud-test-authorization.md remains the user's unrelated uncommitted modification.`
+- `rollback_ref`: `Revert only backend/config/settings/test.py and its focused auth test, then restart the local runtime; no database, session, credential, cloud or production rollback applies.`
+- `time_logic`: `Observed at 2026-10-31T18:08:09+08:00. HTTP probes used bounded requests; no authentication TTL, CSRF expiry, MFA challenge or business time rule changed.`

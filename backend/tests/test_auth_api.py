@@ -209,6 +209,23 @@ def test_csrf_is_required_for_login(admin):
     assert response.json()["code"] == "CSRF_FAILED"
 
 
+def test_local_vite_origin_is_accepted_for_login(admin):
+    client = APIClient(enforce_csrf_checks=True)
+    csrf = client.get("/api/v1/auth/csrf", HTTP_HOST="127.0.0.1")
+    client.credentials(
+        HTTP_X_CSRFTOKEN=csrf.json()["csrf_token"],
+        HTTP_ORIGIN="http://127.0.0.1:9528",
+    )
+    response = client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+        HTTP_HOST="127.0.0.1",
+    )
+    assert response.status_code == 200
+    assert response.json().get("code") != "CSRF_FAILED"
+
+
 @override_settings(XRAY_ENV="test", XRAY_LOCAL_ONE_CLICK_LOGIN=False)
 def test_local_one_click_login_can_be_disabled(csrf_client):
     status = csrf_client.get(

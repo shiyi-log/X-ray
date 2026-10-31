@@ -21,6 +21,17 @@ SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "xray_test_session"
 CSRF_COOKIE_NAME = "xray_test_csrf"
+# Keep direct local test-server runs compatible with the Vite dev origin. The
+# launcher overrides this with the dynamically selected frontend port.
+CSRF_TRUSTED_ORIGINS = list(  # noqa: F405
+    dict.fromkeys(
+        [
+            *env_list("XRAY_CSRF_TRUSTED_ORIGINS"),
+            "http://127.0.0.1:9528",
+            "http://localhost:9528",
+        ]
+    )
+)
 # Deliberately test-only; production settings force this to False.
 XRAY_DISABLE_TOTP = XRAY_ENV == "test" and env_bool("XRAY_DISABLE_TOTP", False)  # noqa: F405
 XRAY_LOCAL_ONE_CLICK_LOGIN = XRAY_ENV == "test" and env_bool(  # noqa: F405
