@@ -1,6 +1,6 @@
 {
   "version": "0.10.0",
-  "generated_at": "2026-10-31T15:44:28+08:00",
+  "generated_at": "2026-10-31T16:06:26+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -65,16 +65,20 @@
             "xray-installer-0.10.0-manifest.json",
             "xray-installer-0.10.0.tar.gz"
           ],
-          "timestamp": "2026-10-31T03:03:47+08:00"
+          "timestamp": "2026-10-31T16:06:26+08:00"
         },
         {
           "kind": "github_release",
           "tag": "v0.10.0",
-          "commit": null,
-          "draft": null,
-          "exit_code": null,
-          "timestamp": null,
-          "assets": []
+          "commit": "33b1e3ea61a56ebed218acd49ade8066d3264178",
+          "draft": false,
+          "exit_code": 0,
+          "timestamp": "2026-10-31T16:05:17+08:00",
+          "assets": [
+            {"name": "SHA256SUMS", "sha256": "01ec599b7e0d3092c94603d50756d281f5938ea5bc403fdc202a67ebd365d4b2"},
+            {"name": "xray-installer-0.10.0-manifest.json", "sha256": "bad67a2a497fc4166b5bac698a5046eab9813dce0956dddebfc29b613632dc68"},
+            {"name": "xray-installer-0.10.0.tar.gz", "sha256": "c8f148a25b1f75450fa7a554ea2cff9e0dd7a6d1f62aa170289707b75fec81c9"}
+          ]
         },
         {
           "kind": "static_gates",
@@ -87,7 +91,7 @@
           "exit_codes": [0, 0, 0, 0]
         }
       ],
-      "commit": "38a183b5d9a10b1d2e783049f49ab890f61a7bc5",
+      "commit": "33b1e3ea61a56ebed218acd49ade8066d3264178",
       "provider": null,
       "region": null,
       "cost": null,

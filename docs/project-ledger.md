@@ -3433,3 +3433,26 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca plus uncommitted scoped changes; docs/cloud-test-authorization.md remains a preserved unrelated user modification.`
 - `rollback_ref`: `Application rollback to v0.9.0 or git revert of the 0.10.0 implementation commit; do not reverse migrations or restore revoked credentials, Token tombstones, security events or cloud state.`
 - `time_logic`: `Recorded at 2026-10-31T15:58:11+08:00. No authentication TTL, MFA challenge expiry, session expiry, provider operation timeout or business time boundary changed.`
+
+### 2026-10-31T16:09:52+08:00 — xray-gate-visibility-20261031-01 0.10.0 release verification
+
+- `event_id`: `xray-gate-visibility-20261031-01/003`
+- `run_id`: `xray-gate-visibility-20261031-01`
+- `timestamp`: `2026-10-31T16:09:52+08:00`
+- `actor`: `Codex`
+- `event_type`: `release_and_final_verification`
+- `path_scope`: `VERSION; CHANGELOG.md; backend/pyproject.toml and uv.lock; frontend package metadata; installer; tests/acceptance/matrix.json; docs/release.md; README.md; GitHub main/tag/release v0.10.0; docs/version-record.md; docs/progress.md; docs/project-ledger.md`
+- `operation`: `提交、打标签、推送并核验 X-ray 0.10.0；记录自动发布阻断与手动资产发布证据`
+- `reason`: `用户此前要求查清旧前端来源后发布一个版本；本轮实现已通过本地门禁，发布范围限定为代码、安装器和 GitHub Release，不包含生产切换或真实云操作。`
+- `authorization`: `用户已明确授权发布版本；GitHub main、annotated tag 和 Release 写入均在该范围内。`
+- `assumptions`: `tag v0.10.0 指向实现提交 33b1e3ea61a56ebed218acd49ade8066d3264178；安装器资产从该提交生成；后续版本索引/验收矩阵文档提交不改变已发布标签资产。`
+- `exclusions`: `不执行 AWS/SWAS/STS、SSH、公网探测、生产镜像切换、实例启停/重启/删除、静态 IP 释放、设备验收或数据库生产迁移；docs/cloud-test-authorization.md 的用户修改保持未提交。`
+- `implementation_scope`: `git commit 33b1e3e；annotated tag v0.10.0；push main/tag；打包 dist/xray-installer-0.10.0*；GitHub Release 资产上传；远端 ref/Release/digest 读回；版本索引、进度和验收矩阵追加。`
+- `command_or_tool`: `git commit -m 'feat: expose configurable management gates'; bash scripts/package-installer-release.sh 0.10.0; (cd dist && shasum -a 256 -c SHA256SUMS); git tag -a; git push origin main; git push origin v0.10.0; gh run view 41183083183; gh release create/view v0.10.0; git ls-remote; shasum -a 256; apply_patch. The first checksum command was run from repository root and exited 1 because SHA256SUMS stores dist-relative filenames; the corrected command from dist exited 0.`
+- `result`: `Commit 33b1e3ea61a56ebed218acd49ade8066d3264178 was pushed to main; annotated tag v0.10.0 points to that commit; release workflow 41183083183 ended before runner allocation with 0 steps, so it is not treated as a passed CI run; manual non-draft GitHub Release v0.10.0 was created and its three asset digests match local files exactly. Main/tag/release readback passed. No cloud or production side effect occurred.`
+- `exit_code`: `commit 0; package 0; initial root checksum 1 (superseded); corrected checksum 0; push main/tag 0/0; workflow failure before runner allocation; manual release 0; remote refs/assets/digests 0.`
+- `evidence`: `Git commit/tag/ref IDs, workflow/job state, Release metadata, asset sizes and SHA-256 values; no credentials, cookies, raw URIs, environment values, cloud resource IDs or secret-bearing output.`
+- `status`: `passed for code/package/GitHub Release; CI runner and production/cloud/SSH/device gates remain blocked or not-run.`
+- `commit_or_tree`: `main and origin/main at 33b1e3ea61a56ebed218acd49ade8066d3264178 at release time; current post-release docs-only updates are uncommitted; docs/cloud-test-authorization.md remains unrelated user work.`
+- `rollback_ref`: `Application rollback uses v0.9.0 or git revert 33b1e3ea61a56ebed218acd49ade8066d3264178; retain v0.10.0 tag/release evidence and do not reverse database security state, credentials, Token tombstones or cloud state.`
+- `time_logic`: `Release verification recorded at 2026-10-31T16:09:52+08:00. Package/checksum operations have no business TTL; no authentication or cloud operation timing changed.`
