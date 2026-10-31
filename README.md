@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-10-31：当前交付版本为 `0.9.0`。本版将节点池收敛为单个 IP 地址池，提供地区额度分配、服务器运行状态和流量统计，并改进 AWS Lightsail 启动/重启后的操作确认与 IPv4 对账。GitHub Release 提供不可变源码标签和一键安装器资产；专用本地门禁、外部云资源和生产部署状态以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
+2026-10-31：当前交付版本为 `0.10.0`。本版将运营门禁纳入管理台可见配置，保留单个 IP 地址池、地区额度、服务器运行状态和流量统计，并让云账号、地区创建策略及 provider 能力阻断原因在前端可见。GitHub Release 提供不可变源码标签和一键安装器资产；专用本地门禁、外部云资源和生产部署状态以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 

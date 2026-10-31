@@ -123,6 +123,11 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "expires_at": {"type": "string", "format": "date-time"},
                 },
             },
+            "LocalLoginCapability": {
+                "type": "object",
+                "required": ["enabled"],
+                "properties": {"enabled": {"type": "boolean"}},
+            },
             "CloudAccount": {
                 "type": "object",
                 "required": ["id", "name", "provider", "credential_version", "enabled"],
@@ -137,6 +142,15 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "last_validation_code": {"type": "string"},
                 },
             },
+            "CloudAccountPatch": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "name": {"type": "string"},
+                    "enabled": {"type": "boolean"},
+                },
+                "minProperties": 1,
+            },
             "NodePool": {
                 "type": "object",
                 "required": [
@@ -148,6 +162,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "quota",
                     "used",
                     "available",
+                    "allow_create",
                 ],
                 "properties": {
                     "id": {"type": "string", "format": "uuid"},
@@ -173,6 +188,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "quota": {"type": "integer"},
                     "used": {"type": "integer"},
                     "available": {"type": "integer"},
+                    "allow_create": {"type": "boolean"},
                     "created_at": {"type": "string", "format": "date-time"},
                     "updated_at": {"type": "string", "format": "date-time"},
                 },
@@ -197,6 +213,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     },
                     "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
                     "quota": {"type": "integer", "minimum": 1},
+                    "allow_create": {"type": "boolean"},
                 },
                 "anyOf": [
                     {"required": ["allocations"]},
@@ -400,6 +417,23 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "debug": {"type": "boolean"},
                     "allowed_hosts": {"type": "array", "items": {"type": "string"}},
                     "csrf_trusted_origins": {"type": "array", "items": {"type": "string"}},
+                    "provider_identity_network": _ref("ProviderIdentityNetworkSetting"),
+                },
+            },
+            "ProviderIdentityNetworkSetting": {
+                "type": "object",
+                "required": ["enabled", "source"],
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "source": {"type": "string", "enum": ["DATABASE", "ENVIRONMENT"]},
+                },
+            },
+            "SystemSettingsPatch": {
+                "type": "object",
+                "required": ["provider_identity_network_enabled"],
+                "additionalProperties": False,
+                "properties": {
+                    "provider_identity_network_enabled": {"type": "boolean"},
                 },
             },
             "ActionPreview": {
@@ -438,10 +472,25 @@ def inject_contract(result: dict, generator, request, public) -> dict:
     def uuid(name: str) -> list[dict]:
         return [_path_parameter(name)]
 
+    local_login_create = _operation(
+        "auth_local_login_create", response="AdminSession", security=False
+    )
+    local_login_create["responses"]["404"] = _response(
+        "ApiError", "Local test login is unavailable"
+    )
+
     paths = {
         "/api/v1/auth/session": {
             "get": _operation("auth_session_retrieve", response="AdminSession", security=False)
         },
+        "/api/v1/auth/local-login/status": {
+            "get": _operation(
+                "auth_local_login_status_retrieve",
+                response="LocalLoginCapability",
+                security=False,
+            )
+        },
+        "/api/v1/auth/local-login": {"post": local_login_create},
         "/api/v1/auth/login": {
             "post": _operation(
                 "auth_login_create",
@@ -457,6 +506,19 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                 response="CloudAccount",
                 request="GenericObject",
                 status="201",
+            ),
+        },
+        "/api/v1/cloud-accounts/{account_id}/": {
+            "get": _operation(
+                "cloud_accounts_retrieve",
+                response="CloudAccount",
+                parameters=uuid("account_id"),
+            ),
+            "patch": _operation(
+                "cloud_accounts_partial_update",
+                response="CloudAccount",
+                request="CloudAccountPatch",
+                parameters=uuid("account_id"),
             ),
         },
         "/api/v1/node-pools/": {
@@ -484,7 +546,10 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/nodes/": {
             "get": _operation("nodes_list", response="PaginatedManagedNodeList"),
             "post": _operation(
-                "nodes_create", response="OperationAccepted", request="NodeCreateRequest", status="202"
+                "nodes_create",
+                response="OperationAccepted",
+                request="NodeCreateRequest",
+                status="202",
             ),
         },
         "/api/v1/nodes/{node_id}/": {
@@ -503,7 +568,14 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                         "required": True,
                         "schema": {
                             "type": "string",
-                            "enum": ["start", "stop", "reboot", "delete", "reinstall", "quarantine"],
+                            "enum": [
+                                "start",
+                                "stop",
+                                "reboot",
+                                "delete",
+                                "reinstall",
+                                "quarantine",
+                            ],
                         },
                     }
                 ],
@@ -583,7 +655,14 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             "get": _operation("audit_events_list", response="PaginatedAuditEventList")
         },
         "/api/v1/overview": {"get": _operation("overview_retrieve", response="Overview")},
-        "/api/v1/system": {"get": _operation("system_retrieve", response="SystemInfo")},
+        "/api/v1/system": {
+            "get": _operation("system_retrieve", response="SystemInfo"),
+            "patch": _operation(
+                "system_partial_update",
+                response="SystemInfo",
+                request="SystemSettingsPatch",
+            ),
+        },
     }
     paths["/api/v1/node-pools/"]["post"]["responses"]["200"] = _response("NodePool")
     policy_properties = {

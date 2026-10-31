@@ -132,4 +132,9 @@ def test_openapi_generation_contains_stable_operation_ids(tmp_path):
     schema = target.read_text(encoding="utf-8")
     assert "operationId: operations_retrieve" in schema
     assert "operationId: auth_session_retrieve" in schema
+    assert "operationId: auth_local_login_create" in schema
+    assert "operationId: auth_local_login_status_retrieve" in schema
+    assert "operationId: system_partial_update" in schema
+    assert "operationId: cloud_accounts_retrieve" in schema
+    assert "allow_create:" in schema
     assert "operationId: subscriptions_force_revoke_create" in schema

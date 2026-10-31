@@ -16,6 +16,7 @@ describe('node pool region allocation', () => {
     const page: Page<NodePool> = {
       items: [{
         id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 3,
+        allow_create: false,
         used: 1, available: 2,
         regions: ['ap-southeast-1', 'eu-west-1'],
         allocations: [
@@ -44,12 +45,14 @@ describe('node pool region allocation', () => {
       expect(wrapper.text()).not.toContain('1/2');
       expect(wrapper.text()).not.toContain('0/1');
       expect(wrapper.text()).not.toContain('暂停创建');
+      expect(wrapper.text()).toContain('已关闭');
       await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
       await flushPromises();
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
       expect(dialog.text()).toContain('地区分配');
       expect(dialog.text()).toContain('eu-west-1（历史地区）');
       expect(dialog.text()).not.toContain('名称');
+      expect((dialog.get('[aria-label="允许创建服务器"]').element as HTMLButtonElement).getAttribute('aria-checked')).toBe('false');
       await dialog.get('form').trigger('submit');
       await vi.waitFor(() => expect(updatePool).toHaveBeenCalledTimes(1));
       expect(updatePool).toHaveBeenCalledWith('pool-1', {
@@ -57,6 +60,7 @@ describe('node pool region allocation', () => {
           { region: 'ap-southeast-1', quota: 2 },
           { region: 'eu-west-1', quota: 2 },
         ],
+        allow_create: false,
       });
       expect(createPool).not.toHaveBeenCalled();
     } finally {
@@ -69,6 +73,7 @@ describe('node pool region allocation', () => {
     vi.spyOn(resourcesApi, 'nodePools').mockResolvedValue(emptyPage);
     const createPool = vi.spyOn(resourcesApi, 'createNodePool').mockResolvedValue({
       id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 3,
+      allow_create: false,
       used: 0, available: 3,
       regions: ['ap-southeast-1'],
       allocations: [{ region: 'ap-southeast-1', quota: 3, used: 0, available: 3 }],
@@ -84,10 +89,12 @@ describe('node pool region allocation', () => {
       await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
       await flushPromises();
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
+      await dialog.get('[aria-label="允许创建服务器"]').trigger('click');
       await dialog.get('form').trigger('submit');
       await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
       expect(createPool).toHaveBeenCalledWith({
         allocations: [{ region: 'ap-southeast-1', quota: 3 }],
+        allow_create: false,
       });
       expect(updatePool).not.toHaveBeenCalled();
     } finally {

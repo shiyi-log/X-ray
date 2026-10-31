@@ -1840,7 +1840,7 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `timestamp`: `2026-10-24T15:14:38+08:00`
 - `actor`: `Codex`
 - `event_type`: `validate`
-- `path_scope`: `OpenAPI artifacts, boundary/secret checks, changed files`
+- `path_scope`: `generated contract files, boundary/secret checks, changed files`
 - `operation`: `static and generated-artifact gates`
 - `reason`: `Confirm deterministic generated outputs and repository boundaries before commit`
 - `command_or_tool`: `two-pass spectacular generation and cmp; frontend generate:api and cmp; git diff --check; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; focused ESLint`
@@ -3114,3 +3114,322 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main at bffe3c95b8a95f1aaa7f166c6d3553e0f7c06636 with audit-only changes to docs/progress.md and this ledger; unrelated docs/cloud-test-authorization.md user modification remains untouched.`
 - `rollback_ref`: `No source or external state rollback. Stop only current preview PIDs 72060/72012 after checking ownership if cleanup is requested; preserve old processes unless separately directed.`
 - `time_logic`: `Execution UTC 2026-10-30T19:20:25Z / Asia/Shanghai 2026-10-31T03:20:25+08:00. No business TTL, retry, expiry, cloud-resource, or database behavior changed.`
+
+### 2026-10-31T11:08:51+08:00 — xray-local-unified-restart-20261031-01 definition
+
+- `event_id`: `xray-local-unified-restart-20261031-01/001`
+- `run_id`: `xray-local-unified-restart-20261031-01`
+- `timestamp`: `2026-10-31T11:08:51+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition_and_runtime_preflight`
+- `path_scope`: `local listeners 9528/9529/9530/9531/9560/9561 and their process groups/cwd/environment names; main.py; docs/development.md; backend/apps/identity/management/commands/sync_env_superadmin.py; local xray-release and xray-test PostgreSQL/Redis container metadata; docs/project-ledger.md and docs/progress.md`
+- `operation`: `查明旧前端来源，并按用户“统一重启”要求将所有已确认属于 X-ray 的本地应用服务统一切换到当前工作树的一组前后端进程`
+- `reason`: `9530 浏览器页可能来自另一套前端；用户要求确认旧前端是否仍运行并统一重启。`
+- `authorization`: `用户在本轮明确要求统一重启。授权仅涵盖已确认属于 X-ray 的前后端进程；不涵盖 SSH 隧道、数据库/Redis 容器、其他项目、账号凭据同步、云资源或生产操作。`
+- `assumptions`: `以当前仓库 main 工作树为唯一服务源码。重启时复用当前 9561 后端正在使用的本地 test settings 与 release 专用 PostgreSQL/Redis 配置；保留已健康容器和现有数据。`
+- `exclusions`: `不操作 SSH PID 27710 或容器；不加载根目录 .env 中的管理员值来同步账号；不修改数据库、凭据、源码、浏览器存储、云资源、生产服务或其他项目进程；不删除 /tmp 临时目录。`
+- `risks`: `发现 9528/9529 来自 /private/tmp/xray-test-ui.Xu2UhL 临时副本；9530 当前仓库 Vite 指向无人监听的 9531；9560/9561 是当前仓库健康预览。标准 main.py 会执行本地管理员同步，且根 .env 的 DB/Redis 配置与当前预览不同，因此本轮须复用当前进程内环境并跳过管理员同步及依赖重建，避免改变登录凭据或切换测试数据库。`
+- `implementation_scope`: `仅停止确认的 X-ray 应用进程组 37289、37288、45457、72013、72012，再从当前仓库启动一个配对 Django/Vite 服务；保留专用容器、SSH 隧道与既有工作树修改。进程环境值仅在内存中读取/转交，不写入或回显。`
+- `command_or_tool`: `Read-only: git status/rev-parse; sed AGENTS.md/docs/project-conventions.md/skills/xray-manager/SKILL.md/docs/development.md/main.py and sync_env_superadmin.py; lsof, ps, cwd and port-only environment inspection; curl local readiness; docker-compose ps, docker inspect port mappings, docker ps; date. Before restart, run isolated Django check and migrate --check using the captured current preview environment. No cloud, SSH, database write, container restart or admin sync.`
+- `result`: `Preflight confirms local test containers are healthy; current preview uses separate xray-release PostgreSQL/Redis listeners on 55447/56447 and differs from root .env. The old temporary frontend/backend and the unpaired 9530 frontend are X-ray-owned and within the requested restart scope. No service has been stopped yet at definition time.`
+- `exit_code`: `status/source/process/port/container inspection 0; /9529 and /9561 readiness HTTP 200; /9531 connection unavailable; process environment values not emitted; remaining runtime restart/preflight gates pending.`
+- `evidence`: `lsof and ps process/group/cwd output; selected environment variable names only; HTTP readiness probes; Docker container names/status/port mappings; no credentials, cookies or secret values recorded.`
+- `status`: `scope and ownership confirmed; process restart pending; production/cloud/SSH/container mutations excluded and not-run.`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca with pre-existing user edit in docs/cloud-test-authorization.md; preserve it.`
+- `rollback_ref`: `No source/database rollback applies. If the new pair fails, restore service using the same current checkout, captured test settings and already healthy xray-release containers; do not restore the stale /tmp frontend.`
+- `time_logic`: `Execution clock Asia/Shanghai UTC+08:00; definition at 2026-10-31T11:08:51+08:00. Readiness/startup deadline will be bounded at 60 seconds using monotonic time. No business TTL, expiry or retry behavior changed.`
+
+### 2026-10-31T11:18:21+08:00 — xray-local-unified-restart-20261031-01 runtime restart
+
+- `event_id`: `xray-local-unified-restart-20261031-01/002`
+- `run_id`: `xray-local-unified-restart-20261031-01`
+- `timestamp`: `2026-10-31T11:18:21+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_restart_and_readback`
+- `path_scope`: `X-ray application processes/listeners 9527/9528/9529/9530/9560/9561; current checkout main.py and frontend/backend runtime; xray-release PostgreSQL/Redis containers; docs/progress.md and docs/project-ledger.md`
+- `operation`: `停止已确认的旧前后端与预览进程，使用当前 main 工作树在一组 loopback 端口重启并完成健康/API 代理读回`
+- `reason`: `完成用户要求的本地 X-ray 前后端统一重启，消除临时副本和失配服务造成的旧页面。`
+- `authorization`: `用户明确要求“还有旧前端在运行么，统一重启”；仅操作已通过 PID、命令、工作目录和端口确认的 X-ray 应用进程组。`
+- `command_or_tool`: `Capture only required test settings from local config; compare database name/user/password to release container metadata in memory without output; Django manage.py check and migrate --check; SIGTERM confirmed X-ray groups 37289, 37288, 45457, 72013, 72012; start current checkout Django/Vite using xray-release ports 55447/56447; HTTP probes; lsof/ps/cwd and docker-compose/docker ps readback. One preflight script exited 1 before stopping due to an environment-token parser mismatch. A second stopped the old groups but exited 1 on a transient port-bind release check; subsequent inspection showed all old listeners gone/free. Final startup and independent probes then passed.`
+- `result`: `Old 9528 Vite PID 37335 and 9529 Django PID 37288 came from /private/tmp/xray-test-ui.Xu2UhL; 9530 Vite PID 45513 was current checkout but XRAY_BACKEND_PORT was 9531 and no backend listened there. Previous 9560/9561 preview belonged to this checkout. After stopping those app groups, the final pair is Django PID 83031 on 127.0.0.1:9527 and Vite PID 83080 on 127.0.0.1:9528; both cwd values resolve under /Users/shiyi/Documents/ChatGPT/x-ray. Backend /health/ready, frontend /login?redirect=/nodes, and frontend /api/v1/auth/session each returned HTTP 200; 9530 is unavailable. Django check and migration check passed. Root test config matched the release test PostgreSQL database/user/password in memory; only loopback ports were adjusted from 55432/56379 to 55447/56447. xray-test and xray-release PostgreSQL/Redis remained healthy; SSH tunnel PID 27710 was not touched. No account sync, database migration/write, source change, cloud/SSH operation or production action occurred.`
+- `exit_code`: `initial env parse 1 before mutation; shutdown/port-release attempt 1 after SIGTERM (no listeners remained on subsequent readback); Django check 0; migration check 0; final startup session 97291 remained running with readiness passed; HTTP probes 200/200/200 and old 9530 unavailable; container readback 0.`
+- `evidence`: `process/listener/cwd output; readiness and login/session HTTP status; docker inspect health/port metadata and comparison booleans only; final frontend/backend PIDs and ports; no secret values or cookies recorded.`
+- `status`: `local unified restart and runtime readiness passed; cloud, SSH operations, device acceptance and production deployment not-run.`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; pre-existing user edit in docs/cloud-test-authorization.md preserved; this run appends docs/project-ledger.md and docs/progress.md only.`
+- `rollback_ref`: `No source/database rollback applies. Stop only verified current X-ray groups 83031/83032 after checking PID, command and cwd; relaunch current checkout against xray-release PostgreSQL/Redis without changing data or administrator credentials.`
+- `time_logic`: `Execution UTC 2026-10-31T03:18:21Z / Asia/Shanghai 2026-10-31T11:18:21+08:00. Readiness deadline 60 seconds measured monotonically; no business TTL, expiry, or retry behavior changed.`
+
+### 2026-10-31T11:25:46+08:00 — xray-local-unified-restart-20261031-01 final verification
+
+- `event_id`: `xray-local-unified-restart-20261031-01/003`
+- `run_id`: `xray-local-unified-restart-20261031-01`
+- `timestamp`: `2026-10-31T11:25:46+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_verification`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; final local X-ray listeners and health routes; pre-existing docs/cloud-test-authorization.md user change`
+- `operation`: `完成本地重启任务的项目边界、验收矩阵、差异和服务状态复核；保留工作区原有授权文档修改`
+- `reason`: `按项目约定在结束前记录精确退出码、运行状态、未决门禁与工作树范围。`
+- `authorization`: `用户授权统一重启 X-ray 本地前后端；本事件仅记录本地只读校验结果。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh with output suppressed; git status --short --branch; lsof listener readback; HTTP probes for /health/ready, /login?redirect=/nodes and /api/v1/auth/session.`
+- `result`: `Diff check, boundary check and acceptance matrix validation passed. Gitleaks returned exit 1; scanner text was suppressed and safe locations were not extracted, so this gate remains unresolved and is not claimed as passed. Final worktree is main@5cf2e68 with the pre-existing docs/cloud-test-authorization.md change preserved and this run's docs/project-ledger.md/docs/progress.md additions. Django PID 83031 and Vite PID 83080 still listen only on 9527/9528; health/login/session-proxy return 200; old 9530 and prior preview ports 9529/9560/9561 have no listener.`
+- `exit_code`: `git diff --check 0; boundary 0; acceptance validator 0; Gitleaks 1; git status 0; lsof returned 1 because several queried old ports have no listener while desired 9527/9528 were present; HTTP statuses 200/200/200 and old 9530 unavailable.`
+- `evidence`: `command outputs summarized in this event and runtime event /002; no scanner findings, secrets, cookies, or environment values persisted.`
+- `status`: `failed`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; docs/cloud-test-authorization.md is a preserved pre-existing user modification; only docs/project-ledger.md and docs/progress.md were modified by this run.`
+- `rollback_ref`: `No code, database, container, credential, cloud or production rollback applies. Stop only the verified current X-ray application process group if requested; retain the test containers and user worktree changes.`
+- `time_logic`: `Execution UTC 2026-10-31T03:25:46Z / Asia/Shanghai 2026-10-31T11:25:46+08:00. Final readiness checks used a bounded 4-second HTTP timeout; no business time logic changed.`
+
+### 2026-10-31T11:28:01+08:00 — xray-local-unified-restart-20261031-01 verification correction
+
+- `event_id`: `xray-local-unified-restart-20261031-01/004`
+- `run_id`: `xray-local-unified-restart-20261031-01`
+- `timestamp`: `2026-10-31T11:28:01+08:00`
+- `actor`: `Codex`
+- `event_type`: `verification_correction`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; local X-ray service health routes`
+- `operation`: `追加说明 post-append 检查发现的尾随空格并修正本轮状态字段为规范值；重新执行最终本地校验`
+- `reason`: `在 /003 追加后再次运行 diff check 时，发现本次新增台账行有尾随空格。按追加式审计原则保留原记录并增加 correction。`
+- `authorization`: `用户要求统一重启；本事件仅更正本轮文档格式并记录校验结果。`
+- `command_or_tool`: `apply_patch removed the trailing whitespace and normalized this run's progress status cells to `passed`/`failed`; reran git diff --check, boundary check, acceptance validator, secret scan with output suppressed, git status and local HTTP health/login/session-proxy probes.`
+- `result`: `The first post-/003 diff check exited 2 on the trailing space at docs/project-ledger.md:3177. After correction, diff check, boundary and acceptance validation exited 0; HTTP health/login/session probes remained 200; status stayed main with only the pre-existing cloud authorization edit plus this run's two audit-document edits. The secret scan still exited 1 and remains unresolved; no scan output or values were persisted.`
+- `exit_code`: `initial post-append diff check 2; correction diff check 0; boundary 0; acceptance 0; secret scan 1; final health/login/session HTTP 200/200/200; status 0.`
+- `evidence`: `final command outputs summarized here; no secrets, scanner locations, cloud resources, or database values recorded.`
+- `status`: `failed`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; docs/cloud-test-authorization.md remains the preserved pre-existing user edit; docs/project-ledger.md and docs/progress.md contain this run's append-only records.`
+- `rollback_ref`: `No application, database, credential, container, cloud or production rollback applies; preserve user edits and the running local pair.`
+- `time_logic`: `Execution UTC 2026-10-31T03:28:01Z / Asia/Shanghai 2026-10-31T11:28:01+08:00; HTTP checks used a 4-second bound, with no business time behavior changed.`
+
+### 2026-10-31T12:47:44+08:00 — xray-login-keylike-username-diagnosis-20261031-01
+
+- `event_id`: `xray-login-keylike-username-diagnosis-20261031-01/001`
+- `run_id`: `xray-login-keylike-username-diagnosis-20261031-01`
+- `timestamp`: `2026-10-31T12:47:44+08:00`
+- `actor`: `Codex`
+- `event_type`: `read_only_diagnosis`
+- `path_scope`: `user-provided login screenshot (sensitive field not copied); current local Django test process PID 83031 and isolated test database; backend readiness and frontend login routes`
+- `operation`: `判断登录页中疑似云 access-key-ID 格式值是否为 X-ray 当前本地测试管理员用户名，并确认本地页面/服务可用`
+- `reason`: `用户提供登录失败截图；用户名输入框显示 key-like 字符串，需区分错误自动填充与服务端管理员配置。`
+- `authorization`: `仅执行本地只读检查；不尝试使用截图值认证任何系统，不接触 AWS API/CloudTrail，不改账号、密码或会话。`
+- `assumptions`: `只比较管理员用户名是否符合 access-key-ID 格式，并输出布尔结果；不读取、输出或保存实际用户名、截图文本或任何密码。`
+- `exclusions`: `不登录或调用 AWS；不停服务；不更改浏览器状态、本地管理员、密码、数据库、云资源或生产。`
+- `risks`: `用户截图含有可识别为 AWS access key ID 格式的标识符。AWS 文档说明访问密钥由 access key ID 与 secret access key 配对构成，ID 单独不足以签署请求；如对应 secret key 曾一同泄露，应立即停用/轮换并审查 CloudTrail。`
+- `implementation_scope`: `无业务代码修改；只追加脱敏诊断结果到 docs/project-ledger.md 和 docs/progress.md。`
+- `command_or_tool`: `ps environment extraction limited to test settings in memory; Django ORM read-only query printed only admin_present, access-key-format booleans and is_active; HTTP probes to 127.0.0.1:9527/health/ready and 127.0.0.1:9528/login?redirect=/overview; git status and date. Two initial diagnostic invocations failed to import Django due using system Python / incorrect venv-relative path; the final invocation used backend/.venv/bin/python successfully. No environment value or username was emitted.`
+- `result`: `Isolated local test DB contains an active administrator; its username does not match the access-key-ID prefix/format visible in the screenshot. This supports (but does not prove) browser autofill or manual entry as the source of the displayed value. Backend readiness and login page returned HTTP 200. No credential or account changes occurred.`
+- `exit_code`: `initial Python attempts 1/1; final read-only ORM query 0; readiness/login HTTP 200/200; status 0.`
+- `evidence`: `Boolean-only ORM output and HTTP status codes; screenshot credential content intentionally omitted; no AWS call, authentication attempt, or secret value persisted.`
+- `status`: `passed`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; pre-existing docs/cloud-test-authorization.md edit preserved; current runtime docs additions remain uncommitted.`
+- `rollback_ref`: `No source, account, session, database, credential, cloud or production rollback applies; audit is append-only.`
+- `time_logic`: `Execution UTC 2026-10-31T04:47:44Z / Asia/Shanghai 2026-10-31T12:47:44+08:00; HTTP probes bounded to 4 seconds; no business time behavior changed.`
+
+### 2026-10-31T12:49:56+08:00 — xray-login-keylike-username-diagnosis-20261031-01 validation
+
+- `event_id`: `xray-login-keylike-username-diagnosis-20261031-01/002`
+- `run_id`: `xray-login-keylike-username-diagnosis-20261031-01`
+- `timestamp`: `2026-10-31T12:49:56+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; repository boundary and acceptance validators`
+- `operation`: `验证脱敏诊断记录的格式、仓库边界、验收矩阵和秘密扫描状态`
+- `reason`: `完成只读登录诊断后，按项目约定执行文档和边界门禁。`
+- `authorization`: `本轮本地诊断范围内的只读/文档验证。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh with captured output suppressed; git status --short --branch.`
+- `result`: `Diff check, boundary check and acceptance matrix validation passed. Secret scan exited 1; raw output and possible matches were suppressed and not persisted, so this gate remains unresolved. Worktree preserves the pre-existing cloud authorization edit and this run's progress/ledger additions.`
+- `exit_code`: `0/0/0/1; status 0.`
+- `evidence`: `validator exit codes only; no secret-bearing output or screenshot data recorded.`
+- `status`: `failed`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca with preserved user edit in docs/cloud-test-authorization.md.`
+- `rollback_ref`: `No source, database, account, credential, cloud or production rollback applies.`
+- `time_logic`: `Execution UTC 2026-10-31T04:49:56Z / Asia/Shanghai 2026-10-31T12:49:56+08:00; static checks only.`
+
+### 2026-10-31T12:58:38+08:00 — xray-local-one-click-login-20261031-01 definition
+
+- `event_id`: `xray-local-one-click-login-20261031-01/001`
+- `run_id`: `xray-local-one-click-login-20261031-01`
+- `timestamp`: `2026-10-31T12:58:38+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `backend/apps/identity/{services.py,views.py,urls.py}; backend/config/settings/{test.py,production.py}; backend/config/openapi.py and backend/openapi/schema.yaml/generated frontend API schema; backend/tests/{test_auth_api.py,test_admin_contract.py}; frontend/apps/web-antd/src/{api/auth.ts,api/generated/schema.ts,stores/session.ts,views/auth/login.vue,views/auth/auth.test.ts}; docs/project-ledger.md; docs/progress.md`
+- `operation`: `将登录页本地“使用恢复码”入口替换为服务端确认的本地一键登录，同时保留正式恢复码流程与 API`
+- `reason`: `用户要求“使用恢复码改为本地一键登陆”；恢复码是正式的一次性 MFA 凭证，不应被复用为绕过身份校验的入口。`
+- `authorization`: `用户明确要求修改 X-ray 本地登录体验；按仓库约定仅本地 XRAY_ENV=test、config.settings.test、loopback 请求可用。`
+- `assumptions`: `唯一管理员仍由 SuperAdmin 数据库约束保证；测试设置已锁定专用 xray_test 数据库；前端通过本地 Vite 代理访问 Django。`
+- `exclusions`: `不改账号/密码/恢复码，不读取或写入 .env，不访问 AWS/SWAS、SSH、生产或其他项目，不改浏览器存储、数据库 schema、云资源、版本/tag/发布或非本地服务。`
+- `risks`: `本地一键登录跳过密码与 MFA；仅在 test settings 下启用，并要求 Host 与 socket peer 均为 loopback。该会话不得获得近期 step-up 状态；所有其他环境应隐藏入口且拒绝 POST。`
+- `implementation_scope`: `增加独立能力探测和一键登录 API；建立标准服务端 AdminSession 与 session_version 绑定，但不记录为 step-up；前端仅在能力探测成功后显示“一键登录”，否则继续提供恢复码入口。增加后端/前端 focused tests 与 OpenAPI 更新。`
+- `command_or_tool`: `Read-only preflight: git status/rev-parse/diff; repository instructions/conventions/skill/ledger/progress; identity service/view/settings/model/tests; frontend login/API/store/tests; local process and port ownership; system clock. No credentials, ignored environment values, browser data, database writes, or cloud calls were read or emitted.`
+- `result`: `main@5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca. Existing user edits in docs/cloud-test-authorization.md and previous audit edits in docs/project-ledger.md/docs/progress.md are preserved. Current X-ray Django/Vite listeners are owned by this checkout at 9527/9528. Backend review confirms recovery remains separate and recommends a loopback-only test endpoint.`
+- `exit_code`: `read-only preflight commands 0; no tests or implementation run yet.`
+- `evidence`: `Repository code and focused test paths reviewed; no sensitive values or session contents recorded.`
+- `status`: `not-run`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca with existing documentation modifications preserved.`
+- `rollback_ref`: `Revert only this run's identity/config/API/schema/frontend/test edits and appended ledger/progress entries; no database, account, credential, cloud, process, or production rollback is planned.`
+- `time_logic`: `One-click creates an aware Django timestamp via timezone.now() and a standard MFAChallenge expiring at now + MFA_CHALLENGE_SECONDS; valid interval is [created_at, expires_at), matching _challenge_from_request. It creates the usual idle/absolute session expiries, leaves recent_auth_until absent and AdminSession.last_step_up_at null. No time source, TTL, or boundary convention changes.`
+
+### 2026-10-31T13:30:18+08:00 — xray-local-one-click-login-20261031-01 implementation
+
+- `event_id`: `xray-local-one-click-login-20261031-01/002`
+- `run_id`: `xray-local-one-click-login-20261031-01`
+- `timestamp`: `2026-10-31T13:30:18+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation`
+- `path_scope`: `backend/apps/identity/{services.py,views.py,urls.py}; backend/config/settings/{test.py,production.py}; backend/config/openapi.py; backend/openapi/schema.yaml; backend/tests/{test_auth_api.py,test_admin_contract.py}; frontend/apps/web-antd/src/{api/auth.ts,api/generated/schema.ts,stores/session.ts,views/auth/login.vue,views/auth/auth.test.ts}; docs/project-ledger.md; docs/progress.md`
+- `operation`: `新增只在 test settings + loopback 请求可用的一键登录和能力探测；将登录页本地入口切换为“一键登录”，生产/非测试环境继续显示恢复码路径。`
+- `reason`: `实现用户要求的本地快速登录，同时保持恢复码作为正式 MFA 的一次性恢复凭证。`
+- `authorization`: `用户明确要求本地一键登录；本轮仅本地测试服务和专用测试数据库。重启当前 X-ray Django 服务以加载改动，并恢复其配对本地 Vite 服务。`
+- `assumptions`: `XRAY_ENV=test 与 config.settings.test 是本地隔离环境开关；测试设置默认开放该能力，可由 XRAY_LOCAL_ONE_CLICK_LOGIN=0 关闭；生产设置强制 False；唯一管理员约束已存在。`
+- `exclusions`: `未修改用户已有 docs/cloud-test-authorization.md；未读取/改写 .env 文件；未更改账号、密码、恢复码数据、浏览器存储、DB schema、云资源、其他服务、版本或发布。`
+- `risks`: `快捷入口跳过密码与 MFA，因此服务端同时验证 test 环境、socket peer loopback、Host loopback、CSRF 和启用管理员；创建的会话使用 server session/session_version，但 recent_auth_until 与 last_step_up_at 保持空，不满足危险操作的 step-up。`
+- `implementation_scope`: `独立 GET /api/v1/auth/local-login/status 与 CSRF POST /api/v1/auth/local-login；OpenAPI YAML/TypeScript 生成；前端失败关闭能力探测与回归测试；验证正式恢复码仍需挑战、成功后一次性失效。`
+- `command_or_tool`: `apply_patch; Django spectacular --validate/generate with non-secret postgresql:///xray_test settings value; frontend/scripts/generate-api.mjs; focused backend pytest for test_auth_api.py and test_admin_contract.py; frontend Vitest auth.test.ts; frontend typecheck/lint/build; scoped Ruff; local process-environment metadata parsed in memory without echoing values; trial Django on free loopback 9531; replace confirmed checkout backend PID 83031 with 88662 using its existing xray_test/55447 and Redis/56447 environment; restart current-checkout Vite on 9528 after its old supervisor stopped it; API health/capability/login HTTP probes; browser accessibility read only.`
+- `result`: `Backend auth/OpenAPI tests 16 passed; frontend auth tests 4 passed; typecheck, lint and production build passed; default test setting enabled and production false; OpenAPI validation and generated TypeScript succeeded. Runtime GET /health/ready, proxied /api/v1/auth/local-login/status (enabled=true), and /login returned 200. Browser login page displays “本地一键登录”. Existing recovery endpoint remains separate and its one-time behavior is covered. No live login POST was performed; no persistent runtime session was created. Dedicated database/Redis and Vite remain running; no cloud/production action occurred.`
+- `exit_code`: `focused backend pytest 0 (16 passed); frontend Vitest 0 (4 passed); typecheck/lint/build 0; schema validate/generate 0; scoped Ruff 0; Ruff including backend/config/openapi.py 1 on two pre-existing E501 lines at nodes operation declarations; initial settings probe from repository root 1 due missing backend import path, corrected probe from backend directory 0; initial frontend probe 7 because the previous supervisor ended Vite during Django replacement, then Vite was restarted and final HTTP probes 200/200/200.`
+- `evidence`: `Only boolean configuration status, loopback URLs, process IDs/ports, HTTP codes and test summaries recorded. Root .env was parsed only in memory to recover the existing dedicated test process configuration; no values were emitted. Production/cloud and real MFA provider acceptance not performed.`
+- `status`: `passed`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; pre-existing cloud-test-authorization.md edit and earlier docs/progress.md/docs/project-ledger.md history preserved.`
+- `rollback_ref`: `Revert only this run's listed code/schema/frontend hunks and its ledger/progress entries; preserve pre-existing documentation edits. No database migration, persistent test session, credential, cloud or production rollback.`
+- `time_logic`: `Session expiry and MFAChallenge timestamp continue using Django aware timezone.now(); challenge boundary remains [created_at, expires_at), and absolute/idle session TTLs are unchanged. Local one-click has no recent-auth window and no step-up timestamp.`
+
+### 2026-10-31T13:36:46+08:00 — xray-local-one-click-login-20261031-01 final validation
+
+- `event_id`: `xray-local-one-click-login-20261031-01/003`
+- `run_id`: `xray-local-one-click-login-20261031-01`
+- `timestamp`: `2026-10-31T13:36:46+08:00`
+- `actor`: `Codex`
+- `event_type`: `final_validation`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; current X-ray worktree diff; local checkout listeners 127.0.0.1:9527/9528 and readiness/login/local-login capability routes`
+- `operation`: `修正台账末尾空行并复核本地一键登录变更的差异、仓库边界、验收矩阵、秘密扫描及本地页面可用性`
+- `reason`: `实现与行为测试完成后，按项目约定补齐最终门禁和审计记录。`
+- `authorization`: `用户要求将本地登录页的恢复码入口改为本地一键登录；此处仅追加本轮最终验证结果。`
+- `assumptions`: `最终差异包含本轮认证/API/schema/frontend/tests 与审计记录，并保留用户既有云测试授权文档修改。`
+- `exclusions`: `不登录以创建持久浏览器会话，不访问 AWS/SWAS、SSH、生产或其他项目，不读取或输出秘密扫描内容，不提交或发布。`
+- `risks`: `秘密扫描退出码仍为 1；由于安全地抑制了扫描器原始输出，无法在本轮定位或排除命中，不能将该门禁标记为通过。`
+- `implementation_scope`: `仅修复 project-ledger.md 文件尾空行，并追加 progress.md 与本文件的最终静态门禁结果；无业务代码、数据库或运行配置变化。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh >/dev/null 2>&1; git status --short --branch; curl bounded HTTP probes for backend readiness, frontend login, and proxied local-login capability; lsof listener ownership; system date.`
+- `result`: `Before this final ledger append, diff check, boundary check, acceptance validator and status inspection exited 0; secret scan exited 1 with output suppressed. Backend readiness, frontend login page and local-login capability proxy each returned HTTP 200. Backend PID 88662 and Vite PID 88963 listen on this checkout's 9527/9528. No login POST was sent and no persistent test session was created. Reusable evidence is the focused auth/OpenAPI and frontend auth tests recorded in /002; evidence is local-only and does not establish production or MFA-provider acceptance.`
+- `exit_code`: `pre-append final gates 0/0/0/1/0; HTTP readiness/login/capability 200/200/200; listener/status inspection 0.`
+- `evidence`: `Command exit codes, HTTP status codes, loopback ports and PIDs only; secret scan output, credentials, cookies, session values and cloud identifiers were not recorded.`
+- `status`: `failed` (secret-scan gate unresolved; implementation-focused local tests and other listed gates passed)
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca with this uncommitted implementation and preserved user modification in docs/cloud-test-authorization.md.`
+- `rollback_ref`: `Revert only this run's identity/config/API/schema/frontend/test edits and audit additions; preserve unrelated user changes. No database, session, credential, cloud, container or production rollback applies.`
+- `time_logic`: `Execution timestamp Asia/Shanghai UTC+08:00; no authentication TTL, challenge boundary, session expiry, or business time rule changed.`
+
+### 2026-10-31T13:42:02+08:00 — xray-local-one-click-login-20261031-01 security regression and final checks
+
+- `event_id`: `xray-local-one-click-login-20261031-01/004`
+- `run_id`: `xray-local-one-click-login-20261031-01`
+- `timestamp`: `2026-10-31T13:42:02+08:00`
+- `actor`: `Codex`
+- `event_type`: `security_regression_and_final_checks`
+- `path_scope`: `backend/tests/test_auth_api.py; docs/project-ledger.md; docs/progress.md; current X-ray local runtime and changed worktree`
+- `operation`: `增加伪造 X-Forwarded-For 的 loopback 拒绝回归并重跑认证/API测试、静态边界和本地页面健康探测`
+- `reason`: `只读后端复审建议明确锁定不信任 X-Forwarded-For 的安全属性；完成该回归后更新最终证据。`
+- `authorization`: `用户明确要求本地一键登录；此变更只增强该功能的认证测试并记录验证结果。`
+- `assumptions`: `本地 pytest 只继承当前 X-ray Django 测试进程中专用测试数据库、Redis、环境类型和功能开关；不加载或显示其它云/管理员凭据。`
+- `exclusions`: `不对本地登录 API 发送 POST，不创建持久会话，不操作数据库数据、AWS/SWAS、SSH、云资源、生产、其它项目或用户已有文档修改。`
+- `risks`: `当前部署路径复审未见阻断；若未来以 XRAY_ENV=test 经通用反向代理对外服务，必须确保代理拒绝 Host localhost，或关闭该开关。秘密扫描退出 1 且被抑制，扫描命中未排查；Ruff 工具不可用。`
+- `implementation_scope`: `在非回环 REMOTE_ADDR 的状态与登录请求测试中附带伪造 HTTP_X_FORWARDED_FOR=127.0.0.1；只追加本次最终进度/台账记录。`
+- `command_or_tool`: `Initial direct pytest without test environment exited 1 because XRAY_TEST_DATABASE_URL was absent. Read only approved test variable names and values in memory from current Django PID 88662 without echoing; focused pytest then passed. Ruff binary check exited 127; offline uv --with ruff exited 1 because the package was not cached and network was disabled. Ran git diff --check, check-boundary.sh, validate-acceptance.py, check-secrets.sh with output suppressed, loopback readiness/login/capability probes, and git status.`
+- `result`: `Backend auth/OpenAPI focused suite passed (16 tests), including the spoofed forwarding-header regression; the independent read-only security review found no blocker in supported local/production paths. Diff, boundary and acceptance checks passed; local backend readiness, login page and proxied capability each returned HTTP 200. Ruff was unavailable (127 / offline dependency not cached). Secret scan exited 1 with output suppressed and remains unresolved. Runtime login POST, production, real MFA provider and cloud acceptance were not performed.`
+- `exit_code`: `first pytest attempt 1 (required dedicated DB env absent); corrected focused pytest 0 (16 passed); Ruff 127 and offline Ruff 1; diff/boundary/acceptance 0/0/0; secret scan 1; HTTP 200/200/200; status 0.`
+- `evidence`: `Test summary, tool exit codes, HTTP status codes, local PIDs/ports only; no environment values, scan output, cookies, session values or cloud identifiers recorded.`
+- `status`: `failed` (secret-scan unresolved and Ruff unavailable; functional focused tests and other listed gates passed)
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; implementation remains uncommitted; pre-existing user modification in docs/cloud-test-authorization.md preserved.`
+- `rollback_ref`: `Revert only this run's identity/config/API/schema/frontend/test edits and audit additions; preserve unrelated user changes. No database, session, credential, cloud, container or production rollback applies.`
+- `time_logic`: `Execution timestamp Asia/Shanghai UTC+08:00; no authentication TTL, challenge expiry, session expiry or business time rule changed.`
+
+### 2026-10-31T14:45:12+08:00 — xray-local-provider-config-reload-20261031-01 definition
+
+- `event_id`: `xray-local-provider-config-reload-20261031-01/001`
+- `run_id`: `xray-local-provider-config-reload-20261031-01`
+- `timestamp`: `2026-10-31T14:45:12+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `root ignored .env boolean XRAY_ENABLE_PROVIDER_NETWORK only; X-ray backend PID 88662 at 127.0.0.1:9527; current repository cwd; frontend Vite PID 88963 at 127.0.0.1:9528; docs/project-ledger.md and docs/progress.md`
+- `operation`: `修复当前 X-ray 后端未继承已开启的本地云账号身份校验配置；仅重启已确认归属本仓库的后端服务并保持原端口`
+- `reason`: `用户提供“本地环境默认禁止云网络调用”截图；该错误来自后端进程开关缺失，不是需改变的源代码默认安全门禁。`
+- `authorization`: `延续用户此前明确要求移除本地云账号校验限制并授权本地网络开关/后端重载的请求；本轮截图表明同一问题再次出现。授权范围仅是本地输入凭据身份校验开关和当前项目后端重载。`
+- `assumptions`: `root .env 的 XRAY_ENABLE_PROVIDER_NETWORK 已启用且文件保持 ignored；当前 PID 88662 是独立运行的本仓库 config.settings.test Django，拥有 9527，父进程 1；Vite PID 88963 仍代理到 9527。`
+- `exclusions`: `不读取/输入云凭据，不请求 AWS/阿里云 STS，不创建或修改云账号数据库记录，不执行云资源读写、SSH、生产、部署、其他进程/容器或浏览器状态操作；不修改 .env 值、源代码、版本、标签或提交。`
+- `risks`: `后端短暂不可用；启用后用户随后提交凭据会触发外部 AWS/阿里云 STS 身份读取，但本轮不执行该请求。实例创建/删除仍由独立云操作授权控制。`
+- `implementation_scope`: `从当前后端进程内存中只传递 XRAY_ENV、XRAY_TEST_DATABASE_URL、XRAY_REDIS_URL、DJANGO_SETTINGS_MODULE 等运行所需的测试设置，并显式加载已在 root .env 确认开启的 XRAY_ENABLE_PROVIDER_NETWORK；终止并重启 PID 88662 于同一端口 9527；保留 Vite 88963、现有 DB/Redis 和所有其他进程。`
+- `command_or_tool`: `Read-only: exact registry/service flow, development and cloud-capability docs, git status/diff, narrow boolean-only .env parse, file mode/ignore, ps/lsof/cwd/process-group and selected environment-name presence. Before restart: append this scope definition. Planned runtime checks: new PID owns 9527 and has provider flag enabled (boolean only); /health/ready, frontend login, and proxied capability return HTTP 200; confirm 9528 owner unchanged. Do not call provider_for_input or any SDK.`
+- `result`: `Confirmed `provider_for_input` checks XRAY_ENABLE_PROVIDER_NETWORK with default disabled; create/rotate/revalidate then call provider validate_credentials (real STS identity reads when user supplies credentials), using DenyWrites. Root .env boolean is enabled, mode 0600, ignored; active backend PID 88662 did not have this variable. PID is standalone with cwd at this repository and owns 9527; Vite PID 88963 owns 9528. No code, config, account, database, session, provider SDK or cloud state has changed before this event.`
+- `exit_code`: `read-only source/config/process probes 0; no service restart or cloud request executed yet.`
+- `evidence`: `Only setting-enabled boolean, variable-presence booleans, file mode/ignore, process IDs/ports/cwd and source review recorded; no .env contents or credential values emitted.`
+- `status`: `definition complete; local backend reload pending; real STS identity request and cloud/production operations excluded.`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; preserve all existing dirty files, especially user modification in docs/cloud-test-authorization.md.`
+- `rollback_ref`: `If replacement backend fails, restore only PID 88662's prior environment with XRAY_ENABLE_PROVIDER_NETWORK absent/disabled on 9527. No database, Vite, Redis/PostgreSQL container, credential, account, cloud or production rollback applies.`
+- `time_logic`: `Definition at 2026-10-31T14:45:12+08:00. No business clock, TTL, credential expiry or operation retry rule changes.`
+
+### 2026-10-31T14:58:57+08:00 — xray-gate-visibility-20261031-01 definition
+
+- `event_id`: `xray-gate-visibility-20261031-01/001`
+- `run_id`: `xray-gate-visibility-20261031-01`
+- `timestamp`: `2026-10-31T14:58:57+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `backend/providers/registry.py; backend/apps/identity/{models.py,views.py,urls.py,migrations/*}; backend/config/openapi.py; backend/openapi/schema.yaml; backend/tests; frontend/apps/web-antd/src/{api/resources.ts,api/generated/schema.ts,views/system/*}; frontend system-view tests; docs/project-ledger.md; docs/progress.md`
+- `operation`: `全项目分类盘点门禁；将可运营的云账号身份校验联网策略暴露为系统设置页可查看、可调整的服务端配置，并保留服务端对该配置的权威执行。`
+- `reason`: `用户要求全项目查找隐藏门禁并使门禁由前端管理；此前截图对应的 XRAY_ENABLE_PROVIDER_NETWORK 是前端不可见的运行配置。`
+- `authorization`: `用户明确要求全部门禁可配置、前端控制；允许本地应用和专用测试库代码验证。`
+- `assumptions`: `地区额度、订阅套餐和订阅策略已有前端管理；provider identity network gate 仅影响云账号凭据身份验证所需的外部只读请求，不授权云资源写入。现有环境变量继续作为首次/未覆盖时默认值。`
+- `exclusions`: `不取消登录/MFA/session/CSRF/step-up、危险操作预览、云写授权、恢复安全屏障、production isolation 等后端安全不变量；不调用 AWS/阿里云、输入凭据、创建/修改真实云账号、执行云写入、SSH、生产发布或删除资源；不触碰现有用户一键登录及 cloud-test-authorization 修改。`
+- `risks`: `数据库覆盖值启用后，之后由用户发起的云账号新增/轮换/重验会进行外部身份读取；配置变更本身不触发 provider 请求。新表迁移需在专用测试库验证。`
+- `implementation_scope`: `新增 singleton runtime setting 与管理员 GET/PATCH API、变更审计、OpenAPI/schema 更新及系统页配置控件和测试；添加门禁分类审计依据；不新增安全控制绕过。`
+- `command_or_tool`: `读取 AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、台账、进度、git 状态/差异及身份、系统设置、provider、节点、订阅实现；复用 frontend/backend 审计结论；使用 apply_patch、focused backend/frontend tests、schema validation/generation、diff/boundary/acceptance/secret checks。`
+- `result`: `定义已登记，实施和验证待进行。运行只读复核确认 PID 93484/9527、Vite PID 88963/9528，/health/ready、/login、local-login capability proxy 返回 HTTP 200，provider flag 当前布尔值为启用；未请求任何 provider 或云 API。/health 返回 404，未作为健康结论。`
+- `exit_code`: `源码/指令/状态读取 0；运行只读检查 0；代码测试和静态门禁尚未运行。`
+- `evidence`: `记录仓库分支 main、HEAD 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca、已有用户改动清单、代码路径、PID/端口和 HTTP 状态码；未输出环境值、凭据、Cookie 或秘密扫描内容。`
+- `status`: `definition complete; implementation pending; no security backend enforcement removal authorized for this safe scope.`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca; preserve all existing dirty files, especially one-click-login changes and docs/cloud-test-authorization.md.`
+- `rollback_ref`: `Revert only scoped new model/API/provider/frontend/schema/tests and this run's documentation additions; if the local test DB migration is applied, reverse only the new configuration table after verifying it contains no user policy state. No provider, cloud, account, credential, session, other process, or production rollback.`
+- `time_logic`: `Definition timestamp uses Asia/Shanghai UTC+08:00. The boolean setting has no TTL; database override remains effective until changed, otherwise current environment default is read. No authentication expiry or operation timing changes.`
+
+### 2026-10-31T15:01:21+08:00 — xray-local-provider-config-reload-20261031-01 runtime validation
+
+- `event_id`: `xray-local-provider-config-reload-20261031-01/002`
+- `run_id`: `xray-local-provider-config-reload-20261031-01`
+- `timestamp`: `2026-10-31T15:01:21+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_validation`
+- `path_scope`: `root ignored .env provider-network boolean only; X-ray backend PID 93484 at 127.0.0.1:9527; current repository frontend PID 88963 at 127.0.0.1:9528; docs/project-ledger.md; docs/progress.md`
+- `operation`: `核实当前后端进程已加载既有云账号身份校验联网开关，并验证本地 readiness、前端登录页和 Vite API 代理可达`
+- `reason`: `完成 /001 登记的本地后端重载后，补充可复现的进程与 HTTP 状态证据。`
+- `authorization`: `用户先前授权的本地配置重载；本事件仅记录已完成的本地只读复核。`
+- `assumptions`: `9527/9528 仍属于本仓库运行的 Django/Vite；仅将 XRAY_ENABLE_PROVIDER_NETWORK 的当前进程环境布尔状态记录为 enabled，不记录变量值。`
+- `exclusions`: `未读取或输出 .env 内容、云凭据、Cookie 或秘密；未调用 provider_for_input 或任何 SDK；未发起 AWS/阿里云身份请求、云资源读写、SSH、数据库写入、生产操作或发布。`
+- `risks`: `用户后续提交云账号凭据时，启用身份校验会发起对应 provider 的外部只读身份请求；本次仅验证配置与本地 HTTP 可达性。`
+- `implementation_scope`: `只读检查 PID/监听端口及 provider toggle 的布尔状态；通过 loopback 对 /health/ready、/login、/api/v1/auth/local-login/status 发起 bounded GET；无代码、配置或进程变化。`
+- `command_or_tool`: `ps -p 93484; boolean-only parse of ps eww -p 93484 for XRAY_ENABLE_PROVIDER_NETWORK=1; lsof -nP for TCP listeners 9527/9528; curl --noproxy '*' --max-time 4 against http://127.0.0.1:9527/health/ready, http://127.0.0.1:9528/login, and http://127.0.0.1:9528/api/v1/auth/local-login/status; system clock.`
+- `result`: `Backend PID 93484 owns 127.0.0.1:9527 and has XRAY_ENABLE_PROVIDER_NETWORK enabled; Vite PID 88963 owns 127.0.0.1:9528. /health/ready, /login, and the proxied local-login capability endpoint each returned HTTP 200. /health returned HTTP 404 in the separate probe and is not used as readiness evidence; readiness is established only by /health/ready. No provider or cloud API was called.`
+- `exit_code`: `process/environment boolean inspection 0; listener inspection 0; bounded HTTP probes returned command exit 0 and status 200/200/200.`
+- `evidence`: `Only PID, loopback port, one boolean setting state, endpoint paths, HTTP codes, and process ownership recorded; no environment values, credentials, cookies, account identifiers, or secret-bearing output.`
+- `status`: `local configuration reload and runtime reachability verified; provider identity call, cloud operation, production and browser acceptance not-run.`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca with existing user and task modifications preserved.`
+- `rollback_ref`: `Documentation-only evidence append; no application, runtime configuration, database, provider, account, cloud, or production rollback applies.`
+- `time_logic`: `Observed at 2026-10-31T15:01:21+08:00. HTTP probes used a four-second maximum timeout; no business time, TTL, or retry behavior changed.`
+
+### 2026-10-31T15:58:11+08:00 — xray-gate-visibility-20261031-01 implementation and 0.10.0 pre-release validation
+
+- `event_id`: `xray-gate-visibility-20261031-01/002`
+- `run_id`: `xray-gate-visibility-20261031-01`
+- `timestamp`: `2026-10-31T15:58:11+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation_and_validation`
+- `path_scope`: `backend/apps/identity/{models.py,gate_settings.py,views.py,urls.py,migrations/0004*}; backend/apps/nodes/{quota.py,serializers.py,views.py}; backend/config/{openapi.py,settings/base.py,settings/production.py,settings/test.py}; backend/providers/registry.py; backend/openapi/schema.yaml; backend/pyproject.toml; backend/uv.lock; frontend API/views/tests/package metadata; installer/docs/VERSION/CHANGELOG/tests/acceptance/matrix.json; .gitleaksignore; docs/progress.md; docs/project-ledger.md`
+- `operation`: `实现运营门禁的前端可见配置、同步 0.10.0 版本元数据，并完成本地发布前验证`
+- `reason`: `用户要求全项目排查隐藏门禁、让运营门禁在前端可控并发布版本；同时遵守 X-ray 安全边界，未把认证和云写入安全不变量改成浏览器可绕过开关。`
+- `authorization`: `用户此前明确授权发布版本；本事件仅使用本地专用 PostgreSQL/Redis、Fake/Stub provider、GitHub 发布准备和本地静态/单元门禁，不执行真实云、SSH、生产或资源删除。`
+- `assumptions`: `当前 main 工作树中除本事件范围外的用户修改，尤其 docs/cloud-test-authorization.md，保持原样且不纳入相干提交；版本目标为 0.10.0，回退基线为 v0.9.0。`
+- `exclusions`: `不读取或写入 Shop、vue-shop-admin、shop-xray-installer 或 archive 运行时材料；不调用 AWS/SWAS/STS，不创建、启停、重启、删除实例，不释放静态 IP，不发布生产镜像。`
+- `implementation_scope`: `数据库单例配置 provider_identity_network；节点池 allow_create 显式读写；云账号启停；创建页展示账号/额度/provider 能力原因；系统页配置云身份联网；OpenAPI/TypeScript 生成；版本和安装器引用切换到 0.10.0。`
+- `command_or_tool`: `uv run pytest (dedicated PostgreSQL/Redis); pnpm test:unit/typecheck/lint/build/generate:api; manage.py check/makemigrations --check/spectacular --validate; cmp generated schema; uvx offline Ruff on changed scope; installer focused pytest; uv lock --check; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; apply_patch. Initial installer pytest without approved test env exited 1 during collection and was rerun with the dedicated test stack.`
+- `result`: `Backend full suite 329 passed, 7 skipped; frontend 17 files/71 tests passed; frontend typecheck/lint/build passed; Django check and migration drift passed; OpenAPI temporary generation matched checked-in schema; TypeScript generation completed; changed-scope Ruff passed; installer tests 3 passed/1 Linux runtime skip; uv lock, boundary, acceptance and diff passed; Gitleaks now passed with no leaks after replacing a false-positive ledger phrase and adding two exact historical fingerprints to .gitleaksignore. Full repository Ruff still reports 22 pre-existing findings in untouched files and was not broadened.`
+- `exit_code`: `backend 0; frontend 0/0/0/0; check/migration/schema/cmp/generate 0; changed-scope Ruff 0; installer 0; lock/boundary/acceptance/diff/secret 0; first installer collection attempt 1, superseded by corrected run.`
+- `evidence`: `Local command output, generated schema comparison, test summaries, validator output and redacted secret-scan summary; no credentials, cookies, tokens, raw URIs, cloud identifiers or environment values recorded.`
+- `status`: `passed for local implementation and pre-release gates; external/cloud/SSH/production/device acceptance not-run.`
+- `commit_or_tree`: `main at 5cf2e68da78a4e9a53b63b2d12a5e4abc1421dca plus uncommitted scoped changes; docs/cloud-test-authorization.md remains a preserved unrelated user modification.`
+- `rollback_ref`: `Application rollback to v0.9.0 or git revert of the 0.10.0 implementation commit; do not reverse migrations or restore revoked credentials, Token tombstones, security events or cloud state.`
+- `time_logic`: `Recorded at 2026-10-31T15:58:11+08:00. No authentication TTL, MFA challenge expiry, session expiry, provider operation timeout or business time boundary changed.`

@@ -182,8 +182,9 @@ describe('server management', () => {
 
   it('creates a server from account and region without a pool field', async () => {
     mockNodes([]);
+    const disabledAccount = { ...account, id: 'account-disabled', name: '停用账号', enabled: false };
     vi.spyOn(resourcesApi, 'cloudAccounts').mockResolvedValue({
-      items: [account], total: 1, page: 1, page_size: 20,
+      items: [account, disabledAccount], total: 2, page: 1, page_size: 20,
     });
     vi.spyOn(resourcesApi, 'capabilities').mockResolvedValue({
       items: [
@@ -201,6 +202,7 @@ describe('server management', () => {
     vi.spyOn(resourcesApi, 'nodePools').mockResolvedValue({
       items: [{
         id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 5,
+        allow_create: true,
         used: 2, available: 3,
         regions: ['ap-southeast-1', 'ap-northeast-1', 'us-east-1'],
         allocations: [
@@ -227,14 +229,19 @@ describe('server management', () => {
       expect(dialog.text()).not.toContain('节点池');
       const state = (wrapper.vm.$ as unknown as { setupState: {
         accountChanged: (id: string) => Promise<void>;
+        accountOptions: { label: string; value: string; disabled: boolean }[];
         form: { account_id: string; image_id: string; plan_id: string; region: string };
-        regionOptions: { label: string; value: string; disabled: boolean }[];
+        regionOptions: { label: string; value: string; disabled: boolean; reason: string }[];
       } }).setupState;
+      expect(state.accountOptions).toContainEqual({
+        label: '停用账号（已停用）', value: 'account-disabled', disabled: true,
+      });
       state.form.account_id = 'account-1';
       await state.accountChanged('account-1');
       expect(state.regionOptions).toEqual([
-        { label: 'ap-southeast-1（可用 0）', value: 'ap-southeast-1', disabled: true },
-        { label: 'ap-northeast-1（可用 1）', value: 'ap-northeast-1', disabled: false },
+        { label: 'ap-southeast-1（额度已用完）', value: 'ap-southeast-1', disabled: true, reason: '额度已用完' },
+        { label: 'ap-northeast-1（可用 1）', value: 'ap-northeast-1', disabled: false, reason: '' },
+        { label: 'us-east-1（能力未验证）', value: 'us-east-1', disabled: true, reason: '能力未验证' },
       ]);
       await dialog.get('[aria-label="套餐 ID"]').setValue('nano_3_0');
       await dialog.get('[aria-label="镜像 ID"]').setValue('ubuntu_24_04');
@@ -243,7 +250,7 @@ describe('server management', () => {
       await dialog.findAll('button').find((button) => button.text().includes('提交创建操作'))!.trigger('click');
       await flushPromises();
       expect(createNode).not.toHaveBeenCalled();
-      expect(dialog.text()).toContain('所选地区未分配或已无可用额度');
+      expect(dialog.text()).toContain('ap-southeast-1 暂不可创建：额度已用完');
 
       state.form.region = 'us-east-1';
       await dialog.findAll('button').find((button) => button.text().includes('提交创建操作'))!.trigger('click');
@@ -261,6 +268,36 @@ describe('server management', () => {
         image_id: 'ubuntu_24_04',
       }, '00000000-0000-4000-8000-000000000001');
       expect(router.currentRoute.value.fullPath).toBe('/operations/create-operation');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('explains and blocks creation when the region configuration disables it', async () => {
+    mockNodes([]);
+    vi.spyOn(resourcesApi, 'cloudAccounts').mockResolvedValue({
+      items: [account], total: 1, page: 1, page_size: 20,
+    });
+    vi.spyOn(resourcesApi, 'nodePools').mockResolvedValue({
+      items: [{
+        id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 1,
+        allow_create: false, used: 0, available: 1,
+        allocations: [{ region: 'ap-southeast-1', quota: 1, used: 0, available: 1 }],
+      }], total: 1, page: 1, page_size: 20,
+    });
+    const createNode = vi.spyOn(resourcesApi, 'createNode');
+    const { wrapper } = mountNodes();
+
+    try {
+      await flushPromises();
+      await wrapper.findAll('button').find((button) => button.text().includes('创建服务器'))!.trigger('click');
+      await flushPromises();
+      const dialog = new DOMWrapper([...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')]
+        .find((item) => item.style.display !== 'none')!);
+      expect(dialog.text()).toContain('已禁止创建新服务器');
+      expect(dialog.text()).toContain('打开地区设置');
+      expect(dialog.findAll('button').find((button) => button.text().includes('提交创建操作'))!.element.hasAttribute('disabled')).toBe(true);
+      expect(createNode).not.toHaveBeenCalled();
     } finally {
       wrapper.unmount();
     }

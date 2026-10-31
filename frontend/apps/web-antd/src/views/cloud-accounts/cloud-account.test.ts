@@ -13,6 +13,35 @@ function inputFor(dialog: DOMWrapper<Element>, labelText: string) {
 }
 
 describe('cloud account form with real Ant components', () => {
+  it('lets the administrator enable or disable a cloud account from the list', async () => {
+    const account = {
+      id: 'account-1', name: '测试账号', provider: 'aws_lightsail',
+      external_account_id: 'external-1', credential_version: 1,
+      enabled: true, validated_at: null, last_validation_code: 'OK',
+    } as const;
+    vi.spyOn(resourcesApi, 'cloudAccounts').mockResolvedValue({
+      items: [account], total: 1, page: 1, page_size: 20,
+    });
+    const updateAccount = vi.spyOn(resourcesApi, 'updateCloudAccount').mockResolvedValue({
+      ...account, enabled: false,
+    });
+    const wrapper = mount(CloudAccounts, {
+      attachTo: document.body,
+      global: { stubs: { transition: false, 'transition-group': false } },
+    });
+
+    try {
+      await flushPromises();
+      const toggle = wrapper.get('[role="switch"][aria-label="停用 测试账号"]');
+      await toggle.trigger('click');
+      await vi.waitFor(() => expect(updateAccount).toHaveBeenCalledWith('account-1', { enabled: false }));
+      await flushPromises();
+      expect(wrapper.get('[role="switch"][aria-label="启用 测试账号"]').attributes('aria-checked')).toBe('false');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('keeps the Singapore default, validates credentials and submits an empty region before clearing a failed request', async () => {
     vi.spyOn(resourcesApi, 'cloudAccounts').mockResolvedValue({
       items: [], total: 0, page: 1, page_size: 20,

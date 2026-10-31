@@ -55,6 +55,12 @@ export const useSessionStore = defineStore('session', {
         this.loading = false;
       }
     },
+    async localOneClickLogin() {
+      this.clearSensitive();
+      const authenticated = await authApi.localLogin();
+      this.applySession(authenticated);
+      return authenticated;
+    },
     async passwordLogin(username: string, password: string): Promise<LoginChallenge> {
       this.clearSensitive();
       const challenge = await authApi.login(username, password);

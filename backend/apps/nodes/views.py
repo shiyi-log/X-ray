@@ -12,7 +12,7 @@ from common.errors import DomainError
 from common.regions import normalize_region
 
 from .models import ManagedNode, NodePool
-from .quota import reserve_node, set_allocations, set_quota
+from .quota import reserve_node, set_allocations, set_allow_create, set_quota
 from .serializers import node_pool_representation, node_representation, with_node_traffic
 
 
@@ -55,6 +55,9 @@ def pool_collection(request):
             request, NodePool.objects.filter(singleton_key=1), node_pool_representation
         )
     payload = json_payload(request)
+    allow_create = payload.get("allow_create", True)
+    if not isinstance(allow_create, bool):
+        raise ValueError("allow_create must be a boolean")
     raw_allocations = payload.get("allocations")
     if raw_allocations is None:
         region = normalize_region(payload.get("region"))
@@ -78,9 +81,12 @@ def pool_collection(request):
                 name="IP",
                 region=normalize_region(allocations[0].get("region")),
                 quota=sum(int(item.get("quota", 0)) for item in allocations),
+                allow_create=allow_create,
             )
             created = True
         set_allocations(pool.pk, allocations)
+        if "allow_create" in payload and not created:
+            set_allow_create(pool.pk, allow_create)
     pool.refresh_from_db()
     return JsonResponse(node_pool_representation(pool), status=201 if created else 200)
 
@@ -91,9 +97,11 @@ def pool_detail(request, pool_id):
     if request.method == "GET":
         return JsonResponse(node_pool_representation(pool))
     payload = json_payload(request)
-    unknown = set(payload) - {"region", "quota", "allocations"}
+    unknown = set(payload) - {"region", "quota", "allocations", "allow_create"}
     if unknown:
         raise ValueError(f"unsupported fields: {sorted(unknown)}")
+    if "allow_create" in payload and not isinstance(payload["allow_create"], bool):
+        raise ValueError("allow_create must be a boolean")
     if "allocations" in payload:
         pool = set_allocations(pool.pk, payload["allocations"])
     elif "quota" in payload:
@@ -116,6 +124,8 @@ def pool_detail(request, pool_id):
             )
         set_allocations(pool.pk, [{"region": region, "quota": current_quota}])
         pool.refresh_from_db()
+    if "allow_create" in payload:
+        pool = set_allow_create(pool.pk, payload["allow_create"])
     pool.refresh_from_db()
     return JsonResponse(node_pool_representation(pool))
 

@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import secrets
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from functools import wraps
+from urllib.parse import urlsplit
 
 import pyotp
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
+from django.core.exceptions import DisallowedHost
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils import timezone
@@ -24,6 +27,22 @@ from .models import AdminSession, MFAChallenge, SuperAdmin
 def request_ip(request) -> str | None:
     """Use the socket peer; proxy headers are not trusted by the app."""
     return request.META.get("REMOTE_ADDR") or None
+
+
+def local_one_click_login_enabled(request) -> bool:
+    if getattr(settings, "XRAY_ENV", "") != "test" or not getattr(
+        settings, "XRAY_LOCAL_ONE_CLICK_LOGIN", False
+    ):
+        return False
+    try:
+        peer = ipaddress.ip_address(request_ip(request) or "")
+        host = urlsplit(f"//{request.get_host()}").hostname or ""
+        host_is_loopback = host.lower() == "localhost" or ipaddress.ip_address(
+            host
+        ).is_loopback
+    except (ValueError, DisallowedHost):
+        return False
+    return peer.is_loopback and host_is_loopback
 
 
 def _user_agent_hash(request) -> str:
@@ -180,7 +199,7 @@ def _consume_recovery_code(admin: SuperAdmin, supplied: str) -> bool:
 def _start_session(
     request,
     admin: SuperAdmin,
-    challenge: MFAChallenge,
+    challenge: MFAChallenge | None,
     *,
     recovery_codes: list[str] | None = None,
 ) -> dict:
@@ -191,15 +210,19 @@ def _start_session(
     request.session["session_version"] = admin.session_version
     request.session["auth_at"] = now.isoformat()
     request.session["absolute_expires_at"] = absolute.isoformat()
-    request.session["recent_auth_until"] = (
-        now + timedelta(seconds=settings.AUTH_STEP_UP_SECONDS)
-    ).isoformat()
+    if challenge is None:
+        request.session.pop("recent_auth_until", None)
+    else:
+        request.session["recent_auth_until"] = (
+            now + timedelta(seconds=settings.AUTH_STEP_UP_SECONDS)
+        ).isoformat()
     request.session.pop("mfa_challenge_id", None)
     request.session.pop("pending_totp_envelope", None)
     request.session.pop("xray_challenge_binding", None)
     request.session.set_expiry(settings.AUTH_SESSION_IDLE_SECONDS)
-    challenge.used_at = now
-    challenge.save(update_fields=["used_at"])
+    if challenge is not None:
+        challenge.used_at = now
+        challenge.save(update_fields=["used_at"])
     AdminSession.objects.create(
         admin=admin,
         session_key_hash=hashlib.sha256(
@@ -208,7 +231,7 @@ def _start_session(
         expires_at=now + timedelta(seconds=settings.AUTH_SESSION_IDLE_SECONDS),
         absolute_expires_at=absolute,
         session_version=admin.session_version,
-        last_step_up_at=now,
+        last_step_up_at=now if challenge is not None else None,
         source_ip=request_ip(request),
         user_agent_hash=_user_agent_hash(request),
     )
@@ -216,10 +239,31 @@ def _start_session(
         "authenticated": True,
         "admin": {"username": admin.username},
         "expires_at": absolute.isoformat(),
+        "mfa_required": False,
+        "recent_auth_until": request.session.get("recent_auth_until"),
     }
     if recovery_codes is not None:
         response["recovery_codes"] = recovery_codes
     return response
+
+
+def local_one_click_login(request) -> dict:
+    if not local_one_click_login_enabled(request):
+        raise DomainError(
+            "LOCAL_LOGIN_UNAVAILABLE", "本地一键登录不可用", status_code=404
+        )
+    return _create_local_one_click_session(request)
+
+
+@transaction.atomic
+def _create_local_one_click_session(request) -> dict:
+    try:
+        admin = SuperAdmin.objects.select_for_update().get(is_active=True)
+    except SuperAdmin.DoesNotExist as exc:
+        raise DomainError("AUTH_UNAVAILABLE", "管理员账号不可用", status_code=503) from exc
+    if admin.locked_until and admin.locked_until > timezone.now():
+        raise DomainError("AUTH_UNAVAILABLE", "管理员账号暂不可用", status_code=503)
+    return _start_session(request, admin, None)
 
 
 @transaction.atomic

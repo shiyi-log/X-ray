@@ -11,6 +11,11 @@ from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
+from apps.identity.gate_settings import (
+    provider_identity_network_setting,
+    set_provider_identity_network_enabled,
+)
+from common.admin_api import admin_endpoint, json_payload
 from common.crypto import configured_secret_store
 from common.errors import DomainError
 
@@ -18,6 +23,8 @@ from .services import (
     complete_recovery,
     complete_totp,
     complete_totp_setup,
+    local_one_click_login,
+    local_one_click_login_enabled,
     password_login,
     require_admin,
     require_recent_step_up,
@@ -65,6 +72,18 @@ def _run(fn):
 @require_GET
 def csrf(request):
     return JsonResponse({"csrf_token": get_token(request)})
+
+
+@require_GET
+def local_login_status(request):
+    return JsonResponse({"enabled": local_one_click_login_enabled(request)})
+
+
+@csrf_protect
+@require_POST
+@_run
+def local_login(request):
+    return JsonResponse(local_one_click_login(request))
 
 
 @csrf_protect
@@ -196,9 +215,17 @@ def change_password(request):
     return JsonResponse({"authenticated": False})
 
 
-@require_GET
-@require_admin
+@admin_endpoint("GET", "PATCH")
 def system(request):
+    if request.method == "PATCH":
+        payload = json_payload(request)
+        if set(payload) != {"provider_identity_network_enabled"}:
+            raise ValueError("provider_identity_network_enabled is required")
+        enabled = payload["provider_identity_network_enabled"]
+        if not isinstance(enabled, bool):
+            raise ValueError("provider_identity_network_enabled must be a boolean")
+        set_provider_identity_network_enabled(enabled=enabled, actor=request.xray_admin)
+
     return JsonResponse(
         {
             "version": open(settings.BASE_DIR.parent / "VERSION", encoding="utf-8").read().strip()
@@ -208,5 +235,6 @@ def system(request):
             "debug": bool(settings.DEBUG),
             "allowed_hosts": list(settings.ALLOWED_HOSTS),
             "csrf_trusted_origins": list(settings.CSRF_TRUSTED_ORIGINS),
+            "provider_identity_network": provider_identity_network_setting(),
         }
     )

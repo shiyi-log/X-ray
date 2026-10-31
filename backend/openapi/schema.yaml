@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: X-ray Manager API
-  version: 0.9.0
+  version: 0.10.0
   description: Private administrator API. Secrets are write-only or delivered once.
 paths:
   /api/v1/auth/session:
@@ -28,6 +28,68 @@ paths:
                 $ref: '#/components/schemas/ApiError'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/v1/auth/local-login/status:
+    get:
+      operationId: auth_local_login_status_retrieve
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocalLoginCapability'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/v1/auth/local-login:
+    post:
+      operationId: auth_local_login_create
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminSession'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Local test login is unavailable
           content:
             application/json:
               schema:
@@ -131,6 +193,85 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/GenericObject'
+  /api/v1/cloud-accounts/{account_id}/:
+    get:
+      operationId: cloud_accounts_retrieve
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloudAccount'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: cloud_accounts_partial_update
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloudAccount'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CloudAccountPatch'
+      parameters:
+      - name: account_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
   /api/v1/node-pools/:
     get:
       operationId: node_pools_list
@@ -955,6 +1096,41 @@ paths:
                 $ref: '#/components/schemas/ApiError'
       security:
       - cookieAuth: []
+    patch:
+      operationId: system_partial_update
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfo'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemSettingsPatch'
   /api/v1/access-profiles/{profile_id}/:
     get:
       operationId: access_profiles_retrieve
@@ -1441,6 +1617,13 @@ components:
         expires_at:
           type: string
           format: date-time
+    LocalLoginCapability:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
     CloudAccount:
       type: object
       required:
@@ -1472,6 +1655,15 @@ components:
           nullable: true
         last_validation_code:
           type: string
+    CloudAccountPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        enabled:
+          type: boolean
+      minProperties: 1
     NodePool:
       type: object
       required:
@@ -1483,6 +1675,7 @@ components:
       - quota
       - used
       - available
+      - allow_create
       properties:
         id:
           type: string
@@ -1540,6 +1733,8 @@ components:
           type: integer
         available:
           type: integer
+        allow_create:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -1584,6 +1779,8 @@ components:
         quota:
           type: integer
           minimum: 1
+        allow_create:
+          type: boolean
       anyOf:
       - required:
         - allocations
@@ -1990,6 +2187,29 @@ components:
           type: array
           items:
             type: string
+        provider_identity_network:
+          $ref: '#/components/schemas/ProviderIdentityNetworkSetting'
+    ProviderIdentityNetworkSetting:
+      type: object
+      required:
+      - enabled
+      - source
+      properties:
+        enabled:
+          type: boolean
+        source:
+          type: string
+          enum:
+          - DATABASE
+          - ENVIRONMENT
+    SystemSettingsPatch:
+      type: object
+      required:
+      - provider_identity_network_enabled
+      additionalProperties: false
+      properties:
+        provider_identity_network_enabled:
+          type: boolean
     ActionPreview:
       type: object
       required:

@@ -114,12 +114,14 @@ def test_pool_migration_preserves_pause_and_only_used_quota(cloud_account):
         ) == {"us-east-1": 1}
 
         from apps.nodes.models import NodePool as CurrentNodePool
-        from apps.nodes.quota import set_allocations
+        from apps.nodes.quota import set_allocations, set_allow_create
 
-        reopened = set_allocations(
+        still_paused = set_allocations(
             CurrentNodePool.objects.get(pk=migrated.pk).pk,
             [{"region": "us-east-1", "quota": 2}],
         )
+        assert still_paused.allow_create is False
+        reopened = set_allow_create(still_paused.pk, True)
         assert reopened.allow_create is True
     finally:
         MigrationExecutor(connection).migrate(latest_targets)

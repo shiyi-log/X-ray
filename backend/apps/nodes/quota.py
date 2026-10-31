@@ -152,8 +152,7 @@ def set_quota(pool_id: UUID, quota: int) -> NodePool:
         allocation.save(update_fields=["quota", "updated_at"])
         pool.quota = quota
         pool.region = allocation.region
-        pool.allow_create = True
-        pool.save(update_fields=["quota", "region", "allow_create", "updated_at"])
+        pool.save(update_fields=["quota", "region", "updated_at"])
         return pool
 
 
@@ -221,6 +220,16 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
             pool.region_allocations.filter(region__in=stale_regions).delete()
         pool.quota = sum(quota for _region, quota in parsed)
         pool.region = parsed[0][0]
-        pool.allow_create = True
-        pool.save(update_fields=["quota", "region", "allow_create", "updated_at"])
+        pool.save(update_fields=["quota", "region", "updated_at"])
+        return pool
+
+
+def set_allow_create(pool_id: UUID, allow_create: bool) -> NodePool:
+    if not isinstance(allow_create, bool):
+        raise ValueError("allow_create must be a boolean")
+    with transaction.atomic():
+        pool = NodePool.objects.select_for_update().get(pk=pool_id)
+        if pool.allow_create != allow_create:
+            pool.allow_create = allow_create
+            pool.save(update_fields=["allow_create", "updated_at"])
         return pool

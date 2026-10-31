@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, inject, ref } from 'vue';
+import { computed, inject, onMounted, ref } from 'vue';
 
 import { AuthenticationLogin, z, type VbenFormSchema } from '@vben/common-ui';
 import { Alert, Button, Form, Input } from 'ant-design-vue';
 import { routerKey } from 'vue-router';
 
+import { authApi } from '@/api/auth';
 import { ApiError } from '@/api/request';
 import { useSessionStore } from '@/stores/session';
 
@@ -30,8 +31,20 @@ const formSchema: VbenFormSchema[] = [
 ];
 const code = ref('');
 const preferRecovery = ref(false);
+const localLoginEnabled = ref(false);
+const localLoginCapabilityLoaded = ref(false);
 const submitting = ref(false);
 const errorMessage = ref('');
+
+onMounted(async () => {
+  try {
+    localLoginEnabled.value = (await authApi.localLoginCapability()).enabled;
+  } catch {
+    localLoginEnabled.value = false;
+  } finally {
+    localLoginCapabilityLoaded.value = true;
+  }
+});
 
 const title = computed(() => {
   if (phase.value === 'setup') return '绑定身份验证器';
@@ -69,6 +82,20 @@ async function submitPassword(values: Record<string, unknown>) {
     showError(error);
   } finally {
     await loginForm.value?.getFormApi().setFieldValue('password', '');
+    submitting.value = false;
+  }
+}
+
+async function submitLocalLogin() {
+  if (submitting.value || !localLoginEnabled.value) return;
+  errorMessage.value = '';
+  submitting.value = true;
+  try {
+    await session.localOneClickLogin();
+    await finishAuthentication();
+  } catch (error) {
+    showError(error);
+  } finally {
     submitting.value = false;
   }
 }
@@ -154,7 +181,18 @@ async function acknowledgeRecoveryCodes() {
       </section>
     </template>
     <Button
-      v-if="phase !== 'setup' && phase !== 'recovery-codes'"
+      v-if="localLoginCapabilityLoaded && localLoginEnabled && phase !== 'setup' && phase !== 'recovery-codes'"
+      data-testid="local-one-click-login"
+      class="mt-4"
+      type="link"
+      block
+      :loading="submitting"
+      @click="submitLocalLogin"
+    >
+      本地一键登录
+    </Button>
+    <Button
+      v-else-if="localLoginCapabilityLoaded && !localLoginEnabled && phase !== 'setup' && phase !== 'recovery-codes'"
       data-testid="use-recovery"
       class="mt-4"
       type="link"

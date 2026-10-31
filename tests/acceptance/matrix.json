@@ -1,6 +1,6 @@
 {
-  "version": "0.9.0",
-  "generated_at": "2026-10-31T03:10:35+08:00",
+  "version": "0.10.0",
+  "generated_at": "2026-10-31T15:44:28+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -18,7 +18,7 @@
           "kind": "vitest",
           "command": "corepack pnpm@10.33.0 --dir frontend test:unit",
           "exit_code": 0,
-          "tests": 65,
+          "tests": 71,
           "failures": 0,
           "skipped": 0,
           "timeout_ms": 15000,
@@ -36,7 +36,7 @@
         {
           "kind": "pytest",
           "command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<dedicated test database> XRAY_REDIS_URL=<dedicated test Redis> uv run --project backend pytest -c backend/pyproject.toml -q",
-          "tests": 316,
+          "tests": 329,
           "failures": 0,
           "errors": 0,
           "skipped": 7,
@@ -57,28 +57,24 @@
         },
         {
           "kind": "release_package",
-          "command": "bash scripts/package-installer-release.sh 0.9.0; shasum -a 256 -c SHA256SUMS",
+          "command": "bash scripts/package-installer-release.sh 0.10.0; shasum -a 256 -c SHA256SUMS",
           "exit_code": 0,
-          "github_release": "v0.9.0",
+          "github_release": "v0.10.0",
           "assets": [
             "SHA256SUMS",
-            "xray-installer-0.9.0-manifest.json",
-            "xray-installer-0.9.0.tar.gz"
+            "xray-installer-0.10.0-manifest.json",
+            "xray-installer-0.10.0.tar.gz"
           ],
           "timestamp": "2026-10-31T03:03:47+08:00"
         },
         {
           "kind": "github_release",
-          "tag": "v0.9.0",
-          "commit": "583df4f739184b8af85737deacec93d3f75f624a",
-          "draft": false,
-          "exit_code": 0,
-          "timestamp": "2026-10-31T03:10:35+08:00",
-          "assets": [
-            {"name": "SHA256SUMS", "sha256": "eba228c936cd2871c6a6deeab4b75ff7efac527e080d524cef8ea4b899c55661"},
-            {"name": "xray-installer-0.9.0-manifest.json", "sha256": "bb05cc11f55163a69d7fa573956ab1938a3225a7143aaa4ce71812a2448b97bc"},
-            {"name": "xray-installer-0.9.0.tar.gz", "sha256": "1e0f3bfcd299652d4f9594f04ecdad63941e311976eb0fe2dc65d206ef3d4280"}
-          ]
+          "tag": "v0.10.0",
+          "commit": null,
+          "draft": null,
+          "exit_code": null,
+          "timestamp": null,
+          "assets": []
         },
         {
           "kind": "static_gates",

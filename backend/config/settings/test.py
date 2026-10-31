@@ -22,4 +22,7 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_NAME = "xray_test_session"
 CSRF_COOKIE_NAME = "xray_test_csrf"
 # Deliberately test-only; production settings force this to False.
-XRAY_DISABLE_TOTP = XRAY_ENV == "test" and env_bool("XRAY_DISABLE_TOTP", False)
+XRAY_DISABLE_TOTP = XRAY_ENV == "test" and env_bool("XRAY_DISABLE_TOTP", False)  # noqa: F405
+XRAY_LOCAL_ONE_CLICK_LOGIN = XRAY_ENV == "test" and env_bool(  # noqa: F405
+    "XRAY_LOCAL_ONE_CLICK_LOGIN", True
+)

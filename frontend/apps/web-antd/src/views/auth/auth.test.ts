@@ -16,6 +16,7 @@ async function mountLogin() {
   const wrapper = mount(LoginView, {
     global: { plugins: [createPinia(), router] },
   });
+  await flushPromises();
   return { wrapper, router };
 }
 
@@ -114,6 +115,53 @@ describe('安全登录', () => {
       'one-time-code',
     );
     expect(wrapper.find('[data-testid="totp-code"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('服务端开放本地能力时，一键登录建立会话并跳转', async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input);
+      if (path.endsWith('/csrf')) {
+        return new Response(JSON.stringify({ csrf_token: 'csrf' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (path.endsWith('/local-login/status')) {
+        return new Response(JSON.stringify({ enabled: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      if (path.endsWith('/local-login') && init?.method === 'POST') {
+        return new Response(
+          JSON.stringify({
+            authenticated: true,
+            mfa_required: false,
+            admin: { username: 'admin' },
+            expires_at: '2026-10-31T06:00:00Z',
+            recent_auth_until: null,
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+      throw new Error('Unexpected auth request');
+    });
+    vi.stubGlobal('fetch', fetch);
+    const { wrapper, router } = await mountLogin();
+
+    expect(wrapper.get('[data-testid="local-one-click-login"]').text()).toContain('本地一键登录');
+    await wrapper.get('[data-testid="local-one-click-login"]').trigger('click');
+    await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/overview'));
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/v1/auth/local-login',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    const loginCall = fetch.mock.calls.find(([input, init]) =>
+      String(input).endsWith('/local-login') && init?.method === 'POST',
+    );
+    expect(new Headers(loginCall?.[1]?.headers).get('X-CSRFToken')).toBe('csrf');
+    expect(wrapper.find('[data-testid="use-recovery"]').exists()).toBe(false);
     wrapper.unmount();
   });
 });

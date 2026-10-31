@@ -11,6 +11,7 @@ if not BASE_ALLOWED_HOSTS:
 
 # The password-only test bypass is never allowed in production.
 XRAY_DISABLE_TOTP = False
+XRAY_LOCAL_ONE_CLICK_LOGIN = False
 if not os.getenv("XRAY_DATABASE_URL"):
     raise RuntimeError("XRAY_DATABASE_URL must be set in production")
 DEBUG = False

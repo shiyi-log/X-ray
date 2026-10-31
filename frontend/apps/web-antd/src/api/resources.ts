@@ -13,6 +13,7 @@ export type NodePool = Omit<
   'allocations' | 'region' | 'regions'
 > & {
   allocations?: readonly NodePoolAllocation[];
+  allow_create?: boolean;
   region: string;
   regions?: readonly string[];
 };
@@ -51,7 +52,13 @@ export interface SubscriptionDetail extends Subscription {
 }
 export type AuditEvent = components['schemas']['AuditEvent'];
 export type Overview = components['schemas']['Overview'];
-export type SystemInfo = components['schemas']['SystemInfo'];
+export type ProviderIdentityChecksNetworkSource = 'DATABASE' | 'ENVIRONMENT';
+export type SystemInfo = components['schemas']['SystemInfo'] & {
+  provider_identity_network: {
+    enabled: boolean;
+    source: ProviderIdentityChecksNetworkSource;
+  };
+};
 export type ActionPreview = components['schemas']['ActionPreview'];
 export type SecretDelivery = components['schemas']['SecretDelivery'];
 
@@ -98,18 +105,24 @@ const json = (method: string, body?: unknown, headers?: HeadersInit): RequestIni
 export const resourcesApi = {
   overview: () => apiRequest<Overview>('/api/v1/overview'),
   system: () => apiRequest<SystemInfo>('/api/v1/system'),
+  updateSystem: (payload: { provider_identity_network_enabled: boolean }) =>
+    apiRequest<SystemInfo>('/api/v1/system', json('PATCH', payload)),
   cloudAccounts: () => apiRequest<Page<CloudAccount>>('/api/v1/cloud-accounts/'),
   createCloudAccount: (payload: Record<string, unknown>) =>
     apiRequest<CloudAccount>('/api/v1/cloud-accounts/', json('POST', payload)),
+  updateCloudAccount: (id: string, payload: { enabled: boolean }) =>
+    apiRequest<CloudAccount>(`/api/v1/cloud-accounts/${id}/`, json('PATCH', payload)),
   capabilities: (id: string) =>
     apiRequest<{ items: Capability[] }>(`/api/v1/cloud-accounts/${id}/capabilities/`),
   nodePools: () => apiRequest<Page<NodePool>>('/api/v1/node-pools/'),
   createNodePool: (payload: {
     allocations: { region: string; quota: number }[];
+    allow_create?: boolean;
   }) =>
     apiRequest<NodePool>('/api/v1/node-pools/', json('POST', payload)),
   updateNodePool: (id: string, payload: {
     allocations: { region: string; quota: number }[];
+    allow_create?: boolean;
   }) =>
     apiRequest<NodePool>(`/api/v1/node-pools/${id}/`, json('PATCH', payload)),
   nodes: () => apiRequest<Page<ManagedNode>>('/api/v1/nodes/'),

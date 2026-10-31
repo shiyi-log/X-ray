@@ -109,26 +109,40 @@ const accounts = ref<CloudAccount[]>([]);
 const form = reactive({ account_id: '', region: '', plan_id: '', image_id: '' });
 const empty = computed(() => !data.value?.items.length);
 const accountOptions = computed(() => accounts.value.map((item) => ({
-  label: item.name,
+  label: item.enabled ? item.name : `${item.name}（已停用）`,
   value: item.id,
+  disabled: !item.enabled,
 })));
-const capabilities = ref<{ status: string; regions: string[] }[]>([]);
+const capabilities = ref<{ name: string; status: string; regions: string[]; reason?: string }[]>([]);
 const regionAllocations = ref<{ region: string; available: number }[]>([]);
 const loadingRegions = ref(false);
+const poolGateState = ref<'loading' | 'ready' | 'disabled' | 'unconfigured'>('loading');
 const regionOptions = computed(() => {
-  const supported = new Set(
-    capabilities.value
-      .filter((item) => item.status === 'SUPPORTED')
-      .flatMap((item) => item.regions),
-  );
   return regionAllocations.value
-    .filter((allocation) => supported.has(allocation.region))
-    .map((allocation) => ({
-      label: `${allocation.region}（可用 ${allocation.available}）`,
-      value: allocation.region,
-      disabled: allocation.available < 1,
-    }));
+    .map((allocation) => {
+      const matchingCapabilities = capabilities.value.filter((item) =>
+        item.regions.includes(allocation.region),
+      );
+      const supported = matchingCapabilities.some((item) => item.status === 'SUPPORTED');
+      let reason = '';
+      if (!supported) {
+        reason = matchingCapabilities.some((item) => item.status === 'UNVERIFIED')
+          ? '能力未验证'
+          : matchingCapabilities.length ? '云厂商不支持' : '能力未登记';
+      } else if (allocation.available < 1) {
+        reason = '额度已用完';
+      }
+      return {
+        label: `${allocation.region}（${reason || `可用 ${allocation.available}`}）`,
+        value: allocation.region,
+        disabled: !supported || allocation.available < 1,
+        reason,
+      };
+    });
 });
+const blockedCapabilitySummaries = computed(() => capabilities.value
+  .filter((item) => item.status !== 'SUPPORTED')
+  .map((item) => `${item.name}：${item.status === 'UNVERIFIED' ? '未验证' : '不支持'}${item.reason ? `，${item.reason}` : ''}`));
 
 const detailOpen = ref(false);
 const detailLoading = ref(false);
@@ -148,11 +162,30 @@ async function openCreate() {
   form.plan_id = '';
   form.image_id = '';
   capabilities.value = [];
+  regionAllocations.value = [];
+  poolGateState.value = 'loading';
   try {
-    const page = await resourcesApi.cloudAccounts();
-    accounts.value = page.items.filter((item) => item.enabled);
+    const [page, pools] = await Promise.all([
+      resourcesApi.cloudAccounts(),
+      resourcesApi.nodePools(),
+    ]);
+    accounts.value = page.items;
+    const pool = pools.items[0];
+    if (!pool) {
+      poolGateState.value = 'unconfigured';
+      return;
+    }
+    poolGateState.value = pool.allow_create === false ? 'disabled' : 'ready';
+    regionAllocations.value = (pool.allocations?.length
+      ? pool.allocations
+      : [{ region: pool.region, quota: pool.quota, used: pool.used, available: pool.available }])
+      .map((allocation) => ({
+        region: allocation.region,
+        available: allocation.available ?? Math.max(allocation.quota - (allocation.used ?? 0), 0),
+      }));
   } catch (caught) {
     formError.value = caught instanceof Error ? caught.message : '云账号加载失败';
+    poolGateState.value = 'unconfigured';
   }
 }
 
@@ -160,24 +193,17 @@ async function accountChanged(value: unknown) {
   const accountId = typeof value === 'string' ? value : '';
   form.region = '';
   capabilities.value = [];
-  regionAllocations.value = [];
   if (!accountId) return;
+  const selectedAccount = accounts.value.find((item) => item.id === accountId);
+  if (!selectedAccount?.enabled) {
+    formError.value = '所选云账号已停用，请在云账号页面启用后再创建服务器';
+    return;
+  }
   loadingRegions.value = true;
   formError.value = '';
   try {
-    const [result, pools] = await Promise.all([
-      resourcesApi.capabilities(accountId),
-      resourcesApi.nodePools(),
-    ]);
+    const result = await resourcesApi.capabilities(accountId);
     capabilities.value = result.items;
-    const pool = pools.items[0];
-    regionAllocations.value = (pool?.allocations?.length
-      ? pool.allocations
-      : pool ? [{ region: pool.region, quota: pool.quota, used: pool.used, available: pool.available }] : [])
-      .map((allocation) => ({
-        region: allocation.region,
-        available: allocation.available ?? Math.max(allocation.quota - (allocation.used ?? 0), 0),
-      }));
   } catch (caught) {
     formError.value = caught instanceof Error ? caught.message : '地区加载失败';
   } finally {
@@ -187,8 +213,19 @@ async function accountChanged(value: unknown) {
 
 async function createNode() {
   if (saving.value) return;
-  if (!regionOptions.value.some((option) => option.value === form.region && !option.disabled)) {
-    formError.value = '所选地区未分配或已无可用额度';
+  if (poolGateState.value === 'disabled') {
+    formError.value = '地区设置已禁止创建服务器，请先调整地区设置';
+    return;
+  }
+  if (poolGateState.value !== 'ready') {
+    formError.value = '尚未配置地区额度，请先完成地区分配';
+    return;
+  }
+  const selectedRegion = regionOptions.value.find((option) => option.value === form.region);
+  if (!selectedRegion || selectedRegion.disabled) {
+    formError.value = selectedRegion?.reason
+      ? `${form.region} 暂不可创建：${selectedRegion.reason}`
+      : '所选地区未分配或已无可用额度';
     return;
   }
   saving.value = true;
@@ -365,19 +402,59 @@ function closeDelete() {
     <Modal v-model:open="open" title="创建服务器" :footer="null" :after-close="() => { form.region = ''; }">
       <Form :model="form" layout="vertical" @finish="createNode">
         <Alert v-if="formError" class="mb-4" :message="formError" type="error" show-icon />
+        <Alert
+          v-if="poolGateState === 'disabled'"
+          class="mb-4"
+          type="warning"
+          show-icon
+          message="已禁止创建新服务器"
+          description="现有服务器不受影响。请在地区设置中重新允许创建。"
+        />
+        <Alert
+          v-else-if="poolGateState === 'unconfigured'"
+          class="mb-4"
+          type="info"
+          show-icon
+          message="尚未配置地区额度"
+          description="创建服务器前，需要先在地区设置中分配额度。"
+        />
+        <Button
+          v-if="poolGateState === 'disabled' || poolGateState === 'unconfigured'"
+          class="mb-4"
+          type="link"
+          @click="router.push('/node-pools')"
+        >
+          打开地区设置
+        </Button>
         <FormItem label="云账号" name="account_id" :rules="[{ required: true, message: '请选择云账号' }]">
-          <Select v-model:value="form.account_id" :options="accountOptions" aria-label="云账号" placeholder="请选择" @change="accountChanged" />
+          <Select v-model:value="form.account_id" :options="accountOptions" aria-label="云账号" :loading="poolGateState === 'loading'" placeholder="请选择" @change="accountChanged" />
         </FormItem>
+        <Alert
+          v-if="accounts.length && !accounts.some((item) => item.enabled)"
+          class="mb-4"
+          type="warning"
+          show-icon
+          message="没有已启用的云账号"
+          description="请在云账号页面启用一个账号后再创建服务器。"
+        />
         <FormItem label="地区" name="region" :rules="[{ required: true, message: '请选择地区' }]">
           <Select v-model:value="form.region" :options="regionOptions" aria-label="地区" :loading="loadingRegions" :disabled="!form.account_id" placeholder="请选择" />
         </FormItem>
+        <Alert
+          v-if="blockedCapabilitySummaries.length"
+          class="mb-4"
+          type="info"
+          show-icon
+          message="部分云能力尚不可用"
+          :description="blockedCapabilitySummaries.join('；')"
+        />
         <FormItem label="套餐 ID" name="plan_id" :rules="[{ required: true, message: '请输入套餐 ID' }]">
           <Input v-model:value="form.plan_id" aria-label="套餐 ID" />
         </FormItem>
         <FormItem label="镜像 ID" name="image_id" :rules="[{ required: true, message: '请输入镜像 ID' }]">
           <Input v-model:value="form.image_id" aria-label="镜像 ID" />
         </FormItem>
-        <Button type="primary" html-type="submit" :loading="saving" block>{{ saving ? '提交中' : '提交创建操作' }}</Button>
+        <Button type="primary" html-type="submit" :loading="saving" :disabled="poolGateState !== 'ready'" block>{{ saving ? '提交中' : '提交创建操作' }}</Button>
       </Form>
     </Modal>
 

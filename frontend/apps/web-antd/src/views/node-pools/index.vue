@@ -5,7 +5,7 @@ import { Plus, RefreshCw, Trash2 } from 'lucide-vue-next';
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert, Button, Card, Form, InputNumber, Modal, Select, Space, Table,
+  Alert, Button, Card, Form, InputNumber, Modal, Select, Space, Switch, Table,
 } from 'ant-design-vue';
 
 import {
@@ -21,6 +21,7 @@ const FormItem = Form.Item;
 const columns = [
   { title: 'IP', dataIndex: 'name', key: 'name' },
   { title: '地区', key: 'allocations' },
+  { title: '允许创建', key: 'allow_create' },
 ];
 
 interface AllocationDraft {
@@ -33,8 +34,9 @@ const open = ref(false);
 const saving = ref(false);
 const formError = ref('');
 const editingPoolId = ref<string | null>(null);
-const form = reactive<{ allocations: AllocationDraft[] }>({
+const form = reactive<{ allocations: AllocationDraft[]; allowCreate: boolean }>({
   allocations: [{ region: DEFAULT_REGION, quota: 3 }],
+  allowCreate: true,
 });
 const empty = computed(() => !data.value?.items.length);
 const regionOptions = computed(() => {
@@ -59,6 +61,7 @@ function resetForm() {
     region: DEFAULT_REGION,
     quota: 3,
   });
+  form.allowCreate = true;
 }
 
 function openEditor() {
@@ -66,6 +69,7 @@ function openEditor() {
   const existing = data.value?.items[0];
   editingPoolId.value = existing?.id ?? null;
   if (existing) {
+    form.allowCreate = existing.allow_create ?? true;
     const allocations = existing.allocations?.length
       ? existing.allocations
       : [{ region: existing.region, quota: existing.quota }];
@@ -123,9 +127,12 @@ async function createPool() {
   formError.value = '';
   try {
     if (editingPoolId.value) {
-      await resourcesApi.updateNodePool(editingPoolId.value, { allocations });
+      await resourcesApi.updateNodePool(editingPoolId.value, {
+        allocations,
+        allow_create: form.allowCreate,
+      });
     } else {
-      await resourcesApi.createNodePool({ allocations });
+      await resourcesApi.createNodePool({ allocations, allow_create: form.allowCreate });
     }
     resetForm();
     open.value = false;
@@ -169,6 +176,9 @@ async function createPool() {
               <div class="text-xs text-muted-foreground">{{ record.id }}</div>
             </div>
             <div v-else-if="column.key === 'allocations'">{{ regionSummary(record as NodePool) }}</div>
+            <span v-else-if="column.key === 'allow_create'">
+              {{ (record as NodePool).allow_create ?? true ? '允许' : '已关闭' }}
+            </span>
           </template>
         </Table>
       </PageState>
@@ -206,6 +216,24 @@ async function createPool() {
             添加地区
           </Button>
         </FormItem>
+        <FormItem label="允许创建服务器">
+          <Space>
+            <Switch
+              v-model:checked="form.allowCreate"
+              aria-label="允许创建服务器"
+              checked-children="开"
+              un-checked-children="关"
+            />
+            <span>{{ form.allowCreate ? '新服务器可按地区额度创建' : '已禁止创建新服务器' }}</span>
+          </Space>
+        </FormItem>
+        <Alert
+          v-if="!form.allowCreate"
+          class="mb-4"
+          type="warning"
+          show-icon
+          message="关闭后，服务端会拒绝新的服务器创建；现有服务器不受影响。"
+        />
         <Button type="primary" html-type="submit" :loading="saving" block>{{ saving ? '保存中' : '保存' }}</Button>
       </Form>
     </Modal>

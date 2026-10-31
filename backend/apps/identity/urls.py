@@ -4,6 +4,8 @@ from . import views
 
 urlpatterns = [
     path("csrf", views.csrf, name="auth-csrf"),
+    path("local-login/status", views.local_login_status, name="auth-local-login-status"),
+    path("local-login", views.local_login, name="auth-local-login"),
     path("login", views.login, name="auth-login"),
     path("totp/setup", views.totp_setup, name="auth-totp-setup"),
     path("totp/confirm", views.totp_confirm, name="auth-totp-confirm"),

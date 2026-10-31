@@ -41,6 +41,7 @@ def node_pool_representation(pool: NodePool) -> dict:
         "quota": quota,
         "used": used,
         "available": max(quota - used, 0),
+        "allow_create": pool.allow_create,
         "created_at": pool.created_at.isoformat(),
         "updated_at": pool.updated_at.isoformat(),
     }

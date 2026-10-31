@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 from uuid import UUID, uuid4
 
+from apps.identity.gate_settings import provider_identity_network_setting
 from common.crypto import configured_secret_store
 from common.errors import DomainError
 
@@ -128,7 +128,7 @@ def build_write_provider(
 
 
 def provider_for_input(credentials: SecretInput, region: str) -> CloudReader:
-    if os.getenv("XRAY_ENABLE_PROVIDER_NETWORK", "0").lower() not in {"1", "true", "yes"}:
+    if not provider_identity_network_setting()["enabled"]:
         raise DomainError(
             "CLOUD_NETWORK_DISABLED",
             "本地环境默认禁止云网络调用",

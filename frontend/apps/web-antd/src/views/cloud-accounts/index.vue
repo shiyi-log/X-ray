@@ -5,7 +5,7 @@ import { Plus, RefreshCw } from 'lucide-vue-next';
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert, Button, Card, Form, Input, Modal, Select, Space, Table,
+  Alert, Button, Card, Form, Input, Modal, Select, Space, Switch, Table,
 } from 'ant-design-vue';
 
 import { resourcesApi, type Capability, type CloudAccount } from '@/api/resources';
@@ -42,6 +42,8 @@ const formError = ref('');
 const capabilityAccount = ref<CloudAccount | null>(null);
 const capabilityRows = ref<Capability[]>([]);
 const capabilityError = ref('');
+const accountActionError = ref('');
+const updatingAccountIds = ref(new Set<string>());
 const form = reactive({
   name: '',
   provider: 'aws_lightsail',
@@ -50,6 +52,28 @@ const form = reactive({
   secretKey: '',
 });
 const empty = computed(() => !data.value?.items.length);
+
+async function updateAccountEnabled(account: CloudAccount, checked: unknown) {
+  if (typeof checked !== 'boolean') return;
+  const enabled = checked;
+  if (updatingAccountIds.value.has(account.id)) return;
+  updatingAccountIds.value.add(account.id);
+  accountActionError.value = '';
+  try {
+    const updated = await resourcesApi.updateCloudAccount(account.id, { enabled });
+    const current = data.value;
+    if (current) {
+      data.value = {
+        ...current,
+        items: current.items.map((item) => item.id === updated.id ? updated : item),
+      };
+    }
+  } catch (caught) {
+    accountActionError.value = caught instanceof Error ? caught.message : '账号状态更新失败';
+  } finally {
+    updatingAccountIds.value.delete(account.id);
+  }
+}
 
 async function createAccount() {
   if (saving.value) return;
@@ -113,6 +137,14 @@ async function showCapabilities(account: CloudAccount) {
         </Button>
       </Space>
     </template>
+    <Alert
+      v-if="accountActionError"
+      class="mb-4"
+      type="error"
+      show-icon
+      role="alert"
+      :message="accountActionError"
+    />
     <Card>
       <PageState
         :loading="loading"
@@ -135,7 +167,15 @@ async function showCapabilities(account: CloudAccount) {
             </template>
             <template v-else-if="column.key === 'credential_version'">v{{ record.credential_version }}</template>
             <StatusBadge v-else-if="column.key === 'last_validation_code'" :value="record.last_validation_code || 'UNVERIFIED'" />
-            <StatusBadge v-else-if="column.key === 'enabled'" :value="record.enabled" />
+            <Switch
+              v-else-if="column.key === 'enabled'"
+              :checked="record.enabled"
+              :loading="updatingAccountIds.has(record.id)"
+              :aria-label="`${record.enabled ? '停用' : '启用'} ${record.name}`"
+              checked-children="启用"
+              un-checked-children="停用"
+              @change="(enabled) => updateAccountEnabled(record as CloudAccount, enabled)"
+            />
             <Button v-else-if="column.key === 'actions'" type="link" @click="showCapabilities(record as CloudAccount)">能力</Button>
           </template>
         </Table>

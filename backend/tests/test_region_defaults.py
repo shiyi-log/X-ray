@@ -102,6 +102,49 @@ def test_node_pool_create_and_patch_expose_normalized_region(cloud_account):
 
 
 @pytest.mark.django_db
+def test_node_pool_creation_gate_is_explicit_and_survives_quota_edits():
+    client = _authenticated_client()
+    created = client.post(
+        "/api/v1/node-pools/",
+        {"region": "us-east-1", "quota": 2, "allow_create": False},
+        format="json",
+    )
+    assert created.status_code == 201
+    pool_id = created.json()["id"]
+    assert created.json()["allow_create"] is False
+    assert client.get("/api/v1/node-pools/").json()["items"][0]["allow_create"] is False
+
+    quota_update = client.patch(
+        f"/api/v1/node-pools/{pool_id}/", {"quota": 3}, format="json"
+    )
+    assert quota_update.status_code == 200
+    assert quota_update.json()["allow_create"] is False
+
+    allocation_update = client.post(
+        "/api/v1/node-pools/",
+        {"allocations": [{"region": "us-east-1", "quota": 4}]},
+        format="json",
+    )
+    assert allocation_update.status_code == 200
+    assert allocation_update.json()["allow_create"] is False
+
+    enabled = client.patch(
+        f"/api/v1/node-pools/{pool_id}/", {"allow_create": True}, format="json"
+    )
+    assert enabled.status_code == 200
+    assert enabled.json()["allow_create"] is True
+
+    invalid = client.patch(
+        f"/api/v1/node-pools/{pool_id}/",
+        {"quota": 5, "allow_create": "false"},
+        format="json",
+    )
+    assert invalid.status_code == 400
+    assert NodePool.objects.get(pk=pool_id).quota == 4
+    assert NodePool.objects.get(pk=pool_id).allow_create is True
+
+
+@pytest.mark.django_db
 def test_node_create_accepts_omitted_region_and_uses_singapore(monkeypatch):
     client = _authenticated_client()
     account = CloudAccount.objects.create(
@@ -175,8 +218,8 @@ def test_node_create_inherits_custom_pool_region_and_rejects_mismatch(cloud_acco
 
 
 @pytest.mark.django_db
-def test_paused_pool_reopens_only_after_explicit_quota_edit(cloud_account):
-    from apps.nodes.quota import reserve_node, set_allocations
+def test_quota_edit_preserves_paused_pool_until_gate_is_explicitly_enabled(cloud_account):
+    from apps.nodes.quota import reserve_node, set_allocations, set_allow_create
 
     pool = NodePool.objects.create(
         name=f"paused-{uuid4()}", region="ap-east-1", quota=2, allow_create=False
@@ -193,9 +236,11 @@ def test_paused_pool_reopens_only_after_explicit_quota_edit(cloud_account):
     assert paused.value.code == "POOL_CREATION_DISABLED"
     assert not pool.region_allocations.exists()
 
-    reopened = set_allocations(
+    still_paused = set_allocations(
         pool.pk, [{"region": "ap-east-1", "quota": 2}]
     )
+    assert still_paused.allow_create is False
+    reopened = set_allow_create(pool.pk, True)
     assert reopened.allow_create is True
     node = reserve_node(
         pool.pk,

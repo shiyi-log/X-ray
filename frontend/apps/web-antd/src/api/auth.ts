@@ -28,11 +28,19 @@ export interface AuthenticatedSession extends AdminSession {
   recovery_codes?: string[];
 }
 
+export interface LocalLoginCapability {
+  enabled: boolean;
+}
+
 const post = <T>(path: string, body: Record<string, unknown>) =>
   apiRequest<T>(path, { method: 'POST', body: JSON.stringify(body) });
 
 export const authApi = {
   session: () => apiRequest<AdminSession>('/api/v1/auth/session'),
+  localLoginCapability: () =>
+    apiRequest<LocalLoginCapability>('/api/v1/auth/local-login/status'),
+  localLogin: () =>
+    post<AuthenticatedSession>('/api/v1/auth/local-login', {}),
   login: (username: string, password: string) =>
     post<LoginChallenge>('/api/v1/auth/login', { username, password }),
   setupTotp: (challengeId: string) =>
