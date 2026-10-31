@@ -3456,3 +3456,26 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main and origin/main at 33b1e3ea61a56ebed218acd49ade8066d3264178 at release time; current post-release docs-only updates are uncommitted; docs/cloud-test-authorization.md remains unrelated user work.`
 - `rollback_ref`: `Application rollback uses v0.9.0 or git revert 33b1e3ea61a56ebed218acd49ade8066d3264178; retain v0.10.0 tag/release evidence and do not reverse database security state, credentials, Token tombstones or cloud state.`
 - `time_logic`: `Release verification recorded at 2026-10-31T16:09:52+08:00. Package/checksum operations have no business TTL; no authentication or cloud operation timing changed.`
+
+### 2026-10-31T16:22:59+08:00 — xray-local-unified-restart-20261031-01 runtime restart verification
+
+- `event_id`: `xray-local-unified-restart-20261031-01/001`
+- `run_id`: `xray-local-unified-restart-20261031-01`
+- `timestamp`: `2026-10-31T16:22:59+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime_restart_and_validation`
+- `path_scope`: `current X-ray worktree; backend listener 127.0.0.1:9527; frontend listener 127.0.0.1:9528; docs/project-ledger.md; docs/progress.md`
+- `operation`: `按用户“统一重启”要求停止旧的 X-ray 前后端并从当前工作树重新启动唯一的本地 Django/Vite 服务`
+- `reason`: `确认旧前端是否仍在运行，并确保浏览器访问的前后端来自当前仓库，而不是临时副本或旧工作树。`
+- `authorization`: `用户明确授权统一重启；范围仅限已确认属于 X-ray 的本地前后端进程，不包含 SSH 隧道、数据库/Redis 容器、其他项目、云资源或生产服务。`
+- `assumptions`: `复用已健康的专用测试 PostgreSQL/Redis 和当前本地测试配置；以当前 `/Users/shiyi/Documents/ChatGPT/x-ray` 工作树作为唯一源码来源。`
+- `exclusions`: `未停止或重启其他项目进程、SSH 隧道、数据库/Redis 容器；未执行 provider、AWS/SWAS/STS、SSH、云资源启停/重启/删除、生产部署或数据库写入。`
+- `implementation_scope`: `仅重启并核验本地 X-ray 后端与前端运行进程；记录 PID、监听地址、工作目录和 bounded loopback HTTP readiness/login/capability 探针。`
+- `command_or_tool`: `ownership-checked process/listener inspection; stop/start of confirmed X-ray backend and Vite processes; lsof/ps/cwd inspection; curl --noproxy '*' --max-time 5 for /health/ready, /login?redirect=/overview and /api/v1/auth/local-login/status; git status.`
+- `result`: `Django PID 10870 listens on 127.0.0.1:9527 with cwd `/Users/shiyi/Documents/ChatGPT/x-ray`; Vite PID 10922 listens on 127.0.0.1:9528 with cwd `/Users/shiyi/Documents/ChatGPT/x-ray/frontend/apps/web-antd`; `/health/ready`, `/login?redirect=/overview` and proxied `/api/v1/auth/local-login/status` returned HTTP 200. No old temporary-copy listener remained on the target ports.`
+- `exit_code`: `process/listener/cwd inspection 0; bounded HTTP probes 0 with status 200/200/200; git status 0.`
+- `evidence`: `Only local PIDs, loopback ports, repository paths, endpoint paths and HTTP status codes recorded; no credentials, cookies, tokens, environment values or secret-bearing output recorded.`
+- `status`: `current-checkout local runtime restarted and verified; provider/cloud, production and device acceptance not-run.`
+- `commit_or_tree`: `main at fdef6c04266021727325f38a692ac4011df50bbc; docs/cloud-test-authorization.md remains the user's unrelated uncommitted modification and is excluded from the evidence commit.`
+- `rollback_ref`: `Documentation-only evidence append; runtime rollback is limited to stopping the two confirmed X-ray processes if explicitly requested. No database, credential, cloud or production rollback applies.`
+- `time_logic`: `Observed at 2026-10-31T16:22:59+08:00. HTTP probes used a five-second maximum timeout; no application business TTL or authentication expiry changed.`
