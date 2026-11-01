@@ -3966,3 +3966,26 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main@53d294c + dirty working tree.`
 - `rollback_ref`: `无回退操作；不得清理这批无关用户更改。`
 - `time_logic`: `记录时间 2026-11-02T02:12:11+08:00；无业务时间逻辑。`
+
+### 2026-11-02T02:35:10+08:00 — xray-subscription-unlimited-20261102-01 release closeout
+
+- `event_id`: `xray-subscription-unlimited-20261102-01/009`
+- `run_id`: `xray-subscription-unlimited-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `release_closeout`
+- `path_scope`: `docs/version-record.md; docs/progress.md; docs/release-checklist.md; tests/acceptance/matrix.json; docs/project-ledger.md; GitHub shiyi-log/X-ray main, v0.11.0 annotated tag, Release and assets`
+- `operation`: `核对并完成 X-ray 0.11.0 的远端提交、注释标签、正式 Release 和安装器资产收尾记录。`
+- `reason`: `用户明确要求“提交发布”；发布提交和本地标签已存在，需要确认远端不可变引用和资产后补齐可追溯证据。`
+- `authorization`: `沿用用户对提交、推送、annotated tag 和 GitHub Release 的明确授权；不扩大到真实 AWS/SWAS、SSH、生产切换、生产 TLS、设备验收或破坏性云操作。`
+- `assumptions`: `当前网络可访问 GitHub API 但 GitHub Git smart-HTTP 端点超时；使用 Git Database API 上传与本地提交完全相同的 tree/commit 对象，随后创建远端 annotated tag 和 Release。`
+- `exclusions`: `不提交 docs/cloud-test-authorization.md；不删除或重建共享测试库，不应用节点 0007 到生产数据库，不执行云写入、实例删除、静态 IP 释放、SSH 或生产部署。`
+- `implementation_scope`: `生成并校验 0.11.0 安装器包；通过 GitHub API 发布 main、v0.11.0 和三项 Release 资产；读回远端 refs、Release 元数据和资产；更新版本索引、进度、验收矩阵、检查表和本台账。`
+- `risk`: `tar.gz 构建包含时间戳，临时本地构建与远端已上传包的 archive digest 可以不同；以远端 SHA256SUMS 对远端包和 manifest 的验证结果为准，不把本地另一份临时包摘要写成远端摘要。标准 `git push`/`git ls-remote` 因 github.com 网络超时未完成，GitHub API 读回已确认远端状态。`
+- `command_or_tool`: `bash scripts/package-installer-release.sh 0.11.0; shasum -a 256 -c SHA256SUMS; GitHub Git Database API blobs/tree/commit/ref/tag; gh release view; GitHub asset download; remote shasum verification; python3 scripts/validate-acceptance.py; git diff --check; apply_patch.`
+- `result`: `远端 main 指向 a0527d6de3e1485a95a158becfaa0e34a109e45e；远端 v0.11.0 为 annotated tag，peeled commit 相同；正式非草稿 Release 已发布。三项远端资产均 uploaded，摘要为 SHA256SUMS 14853de2e00820830084ef808421de70f5b581f745f6657bc905835157934eb2、manifest f84284e6ef22e820b3ffaf91b3cdcc34f10fc12484c08ae9bced6621186fadf0、tar.gz 20a2e91662e7330514bbbd46a81ad46558580cbd6f6b4bf97b569232c293b6af；远端 SHA256SUMS 对 tar.gz 和 manifest 均验证 OK。`
+- `exit_code`: `local package/checksum 0; GitHub API object/ref/release/asset/readback 0; standard git push and git ls-remote terminated 130 after network timeout; acceptance validator 0; diff-check 0.`
+- `evidence`: `只记录提交、标签、Release URL、资产名称/摘要和校验结果；未输出或持久化密码、Cookie、原始 Token、DSN、云凭据或 secret-bearing exception。`
+- `status`: `code/tag/GitHub Release/assets passed; standard Git transport blocked by network timeout but API publication and readback passed; CI, real cloud, SSH, production, device and full browser acceptance remain blocked or not-run.`
+- `commit_or_tree`: `release tag v0.11.0 -> a0527d6de3e1485a95a158becfaa0e34a109e45e; post-release documentation changes remain local until the follow-up audit commit.`
+- `rollback_ref`: `应用回退到 v0.10.0 或对发布提交执行 git revert；不删除 Release 资产，不反向迁移数据库，不恢复 Token tombstone、撤销凭据、安全事件、维护屏障或云操作结果。`
+- `time_logic`: `记录时间 2026-11-02T02:35:10+08:00；Release 标签和资产摘要是不可变定位信息；无新增业务 TTL、过期或重试规则。`

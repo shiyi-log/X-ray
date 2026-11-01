@@ -10,7 +10,7 @@
 - [x] 9527/9528 当前本地服务由本工作树监听，readiness、登录页和本地一键登录探针均 HTTP 200。
 - [ ] 完整 backend/installer 全量门禁：共享测试库状态阻塞，清洁专用库证据沿用前序记录。
 - [ ] 真实 AWS/SWAS、SSH、公网探测、生产部署、生产 TLS、设备验收和完整浏览器 E2E：本版本未运行。
-- [ ] GitHub Release：待 `v0.11.0` 标签和安装器资产完成后回填不可变 SHA-256 证据。
+- [x] GitHub Release：`v0.11.0` 正式非草稿 Release 已发布；远端 `SHA256SUMS`、manifest、tar.gz 摘要分别为 `14853de2e00820830084ef808421de70f5b581f745f6657bc905835157934eb2`、`f84284e6ef22e820b3ffaf91b3cdcc34f10fc12484c08ae9bced6621186fadf0`、`20a2e91662e7330514bbbd46a81ad46558580cbd6f6b4bf97b569232c293b6af`，远端校验文件通过。
 
 ## Historical v0.9.0 checklist
 

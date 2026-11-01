@@ -1,6 +1,6 @@
 {
   "version": "0.11.0",
-  "generated_at": "2026-11-02T02:04:00+08:00",
+  "generated_at": "2026-11-02T02:33:44+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -74,6 +74,32 @@
       ],
       "commit": "583df4f739184b8af85737deacec93d3f75f624a",
       "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-release",
+      "environment": "release",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_release",
+          "tag": "v0.11.0",
+          "commit": "a0527d6de3e1485a95a158becfaa0e34a109e45e",
+          "url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.11.0",
+          "draft": false,
+          "prerelease": false,
+          "assets": {
+            "SHA256SUMS": "sha256:14853de2e00820830084ef808421de70f5b581f745f6657bc905835157934eb2",
+            "xray-installer-0.11.0-manifest.json": "sha256:f84284e6ef22e820b3ffaf91b3cdcc34f10fc12484c08ae9bced6621186fadf0",
+            "xray-installer-0.11.0.tar.gz": "sha256:20a2e91662e7330514bbbd46a81ad46558580cbd6f6b4bf97b569232c293b6af"
+          },
+          "checksum_verification": "remote SHA256SUMS validates the remote tar.gz and manifest"
+        }
+      ],
+      "commit": "a0527d6de3e1485a95a158becfaa0e34a109e45e",
+      "provider": "github",
       "region": null,
       "cost": null,
       "residual_resources": []
