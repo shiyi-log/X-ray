@@ -12,7 +12,7 @@ from apps.identity.models import SuperAdmin
 from apps.nodes import views as node_views
 from apps.nodes.models import ManagedNode, NodePool, NodePoolRegionAllocation
 from common.errors import DomainError
-from common.regions import DEFAULT_REGION, normalize_region
+from common.regions import DEFAULT_REGION, SUPPORTED_REGIONS, normalize_region
 
 
 def _authenticated_client():
@@ -389,6 +389,27 @@ def test_node_pool_rejects_unsupported_region_allocation():
     )
     assert response.status_code == 400
     assert "unsupported region" in response.json()["message"]
+
+
+@pytest.mark.django_db
+def test_node_pool_accepts_zero_quota_for_each_supported_region():
+    client = _authenticated_client()
+    response = client.post(
+        "/api/v1/node-pools/",
+        {
+            "allocations": [
+                {"region": region, "quota": 0} for region in SUPPORTED_REGIONS
+            ]
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["quota"] == 0
+    assert {item["region"] for item in body["allocations"]} == set(SUPPORTED_REGIONS)
+    assert all(item["quota"] == 0 and item["available"] == 0 for item in body["allocations"])
+    assert NodePool.objects.get(pk=body["id"]).quota == 0
 
 
 @pytest.mark.django_db

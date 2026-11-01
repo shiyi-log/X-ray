@@ -8,6 +8,8 @@ const normalized = computed(() =>
 );
 const statusLabels: Record<string, string> = {
   UNKNOWN: '未知',
+  UNVERIFIED: '状态待确认',
+  NOT_FOUND: '云端不存在',
   PENDING: '待处理',
   CREATING: '创建中',
   RUNNING: '运行中',
@@ -39,7 +41,6 @@ const statusLabels: Record<string, string> = {
   CANCELLING: '取消中',
   CANCELLED: '已取消',
   REVOKING: '撤销中',
-  UNVERIFIED: '未验证',
   MAINTENANCE: '维护中',
   QUARANTINED: '已隔离',
   NEEDS_RECONCILIATION: '需要协调',
@@ -66,7 +67,7 @@ const statusLabels: Record<string, string> = {
 const label = computed(() => statusLabels[normalized.value] ?? normalized.value);
 const color = computed(() => {
   if (['READY', 'OPEN', 'ACTIVE', 'NORMAL', 'SUCCEEDED', 'SUPPORTED', 'OK', 'TRUE', 'RUNNING', 'REBOOTED'].includes(normalized.value)) return 'success';
-  if (['FAILED', 'ERROR', 'TERMINATED', 'REVOKED', 'UNSUPPORTED', 'REVOCATION_UNCONFIRMED', 'ISOLATION_UNCONFIRMED', 'FALSE'].includes(normalized.value)) return 'error';
+  if (['FAILED', 'ERROR', 'TERMINATED', 'NOT_FOUND', 'REVOKED', 'UNSUPPORTED', 'REVOCATION_UNCONFIRMED', 'ISOLATION_UNCONFIRMED', 'FALSE'].includes(normalized.value)) return 'error';
   if (['PENDING', 'CREATING', 'STARTING', 'STOPPING', 'REBOOTING', 'SHUTTING_DOWN', 'TERMINATING', 'DELETING', 'RETRY_PENDING', 'REVOKING', 'UNVERIFIED', 'MAINTENANCE', 'QUARANTINED'].includes(normalized.value)) return 'warning';
   return 'default';
 });

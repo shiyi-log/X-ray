@@ -2,23 +2,17 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from common.errors import DomainError
 from django.db import transaction
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 
-from .models import AccessProfile, SubscriptionPlan, UsageCheckpoint
+from common.errors import DomainError
+
+from .models import AccessProfile, UsageCheckpoint
 
 
 def quota_state(profile, *, now=None) -> str:
-    now = now or timezone.now()
     if profile.status != "ACTIVE":
         return profile.status
-    if profile.expires_at is not None and now >= profile.expires_at:
-        return "EXPIRED"
-    if profile.traffic_limit_bytes is not None:
-        if profile.upload_bytes + profile.download_bytes >= profile.traffic_limit_bytes:
-            return "QUOTA_EXHAUSTED"
     return "ACTIVE"
 
 
@@ -37,9 +31,9 @@ def positive_integer(value, field, *, nullable=True):
 
 
 def update_policy(profile, payload):
-    allowed = {"name", "plan_id", "expires_at", "traffic_limit_bytes"}
+    allowed = {"name"}
     if set(payload) - allowed:
-        raise ValueError("unsupported profile fields")
+        raise ValueError("subscription policy is unlimited; only name can be changed")
     if profile.status != "ACTIVE":
         raise DomainError("PROFILE_NOT_ACTIVE", "已撤销身份不能恢复", status_code=409)
     if "name" in payload:
@@ -47,46 +41,7 @@ def update_policy(profile, payload):
         if not name or len(name) > 120:
             raise ValueError("name must contain 1 to 120 characters")
         profile.name = name
-    if "plan_id" in payload:
-        plan = (
-            SubscriptionPlan.objects.get(pk=payload["plan_id"], enabled=True)
-            if payload["plan_id"]
-            else None
-        )
-        profile.plan = plan
-        if plan:
-            profile.traffic_limit_bytes = plan.traffic_limit_bytes
-            profile.expires_at = (
-                timezone.now() + timedelta(days=plan.duration_days) if plan.duration_days else None
-            )
-    if "traffic_limit_bytes" in payload:
-        profile.traffic_limit_bytes = positive_integer(
-            payload["traffic_limit_bytes"], "traffic_limit_bytes"
-        )
-    if "expires_at" in payload:
-        value = payload["expires_at"]
-        parsed = parse_datetime(value) if isinstance(value, str) else None
-        if value is not None and (parsed is None or timezone.is_naive(parsed)):
-            raise ValueError("expires_at must be an ISO-8601 datetime with timezone")
-        profile.expires_at = parsed
-    existing = profile.pk and AccessProfile.objects.filter(pk=profile.pk).exists()
-    if (
-        profile.traffic_limit_bytes is not None
-        and existing
-        and profile.node_credentials.filter(
-            revoked_at__isnull=True, protocol__protocol="socks5"
-        ).exists()
-    ):
-        raise DomainError(
-            "PROTOCOL_METERING_UNSUPPORTED", "请先移除 SOCKS5 再设置限流量套餐", status_code=409
-        )
     profile.save()
-    if existing and any(
-        field in payload for field in ("expires_at", "traffic_limit_bytes", "plan_id")
-    ):
-        from .access import queue_policy_sync
-
-        queue_policy_sync(profile)
     return profile
 
 

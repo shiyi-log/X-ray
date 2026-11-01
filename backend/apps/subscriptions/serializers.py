@@ -46,13 +46,19 @@ def profile_representation(profile) -> dict:
 
 def subscription_representation(subscription) -> dict:
     revision = subscription.current_revision
+    current_token_status = subscription.token_history.filter(
+        token_epoch=subscription.token_epoch
+    ).values_list("status", flat=True).first()
     return {
         "id": str(subscription.pk),
+        "pool_id": str(subscription.pool_id),
+        "pool_name": subscription.pool.name,
         "profile_id": str(subscription.profile_id),
         "profile_name": subscription.profile.name,
         "profile_status": subscription.profile.status,
         "policy": profile_representation(subscription.profile),
         "status": subscription.status,
+        "current_token_status": current_token_status,
         "token_epoch": subscription.token_epoch,
         "current_revision": revision.number if revision else None,
         "public_version": revision.public_version if revision else None,
@@ -61,4 +67,23 @@ def subscription_representation(subscription) -> dict:
         "unavailable_reasons": revision.unavailable_reasons if revision else {},
         "created_at": subscription.created_at.isoformat(),
         "updated_at": subscription.updated_at.isoformat(),
+    }
+
+
+def subscription_token_representation(token) -> dict:
+    subscription = getattr(token, "subscription", None)
+    return {
+        "id": str(token.pk),
+        "subscription_id": str(token.subscription_id),
+        "token_epoch": token.token_epoch,
+        "status": token.status,
+        "is_current": bool(
+            subscription
+            and token.status == "ACTIVE"
+            and subscription.token_epoch == token.token_epoch
+            and subscription.token_digest == token.token_digest
+        ),
+        "revoked_at": token.revoked_at.isoformat() if token.revoked_at else None,
+        "replaced_by_id": str(token.replaced_by_id) if token.replaced_by_id else None,
+        "created_at": token.created_at.isoformat(),
     }

@@ -32,7 +32,7 @@ watch(
   ([open, value]) => {
     wipe();
     if (!open || !value) return;
-    secret.value = { ...value, urls: { ...value.urls } };
+    secret.value = { ...value };
     timer = window.setTimeout(close, 5 * 60 * 1000);
   },
   { immediate: true },
@@ -46,7 +46,7 @@ onScopeDispose(() => {
   wipe();
 });
 
-const formats = computed(() => Object.entries(secret.value?.urls || {}));
+const unifiedUrl = computed(() => secret.value?.url || null);
 
 async function copy(label: string, value: string) {
   copyError.value = '';
@@ -86,7 +86,7 @@ async function copy(label: string, value: string) {
       <p class="text-muted-foreground">关闭或五分钟后清除，之后只能显式轮换。</p>
       <Alert type="warning" show-icon message="Token 与订阅 URL 不会写入浏览器存储，也无法从服务器再次读取。" />
       <Alert v-if="copyError" type="error" :message="copyError" />
-      <Alert type="info" message="Shadowrocket 选择 Shadowrocket 链接；Clash Meta 使用 Mihomo 链接（含 VLESS）；普通 Clash 不含 VLESS。在客户端添加订阅 URL 后更新即可。" />
+      <Alert type="info" message="统一链接默认返回 Mihomo 配置，包含所有已发布且受支持的协议。" />
       <Descriptions :column="1" bordered layout="vertical">
         <Descriptions.Item label="Token">
           <div class="flex items-start justify-between gap-3">
@@ -100,12 +100,12 @@ async function copy(label: string, value: string) {
             </Button>
           </div>
         </Descriptions.Item>
-        <Descriptions.Item v-for="[name, value] in formats" :key="name" :label="name">
+        <Descriptions.Item v-if="unifiedUrl" label="统一订阅链接">
           <div class="flex items-start justify-between gap-3">
-            <code class="min-w-0 break-all">{{ value }}</code>
-            <Button :aria-label="`复制 ${name} URL`" :title="`复制 ${name} URL`" @click="copy(name, value)">
+            <code data-testid="unified-url" class="min-w-0 break-all">{{ unifiedUrl }}</code>
+            <Button aria-label="复制统一订阅链接" title="复制统一订阅链接" @click="copy('unified-url', unifiedUrl)">
               <template #icon>
-                <Check v-if="copied === name" :size="16" />
+                <Check v-if="copied === 'unified-url'" :size="16" />
                 <Clipboard v-else :size="16" />
               </template>
             </Button>

@@ -117,7 +117,9 @@ def test_secret_delivery_is_returned_once_and_never_retrievable(recent_admin_cli
     body = issued.json()
     assert body["display_once"] is True
     assert len(body["token"]) == 43
-    assert set(body["urls"]) == {"shadowrocket", "clash", "mihomo", "v2ray"}
+    assert body["url"] == f"http://testserver/s/{body['token']}"
+    assert "?" not in body["url"]
+    assert "urls" not in body
 
     repeated = client.post(
         f"/api/v1/access-profiles/{profile.pk}/subscription/",
@@ -219,6 +221,103 @@ def test_force_revoke_requires_recent_step_up(recent_admin_client):
     )
     assert response.status_code == 403
     assert response.json()["code"] == "STEP_UP_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_token_revoke_is_target_bound_idempotent_and_keeps_other_tokens_active(
+    recent_admin_client,
+):
+    client, _admin = recent_admin_client
+    first_profile = AccessProfile.objects.create(name="token-revoke-first")
+    second_profile = AccessProfile.objects.create(name="token-revoke-second")
+    first = TokenService.issue(first_profile.pk)
+    second = TokenService.issue(second_profile.pk)
+    first_token = SubscriptionToken.objects.get(subscription_id=first.subscription_id)
+    second_token = SubscriptionToken.objects.get(subscription_id=second.subscription_id)
+
+    preview = client.post(
+        "/api/v1/operations/previews/",
+        {
+            "kind": "subscription.token_revoke",
+            "target_id": str(first_token.pk),
+            "params": {
+                "subscription_id": str(first.subscription_id),
+                "token_id": str(first_token.pk),
+            },
+        },
+        format="json",
+    )
+    assert preview.status_code == 201
+    preview_body = preview.json()
+    assert preview_body["required_phrase"] == "确认撤销令牌"
+
+    key = str(uuid4())
+    path = (
+        f"/api/v1/subscriptions/{first.subscription_id}/tokens/"
+        f"{first_token.pk}/revoke/"
+    )
+    response = client.post(
+        path,
+        {"preview_id": preview_body["id"], "confirmation": preview_body["required_phrase"]},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=key,
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "REVOKED"
+    assert body["is_current"] is False
+    assert first.raw_token not in response.content.decode()
+    assert client.get(f"/api/v1/subscriptions/{first.subscription_id}/tokens/").json()["items"][0]["status"] == "REVOKED"
+    assert client.get("/api/v1/subscriptions/").json()["items"][0]["current_token_status"] == "REVOKED"
+    with pytest.raises(TokenGone):
+        TokenService.resolve(first.raw_token)
+    assert TokenService.resolve(second.raw_token).pk == second.subscription_id
+    assert client.post(
+        path,
+        {"preview_id": preview_body["id"], "confirmation": preview_body["required_phrase"]},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=key,
+    ).json() == body
+    assert second_token.status == "ACTIVE"
+
+
+@pytest.mark.django_db
+def test_token_revoke_requires_preview_and_recent_step_up(recent_admin_client):
+    client, _admin = recent_admin_client
+    profile = AccessProfile.objects.create(name="token-revoke-guard")
+    issued = TokenService.issue(profile.pk)
+    token = SubscriptionToken.objects.get(subscription_id=issued.subscription_id)
+    path = f"/api/v1/subscriptions/{issued.subscription_id}/tokens/{token.pk}/revoke/"
+
+    missing_preview = client.post(
+        path,
+        {"confirmation": "确认撤销令牌"},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert missing_preview.status_code == 409
+    assert missing_preview.json()["code"] == "PREVIEW_REQUIRED"
+
+    preview = client.post(
+        "/api/v1/operations/previews/",
+        {
+            "kind": "subscription.token_revoke",
+            "target_id": str(token.pk),
+            "params": {"subscription_id": str(issued.subscription_id), "token_id": str(token.pk)},
+        },
+        format="json",
+    ).json()
+    session = client.session
+    session["recent_auth_until"] = (timezone.now() - timedelta(seconds=1)).isoformat()
+    session.save()
+    stale = client.post(
+        path,
+        {"preview_id": preview["id"], "confirmation": preview["required_phrase"]},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert stale.status_code == 403
+    assert stale.json()["code"] == "STEP_UP_REQUIRED"
 
 
 @pytest.mark.django_db

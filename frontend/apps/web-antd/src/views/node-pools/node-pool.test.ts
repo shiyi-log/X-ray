@@ -51,6 +51,7 @@ describe('node pool region allocation', () => {
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
       expect(dialog.text()).toContain('地区分配');
       expect(dialog.text()).toContain('eu-west-1（历史地区）');
+      expect(SUPPORTED_REGIONS.every((region) => dialog.text().includes(region))).toBe(true);
       expect(dialog.text()).not.toContain('名称');
       expect((dialog.get('[aria-label="允许创建服务器"]').element as HTMLButtonElement).getAttribute('aria-checked')).toBe('false');
       await dialog.get('form').trigger('submit');
@@ -58,6 +59,10 @@ describe('node pool region allocation', () => {
       expect(updatePool).toHaveBeenCalledWith('pool-1', {
         allocations: [
           { region: 'ap-southeast-1', quota: 2 },
+          { region: 'ap-northeast-1', quota: 0 },
+          { region: 'ap-east-1', quota: 0 },
+          { region: 'us-east-1', quota: 0 },
+          { region: 'us-west-2', quota: 0 },
           { region: 'eu-west-1', quota: 2 },
         ],
         allow_create: false,
@@ -89,11 +94,21 @@ describe('node pool region allocation', () => {
       await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
       await flushPromises();
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
+      expect(SUPPORTED_REGIONS.every((region) => dialog.text().includes(region))).toBe(true);
+      const inputs = dialog.findAll('input[aria-label$="额度"]');
+      expect(inputs.map((input) => (input.element as HTMLInputElement).value)).toEqual(['0', '0', '0', '0', '0']);
+      await dialog.get('[aria-label="ap-southeast-1额度"]').setValue('3');
       await dialog.get('[aria-label="允许创建服务器"]').trigger('click');
       await dialog.get('form').trigger('submit');
       await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
       expect(createPool).toHaveBeenCalledWith({
-        allocations: [{ region: 'ap-southeast-1', quota: 3 }],
+        allocations: [
+          { region: 'ap-southeast-1', quota: 3 },
+          { region: 'ap-northeast-1', quota: 0 },
+          { region: 'ap-east-1', quota: 0 },
+          { region: 'us-east-1', quota: 0 },
+          { region: 'us-west-2', quota: 0 },
+        ],
         allow_create: false,
       });
       expect(updatePool).not.toHaveBeenCalled();

@@ -86,6 +86,21 @@ def test_malformed_token_is_unknown_without_echoing_input():
 
 
 @pytest.mark.django_db
+def test_recovery_inconsistent_revoked_token_fails_closed_without_tombstone():
+    from apps.subscriptions.models import AccessProfile, SubscriptionToken
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    profile = AccessProfile.objects.create(name="inconsistent-revocation")
+    issued = TokenService.issue(profile.pk)
+    token = SubscriptionToken.objects.get(subscription_id=issued.subscription_id)
+    token.status = "REVOKED"
+    token.save(update_fields=["status"])
+
+    with pytest.raises(TokenGone):
+        TokenService.resolve(issued.raw_token)
+
+
+@pytest.mark.django_db
 def test_token_digest_collision_fails_without_recursive_retry(monkeypatch):
     from apps.subscriptions import tokens
     from apps.subscriptions.models import AccessProfile
@@ -108,3 +123,135 @@ def test_token_digest_collision_fails_without_recursive_retry(monkeypatch):
         TokenService.issue(second_profile.pk)
     assert caught.value.code == "SECRET_ALREADY_DELIVERED"
     assert calls == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_tokens_use_one_pool_and_revoke_independently():
+    from apps.subscriptions.models import AccessProfile, SubscriptionPool, SubscriptionToken
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    first_profile = AccessProfile.objects.create(name="first-token")
+    second_profile = AccessProfile.objects.create(name="second-token")
+    first = TokenService.issue(first_profile.pk)
+    second = TokenService.issue(second_profile.pk)
+
+    first_subscription = TokenService.resolve(first.raw_token)
+    second_subscription = TokenService.resolve(second.raw_token)
+    assert first_subscription.pool_id == second_subscription.pool_id
+    assert SubscriptionPool.objects.count() == 1
+
+    first_token = SubscriptionToken.objects.get(subscription_id=first.subscription_id)
+    TokenService.revoke_token(first.subscription_id, first_token.pk)
+    with pytest.raises(TokenGone):
+        TokenService.resolve(first.raw_token)
+    assert TokenService.resolve(second.raw_token).pk == second.subscription_id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_token_revoke_and_rotation_use_consistent_lock_order():
+    from apps.subscriptions.models import AccessProfile, SubscriptionToken
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    profile = AccessProfile.objects.create(name="revoke-and-rotate")
+    issued = TokenService.issue(profile.pk)
+    token = SubscriptionToken.objects.get(subscription_id=issued.subscription_id)
+    barrier = Barrier(2)
+
+    def revoke():
+        connections.close_all()
+        barrier.wait(timeout=5)
+        try:
+            TokenService.revoke_token(issued.subscription_id, token.pk)
+        finally:
+            connections.close_all()
+
+    def rotate():
+        connections.close_all()
+        barrier.wait(timeout=5)
+        try:
+            return TokenService.rotate(issued.subscription_id).raw_token
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        revoked = executor.submit(revoke)
+        rotated = executor.submit(rotate)
+        revoked.result(timeout=10)
+        replacement = rotated.result(timeout=10)
+
+    with pytest.raises(TokenGone):
+        TokenService.resolve(issued.raw_token)
+    assert TokenService.resolve(replacement).pk == issued.subscription_id
+    tokens = list(
+        SubscriptionToken.objects.filter(subscription_id=issued.subscription_id)
+        .order_by("token_epoch")
+        .values_list("token_epoch", "status")
+    )
+    assert tokens == [(1, "REVOKED"), (2, "ACTIVE")]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_token_revoke_and_subscription_disable_serialize():
+    from apps.subscriptions.models import AccessProfile, Subscription, SubscriptionToken
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    profile = AccessProfile.objects.create(name="revoke-and-disable")
+    issued = TokenService.issue(profile.pk)
+    token = SubscriptionToken.objects.get(subscription_id=issued.subscription_id)
+    barrier = Barrier(2)
+
+    def revoke_token():
+        connections.close_all()
+        barrier.wait(timeout=5)
+        try:
+            TokenService.revoke_token(issued.subscription_id, token.pk)
+        finally:
+            connections.close_all()
+
+    def disable_subscription():
+        connections.close_all()
+        barrier.wait(timeout=5)
+        try:
+            TokenService.disable(issued.subscription_id)
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        revoked = executor.submit(revoke_token)
+        disabled = executor.submit(disable_subscription)
+        revoked.result(timeout=10)
+        disabled.result(timeout=10)
+
+    subscription = Subscription.objects.get(pk=issued.subscription_id)
+    token.refresh_from_db()
+    assert subscription.status == "REVOKED"
+    assert token.status == "REVOKED"
+    with pytest.raises(TokenGone):
+        TokenService.resolve(issued.raw_token)
+
+
+@pytest.mark.django_db
+def test_rotation_preserves_individual_revocation_timestamp_and_tombstone_reason():
+    from apps.subscriptions.models import (
+        AccessProfile,
+        RevocationTombstone,
+        SubscriptionToken,
+    )
+    from apps.subscriptions.tokens import TokenService
+
+    profile = AccessProfile.objects.create(name="revoked-then-rotated")
+    issued = TokenService.issue(profile.pk)
+    token = SubscriptionToken.objects.get(subscription_id=issued.subscription_id)
+    TokenService.revoke_token(issued.subscription_id, token.pk)
+    token.refresh_from_db()
+    tombstone = RevocationTombstone.objects.get(token_digest=token.token_digest)
+    original_revoked_at = tombstone.revoked_at
+
+    TokenService.rotate(issued.subscription_id)
+
+    token.refresh_from_db()
+    tombstone.refresh_from_db()
+    assert token.revoked_at == original_revoked_at
+    assert tombstone.revoked_at == original_revoked_at
+    assert tombstone.reason == "token-revoked"
+    assert token.replaced_by_id is not None

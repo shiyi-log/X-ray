@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import {
   Activity,
   Cloud,
-  Network,
   RefreshCw,
   Rss,
   ShieldCheck,
@@ -39,8 +38,7 @@ const metrics = [
   { key: 'cloud_accounts', label: '云账号', to: '/cloud-accounts', icon: Cloud },
   { key: 'nodes', label: '节点', to: '/nodes', icon: Server },
   { key: 'operations_active', label: '进行中操作', to: '/operations', icon: Activity },
-  { key: 'access_profiles', label: '访问配置', to: '/access-profiles', icon: Network },
-  { key: 'subscriptions', label: '订阅', to: '/subscriptions', icon: Rss },
+  { key: 'subscriptions', label: '订阅池', to: '/subscriptions', icon: Rss },
 ] as const;
 
 const metricItems = computed(() =>

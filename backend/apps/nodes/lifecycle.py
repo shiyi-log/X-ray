@@ -20,7 +20,7 @@ from providers.base import (
     MutationPermit,
     ResourceRef,
 )
-from providers.registry import build_write_provider
+from providers.registry import build_read_provider, build_write_provider
 
 from .execution_types import IsolationResult
 from .models import ManagedNode, NodeResource
@@ -62,10 +62,16 @@ class NodeLifecycle:
         self,
         *,
         provider_factory=None,
+        reader_factory=None,
         isolation_probe=None,
         worker_id: str | None = None,
     ):
         self.provider_factory = provider_factory or self._build_provider
+        self.reader_factory = reader_factory or (
+            (lambda node: provider_factory(node, None))
+            if provider_factory is not None
+            else self._build_reader
+        )
         self.isolation_probe = isolation_probe or (lambda _node: {})
         self.worker_id = worker_id or _default_worker_id()
 
@@ -75,6 +81,14 @@ class NodeLifecycle:
             node.cloud_account_id,
             node.region,
             authorizer=authorizer,
+            credential_version=node.cloud_credential_version.version,
+        )
+
+    @staticmethod
+    def _build_reader(node: ManagedNode):
+        return build_read_provider(
+            node.cloud_account_id,
+            node.region,
             credential_version=node.cloud_credential_version.version,
         )
 
@@ -539,6 +553,111 @@ class NodeLifecycle:
             result={"resource_id": matches[0].ref.resource_id, "reconciled": True},
         )
 
+    def refresh(self, node_id: UUID, *, operation_id: UUID) -> None:
+        node = ManagedNode.objects.select_related(
+            "cloud_account", "cloud_credential_version"
+        ).get(pk=node_id)
+        operation = Operation.objects.get(pk=operation_id)
+        self._ensure_scope(node, operation)
+        claim = claim_operation(operation_id, worker_id=self.worker_id)
+        operation = assert_current(claim)
+        if not node.external_id or node.desired_state == "DELETED":
+            self._finish(claim, status="FAILED", error_code="NODE_NOT_PROVISIONED")
+            return
+
+        resource = ResourceRef(
+            self._account_ref(node), node.region, node.external_id
+        )
+        try:
+            instance = self.reader_factory(node).get_instance(resource)
+        except DomainError as exc:
+            if exc.code == "RESOURCE_NOT_FOUND":
+                with transaction.atomic():
+                    locked = ManagedNode.objects.select_for_update().get(pk=node.pk)
+                    if (
+                        locked.cloud_account_id != resource.account.id
+                        or locked.region != resource.region
+                        or locked.external_id != resource.resource_id
+                        or locked.desired_state == "DELETED"
+                    ):
+                        self._finish(
+                            claim,
+                            status="FAILED",
+                            error_code="NODE_TARGET_CHANGED",
+                        )
+                        return
+                    locked.raw_cloud_state = "NOT_FOUND"
+                    locked.observation_error = "RESOURCE_NOT_FOUND"
+                    locked.observed_at = timezone.now()
+                    locked.save(
+                        update_fields=[
+                            "raw_cloud_state",
+                            "observation_error",
+                            "observed_at",
+                            "updated_at",
+                        ]
+                    )
+                self._record_step(
+                    operation,
+                    name="cloud.refresh",
+                    status="CONFIRMED_ABSENT",
+                    evidence={"error_code": "RESOURCE_NOT_FOUND"},
+                )
+                self._finish(
+                    claim,
+                    status="SUCCEEDED",
+                    result={"cloud_status": "NOT_FOUND"},
+                )
+                return
+            self._mark_observation_error(node, exc.code)
+            self._record_step(
+                operation,
+                name="cloud.refresh",
+                status="FAILED",
+                evidence={"error_code": exc.code},
+            )
+            self._finish(claim, status="FAILED", error_code=exc.code)
+            return
+        except Exception:
+            self._mark_observation_error(node, "CLOUD_STATUS_READ_FAILED")
+            self._record_step(
+                operation,
+                name="cloud.refresh",
+                status="FAILED",
+                evidence={"error_code": "CLOUD_STATUS_READ_FAILED"},
+            )
+            self._finish(
+                claim, status="FAILED", error_code="CLOUD_STATUS_READ_FAILED"
+            )
+            return
+
+        try:
+            observed = self._record_instance_observation(node, resource, instance)
+        except DomainError as exc:
+            self._mark_observation_error(node, exc.code)
+            self._record_step(
+                operation,
+                name="cloud.refresh",
+                status="FAILED",
+                evidence={"error_code": exc.code},
+            )
+            self._finish(claim, status="FAILED", error_code=exc.code)
+            return
+        self._record_step(
+            operation,
+            name="cloud.refresh",
+            status="OBSERVED",
+            result={"addresses_changed": observed["addresses_changed"]},
+        )
+        self._finish(
+            claim,
+            status="SUCCEEDED",
+            result={
+                "cloud_status": "PRESENT",
+                "addresses_changed": observed["addresses_changed"],
+            },
+        )
+
     @staticmethod
     def _firewall_safe(snapshot) -> bool:
         for rule in snapshot.rules:
@@ -761,6 +880,8 @@ class NodeLifecycle:
     def dispatch(self, kind: str, node_id: UUID, *, operation_id: UUID) -> None:
         if kind == "create":
             return self.create(node_id, operation_id=operation_id)
+        if kind == "refresh":
+            return self.refresh(node_id, operation_id=operation_id)
         if kind == "quarantine":
             self.quarantine(node_id, operation_id=operation_id)
             return None

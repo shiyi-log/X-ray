@@ -53,6 +53,22 @@ def test_clash_and_mihomo_use_distinct_protocol_sets():
     assert "client-fingerprint" not in clash["proxies"][0]
 
 
+def test_unified_mihomo_subscription_contains_every_supported_protocol():
+    from apps.nodes.protocols import PROTOCOL_CAPABILITIES
+    from apps.subscriptions.renderers import render_subscription
+
+    document = yaml.safe_load(
+        render_subscription(
+            "mihomo",
+            endpoints=[endpoint(name) for name in PROTOCOL_CAPABILITIES],
+            public_version="unified",
+        )
+    )
+
+    expected_types = {"ss" if name == "shadowsocks" else name for name in PROTOCOL_CAPABILITIES}
+    assert {proxy["type"] for proxy in document["proxies"]} == expected_types
+
+
 def test_v2ray_uris_escape_userinfo_bracket_ipv6_and_include_tls_sni():
     from apps.subscriptions.renderers import render_subscription
 

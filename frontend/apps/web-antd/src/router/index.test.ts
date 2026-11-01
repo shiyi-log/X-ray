@@ -33,17 +33,25 @@ describe('X-ray Vben route shell', () => {
       '/subscriptions',
       '/nodes',
       '/operations',
-      '/access-profiles',
       '/audit',
       '/system',
     ]);
     expect(menuPaths).not.toContain('/node-pools');
+    expect(menuPaths).not.toContain('/access-profiles');
     const root = businessRoutes.find((route) => route.name === 'Root');
     const subscriptionRoute = root?.children?.find((route) => route.name === 'subscriptions');
     expect(subscriptionRoute?.meta?.order).toBe(30);
     expect(menuPaths).not.toContain('/operations/:id');
     expect(access.accessToken).toBeNull();
     expect(access.refreshToken).toBeNull();
+  });
+
+  it('keeps the legacy access profile URL as a single subscription-pool entry', () => {
+    const root = businessRoutes.find((route) => route.name === 'Root');
+    const legacyRoute = root?.children?.find((route) => route.name === 'access-profiles');
+
+    expect(legacyRoute?.redirect).toBe('/subscriptions');
+    expect(legacyRoute?.meta?.hideInMenu).toBe(true);
   });
 
   it('keeps the Vben authentication parent separate from the login form route', () => {

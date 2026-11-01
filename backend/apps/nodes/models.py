@@ -24,7 +24,7 @@ class NodePool(models.Model):
                 condition=models.Q(singleton_key=1), name="node_pool_singleton_key_one"
             ),
             models.CheckConstraint(
-                condition=models.Q(quota__gte=1), name="node_pool_quota_positive"
+                condition=models.Q(quota__gte=0), name="node_pool_quota_positive"
             )
         ]
 
@@ -53,7 +53,7 @@ class NodePoolRegionAllocation(models.Model):
                 fields=["pool", "region"], name="unique_node_pool_region_allocation"
             ),
             models.CheckConstraint(
-                condition=models.Q(quota__gte=1), name="node_pool_region_quota_positive"
+                condition=models.Q(quota__gte=0), name="node_pool_region_quota_positive"
             ),
         ]
 

@@ -29,6 +29,7 @@ def _operation(
     response: str | None = None,
     request: str | None = None,
     parameters: list[dict] | None = None,
+    extra_responses: dict[str, dict] | None = None,
     status: str = "200",
     security: bool = True,
 ) -> dict:
@@ -41,6 +42,8 @@ def _operation(
             "409": _response("ApiError", "Conflict"),
         },
     }
+    if extra_responses:
+        value["responses"].update(extra_responses)
     if security:
         value["security"] = [{"cookieAuth": []}]
     if request:
@@ -179,7 +182,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                             "required": ["region", "quota", "used", "available"],
                             "properties": {
                                 "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
-                                "quota": {"type": "integer", "minimum": 1},
+                                "quota": {"type": "integer", "minimum": 0},
                                 "used": {"type": "integer", "minimum": 0},
                                 "available": {"type": "integer", "minimum": 0},
                             },
@@ -199,7 +202,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                 "additionalProperties": False,
                 "properties": {
                     "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
-                    "quota": {"type": "integer", "minimum": 1},
+                    "quota": {"type": "integer", "minimum": 0},
                 },
             },
             "NodePoolWriteRequest": {
@@ -368,13 +371,29 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             },
             "Subscription": {
                 "type": "object",
-                "required": ["id", "profile_id", "profile_name", "status", "token_epoch"],
+                "required": [
+                    "id",
+                    "pool_id",
+                    "pool_name",
+                    "profile_id",
+                    "profile_name",
+                    "status",
+                    "current_token_status",
+                    "token_epoch",
+                ],
                 "properties": {
                     "id": {"type": "string", "format": "uuid"},
+                    "pool_id": {"type": "string", "format": "uuid"},
+                    "pool_name": {"type": "string"},
                     "profile_id": {"type": "string", "format": "uuid"},
                     "profile_name": {"type": "string"},
                     "profile_status": {"type": "string"},
                     "status": {"type": "string"},
+                    "current_token_status": {
+                        "type": "string",
+                        "enum": ["ACTIVE", "REVOKED", "EXPIRED"],
+                        "nullable": True,
+                    },
                     "token_epoch": {"type": "integer"},
                     "current_revision": {"type": "integer", "nullable": True},
                     "public_version": {"type": "string", "nullable": True},
@@ -383,6 +402,27 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "unavailable_reasons": {"type": "object", "additionalProperties": True},
                     "created_at": {"type": "string", "format": "date-time"},
                     "updated_at": {"type": "string", "format": "date-time"},
+                },
+            },
+            "SubscriptionToken": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "subscription_id",
+                    "token_epoch",
+                    "status",
+                    "is_current",
+                    "created_at",
+                ],
+                "properties": {
+                    "id": {"type": "string", "format": "uuid"},
+                    "subscription_id": {"type": "string", "format": "uuid"},
+                    "token_epoch": {"type": "integer"},
+                    "status": {"type": "string", "enum": ["ACTIVE", "REVOKED", "EXPIRED"]},
+                    "is_current": {"type": "boolean"},
+                    "revoked_at": {"type": "string", "format": "date-time", "nullable": True},
+                    "replaced_by_id": {"type": "string", "format": "uuid", "nullable": True},
+                    "created_at": {"type": "string", "format": "date-time"},
                 },
             },
             "AuditEvent": {
@@ -450,12 +490,52 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             },
             "SecretDelivery": {
                 "type": "object",
-                "required": ["subscription_id", "token", "urls", "display_once"],
+                "required": ["subscription_id", "token", "url", "display_once"],
                 "properties": {
                     "subscription_id": {"type": "string", "format": "uuid"},
                     "token": {"type": "string", "writeOnly": True},
-                    "urls": {"type": "object", "additionalProperties": {"type": "string"}},
+                    "url": {"type": "string", "format": "uri"},
                     "display_once": {"type": "boolean"},
+                },
+            },
+            "SubscriptionTokenRevokeRequest": {
+                "type": "object",
+                "required": ["preview_id", "confirmation"],
+                "additionalProperties": False,
+                "properties": {
+                    "preview_id": {"type": "string", "format": "uuid"},
+                    "confirmation": {"type": "string", "minLength": 1},
+                },
+            },
+            "ActionPreviewRequest": {
+                "type": "object",
+                "required": ["kind", "target_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "kind": {"type": "string"},
+                    "target_id": {"type": "string", "format": "uuid"},
+                    "params": {"type": "object", "additionalProperties": True},
+                },
+            },
+            "SubscriptionTokenRevoke": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "subscription_id",
+                    "token_epoch",
+                    "status",
+                    "is_current",
+                    "created_at",
+                ],
+                "properties": {
+                    "id": {"type": "string", "format": "uuid"},
+                    "subscription_id": {"type": "string", "format": "uuid"},
+                    "token_epoch": {"type": "integer"},
+                    "status": {"type": "string", "enum": ["REVOKED"]},
+                    "is_current": {"type": "boolean"},
+                    "revoked_at": {"type": "string", "format": "date-time", "nullable": True},
+                    "replaced_by_id": {"type": "string", "format": "uuid", "nullable": True},
+                    "created_at": {"type": "string", "format": "date-time"},
                 },
             },
             "GenericObject": {"type": "object", "additionalProperties": True},
@@ -465,6 +545,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             "PaginatedOperationList": _page_schema("Operation"),
             "PaginatedAccessProfileList": _page_schema("AccessProfile"),
             "PaginatedSubscriptionList": _page_schema("Subscription"),
+            "PaginatedSubscriptionTokenList": _page_schema("SubscriptionToken"),
             "PaginatedAuditEventList": _page_schema("AuditEvent"),
         }
     )
@@ -555,6 +636,15 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/nodes/{node_id}/": {
             "get": _operation("nodes_retrieve", response="ManagedNode", parameters=uuid("node_id"))
         },
+        "/api/v1/nodes/{node_id}/refresh/": {
+            "post": _operation(
+                "node_refresh_create",
+                response="OperationAccepted",
+                request="GenericObject",
+                parameters=uuid("node_id"),
+                status="202",
+            )
+        },
         "/api/v1/nodes/{node_id}/actions/{action}/": {
             "post": _operation(
                 "node_actions_create",
@@ -589,7 +679,10 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             "post": _operation(
                 "action_previews_create",
                 response="ActionPreview",
-                request="GenericObject",
+                request="ActionPreviewRequest",
+                extra_responses={
+                    "403": _response("ApiError", "Recent step-up authentication required")
+                },
                 status="201",
             )
         },
@@ -619,7 +712,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             "post": _operation(
                 "access_profiles_create",
                 response="AccessProfile",
-                request="GenericObject",
+                request="AccessProfileCreate",
                 status="201",
             ),
         },
@@ -642,6 +735,25 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         },
         "/api/v1/subscriptions/": {
             "get": _operation("subscriptions_list", response="PaginatedSubscriptionList")
+        },
+        "/api/v1/subscriptions/{subscription_id}/tokens/": {
+            "get": _operation(
+                "subscription_tokens_list",
+                response="PaginatedSubscriptionTokenList",
+                parameters=uuid("subscription_id"),
+            )
+        },
+        "/api/v1/subscriptions/{subscription_id}/tokens/{token_id}/revoke/": {
+            "post": _operation(
+                "subscription_token_revoke_create",
+                response="SubscriptionTokenRevoke",
+                request="SubscriptionTokenRevokeRequest",
+                parameters=uuid("subscription_id") + uuid("token_id"),
+                extra_responses={
+                    "403": _response("ApiError", "Recent step-up authentication required"),
+                    "404": _response("ApiError", "Subscription token not found"),
+                },
+            )
         },
         "/api/v1/subscriptions/{subscription_id}/rotate/": {
             "post": _operation(
@@ -677,6 +789,17 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "access_sync_pending": {"type": "boolean"},
     }
     schemas["AccessProfile"]["properties"].update(policy_properties)
+    schemas["AccessProfileCreate"] = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["name"],
+        "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 120}},
+    }
+    schemas["AccessProfilePatch"] = {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 120}},
+    }
     schemas["Subscription"]["properties"]["policy"] = _ref("AccessProfile")
     schemas["SubscriptionPlan"] = {
         "type": "object",
@@ -700,7 +823,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                 "patch": _operation(
                     "access_profiles_update",
                     response="AccessProfile",
-                    request="GenericObject",
+                    request="AccessProfilePatch",
                     parameters=uuid("profile_id"),
                 ),
             },
@@ -768,6 +891,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             "/subscriptions/" in path
             or "/access-profiles/" in path
             or path == "/api/v1/nodes/"
+            or "/api/v1/nodes/{node_id}/refresh/" in path
             or "/api/v1/nodes/{node_id}/actions/" in path
         ):
             for method, operation in methods.items():

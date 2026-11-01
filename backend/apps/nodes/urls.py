@@ -9,6 +9,7 @@ pool_urlpatterns = [
 
 node_urlpatterns = [
     path("", views.node_collection, name="node-list"),
+    path("<uuid:node_id>/refresh/", views.node_refresh, name="node-refresh"),
     path("<uuid:node_id>/", views.node_detail, name="node-detail"),
     path("<uuid:node_id>/actions/<str:action>/", views.node_action, name="node-action"),
 ]

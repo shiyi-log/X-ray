@@ -7,12 +7,7 @@ import SecretDelivery from './SecretDelivery.vue';
 const delivery = {
   subscription_id: '11111111-1111-4111-8111-111111111111',
   token: 'test-only-token-that-must-remain-in-memory-12345',
-  urls: {
-    shadowrocket: 'http://example.test/s/token?format=shadowrocket',
-    clash: 'http://example.test/s/token?format=clash',
-    mihomo: 'http://example.test/s/token?format=mihomo',
-    v2ray: 'http://example.test/s/token?format=v2ray',
-  },
+  url: 'http://example.test/s/token',
   display_once: true,
 };
 
@@ -35,9 +30,7 @@ describe('SecretDelivery', () => {
       expect(wrapper.emitted('close')).toHaveLength(1);
       expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
       expect(wrapper.text()).not.toContain(delivery.token);
-      for (const url of Object.values(delivery.urls)) {
-        expect(wrapper.text()).not.toContain(url);
-      }
+      expect(wrapper.text()).not.toContain(delivery.url);
     } finally {
       wrapper.unmount();
     }
@@ -57,6 +50,19 @@ describe('SecretDelivery', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(localStorage.length).toBe(0);
     expect(sessionStorage.length).toBe(0);
+  });
+
+  it('只展示后端提供的统一订阅链接', () => {
+    const wrapper = mount(SecretDelivery, { props: { open: true, delivery } });
+
+    try {
+      expect(wrapper.get('[data-testid="unified-url"]').text()).toBe(delivery.url);
+      expect(wrapper.text()).toContain('包含所有已发布且受支持的协议');
+      expect(wrapper.text()).not.toContain('format=');
+      expect(wrapper.findAll('[data-testid="unified-url"]')).toHaveLength(1);
+    } finally {
+      wrapper.unmount();
+    }
   });
 
   it('401/退出触发的敏感清理会立即关闭并清空展示', async () => {

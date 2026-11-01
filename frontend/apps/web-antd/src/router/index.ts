@@ -5,7 +5,6 @@ import {
   Activity,
   Cloud,
   LayoutDashboard,
-  Network,
   Rss,
   ScrollText,
   Server,
@@ -78,8 +77,8 @@ export const businessRoutes: RouteRecordRaw[] = [
       {
         path: 'access-profiles',
         name: 'access-profiles',
-        component: () => import('@/views/access-profiles/index.vue'),
-        meta: { title: '访问配置', icon: Network, order: 60 },
+        redirect: '/subscriptions',
+        meta: { title: '访问配置', hideInMenu: true },
       },
       {
         path: 'subscriptions',

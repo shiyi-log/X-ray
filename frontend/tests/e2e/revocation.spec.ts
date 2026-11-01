@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { completePartialRevocation, screenshotPath } from './helpers';
 
 test('一次性交付在关闭后从 DOM 清除', async ({ page }) => {
-  await page.goto('/access-profiles');
+  await page.goto('/subscriptions');
   const row = page.getByRole('row').filter({ hasText: 'e2e-new-device' });
   await row.getByRole('button', { name: '签发 Token' }).click();
   const dialog = page.getByRole('dialog', { name: '一次性交付' });
@@ -15,7 +15,28 @@ test('一次性交付在关闭后从 DOM 清除', async ({ page }) => {
   await dialog.getByRole('button', { name: '我已安全保存并关闭' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText(token, { exact: true })).toHaveCount(0);
-  await page.screenshot({ path: screenshotPath('desktop-access-profiles.png'), fullPage: true });
+  await page.screenshot({ path: screenshotPath('desktop-subscriptions.png'), fullPage: true });
+});
+
+test('单个 Token 可独立撤销并保留在 Token 历史中', async ({ page }) => {
+  await page.goto('/subscriptions');
+  const subscription = page.getByRole('row').filter({ hasText: 'e2e-new-device' });
+  await subscription.getByRole('button', { name: 'Token 历史' }).click();
+  const history = page.locator('.ant-table-expanded-row').filter({ hasText: 'Token 历史' });
+  const token = history.getByRole('row').filter({ hasText: 'Token #1' });
+  await expect(token).toBeVisible();
+  const revokeResponse = page.waitForResponse((response) =>
+    response.url().includes('/tokens/') && response.url().endsWith('/revoke/') && response.request().method() === 'POST',
+  );
+  await token.getByRole('button', { name: '撤销此 Token' }).click();
+  const dialog = page.getByRole('dialog', { name: '撤销 Token' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel('确认文本').fill('确认撤销令牌');
+  await dialog.getByRole('button', { name: '提交操作' }).click();
+  const response = await revokeResponse;
+  expect(response.status()).toBe(200);
+  expect((await response.json()).status).toBe('REVOKED');
+  await expect(token.getByText('已撤销')).toBeVisible();
 });
 
 test('危险确认后的 partial result 不宣称全部凭据失效', async ({ page }) => {

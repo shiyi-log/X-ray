@@ -1,6 +1,6 @@
 {
-  "version": "0.10.0",
-  "generated_at": "2026-10-31T16:06:26+08:00",
+  "version": "0.11.0",
+  "generated_at": "2026-11-02T02:04:00+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -12,86 +12,45 @@
     {
       "id": "local-delivery-gates",
       "environment": "local",
-      "status": "passed",
+      "status": "blocked",
       "evidence": [
         {
-          "kind": "vitest",
-          "command": "corepack pnpm@10.33.0 --dir frontend test:unit",
+          "kind": "focused_subscription_tests",
+          "command": "set -a; source .env; set +a; pytest --reuse-db backend/tests/subscriptions/test_management.py backend/tests/subscriptions/test_public_read.py backend/tests/subscriptions/test_tokens.py backend/tests/subscriptions/test_single_subscription_pool_migration.py -q",
           "exit_code": 0,
-          "tests": 71,
-          "failures": 0,
-          "skipped": 0,
-          "timeout_ms": 15000,
-          "timestamp": "2026-10-31T02:45:35+08:00"
+          "tests": 36,
+          "timestamp": "2026-11-02T01:49:00+08:00"
         },
         {
           "kind": "frontend_checks",
           "commands": [
             "corepack pnpm@10.33.0 --dir frontend typecheck",
-            "corepack pnpm@10.33.0 --dir frontend lint",
-            "corepack pnpm@10.33.0 --dir frontend build"
+            "corepack pnpm@10.33.0 --dir frontend exec eslint <subscription files>",
+            "corepack pnpm@10.33.0 --dir frontend exec vitest run <subscription tests>"
           ],
-          "exit_codes": [0, 0, 0]
+          "exit_codes": [0, 0, 0],
+          "tests": 7
         },
         {
-          "kind": "pytest",
-          "command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<dedicated test database> XRAY_REDIS_URL=<dedicated test Redis> uv run --project backend pytest -c backend/pyproject.toml -q",
-          "tests": 329,
-          "failures": 0,
-          "errors": 0,
-          "skipped": 7,
-          "skip_reason": "fixed Xray binary, disposable Linux/systemd host, backup image and application image digests were not configured",
-          "test_environment": "dedicated local PostgreSQL and Redis; connection values omitted",
+          "kind": "runtime_probe",
+          "endpoints": ["http://127.0.0.1:9527/health/ready", "http://127.0.0.1:9528/login", "http://127.0.0.1:9527/api/v1/auth/local-login/status"],
+          "status_codes": [200, 200, 200],
           "exit_code": 0,
-          "timestamp": "2026-10-31T02:51:59+08:00"
+          "timestamp": "2026-11-02T01:53:34+08:00"
         },
         {
-          "kind": "browser_e2e",
-          "command": "XRAY_TEST_DATABASE_URL=<dedicated test database> XRAY_REDIS_URL=<dedicated test Redis> XRAY_BACKEND_PORT=9551 XRAY_FRONTEND_PORT=9552 corepack pnpm@10.33.0 --dir frontend test:e2e",
-          "exit_code": 0,
-          "tests": 7,
-          "failures": 0,
-          "skipped": 0,
-          "test_environment": "dedicated local PostgreSQL and Redis; Chrome desktop/mobile; connection values omitted",
-          "timestamp": "2026-10-31T02:44:31+08:00"
-        },
-        {
-          "kind": "release_package",
-          "command": "bash scripts/package-installer-release.sh 0.10.0; shasum -a 256 -c SHA256SUMS",
-          "exit_code": 0,
-          "github_release": "v0.10.0",
-          "assets": [
-            "SHA256SUMS",
-            "xray-installer-0.10.0-manifest.json",
-            "xray-installer-0.10.0.tar.gz"
-          ],
-          "timestamp": "2026-10-31T16:06:26+08:00"
-        },
-        {
-          "kind": "github_release",
-          "tag": "v0.10.0",
-          "commit": "33b1e3ea61a56ebed218acd49ade8066d3264178",
-          "draft": false,
-          "exit_code": 0,
-          "timestamp": "2026-10-31T16:05:17+08:00",
-          "assets": [
-            {"name": "SHA256SUMS", "sha256": "01ec599b7e0d3092c94603d50756d281f5938ea5bc403fdc202a67ebd365d4b2"},
-            {"name": "xray-installer-0.10.0-manifest.json", "sha256": "bad67a2a497fc4166b5bac698a5046eab9813dce0956dddebfc29b613632dc68"},
-            {"name": "xray-installer-0.10.0.tar.gz", "sha256": "c8f148a25b1f75450fa7a554ea2cff9e0dd7a6d1f62aa170289707b75fec81c9"}
-          ]
+          "kind": "full_suite_limit",
+          "status": "blocked",
+          "result": "shared test_xray_test database occupied/left residual state; --reuse-db run 67 passed, 17 failed due missing SecurityState and test database state",
+          "action": "do not delete or rebuild shared test database"
         },
         {
           "kind": "static_gates",
-          "commands": [
-            "uv lock --project backend --check",
-            "./scripts/check-boundary.sh",
-            "python3 scripts/validate-acceptance.py",
-            "git diff --check"
-          ],
-          "exit_codes": [0, 0, 0, 0]
+          "commands": ["./scripts/check-boundary.sh", "python3 scripts/validate-acceptance.py", "git diff --check"],
+          "exit_codes": [0, 0, 0]
         }
       ],
-      "commit": "33b1e3ea61a56ebed218acd49ade8066d3264178",
+      "commit": null,
       "provider": null,
       "region": null,
       "cost": null,

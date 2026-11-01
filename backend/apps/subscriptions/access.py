@@ -3,16 +3,17 @@ from __future__ import annotations
 from collections import defaultdict
 from uuid import uuid4
 
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+from django.utils.module_loading import import_string
+
 from apps.nodes.executor import NodeExecutor
 from apps.nodes.models import ManagedNode, NodeProtocol
 from apps.operations.claims import assert_current, claim_operation, release_claim
 from apps.operations.models import Operation
 from apps.operations.services import OperationService
 from common.errors import DomainError
-from django.conf import settings
-from django.db import transaction
-from django.utils import timezone
-from django.utils.module_loading import import_string
 
 from .credentials import CredentialService, decrypt_material
 from .models import AccessProfile, NodeCredential, SubscriptionRevision
@@ -139,11 +140,20 @@ def build_node_config(node):
 
 class AccessService:
     @staticmethod
-    def assign(profile_id, *, protocol_ids, admin):
+    def assign(profile_id, *, protocol_ids=None, admin):
         SecurityBarrier.assert_open(purpose="cloud_write")
         with transaction.atomic():
             profile = AccessProfile.objects.select_for_update().get(pk=profile_id)
             assert_entitled(profile)
+            if protocol_ids is None:
+                protocol_ids = list(
+                    NodeProtocol.objects.filter(
+                        enabled=True,
+                        credential_scope="profile",
+                        node__desired_state="PRESENT",
+                        node__security_state="OPEN",
+                    ).values_list("pk", flat=True)
+                )
             protocols = list(
                 NodeProtocol.objects.filter(
                     pk__in=protocol_ids,
@@ -156,14 +166,6 @@ class AccessService:
             if len(protocols) != len(protocol_ids):
                 raise DomainError(
                     "PROTOCOL_TARGET_MISMATCH", "所选协议不可分配或使用共享凭据", status_code=409
-                )
-            if profile.traffic_limit_bytes is not None and any(
-                p.protocol == "socks5" for p in protocols
-            ):
-                raise DomainError(
-                    "PROTOCOL_METERING_UNSUPPORTED",
-                    "SOCKS5 暂无按用户流量统计，不能用于限流量套餐",
-                    status_code=409,
                 )
             old = list(
                 NodeCredential.objects.select_for_update().filter(

@@ -17,7 +17,25 @@ Django 和 Vite。默认后端端口为 `9527`、前端端口为 `9528`；端口
 会终止本次启动的两个服务；数据库和 Redis 容器保留，方便再次启动。
 启动器只支持本地 `config.settings.test` / `XRAY_ENV=test`，不会停止或复用
 已有服务。依赖缺失或有待执行迁移时会提示退出。CSRF 信任来源和前端 API
-代理均使用启动器本次选定的端口。
+代理均使用启动器本次选定的端口；浏览器可使用该端口的 `127.0.0.1` 或
+`localhost` 地址打开前端。
+
+启动完成后，终端会打印本次前端和后端地址。可用下面的命令做最小健康检查；
+把端口替换为启动器实际打印的值：
+
+```bash
+curl --noproxy '*' -i http://127.0.0.1:<后端端口>/health/live
+curl --noproxy '*' -i http://127.0.0.1:<后端端口>/health/ready
+curl --noproxy '*' -i http://127.0.0.1:<前端端口>/
+curl --noproxy '*' -i http://127.0.0.1:<前端端口>/api/v1/auth/session
+```
+
+四个请求都应返回 HTTP `200`。`/health/ready` 会同时检查专用 PostgreSQL 和
+Redis；前端的 `/api` 请求由 Vite 代理到本次启动器选定的后端端口。若首次启动
+需要下载 Compose 镜像，请等待 `postgres` 和 `redis` 都变为 `healthy`；若默认
+端口被占用，不要停止占用者，直接使用启动器打印的新地址即可。按 Ctrl+C 只会
+停止本次启动器创建的 Django 和 Vite 子进程，专用数据库和 Redis 容器会保留。
+
 开发登录从根目录 `.env` 读取 `XRAY_ADMIN_USERNAME` 和 `XRAY_ADMIN_PASSWORD`；
 启动时会在专用 `xray_test` 数据库创建或同步唯一管理员。`XRAY_DISABLE_TOTP=1`
 只对本地测试设置生效，因此开发阶段输入用户名和密码即可进入控制台。
@@ -47,7 +65,7 @@ P1 使用独立 PostgreSQL 17 和 Redis 7.4，Compose 项目名固定为 `xray-t
 | PostgreSQL | 5432 | 55432 | `xray_test` |
 | Redis | 6379 | 56379 | DB `0` |
 
-端口已在本机检查无监听，不应停止其他项目来抢占端口。若端口发生冲突，先重新执行端口检查并更新本项目配置与注册记录。
+启动前先检查端口归属；若端口由其他项目占用，不要停止或复用该服务，应为本项目选择可用的 loopback 端口，并同步更新配置与注册记录。
 
 ```bash
 cp .env.example .env
@@ -56,6 +74,46 @@ make compose-config
 ```
 
 测试数据库不会使用 SQLite，也不会连接 Shop 的数据库。测试结束后可执行 `make compose-down`；命名卷仅保存本项目测试数据，需要完全重建时再显式删除 `xray-test-postgres` 和 `xray-test-redis`。
+
+### 国内镜像备用
+
+Docker Hub 拉取超时或失败时，可从 DaoCloud 镜像拉取固定版本，再重标记为 Compose 使用的官方镜像名：
+
+```bash
+docker pull docker.m.daocloud.io/library/postgres:17.6-alpine
+docker image tag docker.m.daocloud.io/library/postgres:17.6-alpine postgres:17.6-alpine
+docker pull docker.m.daocloud.io/library/redis:7.4-alpine
+docker image tag docker.m.daocloud.io/library/redis:7.4-alpine redis:7.4-alpine
+```
+
+前端依赖下载使用 npm 国内镜像 `https://registry.npmmirror.com`。宿主 Node/Vite 配置加载卡住时，可用 Docker Desktop 的 Node 22 隔离环境运行前端；下例只把已排除 `node_modules`、`.env*`、`.git` 和构建产物的源码压入临时容器，不挂载宿主机目录，也不读取根目录 `.env`。Docker Desktop 必须启用主机网络模式（host networking）；该模式已在本项目本机验证，Vite 仍绑定 `127.0.0.1`，API 代理访问本机 loopback 后端。
+
+先在一个终端确认专用 PostgreSQL/Redis 已启动且迁移已完成，然后仅启动本地测试后端。此命令使用 `main.py` 的字面量 `.env` 解析器，配置只进入本机后端进程，不会回显：
+
+```bash
+python3 -c 'import os,main; env=main.load_env(main.CONFIG_PATH); env["XRAY_FRONTEND_PORT"]="9528"; env["XRAY_CSRF_TRUSTED_ORIGINS"]="http://127.0.0.1:9528"; python=str(main.ROOT/"backend/.venv/bin/python"); os.execvpe(python,[python,"backend/manage.py","runserver","127.0.0.1:9527","--noreload"],env)'
+```
+
+再在第二个终端启动前端隔离环境：
+
+```bash
+tar -C frontend --exclude=node_modules --exclude='*/node_modules' --exclude='*/node_modules/*' --exclude='.env*' --exclude='*/.env*' --exclude=.git --exclude='*/.git' --exclude=dist --exclude='*/dist' -cf - . |
+docker run --rm -i --pull=missing --network host \
+  -e XRAY_BACKEND_PORT=9527 \
+  -e XRAY_FRONTEND_PORT=9528 \
+  -e COREPACK_NPM_REGISTRY=https://registry.npmmirror.com \
+  -e npm_config_registry=https://registry.npmmirror.com \
+  docker.m.daocloud.io/library/node:22-bookworm-slim sh -lc 'set -eu
+mkdir -p /work/frontend
+tar -C /work/frontend -xf -
+cd /work/frontend
+corepack enable pnpm
+corepack prepare pnpm@10.33.0 --activate
+pnpm install --frozen-lockfile
+pnpm dev'
+```
+
+前端服务会监听 `http://127.0.0.1:9528/`，按 Ctrl+C 会移除临时容器。该方式运行的是容器内源码快照，不实时挂载宿主目录；修改前端源码后需停止并重新运行上面的命令。若端口被占用，不要停止占用者；应让后端、CSRF 来源、`XRAY_FRONTEND_PORT` 与 `XRAY_BACKEND_PORT` 使用同一组新端口。
 
 ## 本地门禁
 
@@ -72,7 +130,7 @@ uv run --project backend pytest -c backend/pyproject.toml backend/tests -q
 
 前端是仓库内独立 pnpm workspace，要求 Node.js `>=22.18` 和 pnpm `10.33.x`，不读取同级项目的依赖或环境文件。
 
-前端基于官方 Vben Admin `v5.7.0`（commit
+前端基于官方 Vben Admin `v5.7.0`（提交
 `63a38dce49ba109f61607994e21ba921d8e970e9`，MIT）源码闭包二次开发。实际源码已
 vendored 为 30 个 workspace 包（26 个运行包和 4 个内部构建支持包），清单、
 许可证、同步边界和唯一 access-store 持久化适配见

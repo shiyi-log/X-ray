@@ -19,6 +19,16 @@ subscription_urlpatterns = [
     path("plans/<uuid:plan_id>/", management_api.plans, name="subscription-plan-detail"),
     path("catalog/", management_api.catalog, name="subscription-catalog"),
     path("<uuid:subscription_id>/", management_api.subscription_detail, name="subscription-detail"),
+    path(
+        "<uuid:subscription_id>/tokens/",
+        admin_views.token_collection,
+        name="subscription-token-list",
+    ),
+    path(
+        "<uuid:subscription_id>/tokens/<uuid:token_id>/revoke/",
+        admin_views.revoke_token,
+        name="subscription-token-revoke",
+    ),
     path("<uuid:subscription_id>/assign/", management_api.assign, name="subscription-assign"),
     path("<uuid:subscription_id>/rotate/", admin_views.rotate, name="subscription-rotate"),
     path("<uuid:subscription_id>/publish/", admin_views.publish, name="subscription-publish"),

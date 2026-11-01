@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-10-31：当前交付版本为 `0.10.0`。本版将运营门禁纳入管理台可见配置，保留单个 IP 地址池、地区额度、服务器运行状态和流量统计，并让云账号、地区创建策略及 provider 能力阻断原因在前端可见。GitHub Release 提供不可变源码标签和一键安装器资产；专用本地门禁、外部云资源和生产部署状态以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
+2026-11-02：当前交付版本为 `0.11.0`。本版完成单订阅池与统一订阅链接改造，创建订阅只需名称，Token 服务端随机生成并支持独立撤销；套餐、到期和流量字段不再限制 ACTIVE 订阅，节点协议配置作为底层兼容能力保留。服务器管理、地区额度、IPv4、中文运行状态和流量统计继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的实际证据为准。
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 

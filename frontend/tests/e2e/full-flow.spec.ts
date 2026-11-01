@@ -40,15 +40,11 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
     }
     await expect(page.getByRole('link', { name: '节点池', exact: true })).toHaveCount(0);
 
-    await page.goto('/access-profiles');
-    await page.getByRole('button', { name: '新建访问配置' }).click();
-    const createDialog = page.getByRole('dialog', { name: '新建访问配置' });
+    await page.goto('/subscriptions');
+    await page.getByRole('button', { name: '创建 Token' }).click();
+    const createDialog = page.getByRole('dialog', { name: '创建 Token' });
     await createDialog.getByLabel('名称').fill(profileName);
-    await createDialog.locator('button[type="submit"]').click();
-
-    const profileRow = page.getByRole('row').filter({ hasText: profileName });
-    await expect(profileRow).toBeVisible();
-    await profileRow.getByRole('button', { name: '签发 Token' }).click();
+    await createDialog.getByRole('button', { name: '保存 Token' }).click();
     const delivery = page.getByRole('dialog', { name: '一次性交付' });
     deliveredToken = (await delivery.locator('code').first().textContent()) || '';
     expect(deliveredToken).toHaveLength(43);
@@ -65,7 +61,7 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
       .getByRole('menuitem', { name: '订阅管理', exact: true })
       .click();
     await expect(page).toHaveURL(/\/subscriptions$/);
-    await expect(page.getByRole('heading', { name: '订阅' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '订阅池' })).toBeVisible();
     const subscriptionRow = page.getByRole('row').filter({ hasText: profileName });
     await expect(subscriptionRow).toBeVisible();
 

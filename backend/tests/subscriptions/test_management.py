@@ -42,53 +42,118 @@ def write(client, path, body, key=None, method="post"):
 
 
 @pytest.mark.django_db
-def test_profile_plan_crud_idempotency_and_aware_expiry(authenticated):
+def test_profile_creation_accepts_name_only_and_is_unlimited(authenticated):
     client, _ = authenticated
-    plan = write(
-        client,
-        "/api/v1/subscriptions/plans/",
-        {"name": "monthly", "duration_days": 30, "traffic_limit_bytes": 10000},
-    )
-    assert plan.status_code == 201
     key = uuid4()
-    payload = {"name": "phone", "plan_id": plan.json()["id"]}
+    payload = {"name": "phone"}
     first = write(client, "/api/v1/access-profiles/", payload, key)
     again = write(client, "/api/v1/access-profiles/", payload, key)
     assert first.status_code == again.status_code == 201
     assert first.json()["id"] == again.json()["id"]
-    assert first.json()["traffic_limit_bytes"] == 10000
+    assert first.json()["plan_id"] is None
+    assert first.json()["traffic_limit_bytes"] is None
+    assert first.json()["expires_at"] is None
     assert first.json()["usage_updated_at"] is None
     assert write(client, "/api/v1/access-profiles/", {"name": "other"}, key).status_code == 409
     path = f"/api/v1/access-profiles/{first.json()['id']}/"
-    assert (
-        write(client, path, {"expires_at": "2030-01-01T00:00:00"}, method="patch").status_code
-        == 400
-    )
-    assert (
-        write(client, path, {"expires_at": "2030-01-01T00:00:00+08:00"}, method="patch").status_code
-        == 200
-    )
+    for unsupported in (
+        {"plan_id": "00000000-0000-0000-0000-000000000001"},
+        {"traffic_limit_bytes": 1},
+        {"expires_at": "2030-01-01T00:00:00+08:00"},
+    ):
+        assert write(client, path, unsupported, method="patch").status_code == 400
     assert write(client, path, {"upload_bytes": 1}, method="patch").status_code == 400
+    renamed = write(client, path, {"name": "phone-renamed"}, method="patch")
+    assert renamed.status_code == 200
+    assert renamed.json()["name"] == "phone-renamed"
 
 
 @pytest.mark.django_db
-def test_expiry_exact_boundary_and_quota():
+def test_assignment_without_protocol_ids_includes_all_publishable_protocols(
+    ready_node, authenticated
+):
+    client, _admin = authenticated
+    profile = AccessProfile.objects.create(name="all-protocols")
+    issued = TokenService.issue(profile.pk)
+    first = NodeProtocol.objects.create(node=ready_node, protocol="vless", port=18443)
+    second = NodeProtocol.objects.create(node=ready_node, protocol="vmess", port=18444)
+
+    response = write(
+        client,
+        f"/api/v1/subscriptions/{issued.subscription_id}/assign/",
+        {},
+    )
+
+    assert response.status_code == 202
+    assert set(profile.node_credentials.values_list("protocol_id", flat=True)) == {
+        first.pk,
+        second.pk,
+    }
+
+
+@pytest.mark.django_db
+def test_issue_assigns_all_publishable_protocols_without_protocol_ui(ready_node, authenticated):
+    client, _admin = authenticated
+    first = NodeProtocol.objects.create(node=ready_node, protocol="vless", port=18445)
+    second = NodeProtocol.objects.create(node=ready_node, protocol="vmess", port=18446)
+    profile = AccessProfile.objects.create(name="issued-all-protocols")
+
+    response = write(
+        client,
+        f"/api/v1/access-profiles/{profile.pk}/subscription/",
+        {},
+    )
+
+    assert response.status_code == 201
+    profile.refresh_from_db()
+    assert set(profile.node_credentials.values_list("protocol_id", flat=True)) == {
+        first.pk,
+        second.pk,
+    }
+    assert profile.node_credentials.filter(revoked_at__isnull=True).count() == 2
+
+
+@pytest.mark.django_db
+def test_issue_rolls_back_token_when_default_protocol_assignment_fails(authenticated, monkeypatch):
+    from apps.subscriptions.delivery import DeliveryService
+    from apps.subscriptions.models import SecretDeliveryReceipt, Subscription, SubscriptionToken
+    from common.errors import DomainError
+
+    _client, admin = authenticated
+    profile = AccessProfile.objects.create(name="assignment-rollback")
+
+    def fail(_profile_id, *, protocol_ids, **_kwargs):
+        assert protocol_ids is None
+        raise DomainError("ASSIGNMENT_FAILED", "协议分配失败", status_code=409)
+
+    monkeypatch.setattr(
+        "apps.subscriptions.access.AccessService.assign", staticmethod(fail)
+    )
+    with pytest.raises(DomainError, match="协议分配失败"):
+        DeliveryService.issue(profile.pk, admin=admin)
+
+    assert not Subscription.objects.filter(profile=profile).exists()
+    assert not SubscriptionToken.objects.filter(subscription__profile=profile).exists()
+    assert not SecretDeliveryReceipt.objects.filter(subscription__profile=profile).exists()
+
+
+@pytest.mark.django_db
+def test_legacy_expiry_and_quota_fields_do_not_block_active_profile():
     now = timezone.now()
     profile = AccessProfile(name="expiry", expires_at=now, traffic_limit_bytes=100)
     assert quota_state(profile, now=now - timedelta(microseconds=1)) == "ACTIVE"
-    assert quota_state(profile, now=now) == "EXPIRED"
-    assert quota_state(profile, now=now + timedelta(microseconds=1)) == "EXPIRED"
-    profile.expires_at = None
     profile.upload_bytes, profile.download_bytes = 40, 60
-    assert quota_state(profile) == "QUOTA_EXHAUSTED"
+    assert quota_state(profile, now=now) == "ACTIVE"
+    assert quota_state(profile, now=now + timedelta(microseconds=1)) == "ACTIVE"
     profile.status = "REVOKED"
-    with pytest.raises(Exception):
-        update_policy(profile, {"expires_at": None})
+    with pytest.raises(Exception) as exc_info:
+        update_policy(profile, {"name": "renamed"})
+    assert exc_info.value.code == "PROFILE_NOT_ACTIVE"
 
 
 @pytest.mark.django_db
 @override_settings(ROOT_URLCONF="config.subscription_urls")
-def test_expired_or_over_quota_public_download_is_denied_but_revoked_stays_410(
+def test_legacy_expiry_does_not_block_public_download_but_revoked_stays_410(
     publishable_subscription,
 ):
     issued, subscription, _, _ = publishable_subscription
@@ -96,7 +161,7 @@ def test_expired_or_over_quota_public_download_is_denied_but_revoked_stays_410(
     profile = subscription.profile
     profile.expires_at = timezone.now()
     profile.save()
-    assert Client().get(f"/s/{issued.raw_token}?format=clash").status_code == 403
+    assert Client().get(f"/s/{issued.raw_token}?format=clash").status_code == 200
     TokenService.disable(subscription.pk)
     assert Client().get(f"/s/{issued.raw_token}?format=clash").status_code == 410
 
@@ -269,10 +334,10 @@ def test_metering_snapshot_rejects_wrong_generation_and_counts_trusted_values(
 
 
 @pytest.mark.django_db
-def test_expiry_enqueues_removal_and_does_not_requeue_unchanged_config(ready_node, authenticated):
+def test_enforce_limits_ignores_legacy_expiry(ready_node, authenticated):
     from apps.subscriptions.tasks import enforce_limits
 
-    _, admin = authenticated
+    _client, _admin = authenticated
     p = AccessProfile.objects.create(
         name="expired-node", expires_at=timezone.now() - timedelta(seconds=1)
     )
@@ -281,35 +346,16 @@ def test_expiry_enqueues_removal_and_does_not_requeue_unchanged_config(ready_nod
     ready_node.refresh_from_db()
     ready_node.applied_generation = ready_node.desired_generation
     ready_node.save()
-    operations = enforce_limits()
-    assert len(operations) == 1
-    assert enforce_limits() == []
-    requests = []
-
-    class Transport:
-        def apply(self, request):
-            requests.append(request)
-            return {
-                "applied_generation": request["generation"],
-                "config_test_passed": True,
-                "service_restarted": True,
-            }
-
-    AccessService.sync(operations[0].pk, transport_factory=lambda _: Transport())
-    assert all(i["tag"] == "manager-api" for i in requests[0]["config"]["inbounds"])
     assert enforce_limits() == []
 
 
 @pytest.mark.django_db
-def test_no_fake_socks_metering_for_limited_plan(ready_node, authenticated):
-    from common.errors import DomainError
-
-    _, admin = authenticated
+def test_socks5_assignment_is_allowed_without_limits(ready_node, authenticated):
+    _client, admin = authenticated
     p = AccessProfile.objects.create(name="limited", traffic_limit_bytes=100)
     protocol = NodeProtocol.objects.create(node=ready_node, protocol="socks5", port=21002)
-    with pytest.raises(DomainError, match="SOCKS5"):
-        AccessService.assign(p.pk, protocol_ids=[protocol.pk], admin=admin)
-    assert p.node_credentials.count() == 0
+    AccessService.assign(p.pk, protocol_ids=[protocol.pk], admin=admin)
+    assert p.node_credentials.filter(protocol=protocol, revoked_at__isnull=True).exists()
 
 
 @pytest.mark.django_db

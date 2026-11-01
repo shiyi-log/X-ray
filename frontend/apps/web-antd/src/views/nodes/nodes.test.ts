@@ -128,6 +128,108 @@ describe('server management', () => {
     }
   });
 
+  it('opens region allocation as a modal with every supported region initialized to zero', async () => {
+    mockNodes();
+    const emptyPools = { items: [], total: 0, page: 1, page_size: 20 };
+    vi.spyOn(resourcesApi, 'nodePools').mockResolvedValue(emptyPools);
+    const createPool = vi.spyOn(resourcesApi, 'createNodePool').mockResolvedValue({
+      id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 2,
+      allow_create: true,
+      used: 0, available: 2,
+      regions: ['ap-southeast-1'],
+      allocations: [{ region: 'ap-southeast-1', quota: 2, used: 0, available: 2 }],
+    });
+    const { wrapper } = mountNodes();
+
+    try {
+      await flushPromises();
+      await wrapper.findAll('button').find((button) => button.text() === '地区分配')!.trigger('click');
+      await flushPromises();
+      const dialog = new DOMWrapper([...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')]
+        .find((item) => item.style.display !== 'none')!);
+      for (const region of ['ap-southeast-1', 'ap-northeast-1', 'ap-east-1', 'us-east-1', 'us-west-2']) {
+        expect(dialog.text()).toContain(region);
+      }
+      const quotas = dialog.findAll('input[aria-label$="额度"]');
+      expect(quotas.map((input) => (input.element as HTMLInputElement).value)).toEqual(['0', '0', '0', '0', '0']);
+      await dialog.get('[aria-label="ap-southeast-1额度"]').setValue('2');
+      await dialog.get('form').trigger('submit');
+      await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
+      expect(createPool).toHaveBeenCalledWith({
+        allocations: [
+          { region: 'ap-southeast-1', quota: 2 },
+          { region: 'ap-northeast-1', quota: 0 },
+          { region: 'ap-east-1', quota: 0 },
+          { region: 'us-east-1', quota: 0 },
+          { region: 'us-west-2', quota: 0 },
+        ],
+        allow_create: true,
+      });
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('submits cloud status updates and can show confirmed missing servers', async () => {
+    const missingNode = {
+      ...node,
+      id: 'node-gone',
+      name: '历史服务器',
+      observation_error: 'RESOURCE_NOT_FOUND',
+    } as ManagedNode;
+    mockNodes([node, missingNode]);
+    const refreshNodeStatus = vi.spyOn(resourcesApi, 'refreshNodeStatus').mockResolvedValue({
+      operation_id: 'refresh-operation', status: 'PENDING', target_type: 'node', target_id: 'node-1',
+    });
+    const { wrapper } = mountNodes();
+
+    try {
+      await flushPromises();
+      expect(wrapper.text()).not.toContain('历史服务器');
+      await wrapper.find('[aria-label="显示已不存在服务器"]').trigger('click');
+      await flushPromises();
+      expect(wrapper.text()).toContain('历史服务器');
+      await wrapper.findAll('button').find((button) => button.text().includes('更新状态'))!.trigger('click');
+      await flushPromises();
+      expect(refreshNodeStatus).toHaveBeenCalledTimes(2);
+      expect(refreshNodeStatus).toHaveBeenCalledWith('node-1');
+      expect(refreshNodeStatus).toHaveBeenCalledWith('node-gone');
+      expect(wrapper.text()).toContain('已提交 2 台服务器的云端状态更新');
+      expect(wrapper.text()).toContain('操作完成后刷新列表查看');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('checks every server across list pages', async () => {
+    const allNodes = Array.from({ length: 101 }, (_, index) => ({
+      ...node,
+      id: `node-${index + 1}`,
+      external_id: `instance-${index + 1}`,
+    })) as ManagedNode[];
+    vi.spyOn(resourcesApi, 'nodes').mockImplementation(async (page = 1, pageSize = 25) => ({
+      items: allNodes.slice((page - 1) * pageSize, page * pageSize),
+      total: allNodes.length,
+      page,
+      page_size: pageSize,
+    }));
+    const refreshNodeStatus = vi.spyOn(resourcesApi, 'refreshNodeStatus').mockResolvedValue({
+      operation_id: 'refresh-operation', status: 'PENDING', target_type: 'node', target_id: 'node-1',
+    });
+    const { wrapper } = mountNodes();
+
+    try {
+      await flushPromises();
+      await wrapper.findAll('button').find((button) => button.text().includes('更新状态'))!.trigger('click');
+      await flushPromises();
+      expect(resourcesApi.nodes).toHaveBeenCalledWith(1, 100);
+      expect(resourcesApi.nodes).toHaveBeenCalledWith(2, 100);
+      expect(refreshNodeStatus).toHaveBeenCalledTimes(101);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it.each([
     ['starting', '启动中'],
     ['stopping', '停止中'],
@@ -295,7 +397,7 @@ describe('server management', () => {
       const dialog = new DOMWrapper([...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')]
         .find((item) => item.style.display !== 'none')!);
       expect(dialog.text()).toContain('已禁止创建新服务器');
-      expect(dialog.text()).toContain('打开地区设置');
+      expect(dialog.text()).toContain('打开地区分配');
       expect(dialog.findAll('button').find((button) => button.text().includes('提交创建操作'))!.element.hasAttribute('disabled')).toBe(true);
       expect(createNode).not.toHaveBeenCalled();
     } finally {

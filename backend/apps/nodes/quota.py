@@ -168,8 +168,8 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
             raise ValueError("each allocation must be an object")
         region = normalize_region(item.get("region"))
         quota = int(item.get("quota", 0))
-        if quota < 1:
-            raise ValueError("allocation quota must be at least 1")
+        if quota < 0:
+            raise ValueError("allocation quota must be at least 0")
         if region in seen:
             raise ValueError("allocation regions must be unique")
         seen.add(region)

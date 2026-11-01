@@ -5,7 +5,7 @@ from uuid import UUID
 from django.http import JsonResponse
 
 from apps.nodes.models import ManagedNode
-from apps.subscriptions.models import AccessProfile, NodeCredential
+from apps.subscriptions.models import AccessProfile, NodeCredential, SubscriptionToken
 from common.admin_api import admin_endpoint, json_payload, paginated_response
 from common.errors import DomainError
 
@@ -101,6 +101,19 @@ def preview(request):
             ],
         }
         phrase = "确认强制撤销"
+    elif kind == "subscription.token_revoke":
+        token = SubscriptionToken.objects.select_related("subscription").get(pk=target_id)
+        if str(params.get("subscription_id") or "") != str(token.subscription_id):
+            raise DomainError("PREVIEW_BINDING_MISMATCH", "预览与订阅不匹配", status_code=409)
+        if token.status != "ACTIVE":
+            raise DomainError("TOKEN_NOT_ACTIVE", "订阅令牌不是活动状态", status_code=409)
+        snapshot = {
+            "subscription_id": str(token.subscription_id),
+            "token_epoch": token.token_epoch,
+            "status": token.status,
+            "subscription_status": token.subscription.status,
+        }
+        phrase = "确认撤销令牌"
     elif kind in {"node.reinstall", "node.quarantine"}:
         node = ManagedNode.objects.get(pk=target_id)
         snapshot = {

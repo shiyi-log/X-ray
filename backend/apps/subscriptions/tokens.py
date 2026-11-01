@@ -15,6 +15,7 @@ from .models import (
     AccessProfile,
     RevocationTombstone,
     Subscription,
+    SubscriptionPool,
     SubscriptionToken,
 )
 from .security_events import SecurityLedger
@@ -51,6 +52,30 @@ def _digest(raw_token: str) -> str:
 
 class TokenService:
     @staticmethod
+    def _revoke_token_locked(token: SubscriptionToken, *, reason: str) -> SubscriptionToken:
+        if token.status == "REVOKED":
+            return token
+        if token.status != "ACTIVE":
+            raise DomainError("TOKEN_NOT_ACTIVE", "订阅令牌不是活动状态", status_code=409)
+        token.revoked_at = timezone.now()
+        token.status = "REVOKED"
+        token.save(update_fields=["status", "revoked_at"])
+        tombstone, created = RevocationTombstone.objects.get_or_create(
+            token_digest=token.token_digest,
+            defaults={"reason": reason, "revoked_at": token.revoked_at},
+        )
+        if created:
+            event = SecurityLedger.append(
+                kind="TOKEN_REVOKED",
+                payload={"token_digest": token.token_digest, "reason": tombstone.reason},
+            )
+            RevocationTombstone.objects.filter(pk=tombstone.pk).update(
+                source_event_id=event["event_id"],
+                source_sequence=event["sequence"],
+            )
+        return token
+
+    @staticmethod
     def issue(profile_id: UUID) -> IssuedToken:
         raw, digest = _fresh_token()
         try:
@@ -72,7 +97,12 @@ class TokenService:
                         "订阅令牌未交付；请重新发起创建",
                         status_code=409,
                     )
+                pool, _created = SubscriptionPool.objects.get_or_create(
+                    singleton_key=1,
+                    defaults={"name": "default"},
+                )
                 subscription = Subscription.objects.create(
+                    pool=pool,
                     profile=profile,
                     token_digest=digest,
                     token_epoch=1,
@@ -125,14 +155,19 @@ class TokenService:
                 token_epoch=new_epoch,
                 status="ACTIVE",
             )
-            current.status = "REVOKED"
-            current.revoked_at = timezone.now()
+            if current.status != "REVOKED":
+                current.status = "REVOKED"
+                current.revoked_at = timezone.now()
             current.replaced_by = replacement
             current.save(update_fields=["status", "revoked_at", "replaced_by"])
+            revoked_at = current.revoked_at or timezone.now()
             tombstone, created = RevocationTombstone.objects.get_or_create(
                 token_digest=current.token_digest,
-                defaults={"reason": "token-rotated", "revoked_at": current.revoked_at},
+                defaults={"reason": "token-rotated", "revoked_at": revoked_at},
             )
+            if current.revoked_at != tombstone.revoked_at:
+                current.revoked_at = tombstone.revoked_at
+                current.save(update_fields=["revoked_at"])
             if created:
                 event = SecurityLedger.append(
                     kind="TOKEN_REVOKED",
@@ -160,45 +195,44 @@ class TokenService:
                 subscription=subscription,
                 token_epoch=subscription.token_epoch,
             )
-            token.status = "REVOKED"
-            token.revoked_at = timezone.now()
-            token.save(update_fields=["status", "revoked_at"])
-            tombstone, created = RevocationTombstone.objects.get_or_create(
-                token_digest=token.token_digest,
-                defaults={
-                    "reason": "subscription-disabled",
-                    "revoked_at": token.revoked_at,
-                },
-            )
-            if created:
-                event = SecurityLedger.append(
-                    kind="TOKEN_REVOKED",
-                    payload={
-                        "token_digest": token.token_digest,
-                        "reason": tombstone.reason,
-                    },
-                )
-                RevocationTombstone.objects.filter(pk=tombstone.pk).update(
-                    source_event_id=event["event_id"],
-                    source_sequence=event["sequence"],
-                )
+            TokenService._revoke_token_locked(token, reason="subscription-disabled")
             subscription.status = "REVOKED"
             subscription.save(update_fields=["status", "updated_at"])
+
+    @staticmethod
+    def revoke_token(subscription_id: UUID, token_id: UUID) -> SubscriptionToken:
+        with transaction.atomic():
+            Subscription.objects.select_for_update().get(pk=subscription_id)
+            token = (
+                SubscriptionToken.objects.select_for_update()
+                .get(pk=token_id, subscription_id=subscription_id)
+            )
+            return TokenService._revoke_token_locked(token, reason="token-revoked")
 
     @staticmethod
     def resolve(raw_token: str) -> Subscription:
         digest = _digest(raw_token)
         if RevocationTombstone.objects.filter(token_digest=digest).exists():
             raise TokenGone()
+        token = SubscriptionToken.objects.filter(token_digest=digest).first()
         subscription = (
             Subscription.objects.select_related("profile", "current_revision")
             .filter(token_digest=digest)
             .first()
         )
+        if token is None:
+            if subscription is None:
+                raise TokenUnknown()
+            raise TokenGone()
+        if token.status != "ACTIVE":
+            raise TokenGone()
         if subscription is not None:
-            if subscription.status != "ACTIVE" or subscription.profile.status != "ACTIVE":
+            if (
+                token.subscription_id != subscription.pk
+                or token.token_epoch != subscription.token_epoch
+                or subscription.status != "ACTIVE"
+                or subscription.profile.status != "ACTIVE"
+            ):
                 raise TokenGone()
             return subscription
-        if SubscriptionToken.objects.filter(token_digest=digest).exists():
-            raise TokenGone()
-        raise TokenUnknown()
+        raise TokenGone()

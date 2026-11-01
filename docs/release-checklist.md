@@ -1,4 +1,18 @@
-# v0.9.0 交付与发布检查表
+# v0.11.0 交付与发布检查表
+
+本轮发布聚焦单订阅池、名称-only 订阅创建、随机 Token、无限策略、自动协议分配、服务器管理和地区额度改造。订阅聚焦测试、前端订阅检查、类型、定向 Lint、边界、验收矩阵和差异检查已通过；共享测试库完整套件复跑因残留连接与缺失 `SecurityState` 保持 `blocked`，不删除或重建共享测试库。真实 AWS/SWAS、SSH、生产 TLS、生产切换、设备和完整浏览器 E2E 仍为 `not-run` 或 `blocked`。
+
+## v0.11.0 当前状态
+
+- [x] `VERSION`、backend OpenAPI、backend/frontend package 版本同步为 `0.11.0`。
+- [x] `CHANGELOG.md`、`docs/progress.md`、`docs/version-record.md` 和验收矩阵已更新。
+- [x] 订阅后端聚焦测试 `36 passed`；前端订阅/交付测试 `7 passed`；vue-tsc、定向 ESLint、边界、验收矩阵和 `git diff --check` 通过。
+- [x] 9527/9528 当前本地服务由本工作树监听，readiness、登录页和本地一键登录探针均 HTTP 200。
+- [ ] 完整 backend/installer 全量门禁：共享测试库状态阻塞，清洁专用库证据沿用前序记录。
+- [ ] 真实 AWS/SWAS、SSH、公网探测、生产部署、生产 TLS、设备验收和完整浏览器 E2E：本版本未运行。
+- [ ] GitHub Release：待 `v0.11.0` 标签和安装器资产完成后回填不可变 SHA-256 证据。
+
+## Historical v0.9.0 checklist
 
 本清单区分“交付包可复现”和“生产已经上线”。只有独立服务器、域名/TLS、真实
 账号和恢复证据齐全后，生产矩阵项才可能从 `blocked` 改为 `passed`。

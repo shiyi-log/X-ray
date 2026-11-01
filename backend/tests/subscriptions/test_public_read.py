@@ -115,3 +115,19 @@ def test_valid_token_without_revision_is_service_unavailable():
     response = Client().get(f"/s/{issued.raw_token}?format=clash")
     assert response.status_code == 503
     assert response["Cache-Control"] == "no-store"
+
+
+@pytest.mark.django_db
+@override_settings(ROOT_URLCONF="config.subscription_urls")
+def test_canonical_url_defaults_to_mihomo_and_includes_published_nodes(
+    publishable_subscription,
+):
+    from apps.subscriptions.publishing import Publisher
+
+    issued, subscription, _node, _credential = publishable_subscription
+    Publisher.publish(subscription.pk)
+
+    response = Client().get(f"/s/{issued.raw_token}")
+    assert response.status_code == 200
+    assert response["Content-Type"].startswith("application/yaml")
+    assert b"proxies:" in response.content

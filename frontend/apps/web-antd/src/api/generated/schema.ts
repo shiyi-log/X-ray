@@ -262,6 +262,22 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/nodes/{node_id}/refresh/": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["node_refresh_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/operations/": {
         readonly parameters: {
             readonly query?: never;
@@ -438,6 +454,38 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/subscriptions/{subscription_id}/tokens/": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["subscription_tokens_list"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/subscriptions/{subscription_id}/tokens/{token_id}/revoke/": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["subscription_token_revoke_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/subscriptions/catalog/": {
         readonly parameters: {
             readonly query?: never;
@@ -535,6 +583,12 @@ export interface components {
             /** Format: date-time */
             readonly usage_updated_at?: string | null;
         };
+        readonly AccessProfileCreate: {
+            readonly name: string;
+        };
+        readonly AccessProfilePatch: {
+            readonly name?: string;
+        };
         readonly ActionPreview: {
             /** Format: date-time */
             readonly expires_at: string;
@@ -543,6 +597,14 @@ export interface components {
             readonly kind: string;
             readonly required_phrase: string;
             readonly snapshot?: {
+                readonly [key: string]: unknown;
+            };
+            /** Format: uuid */
+            readonly target_id: string;
+        };
+        readonly ActionPreviewRequest: {
+            readonly kind: string;
+            readonly params?: {
                 readonly [key: string]: unknown;
             };
             /** Format: uuid */
@@ -813,6 +875,12 @@ export interface components {
             readonly page_size: number;
             readonly total: number;
         };
+        readonly PaginatedSubscriptionTokenList: {
+            readonly items: readonly components["schemas"]["SubscriptionToken"][];
+            readonly page: number;
+            readonly page_size: number;
+            readonly total: number;
+        };
         readonly ProviderIdentityNetworkSetting: {
             readonly enabled: boolean;
             /** @enum {string} */
@@ -823,18 +891,22 @@ export interface components {
             /** Format: uuid */
             readonly subscription_id: string;
             readonly token: string;
-            readonly urls: {
-                readonly [key: string]: string;
-            };
+            /** Format: uri */
+            readonly url: string;
         };
         readonly Subscription: {
             /** Format: date-time */
             readonly created_at?: string;
             readonly current_revision?: number | null;
+            /** @enum {string|null} */
+            readonly current_token_status: "ACTIVE" | "REVOKED" | "EXPIRED" | null;
             readonly formats?: readonly string[];
             /** Format: uuid */
             readonly id: string;
             readonly policy?: components["schemas"]["AccessProfile"];
+            /** Format: uuid */
+            readonly pool_id: string;
+            readonly pool_name: string;
             /** Format: uuid */
             readonly profile_id: string;
             readonly profile_name: string;
@@ -856,6 +928,43 @@ export interface components {
             readonly id?: string;
             readonly name?: string;
             readonly traffic_limit_bytes?: number | null;
+        };
+        readonly SubscriptionToken: {
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: uuid */
+            readonly id: string;
+            readonly is_current: boolean;
+            /** Format: uuid */
+            readonly replaced_by_id?: string | null;
+            /** Format: date-time */
+            readonly revoked_at?: string | null;
+            /** @enum {string} */
+            readonly status: "ACTIVE" | "REVOKED" | "EXPIRED";
+            /** Format: uuid */
+            readonly subscription_id: string;
+            readonly token_epoch: number;
+        };
+        readonly SubscriptionTokenRevoke: {
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: uuid */
+            readonly id: string;
+            readonly is_current: boolean;
+            /** Format: uuid */
+            readonly replaced_by_id?: string | null;
+            /** Format: date-time */
+            readonly revoked_at?: string | null;
+            /** @enum {string} */
+            readonly status: "REVOKED";
+            /** Format: uuid */
+            readonly subscription_id: string;
+            readonly token_epoch: number;
+        };
+        readonly SubscriptionTokenRevokeRequest: {
+            readonly confirmation: string;
+            /** Format: uuid */
+            readonly preview_id: string;
         };
         readonly SystemInfo: {
             readonly allowed_hosts?: readonly string[];
@@ -935,7 +1044,7 @@ export interface operations {
         };
         readonly requestBody: {
             readonly content: {
-                readonly "application/json": components["schemas"]["GenericObject"];
+                readonly "application/json": components["schemas"]["AccessProfileCreate"];
             };
         };
         readonly responses: {
@@ -1039,7 +1148,7 @@ export interface operations {
         };
         readonly requestBody: {
             readonly content: {
-                readonly "application/json": components["schemas"]["GenericObject"];
+                readonly "application/json": components["schemas"]["AccessProfilePatch"];
             };
         };
         readonly responses: {
@@ -2049,6 +2158,61 @@ export interface operations {
             };
         };
     };
+    readonly node_refresh_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly node_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["GenericObject"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OperationAccepted"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
     readonly operations_list: {
         readonly parameters: {
             readonly query?: never;
@@ -2252,7 +2416,7 @@ export interface operations {
         };
         readonly requestBody: {
             readonly content: {
-                readonly "application/json": components["schemas"]["GenericObject"];
+                readonly "application/json": components["schemas"]["ActionPreviewRequest"];
             };
         };
         readonly responses: {
@@ -2276,6 +2440,15 @@ export interface operations {
             };
             /** @description Authentication required */
             readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Recent step-up authentication required */
+            readonly 403: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -2576,6 +2749,129 @@ export interface operations {
             };
             /** @description Authentication required */
             readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly subscription_tokens_list: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly subscription_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["PaginatedSubscriptionTokenList"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly subscription_token_revoke_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path: {
+                readonly subscription_id: string;
+                readonly token_id: string;
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["SubscriptionTokenRevokeRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SubscriptionTokenRevoke"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Recent step-up authentication required */
+            readonly 403: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Subscription token not found */
+            readonly 404: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

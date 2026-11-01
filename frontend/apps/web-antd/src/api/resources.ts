@@ -42,14 +42,16 @@ export interface ProfilePolicy {
   entitlement_state: string;
 }
 export type AccessProfile = components['schemas']['AccessProfile'] & Partial<ProfilePolicy>;
-export type Subscription = components['schemas']['Subscription'] & { policy?: ProfilePolicy };
-export interface SubscriptionPlan { id: string; name: string; duration_days: number | null; traffic_limit_bytes: number | null; enabled: boolean }
-export interface ProtocolOption { id: string; node_id: string; name: string; protocol: string; port: number; transport: string; tls: boolean; state: string; publishable_tls: boolean }
+export type Subscription = components['schemas']['Subscription'] & {
+  policy?: ProfilePolicy;
+  current_token_status?: 'ACTIVE' | 'REVOKED' | 'EXPIRED' | null;
+};
 export interface SubscriptionDetail extends Subscription {
   profile: AccessProfile;
   assignments: { protocol_id: string; node_id: string; protocol: string; desired_generation: number; applied_generation: number; ready: boolean }[];
   revisions: { number: number; published_at: string; usable: boolean; formats: string[] }[];
 }
+export type SubscriptionToken = components['schemas']['SubscriptionToken'];
 export type AuditEvent = components['schemas']['AuditEvent'];
 export type Overview = components['schemas']['Overview'];
 export type ProviderIdentityChecksNetworkSource = 'DATABASE' | 'ENVIRONMENT';
@@ -125,8 +127,14 @@ export const resourcesApi = {
     allow_create?: boolean;
   }) =>
     apiRequest<NodePool>(`/api/v1/node-pools/${id}/`, json('PATCH', payload)),
-  nodes: () => apiRequest<Page<ManagedNode>>('/api/v1/nodes/'),
+  nodes: (page = 1, pageSize = 25) =>
+    apiRequest<Page<ManagedNode>>(`/api/v1/nodes/?page=${page}&page_size=${pageSize}`),
   nodeDetail: (id: string) => apiRequest<ManagedNode>(`/api/v1/nodes/${id}/`),
+  refreshNodeStatus: (id: string, idempotencyKey: string = crypto.randomUUID()) =>
+    apiRequest<OperationAccepted>(
+      `/api/v1/nodes/${id}/refresh/`,
+      json('POST', {}, { 'Idempotency-Key': idempotencyKey }),
+    ),
   nodeAction: (
     id: string,
     action: 'start' | 'reboot' | 'delete',
@@ -148,20 +156,27 @@ export const resourcesApi = {
     apiRequest<Operation>(`/api/v1/operations/${id}/cancel/`, json('POST', {})),
   retryOperation: (id: string) =>
     apiRequest<Operation>(`/api/v1/operations/${id}/retry/`, json('POST', {})),
-  accessProfiles: () => apiRequest<Page<AccessProfile>>('/api/v1/access-profiles/'),
+  accessProfiles: (page = 1, pageSize = 25) =>
+    apiRequest<Page<AccessProfile>>(`/api/v1/access-profiles/?page=${page}&page_size=${pageSize}`),
   createAccessProfile: (value: string | Record<string, unknown>, key: string = crypto.randomUUID()) =>
     apiRequest<AccessProfile>('/api/v1/access-profiles/', json('POST', typeof value === 'string' ? { name: value } : value, { 'Idempotency-Key': key })),
   updateAccessProfile: (id: string, payload: Record<string, unknown>, key: string = crypto.randomUUID()) =>
     apiRequest<AccessProfile>(`/api/v1/access-profiles/${id}/`, json('PATCH', payload, { 'Idempotency-Key': key })),
-  subscriptionPlans: () => apiRequest<Page<SubscriptionPlan>>('/api/v1/subscriptions/plans/'),
-  saveSubscriptionPlan: (payload: Omit<SubscriptionPlan, 'id'>, id?: string) =>
-    apiRequest<SubscriptionPlan>(`/api/v1/subscriptions/plans/${id ? `${id}/` : ''}`, json(id ? 'PATCH' : 'POST', payload, { 'Idempotency-Key': crypto.randomUUID() })),
-  subscriptionCatalog: () => apiRequest<{ items: ProtocolOption[] }>('/api/v1/subscriptions/catalog/'),
-  createSubscriptionProtocol: (payload: Record<string, unknown>) =>
-    apiRequest<{id: string}>('/api/v1/subscriptions/catalog/', json('POST', payload, { 'Idempotency-Key': crypto.randomUUID() })),
   subscriptionDetail: (id: string) => apiRequest<SubscriptionDetail>(`/api/v1/subscriptions/${id}/`),
-  assignSubscription: (id: string, protocolIds: string[], key: string = crypto.randomUUID()) =>
-    apiRequest<{operation_ids: string[]; pending: boolean}>(`/api/v1/subscriptions/${id}/assign/`, json('POST', { protocol_ids: protocolIds }, { 'Idempotency-Key': key })),
+  subscriptionTokens: (subscriptionId: string, page = 1, pageSize = 25) =>
+    apiRequest<Page<SubscriptionToken>>(
+      `/api/v1/subscriptions/${subscriptionId}/tokens/?page=${page}&page_size=${pageSize}`,
+    ),
+  revokeSubscriptionToken: (
+    subscriptionId: string,
+    tokenId: string,
+    payload: { preview_id: string; confirmation: string },
+    idempotencyKey: string,
+  ) =>
+    apiRequest<SubscriptionToken>(
+      `/api/v1/subscriptions/${subscriptionId}/tokens/${tokenId}/revoke/`,
+      json('POST', payload, { 'Idempotency-Key': idempotencyKey }),
+    ),
   subscriptions: (page = 1, q = '') => apiRequest<Page<Subscription>>(`/api/v1/subscriptions/?page=${page}&q=${encodeURIComponent(q)}`),
   auditEvents: () => apiRequest<Page<AuditEvent>>('/api/v1/audit-events/'),
   createPreview: (payload: Record<string, unknown>) =>

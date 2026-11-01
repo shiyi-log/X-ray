@@ -47,7 +47,9 @@ def _response(body: bytes, *, status: int, content_type: str = "text/plain"):
 
 @require_http_methods(["GET", "HEAD"])
 def public_subscription(request, raw_token: str):
-    requested_format = request.GET.get("format", "shadowrocket")
+    # The canonical link has no query string and uses Mihomo, whose format
+    # supports every protocol currently published by the manager.
+    requested_format = request.GET.get("format", "mihomo")
     try:
         body = PublicSubscriptionReader.read(raw_token, format=requested_format)
         status = 200

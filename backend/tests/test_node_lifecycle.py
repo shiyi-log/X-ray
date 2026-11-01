@@ -1092,6 +1092,89 @@ def test_delete_keeps_quota_when_readback_is_unavailable(prepared_node, admin):
 
 
 @pytest.mark.django_db
+def test_refresh_records_current_cloud_state_without_cloud_mutation(
+    prepared_node, admin
+):
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.observation_error = "CLOUD_READ_FAILED"
+    node.save(update_fields=["observation_error", "updated_at"])
+    operation = make_node_action(admin, node, "refresh")
+    lifecycle, holder = make_lifecycle(node)
+    provider = lifecycle.reader_factory(node)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+    )
+
+    lifecycle.dispatch("refresh", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert node.raw_cloud_state == "running"
+    assert node.observation_error == ""
+    assert node.observed_at is not None
+    assert node.desired_state == "PRESENT"
+    assert node.consumes_quota is True
+    assert operation.status == "SUCCEEDED"
+    assert operation.result["cloud_status"] == "PRESENT"
+    assert holder["provider"].action_calls == []
+
+
+@pytest.mark.django_db
+def test_refresh_marks_confirmed_absence_without_deleting_or_releasing_quota(
+    prepared_node, admin
+):
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    operation = make_node_action(admin, node, "refresh")
+    lifecycle, _holder = make_lifecycle(node)
+
+    lifecycle.dispatch("refresh", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert node.raw_cloud_state == "NOT_FOUND"
+    assert node.observation_error == "RESOURCE_NOT_FOUND"
+    assert node.observed_at is not None
+    assert node.desired_state == "PRESENT"
+    assert node.consumes_quota is True
+    assert operation.status == "SUCCEEDED"
+    assert operation.result["cloud_status"] == "NOT_FOUND"
+
+
+@pytest.mark.django_db
+def test_refresh_does_not_mark_other_read_errors_as_absence(prepared_node, admin):
+    from common.errors import DomainError
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    operation = make_node_action(admin, node, "refresh")
+    lifecycle, _holder = make_lifecycle(node)
+    provider = lifecycle.reader_factory(node)
+
+    def fail_read(_resource):
+        raise DomainError("CLOUD_READ_FAILED", "test-only read failure", status_code=502)
+
+    provider.get_instance = fail_read
+    lifecycle.dispatch("refresh", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert node.raw_cloud_state == "stopped"
+    assert node.observation_error == "CLOUD_READ_FAILED"
+    assert node.desired_state == "PRESENT"
+    assert node.consumes_quota is True
+    assert operation.status == "FAILED"
+    assert operation.error_code == "CLOUD_READ_FAILED"
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("provider", ["aws_lightsail", "aliyun_swas"])
 def test_both_provider_kinds_use_same_lifecycle_contract(
     admin, cloud_account, provider

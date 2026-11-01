@@ -67,10 +67,34 @@ class NodeCredential(models.Model):
         raise ValidationError("node credentials are retained for revocation history")
 
 
+class SubscriptionPool(models.Model):
+    """The single shared subscription pool used by all delivered tokens."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    singleton_key = models.PositiveSmallIntegerField(default=1, unique=True, editable=False)
+    name = models.CharField(max_length=120, default="default")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(singleton_key=1),
+                name="subscription_pool_singleton_key_one",
+            )
+        ]
+
+    def delete(self, *args, **kwargs):
+        raise ValidationError("subscription pool is retained")
+
+
 class Subscription(models.Model):
     STATUS_CHOICES = [("ACTIVE", "Active"), ("REVOKED", "Revoked")]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pool = models.ForeignKey(
+        SubscriptionPool, on_delete=models.PROTECT, related_name="subscriptions"
+    )
     profile = models.OneToOneField(
         AccessProfile, on_delete=models.PROTECT, related_name="subscription"
     )

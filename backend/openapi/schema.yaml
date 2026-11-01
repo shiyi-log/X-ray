@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: X-ray Manager API
-  version: 0.10.0
+  version: 0.11.0
   description: Private administrator API. Secrets are write-only or delivered once.
 paths:
   /api/v1/auth/session:
@@ -531,6 +531,55 @@ paths:
         schema:
           type: string
           format: uuid
+  /api/v1/nodes/{node_id}/refresh/:
+    post:
+      operationId: node_refresh_create
+      responses:
+        '202':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OperationAccepted'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenericObject'
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
   /api/v1/nodes/{node_id}/actions/{action}/:
     post:
       operationId: node_actions_create
@@ -650,6 +699,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Recent step-up authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
       security:
       - cookieAuth: []
       requestBody:
@@ -657,7 +712,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenericObject'
+              $ref: '#/components/schemas/ActionPreviewRequest'
   /api/v1/operations/{operation_id}/:
     get:
       operationId: operations_retrieve
@@ -833,7 +888,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenericObject'
+              $ref: '#/components/schemas/AccessProfileCreate'
       parameters:
       - name: Idempotency-Key
         in: header
@@ -963,6 +1018,110 @@ paths:
                 $ref: '#/components/schemas/ApiError'
       security:
       - cookieAuth: []
+  /api/v1/subscriptions/{subscription_id}/tokens/:
+    get:
+      operationId: subscription_tokens_list
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedSubscriptionTokenList'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+  /api/v1/subscriptions/{subscription_id}/tokens/{token_id}/revoke/:
+    post:
+      operationId: subscription_token_revoke_create
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionTokenRevoke'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Recent step-up authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Subscription token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTokenRevokeRequest'
+      parameters:
+      - name: subscription_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: token_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
   /api/v1/subscriptions/{subscription_id}/rotate/:
     post:
       operationId: subscriptions_rotate_create
@@ -1202,7 +1361,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenericObject'
+              $ref: '#/components/schemas/AccessProfilePatch'
       parameters:
       - name: profile_id
         in: path
@@ -1720,7 +1879,7 @@ components:
                 - us-west-2
               quota:
                 type: integer
-                minimum: 1
+                minimum: 0
               used:
                 type: integer
                 minimum: 0
@@ -1758,7 +1917,7 @@ components:
           - us-west-2
         quota:
           type: integer
-          minimum: 1
+          minimum: 0
     NodePoolWriteRequest:
       type: object
       additionalProperties: false
@@ -2081,14 +2240,22 @@ components:
       type: object
       required:
       - id
+      - pool_id
+      - pool_name
       - profile_id
       - profile_name
       - status
+      - current_token_status
       - token_epoch
       properties:
         id:
           type: string
           format: uuid
+        pool_id:
+          type: string
+          format: uuid
+        pool_name:
+          type: string
         profile_id:
           type: string
           format: uuid
@@ -2098,6 +2265,13 @@ components:
           type: string
         status:
           type: string
+        current_token_status:
+          type: string
+          enum:
+          - ACTIVE
+          - REVOKED
+          - EXPIRED
+          nullable: true
         token_epoch:
           type: integer
         current_revision:
@@ -2123,6 +2297,43 @@ components:
           format: date-time
         policy:
           $ref: '#/components/schemas/AccessProfile'
+    SubscriptionToken:
+      type: object
+      required:
+      - id
+      - subscription_id
+      - token_epoch
+      - status
+      - is_current
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        subscription_id:
+          type: string
+          format: uuid
+        token_epoch:
+          type: integer
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - REVOKED
+          - EXPIRED
+        is_current:
+          type: boolean
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        replaced_by_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
     AuditEvent:
       type: object
       required:
@@ -2240,7 +2451,7 @@ components:
       required:
       - subscription_id
       - token
-      - urls
+      - url
       - display_once
       properties:
         subscription_id:
@@ -2249,12 +2460,74 @@ components:
         token:
           type: string
           writeOnly: true
-        urls:
-          type: object
-          additionalProperties:
-            type: string
+        url:
+          type: string
+          format: uri
         display_once:
           type: boolean
+    SubscriptionTokenRevokeRequest:
+      type: object
+      required:
+      - preview_id
+      - confirmation
+      additionalProperties: false
+      properties:
+        preview_id:
+          type: string
+          format: uuid
+        confirmation:
+          type: string
+          minLength: 1
+    ActionPreviewRequest:
+      type: object
+      required:
+      - kind
+      - target_id
+      additionalProperties: false
+      properties:
+        kind:
+          type: string
+        target_id:
+          type: string
+          format: uuid
+        params:
+          type: object
+          additionalProperties: true
+    SubscriptionTokenRevoke:
+      type: object
+      required:
+      - id
+      - subscription_id
+      - token_epoch
+      - status
+      - is_current
+      - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        subscription_id:
+          type: string
+          format: uuid
+        token_epoch:
+          type: integer
+        status:
+          type: string
+          enum:
+          - REVOKED
+        is_current:
+          type: boolean
+        revoked_at:
+          type: string
+          format: date-time
+          nullable: true
+        replaced_by_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
     GenericObject:
       type: object
       additionalProperties: true
@@ -2390,6 +2663,28 @@ components:
           type: integer
           minimum: 1
           maximum: 100
+    PaginatedSubscriptionTokenList:
+      type: object
+      required:
+      - items
+      - total
+      - page
+      - page_size
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionToken'
+        total:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        page_size:
+          type: integer
+          minimum: 1
+          maximum: 100
     PaginatedAuditEventList:
       type: object
       required:
@@ -2412,6 +2707,24 @@ components:
           type: integer
           minimum: 1
           maximum: 100
+    AccessProfileCreate:
+      type: object
+      additionalProperties: false
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+    AccessProfilePatch:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
     SubscriptionPlan:
       type: object
       properties:

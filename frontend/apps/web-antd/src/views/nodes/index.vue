@@ -6,7 +6,7 @@ import { Eye, MapPin, Play, Plus, RefreshCw, RotateCw, Trash2 } from 'lucide-vue
 import { Page } from '@vben/common-ui';
 
 import {
-  Alert, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Table,
+  Alert, Button, Card, Descriptions, Form, Input, Modal, Select, Space, Switch, Table,
 } from 'ant-design-vue';
 
 import {
@@ -14,12 +14,14 @@ import {
   type ActionPreview,
   type CloudAccount,
   type ManagedNode,
+  type NodePool,
 } from '@/api/resources';
 import { ApiError } from '@/api/request';
 import DangerConfirm from '@/components/DangerConfirm.vue';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
+import NodePoolAllocationEditor from '@/views/node-pools/NodePoolAllocationEditor.vue';
 
 const FormItem = Form.Item;
 const DescriptionItem = Descriptions.Item;
@@ -40,6 +42,7 @@ const knownRuntimeStates = new Set([
   'PRESENT', 'PROVISIONED', 'READY', 'REBOOTED', 'REBOOTING', 'RECONCILIATION',
   'RESERVED', 'RUNNING', 'SHUTTING_DOWN', 'STARTING', 'STOPPED', 'STOPPED_BY_USER', 'STOPPING',
   'TERMINATED', 'TERMINATING', 'UNKNOWN',
+  'NOT_FOUND', 'UNVERIFIED',
 ]);
 
 function providerLabel(provider: string) {
@@ -76,6 +79,8 @@ function formatBytes(value?: number) {
 }
 
 function runtimeStatus(node: ManagedNode) {
+  if (node.observation_error === 'RESOURCE_NOT_FOUND') return 'NOT_FOUND';
+  if (node.observation_error) return 'UNVERIFIED';
   const rawState = node.raw_cloud_state?.trim();
   if (rawState) {
     const normalized = rawState.toUpperCase().replace(/[\s-]+/g, '_');
@@ -101,13 +106,30 @@ function trafficTotal(node: ManagedNode) {
 const router = useRouter();
 const { data, loading, error, reload } = useResource(resourcesApi.nodes);
 const open = ref(false);
+const allocationOpen = ref(false);
+const allocationLoading = ref(false);
+const allocationPool = ref<NodePool | null>(null);
+const allocationError = ref('');
 const saving = ref(false);
 const formError = ref('');
 const actionError = ref('');
+const statusRefreshNotice = ref('');
+const statusRefreshError = ref('');
+const statusRefreshing = ref(false);
+const includeMissingNodes = ref(false);
 const busyAction = ref('');
 const accounts = ref<CloudAccount[]>([]);
 const form = reactive({ account_id: '', region: '', plan_id: '', image_id: '' });
-const empty = computed(() => !data.value?.items.length);
+const missingNodeCount = computed(() => data.value?.items.filter(
+  (item) => item.observation_error === 'RESOURCE_NOT_FOUND',
+).length ?? 0);
+const visibleNodes = computed(() => (data.value?.items ?? []).filter(
+  (item) => includeMissingNodes.value || item.observation_error !== 'RESOURCE_NOT_FOUND',
+));
+const empty = computed(() => !visibleNodes.value.length);
+const emptyText = computed(() => missingNodeCount.value && !includeMissingNodes.value
+  ? '云端已确认不存在的服务器已隐藏'
+  : '暂无服务器');
 const accountOptions = computed(() => accounts.value.map((item) => ({
   label: item.enabled ? item.name : `${item.name}（已停用）`,
   value: item.id,
@@ -186,6 +208,67 @@ async function openCreate() {
   } catch (caught) {
     formError.value = caught instanceof Error ? caught.message : '云账号加载失败';
     poolGateState.value = 'unconfigured';
+  }
+}
+
+async function openAllocationEditor() {
+  open.value = false;
+  allocationLoading.value = true;
+  allocationError.value = '';
+  try {
+    const page = await resourcesApi.nodePools();
+    allocationPool.value = page.items[0] ?? null;
+    allocationOpen.value = true;
+  } catch (caught) {
+    allocationError.value = caught instanceof Error ? caught.message : '地区分配加载失败';
+  } finally {
+    allocationLoading.value = false;
+  }
+}
+
+async function allocationSaved() {
+  try {
+    const page = await resourcesApi.nodePools();
+    allocationPool.value = page.items[0] ?? null;
+  } catch {
+    allocationError.value = '地区额度已保存，重新读取配置失败';
+  }
+}
+
+async function refreshCloudStatuses() {
+  if (statusRefreshing.value) return;
+  statusRefreshNotice.value = '';
+  statusRefreshError.value = '';
+  statusRefreshing.value = true;
+  try {
+    const firstPage = await resourcesApi.nodes(1, 100);
+    const allNodes = [...firstPage.items];
+    const pageCount = Math.ceil(firstPage.total / firstPage.page_size);
+    for (let page = 2; page <= pageCount; page += 1) {
+      const nextPage = await resourcesApi.nodes(page, 100);
+      allNodes.push(...nextPage.items);
+    }
+    const targets = allNodes.filter(
+      (node) => Boolean(node.external_id) && node.desired_state !== 'DELETED',
+    );
+    if (!targets.length) {
+      statusRefreshNotice.value = '没有可检查的云端服务器';
+      return;
+    }
+    const results = await Promise.allSettled(
+      targets.map((node) => resourcesApi.refreshNodeStatus(node.id)),
+    );
+    const accepted = results.filter((result) => result.status === 'fulfilled').length;
+    const failed = results.length - accepted;
+    if (failed) {
+      statusRefreshError.value = `${accepted} 台已提交，${failed} 台提交失败`;
+    } else {
+      statusRefreshNotice.value = `已提交 ${accepted} 台服务器的云端状态更新；操作完成后刷新列表查看，进度可在操作中心查看`;
+    }
+  } catch (caught) {
+    statusRefreshError.value = caught instanceof Error ? caught.message : '读取服务器列表失败';
+  } finally {
+    statusRefreshing.value = false;
   }
 }
 
@@ -346,23 +429,34 @@ function closeDelete() {
     <template #title><h1 class="mb-2 text-lg font-semibold">服务器管理</h1></template>
     <template #extra>
       <Space>
-        <Button title="刷新" aria-label="刷新" @click="reload">
+        <Button title="刷新列表" aria-label="刷新列表" @click="reload">
           <template #icon><RefreshCw :size="16" /></template>
         </Button>
-        <Button title="地区额度" aria-label="地区" @click="router.push('/node-pools')">
+        <Button :loading="statusRefreshing" @click="refreshCloudStatuses">
+          <template #icon><RotateCw :size="16" /></template>
+          更新状态
+        </Button>
+        <Button :loading="allocationLoading" @click="openAllocationEditor">
           <template #icon><MapPin :size="16" /></template>
-          地区
+          地区分配
         </Button>
         <Button type="primary" @click="openCreate">
           <template #icon><Plus :size="16" /></template>
           创建服务器
         </Button>
+        <Space v-if="missingNodeCount" size="small">
+          <Switch v-model:checked="includeMissingNodes" aria-label="显示已不存在服务器" />
+          <span>显示已不存在</span>
+        </Space>
       </Space>
     </template>
     <Alert v-if="actionError" class="mb-4" type="error" show-icon :message="actionError" role="alert" />
+    <Alert v-if="allocationError" class="mb-4" type="error" show-icon :message="allocationError" />
+    <Alert v-if="statusRefreshNotice" class="mb-4" type="info" show-icon :message="statusRefreshNotice" />
+    <Alert v-if="statusRefreshError" class="mb-4" type="warning" show-icon :message="statusRefreshError" />
     <Card>
-      <PageState :loading="loading" :error="error" :empty="empty" empty-text="暂无服务器" @retry="reload">
-        <Table :columns="columns" :data-source="data?.items || []" :pagination="false" :scroll="{ x: 'max-content' }" row-key="id">
+      <PageState :loading="loading" :error="error" :empty="empty" :empty-text="emptyText" @retry="reload">
+        <Table :columns="columns" :data-source="visibleNodes" :pagination="false" :scroll="{ x: 'max-content' }" row-key="id">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'name'">
               <strong>{{ record.name }}</strong>
@@ -422,9 +516,9 @@ function closeDelete() {
           v-if="poolGateState === 'disabled' || poolGateState === 'unconfigured'"
           class="mb-4"
           type="link"
-          @click="router.push('/node-pools')"
+          @click="openAllocationEditor"
         >
-          打开地区设置
+          打开地区分配
         </Button>
         <FormItem label="云账号" name="account_id" :rules="[{ required: true, message: '请选择云账号' }]">
           <Select v-model:value="form.account_id" :options="accountOptions" aria-label="云账号" :loading="poolGateState === 'loading'" placeholder="请选择" @change="accountChanged" />
@@ -457,6 +551,12 @@ function closeDelete() {
         <Button type="primary" html-type="submit" :loading="saving" :disabled="poolGateState !== 'ready'" block>{{ saving ? '提交中' : '提交创建操作' }}</Button>
       </Form>
     </Modal>
+
+    <NodePoolAllocationEditor
+      v-model:open="allocationOpen"
+      :pool="allocationPool"
+      @saved="allocationSaved"
+    />
 
     <Modal v-model:open="detailOpen" title="服务器详情" :footer="null">
       <PageState :loading="detailLoading" :error="detailError || undefined" @retry="selectedNode && openDetails(selectedNode)">

@@ -25,7 +25,7 @@ test('刷新恢复会话、真实空状态与固定 Operation', async ({ page, c
 
 test('真实网络失败显示错误且不伪造系统数据', async ({ page, context }) => {
   await page.goto('/subscriptions');
-  await expect(page.getByRole('heading', { name: '订阅' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '订阅池' })).toBeVisible();
   const refresh = page.getByRole('button', { name: '刷新' });
   await expect(refresh).toBeVisible();
   await context.setOffline(true);

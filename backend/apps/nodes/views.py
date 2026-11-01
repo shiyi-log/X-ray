@@ -71,8 +71,8 @@ def pool_collection(request):
         raise ValueError("allocations must be a non-empty list")
     if any(not isinstance(item, dict) for item in allocations):
         raise ValueError("each allocation must be an object")
-    if any(int(item.get("quota", 0)) < 1 for item in allocations):
-        raise ValueError("allocation quota must be at least 1")
+    if any(int(item.get("quota", 0)) < 0 for item in allocations):
+        raise ValueError("allocation quota must be at least 0")
     created = False
     with transaction.atomic():
         pool = NodePool.objects.filter(singleton_key=1).first()
@@ -189,6 +189,33 @@ def node_detail(request, node_id):
         pk=node_id
     )
     return JsonResponse(node_representation(node))
+
+
+@admin_endpoint("POST")
+def node_refresh(request, node_id):
+    json_payload(request)
+    key = _uuid(request.headers.get("Idempotency-Key"), "Idempotency-Key")
+    with transaction.atomic():
+        node = ManagedNode.objects.select_related("cloud_credential_version").get(
+            pk=node_id
+        )
+        if not node.external_id or node.desired_state == "DELETED":
+            raise DomainError(
+                "NODE_NOT_PROVISIONED", "服务器尚无可刷新的云实例", status_code=409
+            )
+        operation = OperationService.submit(
+            kind="node.refresh",
+            target_id=node.pk,
+            params={
+                "region": node.region,
+                "account_id": str(node.cloud_account_id),
+            },
+            key=key,
+            preview_id=None,
+            admin=request.xray_admin,
+            cloud_credential_version=node.cloud_credential_version,
+        )
+    return _operation_response(operation)
 
 
 @admin_endpoint("POST", recent=True)

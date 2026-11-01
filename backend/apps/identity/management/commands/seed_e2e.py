@@ -15,6 +15,7 @@ from apps.subscriptions.models import (
     AccessProfile,
     SecurityState,
     Subscription,
+    SubscriptionPool,
     SubscriptionRevision,
     SubscriptionToken,
 )
@@ -78,7 +79,12 @@ class Command(BaseCommand):
         AccessProfile.objects.create(name="e2e-new-device")
         revoke_profile = AccessProfile.objects.create(name="e2e-revocation-device")
         token_digest = hashlib.sha256(FIXED_TOKEN.encode()).hexdigest()
+        pool, _created = SubscriptionPool.objects.get_or_create(
+            singleton_key=1,
+            defaults={"name": "default"},
+        )
         subscription = Subscription.objects.create(
+            pool=pool,
             profile=revoke_profile,
             token_digest=token_digest,
             token_epoch=1,

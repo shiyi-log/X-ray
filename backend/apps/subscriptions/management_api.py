@@ -193,9 +193,9 @@ def subscription_detail(request, subscription_id):
     from .models import NodeCredential
     from .serializers import subscription_representation
 
-    subscription = Subscription.objects.select_related("profile", "current_revision").get(
-        pk=subscription_id
-    )
+    subscription = Subscription.objects.select_related(
+        "pool", "profile", "current_revision"
+    ).get(pk=subscription_id)
     value = subscription_representation(subscription)
     value["profile"] = profile_representation(subscription.profile)
     latest = {}
@@ -236,14 +236,15 @@ def assign(request, subscription_id):
 
     payload = json_payload(request)
     ids = payload.get("protocol_ids")
-    if not isinstance(ids, list) or len(ids) > 100:
-        raise ValueError("protocol_ids must be an array of at most 100 UUIDs")
-    try:
-        ids = [UUID(str(value)) for value in ids]
-    except (ValueError, TypeError):
-        raise ValueError("invalid protocol UUID") from None
-    if len(ids) != len(set(ids)):
-        raise ValueError("protocol_ids must be unique")
+    if ids is not None:
+        if not isinstance(ids, list) or len(ids) > 100:
+            raise ValueError("protocol_ids must be an array of at most 100 UUIDs")
+        try:
+            ids = [UUID(str(value)) for value in ids]
+        except (ValueError, TypeError):
+            raise ValueError("invalid protocol UUID") from None
+        if len(ids) != len(set(ids)):
+            raise ValueError("protocol_ids must be unique")
 
     def save():
         subscription = Subscription.objects.select_for_update().get(pk=subscription_id)
