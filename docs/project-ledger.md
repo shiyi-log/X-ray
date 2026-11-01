@@ -3989,3 +3989,25 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `release tag v0.11.0 -> a0527d6de3e1485a95a158becfaa0e34a109e45e; post-release documentation changes remain local until the follow-up audit commit.`
 - `rollback_ref`: `应用回退到 v0.10.0 或对发布提交执行 git revert；不删除 Release 资产，不反向迁移数据库，不恢复 Token tombstone、撤销凭据、安全事件、维护屏障或云操作结果。`
 - `time_logic`: `记录时间 2026-11-02T02:35:10+08:00；Release 标签和资产摘要是不可变定位信息；无新增业务 TTL、过期或重试规则。`
+
+### 2026-11-02T02:37:45+08:00 — xray-subscription-unlimited-20261102-01 final verification
+
+- `event_id`: `xray-subscription-unlimited-20261102-01/010`
+- `run_id`: `xray-subscription-unlimited-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `final_verification`
+- `path_scope`: `current worktree; GitHub main/v0.11.0/Release; docs/project-ledger.md`
+- `operation`: `完成发布后最终状态、边界、验收矩阵、秘密扫描和工作树检查。`
+- `reason`: `满足 X-ray 收尾契约，确认发布提交、标签、Release、资产和保留的用户脏文件边界。`
+- `authorization`: `沿用用户对本版本提交发布的授权；不扩大到生产、真实云、SSH、实例删除或静态 IP 释放。`
+- `assumptions`: `GitHub API 读回是远端引用和 Release 状态的权威来源；本地 origin/main 跟踪引用已同步到远端文档收尾提交。`
+- `exclusions`: `docs/cloud-test-authorization.md 仍不提交；不清理或修改数据库、服务、浏览器会话、云资源或其他项目文件。`
+- `implementation_scope`: `只读检查 refs/Release/assets、git status/log、diff、boundary、acceptance 和 secret validator；追加此事件。`
+- `command_or_tool`: `gh api refs/tags/heads/tags; gh release view; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; git status/log.`
+- `result`: `远端 main=2bd1d35961d470462f1e5bb0a3e11fb954c2e05a；v0.11.0 annotated tag peeled commit=a0527d6de3e1485a95a158becfaa0e34a109e45e；Release 非草稿/非预发布，三项资产 uploaded。diff-check、boundary、acceptance 和 secret scan 均退出 0。工作树仅保留用户的 docs/cloud-test-authorization.md 未提交修改。`
+- `exit_code`: `GitHub refs/release 0; diff/boundary/acceptance/secret/status 0.`
+- `evidence`: `输出仅包含提交、标签、资产摘要和路径状态；没有输出或保存密码、Cookie、Token、DSN、云凭据或 secret-bearing exception。`
+- `status`: `release and final local verification passed; CI runner, real cloud, SSH, production, device and complete browser acceptance remain blocked or not-run.`
+- `commit_or_tree`: `main@2bd1d35 + only docs/cloud-test-authorization.md user modification before this ledger-only follow-up commit.`
+- `rollback_ref`: `应用回退使用 v0.10.0 或对 a0527d6de3e1485a95a158becfaa0e34a109e45e 执行 git revert；本事件为文档证据，可单独回退，不触碰 Token tombstone、撤销凭据、安全事件或云状态。`
+- `time_logic`: `记录时间 2026-11-02T02:37:45+08:00；无新增业务时间规则。`
