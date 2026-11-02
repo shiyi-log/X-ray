@@ -1,3 +1,4 @@
+import { Modal } from 'ant-design-vue';
 import { DOMWrapper, flushPromises, mount } from '@vue/test-utils';
 
 import { resourcesApi } from '@/api/resources';
@@ -112,6 +113,7 @@ describe('cloud account form with real Ant components', () => {
       attachTo: document.body,
       global: { stubs: { transition: false, 'transition-group': false } },
     });
+    const createModal = wrapper.findAllComponents(Modal)[0];
 
     try {
       await flushPromises();
@@ -124,10 +126,8 @@ describe('cloud account form with real Ant components', () => {
       await inputFor(dialog, '区域').setValue('');
 
       await dialog.get('.ant-modal-close').trigger('click');
-      await vi.waitFor(() => {
-        const modal = document.querySelector('.ant-modal-wrap') as HTMLElement | null;
-        expect(modal === null || modal.style.display === 'none').toBe(true);
-      });
+      await flushPromises();
+      expect(createModal.props('open')).toBe(false);
       await add.trigger('click');
       await flushPromises();
       const reopened = new DOMWrapper(document.querySelector('[role="dialog"]')!);
