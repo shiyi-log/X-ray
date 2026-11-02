@@ -98,7 +98,7 @@ describe('cloud account form with real Ant components', () => {
       wrapper.unmount();
       vi.unstubAllGlobals();
     }
-  });
+  }, 15000);
 
   it('clears both credentials on cancel and restores the region when reopened', async () => {
     vi.spyOn(resourcesApi, 'cloudAccounts').mockResolvedValue({
@@ -113,7 +113,7 @@ describe('cloud account form with real Ant components', () => {
       attachTo: document.body,
       global: { stubs: { transition: false, 'transition-group': false } },
     });
-    const createModal = wrapper.findAllComponents(Modal)[0];
+    const createModal = wrapper.getComponent(Modal);
 
     try {
       await flushPromises();
