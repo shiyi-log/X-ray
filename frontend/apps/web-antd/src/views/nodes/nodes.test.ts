@@ -3,6 +3,8 @@ import { DOMWrapper, flushPromises, mount } from '@vue/test-utils';
 
 import {
   resourcesApi,
+  regionLabel,
+  SUPPORTED_REGIONS,
   type ActionPreview,
   type CloudAccount,
   type ManagedNode,
@@ -147,21 +149,22 @@ describe('server management', () => {
       await flushPromises();
       const dialog = new DOMWrapper([...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')]
         .find((item) => item.style.display !== 'none')!);
-      for (const region of ['ap-southeast-1', 'ap-northeast-1', 'ap-east-1', 'us-east-1', 'us-west-2']) {
+      for (const region of SUPPORTED_REGIONS) {
         expect(dialog.text()).toContain(region);
       }
       const quotas = dialog.findAll('input[aria-label$="额度"]');
-      expect(quotas.map((input) => (input.element as HTMLInputElement).value)).toEqual(['0', '0', '0', '0', '0']);
+      expect(quotas.map((input) => (input.element as HTMLInputElement).value)).toEqual(
+        Array.from({ length: SUPPORTED_REGIONS.length }, () => '0'),
+      );
       await dialog.get('[aria-label="ap-southeast-1额度"]').setValue('2');
       await dialog.get('form').trigger('submit');
       await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
       expect(createPool).toHaveBeenCalledWith({
         allocations: [
-          { region: 'ap-southeast-1', quota: 2 },
-          { region: 'ap-northeast-1', quota: 0 },
-          { region: 'ap-east-1', quota: 0 },
-          { region: 'us-east-1', quota: 0 },
-          { region: 'us-west-2', quota: 0 },
+          ...SUPPORTED_REGIONS.map((region) => ({
+            region,
+            quota: region === 'ap-southeast-1' ? 2 : 0,
+          })),
         ],
         allow_create: true,
       });
@@ -341,9 +344,9 @@ describe('server management', () => {
       state.form.account_id = 'account-1';
       await state.accountChanged('account-1');
       expect(state.regionOptions).toEqual([
-        { label: 'ap-southeast-1（额度已用完）', value: 'ap-southeast-1', disabled: true, reason: '额度已用完' },
-        { label: 'ap-northeast-1（可用 1）', value: 'ap-northeast-1', disabled: false, reason: '' },
-        { label: 'us-east-1（能力未验证）', value: 'us-east-1', disabled: true, reason: '能力未验证' },
+        { label: `${regionLabel('ap-southeast-1')}（额度已用完）`, value: 'ap-southeast-1', disabled: true, reason: '额度已用完' },
+        { label: `${regionLabel('ap-northeast-1')}（可用 1）`, value: 'ap-northeast-1', disabled: false, reason: '' },
+        { label: `${regionLabel('us-east-1')}（能力未验证）`, value: 'us-east-1', disabled: true, reason: '能力未验证' },
       ]);
       await dialog.get('[aria-label="套餐 ID"]').setValue('nano_3_0');
       await dialog.get('[aria-label="镜像 ID"]').setValue('ubuntu_24_04');

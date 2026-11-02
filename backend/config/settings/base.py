@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "X-ray Manager API",
     "DESCRIPTION": "Private administrator API. Secrets are write-only or delivered once.",
-    "VERSION": "0.11.0",
+    "VERSION": "0.12.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": ["config.openapi.inject_contract"],
 }
@@ -148,5 +148,8 @@ XRAY_PUBLIC_SUBSCRIPTION_BASE_URL = os.getenv("XRAY_PUBLIC_SUBSCRIPTION_BASE_URL
 CELERY_BEAT_SCHEDULE = {
     "subscription-usage-and-limits": {
         "task": "apps.subscriptions.tasks.refresh_usage_and_limits", "schedule": 60.0,
+    },
+    "node-status-refresh-scheduler": {
+        "task": "apps.nodes.tasks.schedule_node_status_refreshes", "schedule": 60.0,
     },
 }

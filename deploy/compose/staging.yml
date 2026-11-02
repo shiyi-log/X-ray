@@ -128,6 +128,16 @@ services:
     networks: [data, queue]
     depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
 
+  beat:
+    <<: *backend
+    command: [celery, -A, config.celery:app, beat, --loglevel=INFO, --schedule=/tmp/celerybeat-schedule]
+    environment:
+      <<: *backend_environment
+      DJANGO_SETTINGS_MODULE: config.settings.production
+    tmpfs: [/tmp:rw,noexec,nosuid,size=16m]
+    networks: [queue]
+    depends_on: {redis: {condition: service_healthy}}
+
   outbox-dispatcher:
     <<: *backend
     command: [xray-outbox]

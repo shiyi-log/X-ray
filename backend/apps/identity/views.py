@@ -12,7 +12,10 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.identity.gate_settings import (
+    node_status_sync_setting,
     provider_identity_network_setting,
+    _UNSET,
+    set_node_status_sync_settings,
     set_provider_identity_network_enabled,
 )
 from common.admin_api import admin_endpoint, json_payload
@@ -219,12 +222,24 @@ def change_password(request):
 def system(request):
     if request.method == "PATCH":
         payload = json_payload(request)
-        if set(payload) != {"provider_identity_network_enabled"}:
-            raise ValueError("provider_identity_network_enabled is required")
-        enabled = payload["provider_identity_network_enabled"]
-        if not isinstance(enabled, bool):
-            raise ValueError("provider_identity_network_enabled must be a boolean")
-        set_provider_identity_network_enabled(enabled=enabled, actor=request.xray_admin)
+        allowed = {
+            "provider_identity_network_enabled",
+            "node_status_sync_enabled",
+            "node_status_sync_interval_minutes",
+        }
+        if not payload or set(payload) - allowed:
+            raise ValueError("at least one supported system setting is required")
+        if "provider_identity_network_enabled" in payload:
+            enabled = payload["provider_identity_network_enabled"]
+            if not isinstance(enabled, bool):
+                raise ValueError("provider_identity_network_enabled must be a boolean")
+            set_provider_identity_network_enabled(enabled=enabled, actor=request.xray_admin)
+        if {"node_status_sync_enabled", "node_status_sync_interval_minutes"} & set(payload):
+            set_node_status_sync_settings(
+                actor=request.xray_admin,
+                enabled=payload.get("node_status_sync_enabled", _UNSET),
+                interval_minutes=payload.get("node_status_sync_interval_minutes", _UNSET),
+            )
 
     return JsonResponse(
         {
@@ -236,5 +251,6 @@ def system(request):
             "allowed_hosts": list(settings.ALLOWED_HOSTS),
             "csrf_trusted_origins": list(settings.CSRF_TRUSTED_ORIGINS),
             "provider_identity_network": provider_identity_network_setting(),
+            "node_status_sync": node_status_sync_setting(),
         }
     )

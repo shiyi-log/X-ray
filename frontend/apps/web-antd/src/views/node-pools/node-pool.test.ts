@@ -11,17 +11,17 @@ import NodePools from './index.vue';
 
 describe('node pool region allocation', () => {
   it('loads and preserves existing per-region allocations when saving', async () => {
-    expect(SUPPORTED_REGIONS).not.toContain('eu-west-1');
+    expect(SUPPORTED_REGIONS).toContain('eu-west-1');
 
     const page: Page<NodePool> = {
       items: [{
         id: 'pool-1', name: 'IP', region: 'ap-southeast-1', quota: 3,
         allow_create: false,
         used: 1, available: 2,
-        regions: ['ap-southeast-1', 'eu-west-1'],
+        regions: ['ap-southeast-1', 'af-south-1'],
         allocations: [
           { region: 'ap-southeast-1', quota: 2, used: 1, available: 1 },
-          { region: 'eu-west-1', quota: 2, used: 1, available: 1 },
+          { region: 'af-south-1', quota: 2, used: 1, available: 1 },
         ],
       }],
       total: 1,
@@ -38,7 +38,7 @@ describe('node pool region allocation', () => {
 
     try {
       await flushPromises();
-      expect(wrapper.text()).toContain('ap-southeast-1、eu-west-1');
+      expect(wrapper.text()).toContain('新加坡（ap-southeast-1）、非洲（南非）（af-south-1）');
       expect(wrapper.text()).not.toContain('总额度');
       expect(wrapper.text()).not.toContain('占用');
       expect(wrapper.text()).not.toContain('可用');
@@ -50,7 +50,7 @@ describe('node pool region allocation', () => {
       await flushPromises();
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
       expect(dialog.text()).toContain('地区分配');
-      expect(dialog.text()).toContain('eu-west-1（历史地区）');
+      expect(dialog.text()).toContain('非洲（南非）（af-south-1）（历史地区）');
       expect(SUPPORTED_REGIONS.every((region) => dialog.text().includes(region))).toBe(true);
       expect(dialog.text()).not.toContain('名称');
       expect((dialog.get('[aria-label="允许创建服务器"]').element as HTMLButtonElement).getAttribute('aria-checked')).toBe('false');
@@ -58,12 +58,11 @@ describe('node pool region allocation', () => {
       await vi.waitFor(() => expect(updatePool).toHaveBeenCalledTimes(1));
       expect(updatePool).toHaveBeenCalledWith('pool-1', {
         allocations: [
-          { region: 'ap-southeast-1', quota: 2 },
-          { region: 'ap-northeast-1', quota: 0 },
-          { region: 'ap-east-1', quota: 0 },
-          { region: 'us-east-1', quota: 0 },
-          { region: 'us-west-2', quota: 0 },
-          { region: 'eu-west-1', quota: 2 },
+          ...SUPPORTED_REGIONS.map((region) => ({
+            region,
+            quota: region === 'ap-southeast-1' ? 2 : 0,
+          })),
+          { region: 'af-south-1', quota: 2 },
         ],
         allow_create: false,
       });
@@ -96,18 +95,19 @@ describe('node pool region allocation', () => {
       const dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
       expect(SUPPORTED_REGIONS.every((region) => dialog.text().includes(region))).toBe(true);
       const inputs = dialog.findAll('input[aria-label$="额度"]');
-      expect(inputs.map((input) => (input.element as HTMLInputElement).value)).toEqual(['0', '0', '0', '0', '0']);
+      expect(inputs.map((input) => (input.element as HTMLInputElement).value)).toEqual(
+        Array.from({ length: SUPPORTED_REGIONS.length }, () => '0'),
+      );
       await dialog.get('[aria-label="ap-southeast-1额度"]').setValue('3');
       await dialog.get('[aria-label="允许创建服务器"]').trigger('click');
       await dialog.get('form').trigger('submit');
       await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
       expect(createPool).toHaveBeenCalledWith({
         allocations: [
-          { region: 'ap-southeast-1', quota: 3 },
-          { region: 'ap-northeast-1', quota: 0 },
-          { region: 'ap-east-1', quota: 0 },
-          { region: 'us-east-1', quota: 0 },
-          { region: 'us-west-2', quota: 0 },
+          ...SUPPORTED_REGIONS.map((region) => ({
+            region,
+            quota: region === 'ap-southeast-1' ? 3 : 0,
+          })),
         ],
         allow_create: false,
       });

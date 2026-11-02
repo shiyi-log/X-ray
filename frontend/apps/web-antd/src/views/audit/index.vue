@@ -10,6 +10,7 @@ import { resourcesApi } from '@/api/resources';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useResource } from '@/composables/useResource';
+import { auditActionLabel, targetTypeLabel } from '@/views/overview/presentation';
 
 const { data, loading, error, reload } = useResource(resourcesApi.auditEvents);
 const empty = computed(() => !data.value?.items.length);
@@ -37,9 +38,9 @@ const columns = [
         <Table :columns="columns" :data-source="data?.items || []" :pagination="false" :scroll="{ x: 1000 }" row-key="id">
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'created_at'">{{ new Date(record.created_at).toLocaleString('zh-CN') }}</template>
-            <template v-else-if="column.key === 'action'">{{ record.action }}</template>
+            <template v-else-if="column.key === 'action'">{{ auditActionLabel(record.action) }}</template>
             <template v-else-if="column.key === 'target'">
-              {{ record.target_type }}
+              {{ targetTypeLabel(record.target_type) }}
               <div><Typography.Text type="secondary">{{ record.target_id || '-' }}</Typography.Text></div>
             </template>
             <StatusBadge v-else-if="column.key === 'result'" :value="record.result" />

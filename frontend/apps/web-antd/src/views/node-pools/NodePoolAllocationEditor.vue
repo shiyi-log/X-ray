@@ -2,7 +2,7 @@
 import { reactive, ref, watch } from 'vue';
 import { Alert, Button, Form, InputNumber, Modal, Space, Switch } from 'ant-design-vue';
 
-import { resourcesApi, SUPPORTED_REGIONS, type NodePool } from '@/api/resources';
+import { regionLabel, resourcesApi, SUPPORTED_REGIONS, type NodePool } from '@/api/resources';
 
 const props = defineProps<{ open: boolean; pool: NodePool | null }>();
 const emit = defineEmits<{
@@ -91,9 +91,15 @@ async function save() {
     <Form :model="form" layout="vertical" @finish="save">
       <Alert v-if="error" class="mb-4" :message="error" type="error" show-icon />
       <FormItem label="地区额度" required>
+        <a
+          class="mb-3 inline-block text-sm"
+          href="https://docs.aws.amazon.com/lightsail/latest/userguide/understanding-regions-and-availability-zones-in-amazon-lightsail.html"
+          target="_blank"
+          rel="noreferrer"
+        >AWS Lightsail 支持地区</a>
         <div class="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-x-3 gap-y-2">
           <template v-for="allocation in form.allocations" :key="allocation.region">
-            <span>{{ allocation.region }}{{ allocation.historical ? '（历史地区）' : '' }}</span>
+            <span>{{ regionLabel(allocation.region) }}{{ allocation.historical ? '（历史地区）' : '' }}</span>
             <InputNumber
               v-model:value="allocation.quota"
               :min="0"

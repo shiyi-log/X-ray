@@ -8,6 +8,7 @@ import { Button, Card, Space, Table } from 'ant-design-vue';
 
 import {
   resourcesApi,
+  regionLabel,
   type NodePool,
 } from '@/api/resources';
 import PageState from '@/components/PageState.vue';
@@ -31,7 +32,7 @@ function openEditor() {
 
 function regionSummary(item: NodePool) {
   const regions = item.allocations?.map((allocation) => allocation.region) ?? item.regions;
-  return regions?.length ? regions.join('、') : item.region || '未配置';
+  return regions?.length ? regions.map(regionLabel).join('、') : regionLabel(item.region || '未配置');
 }
 
 </script>

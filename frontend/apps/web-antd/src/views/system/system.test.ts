@@ -5,12 +5,18 @@ import { resourcesApi, type SystemInfo } from '@/api/resources';
 import SystemSettings from './index.vue';
 
 const systemInfo: SystemInfo = {
-  version: '0.11.0',
+  version: '0.12.0',
   environment: 'test',
   debug: false,
   allowed_hosts: ['localhost'],
   csrf_trusted_origins: [],
   provider_identity_network: { enabled: false, source: 'ENVIRONMENT' },
+  node_status_sync: {
+    enabled: false,
+    interval_minutes: 60,
+    last_scheduled_at: null,
+    source: 'DEFAULT',
+  },
 };
 
 function mountSystemSettings() {
@@ -34,6 +40,8 @@ describe('system provider identity network setting', () => {
       expect(wrapper.text()).toContain('环境变量默认值');
       expect(wrapper.text()).toContain('否');
       expect(wrapper.text()).toContain('不授予云资源写入权限');
+      expect(wrapper.text()).toContain('重复时间');
+      expect((wrapper.get('input[aria-label="同步重复时间（分钟）"]').element as HTMLInputElement).value).toBe('60');
 
       const toggle = wrapper.get('[role="switch"]');
       expect(toggle.attributes('aria-checked')).toBe('false');
@@ -51,6 +59,26 @@ describe('system provider identity network setting', () => {
       expect(wrapper.text()).toContain('数据库设置');
       expect(wrapper.get('[role="switch"]').attributes('aria-checked')).toBe('true');
       expect(wrapper.get('[role="switch"]').attributes('disabled')).toBeUndefined();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('saves the recurring node status interval in minutes', async () => {
+    vi.spyOn(resourcesApi, 'system').mockResolvedValue(systemInfo);
+    const update = vi.spyOn(resourcesApi, 'updateSystem').mockResolvedValue({
+      ...systemInfo,
+      node_status_sync: { ...systemInfo.node_status_sync, interval_minutes: 30 },
+    });
+    const wrapper = mountSystemSettings();
+
+    try {
+      await flushPromises();
+      const intervalInput = wrapper.get('input[aria-label="同步重复时间（分钟）"]');
+      await intervalInput.setValue('30');
+      await wrapper.findAll('button').find((button) => button.text().includes('保存间隔'))!.trigger('click');
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith({ node_status_sync_interval_minutes: 30 });
     } finally {
       wrapper.unmount();
     }

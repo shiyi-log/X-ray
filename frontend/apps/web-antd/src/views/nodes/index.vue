@@ -11,6 +11,7 @@ import {
 
 import {
   resourcesApi,
+  regionLabel,
   type ActionPreview,
   type CloudAccount,
   type ManagedNode,
@@ -155,7 +156,7 @@ const regionOptions = computed(() => {
         reason = '额度已用完';
       }
       return {
-        label: `${allocation.region}（${reason || `可用 ${allocation.available}`}）`,
+        label: `${regionLabel(allocation.region)}（${reason || `可用 ${allocation.available}`}）`,
         value: allocation.region,
         disabled: !supported || allocation.available < 1,
         reason,
@@ -460,7 +461,7 @@ function closeDelete() {
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'name'">
               <strong>{{ record.name }}</strong>
-              <div class="text-xs text-muted-foreground">{{ providerLabel(record.provider) }} · {{ record.region }}</div>
+              <div class="text-xs text-muted-foreground">{{ providerLabel(record.provider) }} · {{ regionLabel(record.region) }}</div>
             </template>
             <span v-else-if="column.key === 'ip'">{{ nodeIp(record as ManagedNode) }}</span>
             <StatusBadge v-else-if="column.key === 'runtime_status'" :value="runtimeStatus(record as ManagedNode)" />
@@ -564,7 +565,7 @@ function closeDelete() {
           <DescriptionItem label="服务器">{{ selectedNode.name }}</DescriptionItem>
           <DescriptionItem label="IP">{{ nodeIp(selectedNode) }}</DescriptionItem>
           <DescriptionItem label="平台">{{ providerLabel(selectedNode.provider) }}</DescriptionItem>
-          <DescriptionItem label="地区">{{ selectedNode.region }}</DescriptionItem>
+          <DescriptionItem label="地区">{{ regionLabel(selectedNode.region) }}</DescriptionItem>
           <DescriptionItem label="运行状态"><StatusBadge :value="runtimeStatus(selectedNode)" /></DescriptionItem>
           <DescriptionItem label="健康状态"><StatusBadge :value="selectedNode.health_state" /></DescriptionItem>
           <DescriptionItem label="安全状态"><StatusBadge :value="selectedNode.security_state" /></DescriptionItem>

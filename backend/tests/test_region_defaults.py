@@ -38,6 +38,16 @@ def test_normalize_region_defaults_blank_values_to_singapore():
     assert normalize_region("ap-east-1") == "ap-east-1"
 
 
+def test_all_current_aws_lightsail_regions_are_accepted_for_manual_allocation():
+    assert {
+        "ap-east-1", "ap-northeast-1", "ap-northeast-2", "ap-south-1",
+        "ap-southeast-1", "ap-southeast-2", "ap-southeast-3", "ap-southeast-5",
+        "ca-central-1", "eu-central-1", "eu-north-1", "eu-south-2",
+        "eu-west-1", "eu-west-2", "eu-west-3", "sa-east-1", "us-east-1",
+        "us-east-2", "us-west-2",
+    } <= set(SUPPORTED_REGIONS)
+
+
 def test_cloud_account_create_accepts_blank_region_and_uses_singapore():
     name, region, raw = CloudAccountSerializer.validate_create(
         {
@@ -383,7 +393,7 @@ def test_node_pool_rejects_unsupported_region_allocation():
         "/api/v1/node-pools/",
         {
             "name": "unsupported region pool",
-            "allocations": [{"region": "eu-west-1", "quota": 1}],
+            "allocations": [{"region": "af-south-1", "quota": 1}],
         },
         format="json",
     )
@@ -419,18 +429,18 @@ def test_unsupported_region_allocation_is_preserved_only_for_existing_usage(clou
 
     rejected = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",
-        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        {"allocations": [{"region": "af-south-1", "quota": 2}]},
         format="json",
     )
     assert rejected.status_code == 400
     assert "unsupported region" in rejected.json()["message"]
 
     allocation = NodePoolRegionAllocation.objects.create(
-        pool=pool, region="eu-west-1", quota=3
+        pool=pool, region="af-south-1", quota=3
     )
     retained_allocation = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",
-        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        {"allocations": [{"region": "af-south-1", "quota": 2}]},
         format="json",
     )
     assert retained_allocation.status_code == 200
@@ -443,7 +453,7 @@ def test_unsupported_region_allocation_is_preserved_only_for_existing_usage(clou
         reserve_node(
             pool.pk,
             account_id=cloud_account.pk,
-            region="eu-west-1",
+            region="af-south-1",
             plan_id="nano",
             image_id="debian-12",
             operation_key=uuid4(),
@@ -451,14 +461,14 @@ def test_unsupported_region_allocation_is_preserved_only_for_existing_usage(clou
 
     retained = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",
-        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        {"allocations": [{"region": "af-south-1", "quota": 2}]},
         format="json",
     )
     assert retained.status_code == 200
 
     below_usage = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",
-        {"allocations": [{"region": "eu-west-1", "quota": 1}]},
+        {"allocations": [{"region": "af-south-1", "quota": 1}]},
         format="json",
     )
     assert below_usage.status_code == 409
@@ -475,8 +485,8 @@ def test_unsupported_region_allocation_is_preserved_only_for_existing_usage(clou
     allocation.delete()
     legacy_usage = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",
-        {"allocations": [{"region": "eu-west-1", "quota": 2}]},
+        {"allocations": [{"region": "af-south-1", "quota": 2}]},
         format="json",
     )
     assert legacy_usage.status_code == 200
-    assert NodePoolRegionAllocation.objects.get(pool=pool).region == "eu-west-1"
+    assert NodePoolRegionAllocation.objects.get(pool=pool).region == "af-south-1"

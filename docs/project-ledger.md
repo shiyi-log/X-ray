@@ -4011,3 +4011,22 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `main@2bd1d35 + only docs/cloud-test-authorization.md user modification before this ledger-only follow-up commit.`
 - `rollback_ref`: `应用回退使用 v0.10.0 或对 a0527d6de3e1485a95a158becfaa0e34a109e45e 执行 git revert；本事件为文档证据，可单独回退，不触碰 Token tombstone、撤销凭据、安全事件或云状态。`
 - `time_logic`: `记录时间 2026-11-02T02:37:45+08:00；无新增业务时间规则。`
+
+### 2026-11-02T16:15:22+08:00 — xray-admin-sync-han-20261102-01 scope and authorization
+
+- `event_id`: `xray-admin-sync-han-20261102-01/001`
+- `run_id`: `xray-admin-sync-han-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `definition`
+- `path_scope`: `backend/apps/identity; backend/apps/nodes; backend/apps/operations; backend/config; backend/tests; deploy/compose/{production,staging}.yml; frontend/apps/web-antd/src/{api,components,views}; frontend tests; VERSION; CHANGELOG.md; README.md; docs/{project-ledger.md,progress.md,version-record.md}; tests/acceptance/matrix.json`
+- `operation`: `修复管理员系统设置读取与状态同步间隔配置；为节点状态刷新增加可关闭的周期调度；完善操作/审计/订阅汉化；复核节点和订阅状态数据；完成新版本提交与发布。`
+- `reason`: `用户连续要求节点状态、订阅管理、系统设置和中文展示修正，明确要求在系统设置配置同步重复时间，并授权全部修正、提交和发布新版。`
+- `authorization`: `当前对话用户明确授权本地实现、提交、推送和创建 GitHub Release；不将其解释为 AWS/SWAS 写入、SSH、公网探测、生产切换、数据库中历史业务状态批量改写或实例/IP 删除授权。`
+- `assumptions`: `周期刷新默认关闭；开启后复用 node.refresh 的异步只读 provider 操作；间隔以分钟配置并校验边界；若存在未终结刷新操作则跳过该节点；只有精确 RESOURCE_NOT_FOUND 才记录云端不存在。`
+- `exclusions`: `保留 docs/cloud-test-authorization.md 用户未提交修改；不访问 Shop/archive；不执行云操作或生产发布；本地 PostgreSQL 127.0.0.1:55432 和 Redis 127.0.0.1:56379 当前未监听，因此不启动、不迁移、不读取或修改数据库。`
+- `risk`: `定时扫描会产生只读云 API 调用，首次关闭可避免部署后产生未预期调用；Beat 必须单实例运行，数据库锁和开放操作检查承担重复防护；系统设置 GET 若受本地迁移/DB 状态影响需明确记录，不能吞掉底层异常。`
+- `implementation_scope`: `新增/扩展系统设置模型、迁移、权限审计、OpenAPI、前端 API 与设置页；定时任务和 Celery Beat 部署服务；operation/audit/status 展示映射及回归测试；节点和订阅数据只读盘点，权威依据不足时保持不变；发布版本元数据和回退索引。`
+- `command_or_tool`: `终端只读检查 git/status/diff、源码、配置、test database listener、migration/data counts、GitHub release/tag；文件编辑使用 apply_patch；focused backend/frontend tests、typecheck/lint/build、schema generation、migration drift、boundary/acceptance/secret/diff gates。`
+- `result`: `源码检查确认单次 node.refresh 可复用，Celery Beat 当前未纳入 production/staging Compose；本地数据盘点未执行，因专用 PostgreSQL 未运行且 55432/56379 无监听。`
+- `rollback_ref`: `应用回退使用 v0.11.0 或对本轮提交执行 git revert；数据库迁移为兼容性前向迁移，不自动反向删除设置或刷新记录；不回退 Token tombstone、安全事件或云端状态。`
+- `time_logic`: `事件时间使用系统时钟并记录 Asia/Shanghai 偏移；同步间隔按整数分钟解释，定时触发使用 Celery wall-clock beat 并避免重叠开放操作；业务观察时间继续由 Django aware timezone.now() 保存 UTC。`

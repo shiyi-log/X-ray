@@ -60,6 +60,12 @@ export type SystemInfo = components['schemas']['SystemInfo'] & {
     enabled: boolean;
     source: ProviderIdentityChecksNetworkSource;
   };
+  node_status_sync: {
+    enabled: boolean;
+    interval_minutes: number;
+    last_scheduled_at: string | null;
+    source: 'DATABASE' | 'DEFAULT';
+  };
 };
 export type ActionPreview = components['schemas']['ActionPreview'];
 export type SecretDelivery = components['schemas']['SecretDelivery'];
@@ -91,12 +97,64 @@ export interface Capability {
 
 /** Regions accepted by the node creation API. */
 export const SUPPORTED_REGIONS = [
-  'ap-southeast-1',
-  'ap-northeast-1',
   'ap-east-1',
+  'ap-northeast-1',
+  'ap-northeast-2',
+  'ap-south-1',
+  'ap-southeast-1',
+  'ap-southeast-2',
+  'ap-southeast-3',
+  'ap-southeast-5',
+  'ca-central-1',
+  'eu-central-1',
+  'eu-north-1',
+  'eu-south-2',
+  'eu-west-1',
+  'eu-west-2',
+  'eu-west-3',
+  'sa-east-1',
   'us-east-1',
+  'us-east-2',
   'us-west-2',
 ] as const;
+
+export const AWS_LIGHTSAIL_REGION_LABELS: Record<(typeof SUPPORTED_REGIONS)[number], string> = {
+  'ap-east-1': '香港',
+  'ap-northeast-1': '东京',
+  'ap-northeast-2': '首尔',
+  'ap-south-1': '孟买',
+  'ap-southeast-1': '新加坡',
+  'ap-southeast-2': '悉尼',
+  'ap-southeast-3': '雅加达',
+  'ap-southeast-5': '马来西亚',
+  'ca-central-1': '加拿大中部',
+  'eu-central-1': '法兰克福',
+  'eu-north-1': '斯德哥尔摩',
+  'eu-south-2': '西班牙',
+  'eu-west-1': '爱尔兰',
+  'eu-west-2': '伦敦',
+  'eu-west-3': '巴黎',
+  'sa-east-1': '圣保罗',
+  'us-east-1': '北弗吉尼亚',
+  'us-east-2': '俄亥俄',
+  'us-west-2': '俄勒冈',
+};
+
+export function regionLabel(region: string) {
+  const label = AWS_LIGHTSAIL_REGION_LABELS[region as keyof typeof AWS_LIGHTSAIL_REGION_LABELS];
+  if (label) return `${label}（${region}）`;
+  const aliRegionLabels: Record<string, string> = {
+    'af-south-1': '非洲（南非）',
+    'cn-beijing': '中国北京',
+    'cn-chengdu': '中国成都',
+    'cn-hangzhou': '中国杭州',
+    'cn-hongkong': '中国香港',
+    'cn-shanghai': '中国上海',
+    'cn-shenzhen': '中国深圳',
+    'cn-zhangjiakou': '中国张家口',
+  };
+  return aliRegionLabels[region] ? `${aliRegionLabels[region]}（${region}）` : region;
+}
 
 const json = (method: string, body?: unknown, headers?: HeadersInit): RequestInit => ({
   method,
@@ -107,7 +165,11 @@ const json = (method: string, body?: unknown, headers?: HeadersInit): RequestIni
 export const resourcesApi = {
   overview: () => apiRequest<Overview>('/api/v1/overview'),
   system: () => apiRequest<SystemInfo>('/api/v1/system'),
-  updateSystem: (payload: { provider_identity_network_enabled: boolean }) =>
+  updateSystem: (payload: {
+    provider_identity_network_enabled?: boolean;
+    node_status_sync_enabled?: boolean;
+    node_status_sync_interval_minutes?: number;
+  }) =>
     apiRequest<SystemInfo>('/api/v1/system', json('PATCH', payload)),
   cloudAccounts: () => apiRequest<Page<CloudAccount>>('/api/v1/cloud-accounts/'),
   createCloudAccount: (payload: Record<string, unknown>) =>

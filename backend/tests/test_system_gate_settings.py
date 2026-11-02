@@ -48,6 +48,49 @@ def test_system_get_preserves_contract_and_reports_environment_default(
         "enabled": True,
         "source": "ENVIRONMENT",
     }
+    assert body["node_status_sync"] == {
+        "enabled": False,
+        "interval_minutes": 60,
+        "last_scheduled_at": None,
+        "source": "DEFAULT",
+    }
+
+
+@pytest.mark.django_db
+def test_system_node_status_sync_setting_is_validated_and_audited(admin_client, admin):
+    enabled = admin_client.patch(
+        "/api/v1/system",
+        {"node_status_sync_enabled": True},
+        format="json",
+    )
+    assert enabled.status_code == 200
+    assert enabled.json()["node_status_sync"]["enabled"] is True
+    assert enabled.json()["node_status_sync"]["interval_minutes"] == 60
+
+    interval = admin_client.patch(
+        "/api/v1/system",
+        {"node_status_sync_interval_minutes": 15},
+        format="json",
+    )
+    assert interval.status_code == 200
+    assert interval.json()["node_status_sync"]["interval_minutes"] == 15
+
+    for value in (4, 1441, True, "15", None):
+        response = admin_client.patch(
+            "/api/v1/system",
+            {"node_status_sync_interval_minutes": value},
+            format="json",
+        )
+        assert response.status_code == 400
+
+    from apps.identity.models import NodeStatusSyncSetting
+
+    setting = NodeStatusSyncSetting.objects.get(singleton_key=1)
+    assert (setting.enabled, setting.interval_minutes) == (True, 15)
+    event = AuditEvent.objects.filter(action="system.node_status_sync.update").order_by("pk").last()
+    assert event.actor == admin
+    assert event.metadata["enabled"] is True
+    assert event.metadata["interval_minutes"] == 15
 
 
 @pytest.mark.django_db

@@ -731,14 +731,14 @@ export interface components {
             readonly image_id: string;
             readonly plan_id: string;
             /** @enum {string} */
-            readonly region?: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+            readonly region?: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
         };
         readonly NodePool: {
             readonly allocations: readonly {
                 readonly available: number;
                 readonly quota: number;
                 /** @enum {string} */
-                readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+                readonly region: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
                 readonly used: number;
             }[];
             readonly allow_create: boolean;
@@ -750,8 +750,8 @@ export interface components {
             readonly name: string;
             readonly quota: number;
             /** @enum {string} */
-            readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
-            readonly regions: readonly ("ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2")[];
+            readonly region: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
+            readonly regions: readonly ("ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2")[];
             /** Format: date-time */
             readonly updated_at?: string;
             readonly used: number;
@@ -759,15 +759,23 @@ export interface components {
         readonly NodePoolAllocationInput: {
             readonly quota: number;
             /** @enum {string} */
-            readonly region: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+            readonly region: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
         };
         readonly NodePoolWriteRequest: {
             readonly allocations?: readonly components["schemas"]["NodePoolAllocationInput"][];
             readonly allow_create?: boolean;
             readonly quota?: number;
             /** @enum {string} */
-            readonly region?: "ap-southeast-1" | "ap-northeast-1" | "ap-east-1" | "us-east-1" | "us-west-2";
+            readonly region?: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
         } | unknown | unknown | unknown;
+        readonly NodeStatusSyncSetting: {
+            readonly enabled: boolean;
+            readonly interval_minutes: number;
+            /** Format: date-time */
+            readonly last_scheduled_at: string | null;
+            /** @enum {string} */
+            readonly source: "DATABASE" | "DEFAULT";
+        };
         readonly Operation: {
             readonly can_cancel: boolean;
             /** Format: date-time */
@@ -971,11 +979,14 @@ export interface components {
             readonly csrf_trusted_origins?: readonly string[];
             readonly debug?: boolean;
             readonly environment?: string;
+            readonly node_status_sync?: components["schemas"]["NodeStatusSyncSetting"];
             readonly provider_identity_network?: components["schemas"]["ProviderIdentityNetworkSetting"];
             readonly version?: string;
         };
         readonly SystemSettingsPatch: {
-            readonly provider_identity_network_enabled: boolean;
+            readonly node_status_sync_enabled?: boolean;
+            readonly node_status_sync_interval_minutes?: number;
+            readonly provider_identity_network_enabled?: boolean;
         };
     };
     responses: never;

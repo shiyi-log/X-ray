@@ -40,8 +40,8 @@ catalogs:
       specifier: 4.3.0
       version: 4.3.0
     '@tanstack/vue-store':
-      specifier: 0.11.0
-      version: 0.11.0
+      specifier: 0.12.0
+      version: 0.12.0
     '@tiptap/core':
       specifier: 3.23.5
       version: 3.23.5

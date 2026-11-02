@@ -52,5 +52,5 @@ compose --profile release run --rm database-bootstrap
 compose --profile release run --rm migrator python /app/backend/manage.py migrate --check --noinput
 
 compose up -d --wait admin-api subscription-api frontend gateway
-compose up -d worker outbox-dispatcher security-ledger-dispatcher
+compose up -d worker beat outbox-dispatcher security-ledger-dispatcher
 echo "released version=$version backend_digest=$digest"

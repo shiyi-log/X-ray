@@ -22,6 +22,11 @@ import { resourcesApi } from '@/api/resources';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
 import { useOperation } from '@/composables/useOperation';
+import {
+  operationLabel,
+  operationStepLabel,
+  operationStepPhaseLabel,
+} from '@/views/overview/presentation';
 
 const route = useRoute();
 const id = computed(() => String(route.params.id));
@@ -55,9 +60,9 @@ async function retry() {
 </script>
 
 <template>
-  <Page :title="data?.kind || '操作详情'" :description="id">
+  <Page :title="data?.kind ? operationLabel(data.kind) : '操作详情'" :description="id">
     <template #title>
-      <h1 class="mb-2 text-lg font-semibold">{{ data?.kind || '操作详情' }}</h1>
+      <h1 class="mb-2 text-lg font-semibold">{{ data?.kind ? operationLabel(data.kind) : '操作详情' }}</h1>
     </template>
     <template #extra>
       <Space wrap>
@@ -80,7 +85,7 @@ async function retry() {
           <Descriptions bordered :column="{ xs: 1, md: 2 }">
             <DescriptionsItem label="ID"><code data-testid="operation-id">{{ data?.id }}</code></DescriptionsItem>
             <DescriptionsItem label="状态"><StatusBadge data-testid="operation-state" :value="data?.status" /></DescriptionsItem>
-            <DescriptionsItem label="当前步骤">{{ data?.current_step || '-' }}</DescriptionsItem>
+            <DescriptionsItem label="当前步骤">{{ operationStepLabel(data?.current_step) }}</DescriptionsItem>
             <DescriptionsItem label="错误"><Typography.Text :type="data?.error_code ? 'danger' : undefined">{{ data?.error_code || '-' }}</Typography.Text></DescriptionsItem>
           </Descriptions>
         </Card>
@@ -103,8 +108,8 @@ async function retry() {
             <Timeline>
               <TimelineItem v-for="step in data?.steps" :key="`${step.name}-${step.attempt}`">
                 <Space direction="vertical" size="small">
-                  <Space><Typography.Text strong>{{ step.name }}</Typography.Text><StatusBadge :value="step.status" /></Space>
-                  <Typography.Text type="secondary">{{ step.phase }} · 第 {{ step.attempt }} 次</Typography.Text>
+                  <Space><Typography.Text strong>{{ operationStepLabel(step.name) }}</Typography.Text><StatusBadge :value="step.status" /></Space>
+                  <Typography.Text type="secondary">{{ operationStepPhaseLabel(step.phase) }} · 第 {{ step.attempt }} 次</Typography.Text>
                 </Space>
               </TimelineItem>
             </Timeline>

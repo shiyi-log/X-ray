@@ -66,6 +66,22 @@ WHERE schemaname = 'public'
     'subscriptions_subscriptiontoken'
   ]) \gexec
 
+SELECT format('GRANT SELECT ON TABLE %I.%I TO xray_worker', schemaname, tablename)
+FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename IN (
+    'identity_superadmin',
+    'cloud_accounts_cloudaccount',
+    'cloud_accounts_cloudcredentialversion'
+  ) \gexec
+
+SELECT format('GRANT SELECT, UPDATE ON TABLE %I.%I TO xray_worker', schemaname, tablename)
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'identity_nodestatussyncsetting' \gexec
+
+GRANT SELECT, INSERT ON TABLE audit_auditevent TO xray_worker;
+GRANT USAGE, SELECT ON SEQUENCE audit_auditevent_id_seq TO xray_worker;
+
 SELECT format(
     'GRANT SELECT, INSERT, UPDATE ON TABLE %I.%I TO xray_outbox',
     schemaname,

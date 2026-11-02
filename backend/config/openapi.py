@@ -458,6 +458,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "allowed_hosts": {"type": "array", "items": {"type": "string"}},
                     "csrf_trusted_origins": {"type": "array", "items": {"type": "string"}},
                     "provider_identity_network": _ref("ProviderIdentityNetworkSetting"),
+                    "node_status_sync": _ref("NodeStatusSyncSetting"),
                 },
             },
             "ProviderIdentityNetworkSetting": {
@@ -468,12 +469,25 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "source": {"type": "string", "enum": ["DATABASE", "ENVIRONMENT"]},
                 },
             },
+            "NodeStatusSyncSetting": {
+                "type": "object",
+                "required": ["enabled", "interval_minutes", "last_scheduled_at", "source"],
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "interval_minutes": {"type": "integer", "minimum": 5, "maximum": 1440},
+                    "last_scheduled_at": {"type": "string", "format": "date-time", "nullable": True},
+                    "source": {"type": "string", "enum": ["DATABASE", "DEFAULT"]},
+                },
+            },
             "SystemSettingsPatch": {
                 "type": "object",
-                "required": ["provider_identity_network_enabled"],
                 "additionalProperties": False,
                 "properties": {
                     "provider_identity_network_enabled": {"type": "boolean"},
+                    "node_status_sync_enabled": {"type": "boolean"},
+                    "node_status_sync_interval_minutes": {
+                        "type": "integer", "minimum": 5, "maximum": 1440
+                    },
                 },
             },
             "ActionPreview": {
