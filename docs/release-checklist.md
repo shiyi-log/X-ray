@@ -1,21 +1,30 @@
-# v0.12.0 交付与发布检查表
+# v0.12.1 交付与发布检查表
 
-本轮发布聚焦服务器状态同步定时器、AWS Lightsail 地区中文目录、地区额度弹窗、操作/审计汉化和系统设置稳定性。真实 AWS/SWAS、SSH、生产 TLS、生产切换、设备和完整浏览器 E2E 仍按验收矩阵保持未运行或阻塞。
+本修订保留 v0.12.0 的功能，修复 GitHub 冻结安装发现的 pnpm workspace catalog 锁文件不一致。真实 AWS/SWAS、SSH、生产 TLS、生产切换、设备和完整浏览器 E2E 仍按验收矩阵保持未运行或阻塞。
 
-## v0.12.0 当前状态
+## v0.12.1 当前状态
 
-- [x] `VERSION`、backend OpenAPI、frontend package 和安装器默认标签同步为 `0.12.0`。
-- [x] 系统设置迁移、周期调度、Beat Compose 服务、节点刷新跳过在途操作和 worker 权限回归通过。
-- [x] AWS Lightsail 19 个地区目录、中文展示、额度默认 0/手动编辑和 AWS 官方链接已完成。
-- [x] 操作中心、审计日志、操作详情和订阅状态中文映射已完成，`ACCEPTED` 保持“已受理”中性语义。
-- [x] 后端聚焦测试 26 项；前端串行单测 78 项；typecheck、lint、build、Django check、迁移漂移、OpenAPI 双生成、边界、验收矩阵和差异检查通过。
+- [x] `VERSION`、backend OpenAPI、frontend package 和安装器默认标签同步为 `0.12.1`。
+- [x] `CI=true corepack pnpm@10.33.0 --dir frontend install --frozen-lockfile` 通过；workspace catalog 和锁文件一致。
+- [x] 继承 v0.12.0 的系统设置迁移、周期调度、Beat Compose 服务、地区分配弹窗及中文管理界面。
+- [x] 后端聚焦测试 21 passed；前端 17 个文件/78 passed；安装器 3 passed、1 skipped。
+- [x] Django check、迁移漂移、OpenAPI 双生成、TypeScript 生成、typecheck、Lint、build、uv lock check 通过。
+- [ ] GitHub delivery-gates 与 release workflows 的 v0.12.1 运行结果待发布后回读。
+- [ ] GitHub `v0.12.1` Release、CI 结果及远端资产摘要回读待提交后完成。
 - [ ] Ruff 工具未安装在当前本地虚拟环境，`uv run ruff` 无可执行文件；已执行 py_compile 和其余静态门禁。
 - [ ] 真实 AWS/SWAS、SSH、公网探测、生产部署、生产 TLS、设备验收和完整浏览器 E2E：本版本未运行。
 
 ## 发布与回退
 
-- [ ] GitHub `v0.12.0` 正式非草稿 Release、远端三项资产摘要和标签回读待本轮提交后记录。
-- [x] 应用回退使用 `v0.11.0` 或对本轮提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、安全事件、撤销凭据或云端状态。
+- [ ] 应用回退使用 `v0.12.0` 或对本轮提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、安全事件、撤销凭据或云端状态。
+
+---
+
+## v0.12.0 发布记录
+
+- [x] GitHub `v0.12.0` 正式非草稿 Release 已发布；远端 `main` 和注释标签指向 `7694984795f5a501b3f390aa9648dd7ef3d18087`。
+- [x] Release workflow 成功；远端 `SHA256SUMS`、manifest、tar.gz 的资产 SHA-256 分别为 `9d2fea262771ad906c5290036f46b8fc5682c4b2f8c89ea58d3e36b587a15d22`、`050f6bc96b68246e972ffb33d6bbbace3ba93ffec12d62248798fd38da162758`、`4693e42af1fa776c1e68f306c7c0f8898ef81ddab2124d57a3259611a0c0aa8e`；远端校验文件通过。
+- [x] GitHub delivery-gates run `41421735958` 在 `Install locked dependencies` 失败，原因为 catalog 与锁文件不一致；依赖安装后的检查步骤未运行。v0.12.1 修订此锁文件问题。
 
 ---
 

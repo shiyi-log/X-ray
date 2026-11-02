@@ -4,7 +4,7 @@ import path from 'node:path';
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const acceptanceRoot =
   process.env.XRAY_ACCEPTANCE_ARTIFACT_DIR ??
-  path.join(repositoryRoot, 'artifacts', 'acceptance', '0.12.0');
+  path.join(repositoryRoot, 'artifacts', 'acceptance', '0.12.1');
 const authState =
   process.env.XRAY_PLAYWRIGHT_AUTH_STATE ??
   path.join(import.meta.dirname, '.playwright', 'admin.json');

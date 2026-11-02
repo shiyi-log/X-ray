@@ -4030,3 +4030,25 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `result`: `源码检查确认单次 node.refresh 可复用，Celery Beat 当前未纳入 production/staging Compose；本地数据盘点未执行，因专用 PostgreSQL 未运行且 55432/56379 无监听。`
 - `rollback_ref`: `应用回退使用 v0.11.0 或对本轮提交执行 git revert；数据库迁移为兼容性前向迁移，不自动反向删除设置或刷新记录；不回退 Token tombstone、安全事件或云端状态。`
 - `time_logic`: `事件时间使用系统时钟并记录 Asia/Shanghai 偏移；同步间隔按整数分钟解释，定时触发使用 Celery wall-clock beat 并避免重叠开放操作；业务观察时间继续由 Django aware timezone.now() 保存 UTC。`
+
+### 2026-11-02T17:45:39+08:00 — xray-admin-sync-han-20261102-01 v0.12.0 release and CI correction
+
+- `event_id`: `xray-admin-sync-han-20261102-01/002`
+- `run_id`: `xray-admin-sync-han-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `release_closeout / correction_definition`
+- `path_scope`: `v0.12.0 GitHub Release and assets; frontend/pnpm-lock.yaml; version metadata for v0.12.1; installer/version tests; docs/release-checklist.md; docs/version-record.md; docs/progress.md`
+- `operation`: `发布 0.12.0 后读取 GitHub Actions 结果，修复冻结安装失败并准备 0.12.1 修订版。`
+- `reason`: `用户明确要求提交并发布新版；tag-triggered release workflow 成功，但 delivery-gates run 41421735958 在 Install locked dependencies 失败。`
+- `authorization`: `沿用用户对本地修正、Git 提交、推送、annotated tag 和 GitHub Release 的明确授权；不扩张为生产部署、真实 AWS/SWAS、SSH、公网探测或设备验收授权。`
+- `assumptions`: `v0.12.0 中 pnpm-lock.yaml 将 @tanstack/vue-store catalog 标记为 0.12.0，但 pnpm-workspace.yaml 及锁定包实际版本均为 0.11.0；CI 冻结安装要求 specifier 与 workspace 一致。`
+- `exclusions`: `不改写已发布 v0.12.0 tag/Release；保留 docs/cloud-test-authorization.md 和独立云/设备验收记录；不执行云 API、SSH、生产或历史业务数据写入。`
+- `risk`: `v0.12.0 delivery-gates 未进入测试/构建步骤；若重写不可变 tag 会破坏发布定位，因此使用 0.12.1 向前修订。Git smart-HTTP 连接失败，GitHub API 作为 refs/objects 发布通道并回读验证。`
+- `implementation_scope`: `恢复 frontend/pnpm-lock.yaml 中 catalog specifier/version 到 0.11.0；将当前版本元数据、安装器默认 tag、包测试、验收矩阵和发布文档升至 0.12.1；保留 v0.12.0 发布证据。`
+- `command_or_tool`: `gh run view 41421735958; gh release view/download; GitHub Git Database API; CI=true corepack pnpm@10.33.0 --dir frontend install --frozen-lockfile; focused pytest; frontend Vitest/typecheck/lint/build; Django check/migration drift; OpenAPI double generation and TypeScript generation; uv lock --check.`
+- `result`: `v0.12.0 正式 Release 和 tag 已发布且对应 main SHA 7694984795f5a501b3f390aa9648dd7ef3d18087；远端 SHA256SUMS 校验 tar.gz/manifest 成功，解包内容与本地包一致。CI 失败原因已修复；CI 模式冻结安装 exit 0；后端 21 passed、前端 78 passed、安装器 3 passed/1 skipped、typecheck/lint/build/Django/migration/OpenAPI/TypeScript/uv lock 通过；v0.12.1 GitHub 发布和 Actions 验收待完成。`
+- `exit_code`: `v0.12.0 release workflow 0; v0.12.0 delivery-gates 1 (frozen install mismatch); corrected frozen install 0; backend 21 passed; frontend 78 passed; installer 3 passed/1 skipped; static and build gates 0.`
+- `evidence`: `只记录公开提交 SHA、workflow/run ID、Release URL、资产摘要、测试汇总和不含凭据的 pnpm 错误码；没有读取或记录密码、Cookie、Token、DSN 或云凭据。`
+- `commit_or_tree`: `v0.12.0 tag -> 7694984795f5a501b3f390aa9648dd7ef3d18087; v0.12.1 修订尚未提交。`
+- `rollback_ref`: `应用回退使用 v0.12.0 或对修订提交执行 git revert；没有数据库/云业务状态变化，不反向迁移、不恢复 Token tombstone、撤销凭据或安全事件。`
+- `time_logic`: `记录时间为 Asia/Shanghai；本修订不改变服务器状态同步间隔、Celery Beat 每分钟检查节奏或业务观察时间规则。`
