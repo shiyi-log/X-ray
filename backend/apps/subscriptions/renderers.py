@@ -6,6 +6,7 @@ import json
 from urllib.parse import quote, urlencode
 
 import yaml
+
 from apps.nodes.protocols import PROTOCOL_CAPABILITIES
 from common.errors import DomainError
 

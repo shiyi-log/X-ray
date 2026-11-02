@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 
 from .base import *  # noqa: F403
-from .base import database_from_url
+from .base import database_from_url, env_list
 
 TEST_DATABASE_URL = os.getenv("XRAY_TEST_DATABASE_URL")
 if not TEST_DATABASE_URL:

@@ -1,5 +1,6 @@
-from apps.subscriptions.tasks import refresh_usage_and_limits
 from django.core.management.base import BaseCommand
+
+from apps.subscriptions.tasks import refresh_usage_and_limits
 
 
 class Command(BaseCommand):

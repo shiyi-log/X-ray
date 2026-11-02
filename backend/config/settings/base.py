@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "X-ray Manager API",
     "DESCRIPTION": "Private administrator API. Secrets are write-only or delivered once.",
-    "VERSION": "0.12.1",
+    "VERSION": "0.12.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": ["config.openapi.inject_contract"],
 }

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import uuid
 
-from apps.nodes.models import ManagedNode, NodeProtocol
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+
+from apps.nodes.models import ManagedNode, NodeProtocol
 
 
 class AccessProfile(models.Model):

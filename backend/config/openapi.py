@@ -471,11 +471,20 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             },
             "NodeStatusSyncSetting": {
                 "type": "object",
-                "required": ["enabled", "interval_minutes", "last_scheduled_at", "source"],
+                "required": [
+                    "enabled",
+                    "interval_minutes",
+                    "last_scheduled_at",
+                    "source",
+                ],
                 "properties": {
                     "enabled": {"type": "boolean"},
                     "interval_minutes": {"type": "integer", "minimum": 5, "maximum": 1440},
-                    "last_scheduled_at": {"type": "string", "format": "date-time", "nullable": True},
+                    "last_scheduled_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": True,
+                    },
                     "source": {"type": "string", "enum": ["DATABASE", "DEFAULT"]},
                 },
             },

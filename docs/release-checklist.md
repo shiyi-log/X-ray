@@ -1,22 +1,28 @@
-# v0.12.1 交付与发布检查表
+# v0.12.2 交付与发布检查表
 
-本修订保留 v0.12.0 的功能，修复 GitHub 冻结安装发现的 pnpm workspace catalog 锁文件不一致。真实 AWS/SWAS、SSH、生产 TLS、生产切换、设备和完整浏览器 E2E 仍按验收矩阵保持未运行或阻塞。
+本修订继承 v0.12.0 的功能和 v0.12.1 的冻结安装修复，清理 delivery-gates 全仓库 Ruff 诊断。真实 AWS/SWAS、SSH、生产 TLS、生产切换、设备和完整浏览器 E2E 仍按验收矩阵保持未运行或阻塞。
 
-## v0.12.1 当前状态
+## v0.12.2 当前状态
 
-- [x] `VERSION`、backend OpenAPI、frontend package 和安装器默认标签同步为 `0.12.1`。
-- [x] `CI=true corepack pnpm@10.33.0 --dir frontend install --frozen-lockfile` 通过；workspace catalog 和锁文件一致。
-- [x] 继承 v0.12.0 的系统设置迁移、周期调度、Beat Compose 服务、地区分配弹窗及中文管理界面。
-- [x] 后端聚焦测试 21 passed；前端 17 个文件/78 passed；安装器 3 passed、1 skipped。
-- [x] Django check、迁移漂移、OpenAPI 双生成、TypeScript 生成、typecheck、Lint、build、uv lock check 通过。
-- [ ] GitHub delivery-gates 与 release workflows 的 v0.12.1 运行结果待发布后回读。
-- [ ] GitHub `v0.12.1` Release、CI 结果及远端资产摘要回读待提交后完成。
-- [ ] Ruff 工具未安装在当前本地虚拟环境，`uv run ruff` 无可执行文件；已执行 py_compile 和其余静态门禁。
+- [x] `VERSION`、backend OpenAPI、frontend package、验收矩阵和安装器默认标签同步为 `0.12.2`。
+- [x] Ruff 0.13.1 全仓库检查通过；修复的诊断限于导入顺序、未使用导入、测试导入和行宽。
+- [x] 补充订阅撤销操作中文标签的前端回归断言。
+- [ ] GitHub delivery-gates 与 release workflows 的 v0.12.2 运行结果待发布后回读。
+- [ ] GitHub `v0.12.2` Release、CI 结果及远端资产摘要回读待提交后完成。
 - [ ] 真实 AWS/SWAS、SSH、公网探测、生产部署、生产 TLS、设备验收和完整浏览器 E2E：本版本未运行。
 
 ## 发布与回退
 
-- [ ] 应用回退使用 `v0.12.0` 或对本轮提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、安全事件、撤销凭据或云端状态。
+- [ ] 应用回退使用 `v0.12.1` 或对本轮提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、安全事件、撤销凭据或云端状态。
+
+---
+
+## v0.12.1 发布记录
+
+- [x] GitHub `v0.12.1` 正式非草稿 Release 已发布，Release workflow run `41423911493` 成功；标签指向提交 `9f1a10782c2b0c88163e83d83753c4ad271d9511`。
+- [x] 远端 `SHA256SUMS`、manifest、tar.gz 资产已上传并经后续读取校验；摘要记录在 `docs/version-record.md`。
+- [x] 冻结依赖安装修复通过；delivery-gates run `41423915567` 进入完整本地门禁后，在 Ruff 阶段因 25 项诊断失败，后续门禁未运行。v0.12.2 修复这些诊断。
+- [ ] 真实 AWS/SWAS、SSH、公网探测、生产部署、生产 TLS、设备验收和完整浏览器 E2E：本版本未运行。
 
 ---
 

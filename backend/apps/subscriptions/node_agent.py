@@ -3,9 +3,10 @@ from __future__ import annotations
 import json
 import socket
 
+from django.conf import settings
+
 from apps.nodes.ssh import HostKeyService, ParamikoApplyTransport, sha256_fingerprint
 from common.errors import DomainError
-from django.conf import settings
 from providers.registry import build_read_provider
 
 

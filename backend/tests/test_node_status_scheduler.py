@@ -6,9 +6,9 @@ from django.utils import timezone
 
 from apps.identity.models import NodeStatusSyncSetting
 from apps.nodes.models import ManagedNode
+from apps.nodes.tasks import schedule_node_status_refreshes
 from apps.operations.models import Operation
 from apps.operations.services import OperationService
-from apps.nodes.tasks import schedule_node_status_refreshes
 
 
 @pytest.mark.django_db

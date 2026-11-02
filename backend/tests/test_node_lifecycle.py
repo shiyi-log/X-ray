@@ -682,6 +682,7 @@ def test_reboot_crash_after_acceptance_does_not_adopt_snapshot_diff_candidate(
     from datetime import timedelta
 
     from django.utils import timezone
+
     from providers.base import Address
 
     class SimulatedProcessCrash(BaseException):
@@ -794,8 +795,9 @@ def test_reboot_retry_does_not_adopt_single_external_operation_after_snapshot(
 ):
     from datetime import timedelta
 
-    from apps.operations.services import OperationService
     from django.utils import timezone
+
+    from apps.operations.services import OperationService
 
     class SimulatedProcessCrash(BaseException):
         pass
@@ -912,7 +914,6 @@ def test_missing_reboot_operation_id_is_queried_again_without_rebooting(
 def test_reboot_without_ipv4_does_not_clear_saved_address_or_publish(
     prepared_node, admin, monkeypatch
 ):
-    from providers.base import Address
 
     node, _create_operation = prepared_node
     provision_node_for_action(node)

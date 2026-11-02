@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from django.db import transaction
+
 from apps.nodes.lifecycle import NodeLifecycle
 from common.errors import DomainError
-from django.db import transaction
 
 from .models import Operation
 

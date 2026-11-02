@@ -1,5 +1,5 @@
 {
-  "version": "0.12.1",
+  "version": "0.12.2",
   "generated_at": "2026-11-02T17:47:04+08:00",
   "allowed_statuses": [
     "passed",

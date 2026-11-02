@@ -12,9 +12,9 @@ from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST
 
 from apps.identity.gate_settings import (
+    _UNSET,
     node_status_sync_setting,
     provider_identity_network_setting,
-    _UNSET,
     set_node_status_sync_settings,
     set_provider_identity_network_enabled,
 )

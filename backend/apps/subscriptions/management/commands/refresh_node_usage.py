@@ -1,8 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from common.errors import DomainError
-
 from apps.subscriptions.metering import collect_node_once
+from common.errors import DomainError
 
 
 class Command(BaseCommand):

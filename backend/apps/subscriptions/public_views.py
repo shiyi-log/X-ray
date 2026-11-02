@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from common.crypto import configured_subscription_store
-from common.errors import DomainError
 from django.db import DatabaseError
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
+
+from common.crypto import configured_subscription_store
+from common.errors import DomainError
 
 from .policy import assert_entitled
 from .security_barrier import PublishingBlocked, SecurityBarrier

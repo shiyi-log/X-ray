@@ -4,11 +4,12 @@ from uuid import uuid4
 
 import paramiko
 import pytest
-from apps.nodes.ssh import ParamikoApplyTransport
-from common.errors import DomainError
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.serialization import SSHCertificateBuilder, SSHCertificateType
+
+from apps.nodes.ssh import ParamikoApplyTransport
+from common.errors import DomainError
 
 
 def credential_pair():

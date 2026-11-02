@@ -1,7 +1,8 @@
 import json
 
-from apps.subscriptions.runtime import subscription_runtime
 from django.core.management.base import BaseCommand, CommandError
+
+from apps.subscriptions.runtime import subscription_runtime
 
 
 class Command(BaseCommand):

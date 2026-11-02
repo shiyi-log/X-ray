@@ -85,7 +85,13 @@ def test_sync_env_superadmin_revokes_sessions_after_credential_change(monkeypatc
 @pytest.mark.parametrize(
     ("settings_overrides", "env_values"),
     [
-        ({"XRAY_ENV": "production"}, {"XRAY_ADMIN_USERNAME": "admin", "XRAY_ADMIN_PASSWORD": "local-development-password"}),
+        (
+            {"XRAY_ENV": "production"},
+            {
+                "XRAY_ADMIN_USERNAME": "admin",
+                "XRAY_ADMIN_PASSWORD": "local-development-password",
+            },
+        ),
         ({}, {"XRAY_ADMIN_USERNAME": "admin"}),
         ({}, {"XRAY_ADMIN_USERNAME": "admin", "XRAY_ADMIN_PASSWORD": "too-short"}),
     ],

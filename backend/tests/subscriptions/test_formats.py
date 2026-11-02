@@ -4,6 +4,7 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 import yaml
+
 from common.errors import DomainError
 
 

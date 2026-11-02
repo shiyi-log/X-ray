@@ -1,6 +1,6 @@
 [project]
 name = "xray-manager-backend"
-version = "0.12.1"
+version = "0.12.2"
 description = "Private X-ray manager backend"
 requires-python = ">=3.13,<3.14"
 dependencies = [

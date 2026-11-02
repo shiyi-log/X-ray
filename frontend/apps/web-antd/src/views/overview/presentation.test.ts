@@ -14,6 +14,7 @@ describe('总览展示格式', () => {
     expect(overviewEventLabel('custom.event')).toBe('custom.event');
     expect(operationLabel('node.delete')).toBe('删除节点');
     expect(operationLabel('operation.submit.node.delete')).toBe('提交删除节点');
+    expect(operationLabel('subscription.token_revoke')).toBe('撤销订阅令牌');
     expect(auditActionLabel('operation.submit.node.delete')).toBe('提交删除节点');
     expect(auditActionLabel('subscription.management.mutate')).toBe('修改订阅管理');
     expect(targetTypeLabel('node')).toBe('服务器');

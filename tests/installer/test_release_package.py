@@ -14,9 +14,9 @@ PACKAGE_SCRIPT = ROOT / "scripts" / "package-installer-release.sh"
 
 def test_installer_release_package_contains_only_publishable_assets(tmp_path: Path) -> None:
     dist = tmp_path / "dist"
-    env = {**os.environ, "XRAY_RELEASE_DIST_DIR": str(dist), "XRAY_RELEASE_TAG": "v0.12.1"}
+    env = {**os.environ, "XRAY_RELEASE_DIST_DIR": str(dist), "XRAY_RELEASE_TAG": "v0.12.2"}
     result = subprocess.run(
-        ["bash", str(PACKAGE_SCRIPT), "0.12.1"],
+        ["bash", str(PACKAGE_SCRIPT), "0.12.2"],
         cwd=ROOT,
         env=env,
         capture_output=True,
@@ -25,8 +25,8 @@ def test_installer_release_package_contains_only_publishable_assets(tmp_path: Pa
     )
     assert result.returncode == 0, result.stderr + result.stdout
 
-    archive = dist / "xray-installer-0.12.1.tar.gz"
-    manifest = dist / "xray-installer-0.12.1-manifest.json"
+    archive = dist / "xray-installer-0.12.2.tar.gz"
+    manifest = dist / "xray-installer-0.12.2-manifest.json"
     checksums = dist / "SHA256SUMS"
     assert archive.is_file()
     assert manifest.is_file()
@@ -34,13 +34,13 @@ def test_installer_release_package_contains_only_publishable_assets(tmp_path: Pa
 
     with tarfile.open(archive, "r:gz") as bundle:
         names = set(bundle.getnames())
-    assert "xray-installer-0.12.1/installer/one-click.sh" in names
-    assert "xray-installer-0.12.1/installer/manifest.json" in names
+    assert "xray-installer-0.12.2/installer/one-click.sh" in names
+    assert "xray-installer-0.12.2/installer/manifest.json" in names
     assert not any(".env" in name or "archive/" in name for name in names)
 
     payload = json.loads(manifest.read_text(encoding="utf-8"))
-    assert payload["version"] == "0.12.1"
-    assert payload["tag"] == "v0.12.1"
+    assert payload["version"] == "0.12.2"
+    assert payload["tag"] == "v0.12.2"
     assert payload["commit"]
 
     expected = hashlib.sha256(archive.read_bytes()).hexdigest()

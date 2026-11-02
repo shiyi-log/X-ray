@@ -4031,6 +4031,25 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `rollback_ref`: `应用回退使用 v0.11.0 或对本轮提交执行 git revert；数据库迁移为兼容性前向迁移，不自动反向删除设置或刷新记录；不回退 Token tombstone、安全事件或云端状态。`
 - `time_logic`: `事件时间使用系统时钟并记录 Asia/Shanghai 偏移；同步间隔按整数分钟解释，定时触发使用 Celery wall-clock beat 并避免重叠开放操作；业务观察时间继续由 Django aware timezone.now() 保存 UTC。`
 
+### 2026-11-02T16:36:08+08:00 — Cloud subscription and Shadowrocket request blocked pending scoped authorization
+
+- `event_id`: `xray-cloud-shadowrocket-20261102-01/001`
+- `run_id`: `xray-cloud-shadowrocket-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; docs/project-ledger.md; docs/progress.md; docs/cloud-test-authorization.md; docs/subscriptions.md; skills/xray-manager/SKILL.md; relevant prior memory summary`
+- `operation`: `评估用户请求“创建云服务器，创建订阅，导入小火箭，打通本地油管访问”的执行前置条件；未发起云、订阅数据库或设备写入。`
+- `reason`: `本任务同时涉及真实云创建/网络开放、公网 YouTube 探测、Token 化订阅创建与真机导入；必须核对独立授权范围和现状。`
+- `authorization`: `当前用户请求明确表达了目标，但现存 docs/cloud-test-authorization.md 授权仅限两台指定 Lightsail 测试实例的 Heyue 生命周期，明确 public_probe_scope=无，且不包含本次订阅创建或 Shadowrocket 导入；不得扩张旧授权。`
+- `assumptions`: `创建节点至少需要用户指定云商/账号引用、区域、套餐/镜像、预算与计费责任、存活截止时间；可达性测试需指定协议/端口及允许目标；清理必须限定本轮新建资源并明确动作。订阅 Token 和原始 URI 属秘密，不得写入台账或日志。`
+- `exclusions`: `不调用 AWS/SWAS、不发 SSH、不改防火墙、不创建订阅或读取 Token、不访问/修改 Shadowrocket、不发起公网探测；不读取忽略环境文件或凭据；保留全部既有工作树修改。`
+- `risk`: `缺少精确云资源与费用生命周期范围会造成未授权计费资源；开放代理端口及真实 YouTube 请求属于单独公网/设备验收边界；订阅链接一旦导出即为凭据。`
+- `implementation_scope`: `本轮仅记录授权判断、运行 diff check 并请求补足资源规格与网络/设备验收范围；收到明确细化授权后再逐门执行并安全处理订阅凭据。`
+- `command_or_tool`: `读取项目约定、技能、授权文件、订阅文档和现有台账；读取 git status/diff 范围及系统时间；git diff --check。`
+- `result`: `HEAD=c7c2cd16a69e1eb3fb7a39f1881f9e3a10de9073，main 分支且工作树有大量既有用户改动；授权记录仍显示 Ubuntu 操作待执行，Debian 未提交；本地数据库、服务与设备未检查或触碰。初始 git diff --check exit 0。`
+- `rollback_ref`: `本轮只追加文档审计记录；如需纠正则按追加式原则增补 correction，不回退或覆盖既有用户修改；无云/数据库/订阅/设备状态变化。`
+- `time_logic`: `事件时间取执行机器系统时钟 2026-11-02T16:36:08+08:00；本轮无新增业务时间规则。`
+
 ### 2026-11-02T17:45:39+08:00 — xray-admin-sync-han-20261102-01 v0.12.0 release and CI correction
 
 - `event_id`: `xray-admin-sync-han-20261102-01/002`
@@ -4052,3 +4071,105 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `commit_or_tree`: `v0.12.0 tag -> 7694984795f5a501b3f390aa9648dd7ef3d18087; v0.12.1 修订尚未提交。`
 - `rollback_ref`: `应用回退使用 v0.12.0 或对修订提交执行 git revert；没有数据库/云业务状态变化，不反向迁移、不恢复 Token tombstone、撤销凭据或安全事件。`
 - `time_logic`: `记录时间为 Asia/Shanghai；本修订不改变服务器状态同步间隔、Celery Beat 每分钟检查节奏或业务观察时间规则。`
+
+### 2026-11-02T17:36:23+08:00 — Cloud subscription and Shadowrocket authorization extended; preflight blocked
+
+- `event_id`: `xray-cloud-shadowrocket-20261102-01/002`
+- `run_id`: `xray-cloud-shadowrocket-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `authorization / read / decision`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; runtime/phase1_create.py; runtime/phase2b_firewall.py; runtime/phase3_subscribe.py; runtime/phase4_import.py; backend/apps/{cloud_accounts,nodes,operations,subscriptions}; local X-ray process/listener metadata; AWS CLI availability`
+- `operation`: `继续处理用户新增授权：AWS Lightsail 公网入站、创建临时 Shadowrocket 订阅、在当前设备导入、访问验收后保留；执行只读前置盘点。`
+- `reason`: `用户明确扩展真实云、公网与设备验收范围。写入前仍须确认费用/期限和具体入站范围，并确认当前 X-ray 云账号及目标归属。`
+- `authorization`: `用户消息明确授权 AWS Lightsail、必要公网入站、临时订阅创建、当前设备导入、联网验收及验收后保留；不授权删除、停机、释放静态 IP 或快照。预算、最大保留时限、区域、套餐/镜像、代理入站协议/端口、SSH 来源及保留对象细节仍待用户在本轮选项中确认。不得扩张旧的两台 Heyue Lightsail 测试授权。`
+- `assumptions`: `runtime 脚本中的 ap-southeast-1/nano_3_0/ubuntu_24_04 与 TCP 80 仅是历史候选值，不作为本轮已批准参数。用户所说“验收后保留”暂按服务器与订阅均保留解释，但只有在给出费用上限和时间上限后才可创建计费资源。`
+- `exclusions`: `本事件未访问 AWS API、未创建/改动云资源、防火墙、数据库记录、订阅或设备状态；未发 SSH、Google/YouTube 公网探测或 Shadowrocket 导入；未停止既有进程；未回显任何密钥、密码、订阅 Token、原始 URI 或 AWS 凭据；保留现有全部工作树修改。`
+- `risk`: `本地专用测试数据库中 CloudAccount、节点、协议、操作、未投递 outbox、profile、订阅均为 0，且 AWS CLI 不存在，故无法通过当前 X-ray provider 读取云账户/资源或走其目标绑定写入流程。历史 2026-10-27 Shadowrocket 节点曾通过设备流量验收，但其 AWS readback 当时被 AccessDenied 阻断，当前状态未知，不得复用或覆盖。没有费用和最大期限会令“临时后保留”形成无界计费。`
+- `implementation_scope`: `仅追加本事件与进度记录；等待用户确认预算/期限、候选区域套餐镜像、TCP 80 入站与 SSH 来源及保留范围。其后仍需当前 X-ray 启用 AWS Lightsail CloudAccount 和目标绑定操作路径，读回账户/资源/成本与所有者后才能考虑任何云写入。`
+- `command_or_tool`: `读取受影响的源代码/模型/订阅流程与既有台账；检查 git status、git rev-parse、date -Iseconds、本地监听归属；将 .env 静默加载到只读 Django 查询进程且不回显变量；查询 X-ray test DB 脱敏计数；检查 command -v aws、aws --version、aws lightsail get-instances；使用 apply_patch 追加审计文档。`
+- `result`: `HEAD=7694984795f5a501b3f390aa9648dd7ef3d18087，main；dirty state 仅 docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md，全部保留。X-ray 后端/前端 PID 8647/8700 分别持有 9527/9528；专用 PostgreSQL/Redis 端口由 OrbStack PID 25469 持有；Shadowrocket PID 41691 在运行。当前 test DB CloudAccount/NodePool/ManagedNode/NodeProtocol/HostKeyRecord/Operation/AccessProfile/Subscription 计数为 0，未投递 outbox 为 0；一次默认连接 5432 的只读查询失败 exit 1，随后静默加载现有环境后连接 55432 并读回空记录；只读 revisions 子查询因所选模型字段不存在失败 exit 1。AWS CLI 不存在，region inventory 命令 exit 127；未调用 AWS 网络 API。`
+- `rollback_ref`: `没有外部资源或数据变更；只追加本轮 docs/project-ledger.md 与 docs/progress.md，可按追加式原则增补 correction，不覆盖或回退用户已有修改。`
+- `time_logic`: `事件时间取执行机器 date -Iseconds 的 Asia/Shanghai aware 值 2026-11-02T17:36:23+08:00。创建时间、预算及最大保留时限未确定，当前不得创建计费资源；本事件没有业务 TTL 状态变化。`
+
+- `event_id`: `xray-cloud-shadowrocket-20261102-01/003`
+- `timestamp`: `2026-11-02T17:38:13+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / decision`
+- `path_scope`: `local AWS SDK credential-provider metadata; AWS STS/Lightsail calls not made`
+- `operation`: `确定是否存在可用于 X-ray 云账号初始化的当前 AWS SDK 凭证来源；仅检查 provider 名称/是否存在。`
+- `reason`: `AWS CLI 不可用且本地 X-ray CloudAccount 为空；在停止前复核当前进程凭证链，不读取或回显凭证正文。`
+- `authorization`: `用户本轮明确授权 AWS Lightsail；本动作只读且不访问 AWS 网络 API。`
+- `assumptions`: `SDK 返回凭证 provider 名称及是否有身份，仅用于判断本机是否配置云凭证；不记录访问密钥、会话令牌、账号完整号码或环境值。`
+- `exclusions`: `未调用 STS 或 Lightsail API，未做任何云写入、订阅写入、SSH、防火墙、探测或设备操作。`
+- `command_or_tool`: `在静默载入既有 .env 的子进程中调用 boto3.Session.get_credentials()；异常只输出类型名称。`
+- `result`: `credential_provider=none；SDK 只读身份检查得到 NoCredentialsError，退出码 0；没有 AWS 请求 ID、身份信息或资源读回。`
+- `rollback_ref`: `只读检查，无运行态/数据回退事项；保留本轮台账与既有工作树修改。`
+- `time_logic`: `使用执行机器时区 Asia/Shanghai aware 时间 2026-11-02T17:38:13+08:00；无业务时间变化。`
+
+- `event_id`: `xray-cloud-shadowrocket-20261102-01/004`
+- `timestamp`: `2026-11-02T17:38:48+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate / closeout`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; repository boundary; tests/acceptance/matrix.json; git status`
+- `operation`: `完成当前授权后置检查的文档门禁和工作区收尾；保持真实云、订阅与设备执行 blocked。`
+- `reason`: `保存本轮精确验证结果、未完成条件、用户工作区现状和回退边界。`
+- `authorization`: `仅执行用户授权范围内只读检查及追加式项目审计文档；不提交、不推送，不操作云/设备。`
+- `assumptions`: `用户当前尚未选择预算、最长保留期、公网/SSH 端口来源参数；AWS 凭证需由用户在 X-ray 支持的账号流程配置并验证后才可继续。`
+- `exclusions`: `未改变 docs/cloud-test-authorization.md 用户文件、其他既有源码/发布改动或任何外部状态。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; git status --short --branch; review scoped diff.`
+- `result`: `最终复跑记录在此事件后续验证中；此前一轮三个门禁均 exit 0。当前分支 main，与 origin/main ahead 1；未提交工作树仅 docs/cloud-test-authorization.md（用户既有）、docs/project-ledger.md、docs/progress.md（本轮追加）。本轮无云账号/实例、防火墙、订阅 Token、SSH、设备导入或 Google/YouTube 探测证据；不宣称验收完成。`
+- `rollback_ref`: `无外部状态回退；仅按追加式原则处理本轮 project-ledger/progress 审计条目，保留用户的授权文件与现有全部源码修改。`
+- `time_logic`: `2026-11-02 Asia/Shanghai；没有确定计费资源最大存活时间，故创建继续禁止；最终验证后续时间与退出码在进度/后续审计记录中更新。`
+
+- `event_id`: `xray-cloud-shadowrocket-20261102-01/005`
+- `timestamp`: `2026-11-02T17:39:25+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / validate`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; git refs/status; repository validation scripts`
+- `operation`: `更正事件 /004 的分支 ahead 描述，并记录最终门禁结果。`
+- `reason`: `最终复核显示 HEAD 与 origin/main 一致；/004 写作时使用了先前临时的 ahead 状态，须按追加式原则保留历史并补充正确读回。`
+- `authorization`: `仅只读状态复核和追加文档纠正。`
+- `assumptions`: `最终状态以本事件中的 SHA 与验证命令为准。`
+- `exclusions`: `未操作云/订阅/SSH/设备；没有提交或推送。`
+- `command_or_tool`: `git rev-parse HEAD; git rev-parse origin/main; git status --short --branch; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh with output suppressed.`
+- `result`: `更正 /004：HEAD=7694984795f5a501b3f390aa9648dd7ef3d18087，与 origin/main 相同，本地 main 不 ahead；工作树只有 docs/cloud-test-authorization.md（既有用户修改）与本轮 docs/project-ledger.md、docs/progress.md。最终退出码 diff=0、boundary=0、acceptance=0、secret-scan=0；云创建、订阅、SSH、防火墙、Shadowrocket 导入及 Google/YouTube 公网探测仍未运行。`
+- `rollback_ref`: `无外部状态变更；本更正仅供准确解释 /004，不覆盖其历史原文或用户既有修改。`
+- `time_logic`: `最终事件时间为 Asia/Shanghai aware 值 2026-11-02T17:39:25+08:00；没有实例最大期限，故真实创建仍 blocked。`
+
+### 2026-11-02T18:09:16+08:00 — User selected Lightsail scope; retention conflict remains
+
+- `event_id`: `xray-cloud-shadowrocket-20261102-01/006`
+- `run_id`: `xray-cloud-shadowrocket-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `authorization / read / decision`
+- `path_scope`: `current user selections; docs/project-ledger.md; docs/progress.md; local X-ray cloud-account UI`
+- `operation`: `Record the user's selected Lightsail region/plan/image, budget, inbound rules, and keep request; inspect the supported CloudAccount entry path.`
+- `reason`: `The user selected USD 20 and 7 days, public TCP 80, SSH from current egress IP, and retaining server plus subscription until further instruction. The retention clauses conflict because a seven-day hard resource lifetime does not permit indefinite retention.`
+- `authorization`: `User explicitly selected provider AWS Lightsail, region ap-southeast-1, plan nano_3_0, image ubuntu_24_04, a USD 20 budget, TCP 80 from 0.0.0.0/0, SSH restricted to the current egress IP, YouTube access acceptance, and retaining both server and subscription. User also selected a seven-day lifetime while separately selecting retention until deletion by later instruction; which deadline governs remains pending. No Google probe is included. No stop/delete/static-IP/snapshot action is authorized.`
+- `assumptions`: `SSH source will be resolved to the current public egress IPv4 /32 only when performing the authorized firewall operation. USD 20 is treated as a cumulative maximum. The user should provision the Lightsail account through X-ray's encrypted CloudAccount creation flow; the key must not be sent in chat.`
+- `exclusions`: `No Lightsail API, create, firewall mutation, SSH, subscription/token creation, device import, or YouTube probe occurred. The CloudAccount page was requested to open in Codex but returned queued status; no form was submitted. No credentials were read or provided.`
+- `risk`: `7-day lifetime and indefinite retention cannot both bound cost. Current X-ray test DB still has zero CloudAccounts/nodes/subscriptions/operations, and boto3 previously returned NoCredentialsError; an account must be configured and verified before a target-bound create/readback path can run.`
+- `implementation_scope`: `Wait for the user to resolve the retention/cost deadline and for a validated Lightsail CloudAccount to appear through the app. Then recheck account identity, capabilities, resource inventory, and price before creating one node; never exceed USD 20. Afterward use only public TCP 80 and current egress-IP SSH; create and import the subscription; probe YouTube through the device proxy; retain resources only within the confirmed lifetime/budget.`
+- `command_or_tool`: `request_user_input_async choices received; inspected frontend/apps/web-antd/src/views/cloud-accounts/index.vue and backend/apps/cloud_accounts/{views.py,services.py,serializers.py}; queried current test DB read-only; mcp__codex_app__open_in_codex for http://127.0.0.1:9528/cloud-accounts returned status queued.`
+- `result`: `Selected specifications recorded. Local X-ray front/back listeners 9528/9527 were live; latest read-only test DB remained empty for CloudAccount, nodes, protocols, operations, outbox, profiles, subscriptions, and revisions. The UI supports validating and encrypting AWS credentials locally, with credential fields cleared after create/cancel; user action is required to populate it. The seven-day/keep-until-deleted conflict remains unresolved, so all cloud and subscription writes remain blocked.`
+- `rollback_ref`: `No external or database changes. Only this audit append exists; preserve all current worktree edits, including concurrent release-gate changes.`
+- `time_logic`: `Timestamp from system clock in Asia/Shanghai: 2026-11-02T18:09:16+08:00. If the user confirms seven days as a hard maximum, deadline is seven days from AWS successful create/readback and cost remains capped at USD 20; otherwise an explicit longer lifetime and cumulative budget cap are required.`
+
+### 2026-11-02T17:58:41+08:00 — xray-release-gate-20261102-01 scope and authorization
+
+- `event_id`: `xray-release-gate-20261102-01/001`
+- `run_id`: `xray-release-gate-20261102-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `Ruff findings in backend and tests; VERSION; CHANGELOG.md; installer release references; docs/release-checklist.md; docs/release.md; docs/version-record.md; docs/progress.md; tests/acceptance/matrix.json`
+- `operation`: `调查 v0.12.1 发布后的 delivery-gates 失败，修复全仓库 Ruff 阻断，并准备绿色的新补丁发布。`
+- `reason`: `v0.12.1 Release workflow 成功，但 delivery-gates run 41423915567 在 Ruff 阶段以 25 个既有/新增代码风格诊断失败；不应将失败门禁版本作为最终交付。`
+- `authorization`: `用户明确要求全部修正、提交并发布新版；可提交本地兼容修复、推送 main、创建不可变 annotated tag 和 GitHub Release。此授权不扩展到生产部署、真实 AWS/SWAS、SSH、公网探测、实例删除或静态 IP 释放。`
+- `assumptions`: `v0.12.1 tag/Release 已成功创建且不可重写；以 v0.12.2 向前修订。Ruff 0.13.1 的 25 项诊断均属于 CI 全仓库检查的必要修复，自动 import 排序仅改格式；非自动项人工拆行或加精确兼容标注。`
+- `exclusions`: `保留 docs/cloud-test-authorization.md 未提交修改及既有云验收记录；不读取、修改或打印凭据；不修改数据库、节点/订阅业务数据、服务、浏览器会话、云资源或生产状态。`
+- `risk`: `修复范围包括已有 backend/tests 风格问题，非业务行为；必须审阅 formatter 差异并运行对应 Ruff、前端聚焦测试、全量 delivery-gates、版本一致性及 Release 资产校验。CI 后续门禁可能暴露此前被 Ruff 中断而未运行的问题。`
+- `implementation_scope`: `检查 CI 失败诊断；只修改已报告的 backend/tests lint 位置；补充订阅撤销中文 operation label 回归断言；按补丁版本规则同步版本与发布文档；本地 focused 验证后提交、推送、打标签并回读 GitHub CI/Release/资产。`
+- `command_or_tool`: `gh run view/log; uvx --from ruff==0.13.1 ruff check [--fix] backend tests; focused pytest/Vitest; delivery-gates; package/checksum; git diff --check; GitHub refs/Actions/Release/asset readback; apply_patch.`
+- `result`: `run 41423915567 的依赖冻结安装与接受矩阵校验通过；complete-local-delivery-gates 在全仓库 Ruff 阶段退出 1，诊断 25 项，后续门禁未执行。只读 test DB 核验 identity 5/5、nodes 7/7、subscriptions 6/6 migration 已应用，节点/订阅/配置/Token 聚合及待处理操作均为 0；无数据可修复。系统设置视图 GET 在本地绕过认证只读调用为 HTTP 200；未认证 API 返回预期 401 AUTH_REQUIRED，截图失败不可复现，可能与当时会话/运行版本有关。`
+- `rollback_ref`: `应用回退使用 v0.12.1 或对新发布提交执行 git revert；不移动/覆盖 v0.12.1 tag，不反向迁移，不恢复 Token tombstone、撤销凭据、安全事件或云状态。`
+- `time_logic`: `本轮记录时间取系统时钟 2026-11-02T17:58:41+08:00。没有新增业务时间逻辑；系统状态同步区间仍为 5–1440 整数分钟、默认关闭，数据库调度时间使用 Django aware UTC 存储并按 Asia/Shanghai 显示。`

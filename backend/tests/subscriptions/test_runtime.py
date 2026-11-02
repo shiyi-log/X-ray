@@ -3,10 +3,11 @@ import json
 from unittest.mock import patch
 
 import pytest
-from apps.subscriptions.runtime import subscription_runtime
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import override_settings
+
+from apps.subscriptions.runtime import subscription_runtime
 
 
 @override_settings(XRAY_NODE_TRANSPORT_FACTORY="", XRAY_USAGE_FETCHER="")

@@ -267,8 +267,14 @@ def test_token_revoke_is_target_bound_idempotent_and_keeps_other_tokens_active(
     assert body["status"] == "REVOKED"
     assert body["is_current"] is False
     assert first.raw_token not in response.content.decode()
-    assert client.get(f"/api/v1/subscriptions/{first.subscription_id}/tokens/").json()["items"][0]["status"] == "REVOKED"
-    assert client.get("/api/v1/subscriptions/").json()["items"][0]["current_token_status"] == "REVOKED"
+    token_status = client.get(
+        f"/api/v1/subscriptions/{first.subscription_id}/tokens/"
+    ).json()["items"][0]["status"]
+    subscription_status = client.get("/api/v1/subscriptions/").json()["items"][0][
+        "current_token_status"
+    ]
+    assert token_status == "REVOKED"
+    assert subscription_status == "REVOKED"
     with pytest.raises(TokenGone):
         TokenService.resolve(first.raw_token)
     assert TokenService.resolve(second.raw_token).pk == second.subscription_id
