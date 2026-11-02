@@ -28,6 +28,29 @@ def test_dockerfiles_copy_only_explicit_application_roots(dockerfile, allowed_co
         assert "COPY ." not in line
 
 
+def test_frontend_dockerfile_copies_workspace_packages_before_install():
+    frontend_dockerfile = ROOT / "deploy/docker/frontend.Dockerfile"
+    lines = frontend_dockerfile.read_text(encoding="utf-8").splitlines()
+    install_index = lines.index("RUN pnpm install --frozen-lockfile")
+    copied_workspace_roots = {
+        line.strip()
+        for line in lines[:install_index]
+        if line.strip().startswith("COPY frontend/")
+    }
+
+    assert "COPY frontend/internal/ ./internal/" in copied_workspace_roots
+    assert "COPY frontend/packages/ ./packages/" in copied_workspace_roots
+
+
+def test_dockerignore_excludes_nested_dependencies_and_virtualenvs():
+    dockerignore = (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
+
+    assert "**/node_modules/" in dockerignore
+    assert "**/.venv/" in dockerignore
+    assert "artifacts/" in dockerignore
+    assert ".local-tools/" in dockerignore
+
+
 @pytest.mark.parametrize(
     ("environment_key", "expected_user", "application_root"),
     [

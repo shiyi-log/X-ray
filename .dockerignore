@@ -19,12 +19,17 @@ archive/
 backups/
 runtime/
 logs/
+artifacts/
+.local-tools/
+.compose-state/
 **/*.log
 **/__pycache__/
 **/*.py[cod]
 .venv/
+**/.venv/
 .uv-cache/
 node_modules/
+**/node_modules/
 dist/
 coverage/
 .turbo/

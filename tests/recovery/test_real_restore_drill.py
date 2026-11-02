@@ -22,6 +22,8 @@ def _docker_tools(tmp_path: Path, *command: str) -> subprocess.CompletedProcess[
             "docker",
             "run",
             "--rm",
+            "--user",
+            f"{os.getuid()}:{os.getgid()}",
             "--add-host",
             "host.docker.internal:host-gateway",
             "-v",

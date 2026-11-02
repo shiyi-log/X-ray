@@ -6,10 +6,10 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/pnpm-lock.yaml frontend/pnpm-workspace.yaml frontend/tsconfig.json frontend/eslint.config.js ./
 COPY frontend/apps/web-antd/package.json ./apps/web-antd/package.json
-COPY frontend/packages/ui/package.json ./packages/ui/package.json
+COPY frontend/internal/ ./internal/
+COPY frontend/packages/ ./packages/
 RUN pnpm install --frozen-lockfile
 COPY frontend/apps/ ./apps/
-COPY frontend/packages/ ./packages/
 RUN pnpm build && test -f apps/web-antd/dist/index.html
 
 FROM ${NGINX_IMAGE} AS runtime
