@@ -29,9 +29,9 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
     const pages = [
       ['/cloud-accounts', '云账号', '暂无云账号'],
       ['/nodes', '服务器管理', '暂无服务器'],
-      ['/operations', '操作中心', 'node.create'],
+      ['/operations', '操作中心', '创建节点'],
       ['/audit', '审计日志', 'e2e.seed.complete'],
-      ['/system', '系统设置', '部署配置只读'],
+      ['/system', '系统设置', '重复时间'],
     ] as const;
     for (const [path, heading, visibleText] of pages) {
       await page.goto(path);
@@ -41,10 +41,10 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
     await expect(page.getByRole('link', { name: '节点池', exact: true })).toHaveCount(0);
 
     await page.goto('/subscriptions');
-    await page.getByRole('button', { name: '创建 Token' }).click();
-    const createDialog = page.getByRole('dialog', { name: '创建 Token' });
+    await page.getByRole('button', { name: '创建订阅' }).click();
+    const createDialog = page.getByRole('dialog', { name: '创建订阅' });
     await createDialog.getByLabel('名称').fill(profileName);
-    await createDialog.getByRole('button', { name: '保存 Token' }).click();
+    await createDialog.getByRole('button', { name: '保存订阅' }).click();
     const delivery = page.getByRole('dialog', { name: '一次性交付' });
     deliveredToken = (await delivery.locator('code').first().textContent()) || '';
     expect(deliveredToken).toHaveLength(43);
