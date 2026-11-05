@@ -4485,3 +4485,143 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `file_hash_before`: `docs/project-ledger.md SHA256=1a22ac7cc141f6b33def7b21de2bb5286f7be247689e52dab8fd9c9df037b89d；docs/progress.md SHA256=fcf83975f7f851f3dfbb3625c43f1c3212cb00880ea2287834e2392b0a21e9a5。`
 - `reuse`: `复用用户既有实现与审计记录；后续功能从新提交基线继续，不重置或清理任何用户数据。`
 - `rollback_ref`: `提交后使用 git revert <commit> 回退代码/文档；不删除本地浏览器状态、不反向迁移数据库或回滚凭据/云状态；远端推送使用正向新提交修正。`
+
+### 2026-11-06T03:22:11+08:00 — xray-password-login-20261106-01 correction and closeout
+
+- `event_id`: `xray-password-login-20261106-01/003`
+- `run_id`: `xray-password-login-20261106-01`
+- `timestamp`: `2026-11-06T03:22:11+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / decision / validate`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; isolated Chrome login/logout evidence; current Git status and commit metadata`
+- `operation`: `补充记录账号密码登录验证中的退出请求修正、隔离会话清理边界及本轮文档门禁收尾。`
+- `reason`: `第一次完整验证使用了错误的 CSRF 字段，普通退出返回 403；修正脚本字段后重新执行登录闭环并成功退出。补充记录首次失败和临时会话状态。`
+- `authorization`: `用户明确要求测试账号密码登录；仅整理已授权的本地隔离验证证据，不执行 logout-all 或影响其他会话的操作。`
+- `implementation_scope`: `仅追加本台账 correction/final verification event，并在进度表登记已完成的本地登录验证及静态门禁退出码。`
+- `exclusions`: `不改应用源码、凭据、忽略配置、数据库或云资源；不读取或输出密码、Cookie、CSRF 值、token、secret 或 secret-bearing exception；不清理用户的 .playwright-cli 状态。`
+- `risk`: `首次错误字段退出的隔离浏览器尝试可能留下服务端临时会话记录；cookie 随隔离 context 关闭后不可继续使用，该记录按本地 30 分钟 TTL 自然失效。不运行 logout-all，以免撤销其他会话。`
+- `command_or_tool`: `复核 xray-password-login-20261106-01/001-002 和当前状态；追加本 correction；随后运行 git diff --check、./scripts/check-boundary.sh、python3 scripts/validate-acceptance.py、./scripts/check-secrets.sh 和最终 git status/rev-parse。`
+- `result`: `修正字段后的浏览器实测已由 /002 记录：错误密码 401，正确密码 200 并进入 /overview，刷新保持登录，密码不存于 localStorage/sessionStorage；最终复测普通 logout 200 且访问回到 401。首次错误字段退出为 403，不能记作成功；其隔离临时会话最多存续至 30 分钟 TTL 到期。静态门禁待本轮 fresh closeout。`
+- `exit_code`: `corrected browser verification=0; initial incorrect-field logout=403; current closeout gates pending.`
+- `evidence`: `只复用已脱敏的 HTTP 状态、路由、认证布尔值、存储检查和会话 TTL；未保存凭据、Cookie、CSRF、token、secret 或截图。`
+- `status`: `local-password-login-passed; documentation-closeout-pending`
+- `commit_or_tree`: `登录实测记录于 main@f4263f0228c336f5ba3189353eef6c13038d8c0f；当前 HEAD 为 main@d54da54f9379d82400a14ec508be346c1566ca46；保留已提交代码和被忽略的 .playwright-cli/。`
+- `time_logic`: `时间为本机 Asia/Shanghai aware ISO-8601；服务端临时会话依配置 30 分钟 TTL 自然到期；没有改变业务时间、过期或重试行为。`
+- `reuse`: `复用 /002 的隔离浏览器与本地服务证据；本轮只运行文档、边界和秘密门禁，不重复登录或创建新会话。`
+- `rollback_ref`: `仅追加的文档事件无需运行态回滚；不删除会话记录、不撤销其他会话、不停止服务、不回滚代码或安全状态。`
+
+### 2026-11-06T03:26:23+08:00 — xray-ruff-install-20261106-01 definition
+
+- `event_id`: `xray-ruff-install-20261106-01/001`
+- `run_id`: `xray-ruff-install-20261106-01`
+- `timestamp`: `2026-11-06T03:26:23+08:00`
+- `actor`: `Codex`
+- `event_type`: `definition / read`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; docs/project-ledger.md tail; docs/progress.md tail; skills/xray-manager/SKILL.md; skills/xray-manager/references/acceptance.md; skills/xray-manager/references/versioning-and-recovery.md; pyproject.toml; backend/pyproject.toml; uv.lock; backend/uv.lock; scripts/check-local.sh; .github/workflows/ci.yml; current Git status; local uv/Ruff tool metadata`
+- `operation`: `按用户“Ruff 安装”请求，将仓库已固定的 Ruff 0.13.1 安装为 uv 用户级独立工具，并运行仓库现有 Ruff 门禁验证。`
+- `authorization`: `用户明确要求安装 Ruff；授权范围为本机用户级工具环境和本地静态 lint，不包括仓库依赖、锁文件、业务源码、服务、数据库或云资源。`
+- `assumptions`: `仓库 CI/local gate 明确使用 `uvx --from ruff==0.13.1 ruff check backend tests`；用户需要可直接调用的 ruff 命令，因此采用相同固定版本的 `uv tool install`。`
+- `implementation_scope`: `用户级安装 ruff==0.13.1；验证 ruff 版本、`ruff check backend tests` 与现有 uvx gate；只在 docs/project-ledger.md 和 docs/progress.md 追加操作及验证证据。`
+- `exclusions`: `不修改 pyproject.toml、backend/pyproject.toml、任一 uv.lock、CI、应用源码或测试；不执行数据库、容器、前后端服务、云、SSH、公网、提交、tag 或发布操作；保留既有 docs 差异及 .playwright-cli 状态。`
+- `risk`: `用户级工具会增加 ~/.local/bin/ruff 并创建 uv 隔离工具环境，可用 `uv tool uninstall ruff` 回退。先前版本探测误调用 `uv run --project .`，在根目录新建了 `.venv`；该目录创建时间与命令输出相符且仅包含新建虚拟环境文件，本轮结束前核实并移除该误产物。`
+- `command_or_tool`: `只读检查 Git/status/diff、项目约定/技能、Ruff 配置及 CI 命令；`uv --version`；安装 `uv tool install ruff==0.13.1`；`ruff --version`；`ruff check backend tests`；`uvx --from ruff==0.13.1 ruff check backend tests`；`git diff --check`；`./scripts/check-boundary.sh`；`python3 scripts/validate-acceptance.py`；`./scripts/check-secrets.sh`；最终 Git status/HEAD。`
+- `result`: `范围定义完成，安装和验证待执行。初始检查发现 ruff/uvx 用户工具尚未安装；仓库根目录 .venv 于本轮 03:24:38+08:00 的失败 uv 探测中创建，待验证与清理。`
+- `exit_code`: `初始 Ruff 可执行文件探测 127；root/backend `uv run ... ruff --version` 均 2（Ruff 不存在）；项目配置/版本及 Git 状态读取 0；后续门禁待运行。`
+- `evidence`: `scripts/check-local.sh 固定版本 0.13.1 且通过 uvx 执行 backend/tests；两个 pyproject 与 uv locks 未声明 Ruff 依赖；当前 HEAD d54da54f9379d82400a14ec508be346c1566ca46；原有用户差异为 docs/progress.md、docs/project-ledger.md。`
+- `time_logic`: `记录本机 Asia/Shanghai aware 时间；本任务不涉及业务时间、TTL、过期或重试逻辑。`
+- `reuse`: `复用 scripts/check-local.sh 和 CI 中的现有 Ruff 版本及调用边界，不新增仓库依赖或另一套 lint 配置。`
+- `rollback_ref`: `卸载用户级工具使用 `uv tool uninstall ruff`；若文档追加需回退，仅通过追加 correction 表明状态，不重写既有台账；不触碰其他用户文件或运行状态。`
+
+- `event_id`: `xray-password-login-20261106-01/004`
+- `run_id`: `xray-password-login-20261106-01`
+- `timestamp`: `2026-11-06T03:25:16+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate / final`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; current branch/status`
+- `operation`: `完成普通账号密码登录记录的静态门禁和最终工作树检查。`
+- `reason`: `结束前确认文档差异、仓库边界、验收矩阵、秘密扫描和本次修改范围均符合项目约定。`
+- `authorization`: `用户明确要求测试账号密码登录；本次仅完成授权范围内的本地验证记录。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh >/dev/null 2>&1; git status --short --branch; git rev-parse HEAD; git diff --stat.`
+- `result`: `全部命令退出码为 0。boundary check passed；acceptance matrix valid。秘密扫描输出抑制且退出码 0。分支 main 与 origin/main 同步展示；HEAD=d54da54f9379d82400a14ec508be346c1566ca46。仅 docs/progress.md 和 docs/project-ledger.md 有未提交修改，共 25 行新增；未改源码、运行配置、数据库或服务。普通账号密码登录闭环通过；首次错误 CSRF 字段导致 logout HTTP 403 已作为失败记录，修正后完整复测通过。首次隔离 context 可能留下的会话记录最多等待本地 30 分钟 TTL 到期；没有执行 logout-all。`
+- `exit_code`: `diff-check=0; boundary=0; acceptance=0; secret-scan=0; status/rev-parse/diff-stat=0.`
+- `evidence`: `仅记录门禁退出码、脱敏 HTTP 状态/认证行为、当前提交和修改文件范围；秘密扫描原始输出未打印或保存。`
+- `status`: `passed (local isolated browser login and documentation gates only; no production/cloud claim)`
+- `commit_or_tree`: `main@d54da54f9379d82400a14ec508be346c1566ca46; two intended audit documents modified; ignored .playwright-cli/ preserved.`
+- `time_logic`: `2026-11-06 Asia/Shanghai (+08:00)；未改变认证业务 TTL；一条隔离测试会话可能按既有 30 分钟 TTL 自然失效。`
+- `reuse`: `复用 xray-password-login-20261106-01/002 浏览器证据；本次未创建新会话。`
+- `rollback_ref`: `审计文档变更可通过仅回退本次两处追加内容撤销；无需数据库、凭据、服务、云或代码回退。`
+
+- `event_id`: `xray-password-login-20261106-01/005`
+- `run_id`: `xray-password-login-20261106-01`
+- `timestamp`: `2026-11-06T03:27:57+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / validate / final`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; current branch/status`
+- `operation`: `校正登录进度行的实测提交基线，并在修正后的最终文档状态重跑静态门禁。`
+- `reason`: `只读复核指出浏览器验证发生于 f4263f0，而后续当前 HEAD 为 d54da54；进度行应区分实测基线与文档归档基线。前一事件 /004 的差异统计是其追加前的快照，不代表当前差异总量。`
+- `authorization`: `用户明确要求测试账号密码登录；仅修正审计文档，不改登录实现或运行环境。`
+- `implementation_scope`: `修正文档中的 commit 标注；复跑 diff、边界、验收、秘密扫描和 Git 状态检查；追加本校正/最终结果。`
+- `exclusions`: `不修改源码、凭据、数据库、会话、服务、云资源或 ignored .playwright-cli/；不运行 logout-all。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh >/dev/null 2>&1; git status --short --branch; git rev-parse HEAD; git diff --stat.`
+- `result`: `登录实测基线为 main@f4263f0228c336f5ba3189353eef6c13038d8c0f；归档文档时当前 HEAD 为 main@d54da54f9379d82400a14ec508be346c1566ca46。以上五组检查及状态/版本查询均退出码 0；boundary check passed、acceptance matrix valid，秘密扫描无输出且退出 0。检查时差异仅为 docs/progress.md 与 docs/project-ledger.md；diff-stat 为两文件共 66 行新增。/005 为其后的追加式证据，不将前述 66 行描述为追加后的总数。`
+- `exit_code`: `diff-check=0; boundary=0; acceptance=0; secret-scan=0; status/rev-parse/diff-stat=0.`
+- `evidence`: `浏览器行为复用 /002 的脱敏证据；提交基线由 /002 与 git rev-parse 交叉核对；静态门禁只保留退出码与通过摘要，秘密扫描原始输出未打印或保存。`
+- `status`: `passed (local isolated browser login evidence and documentation checks; no production/cloud claim)`
+- `commit_or_tree`: `main@d54da54f9379d82400a14ec508be346c1566ca46; only docs/progress.md and docs/project-ledger.md changed; ignored .playwright-cli/ preserved.`
+- `time_logic`: `2026-11-06 Asia/Shanghai (+08:00)；未改变会话 TTL 或其他业务时间行为。`
+- `reuse`: `复用 xray-password-login-20261106-01/002 登录闭环；未再创建会话。`
+- `rollback_ref`: `仅回退本次进度基线校正与台账追加即可撤销文档修改；无需改动代码、数据库、会话、服务或云状态。`
+
+### 2026-11-06T03:29:39+08:00 — xray-ruff-install-20261106-01 installation and verification
+
+- `event_id`: `xray-ruff-install-20261106-01/002`
+- `run_id`: `xray-ruff-install-20261106-01`
+- `timestamp`: `2026-11-06T03:29:39+08:00`
+- `actor`: `Codex`
+- `event_type`: `install / test / validate / correction`
+- `path_scope`: `~/.local/share/uv/tools/ruff; ~/.local/bin/ruff; docs/project-ledger.md; docs/progress.md; root .venv created by this run's failed probe`
+- `operation`: `安装 Ruff 0.13.1 为独立用户级工具，验证仓库 lint 门禁并追加证据。`
+- `authorization`: `用户明确请求 Ruff 安装；仅本机工具和静态 lint。`
+- `command_or_tool`: `uv tool install ruff==0.13.1; ruff --version; ruff check backend tests; uvx --from ruff==0.13.1 ruff --version; uvx --from ruff==0.13.1 ruff check backend tests; uv tool list; command -v ruff; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; dependency SHA-256 readback; git status.`
+- `result`: `安装 1 个包和 1 个可执行文件，版本为 0.13.1；直接 Ruff 和仓库 uvx 命令对 backend/tests 均 All checks passed。diff、boundary、acceptance、secret scan 均退出 0，秘密扫描显示 no leaks found。命令位置 /Users/shiyi/.local/bin/ruff。两个 pyproject.toml 和两个 uv.lock 哈希与安装前完全一致。初次 uv run 误在根目录创建 .venv，核实其创建时间与本轮探测吻合、无已安装包后移除；backend/.venv 保留。`
+- `correction`: `/001 中等待安装的状态由本事件更新为完成；初始工具缺失的探测记录不作为成功证据。一次尝试用 Python 字符串追加文档因语法错误退出 1、没有写入；改用 apply_patch 完成审计记录。`
+- `exit_code`: `install=0; ruff version/check=0/0; uvx version/check=0/0; diff/boundary/acceptance/secret/status=0; root .venv cleanup=0; failed documentation script=1 with no file write.`
+- `evidence`: `Ruff 输出、版本、可执行文件路径、静态门禁摘要和依赖文件 SHA-256；未读取或保存秘密。`
+- `status`: `passed`
+- `commit_or_tree`: `main@d54da54f9379d82400a14ec508be346c1566ca46；本任务未改源码/依赖或运行态；保留此前 docs/progress.md 与 docs/project-ledger.md 用户差异及期间其他会话的审计追加。`
+- `limitations`: `本地 lint 与静态门禁已执行；业务测试、服务、数据库、浏览器、云、SSH、生产和发布未运行。`
+- `time_logic`: `Asia/Shanghai aware ISO-8601；无业务时间规则变化。`
+- `reuse`: `直接调用 ruff check backend tests；CI 的 uvx --from ruff==0.13.1 ruff check backend tests 同版本通过。`
+- `rollback_ref`: `uv tool uninstall ruff；文档历史按追加式 correction 保留。`
+
+### 2026-11-06T03:31:37+08:00 — xray-ruff-install-20261106-01 final verification
+
+- `event_id`: `xray-ruff-install-20261106-01/003`
+- `run_id`: `xray-ruff-install-20261106-01`
+- `actor / event_type`: `Codex / validate / final`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; Ruff tool and current Git state`
+- `operation / authorization`: `完成用户 Ruff 安装请求的最终证据记录；仅追加本审计事件。`
+- `command_or_tool`: `ruff --version; ruff check backend tests; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; dependency-file SHA-256 readback; git status --short --branch; git rev-parse HEAD; git diff --stat.`
+- `result / exit_code`: `以上全部退出 0；Ruff 0.13.1、All checks passed；边界和验收矩阵有效，秘密扫描无泄漏。两个 pyproject/uv.lock 哈希保持不变。根 .venv 不存在，backend/.venv 保留。最终仅两份审计文档有差异，包含此前用户及其他会话追加；未提交、未打 tag、无版本变化。`
+- `status / commit_or_tree`: `passed / main@d54da54f9379d82400a14ec508be346c1566ca46`
+- `time_logic / limitations`: `本机 Asia/Shanghai aware ISO-8601；业务测试、数据库、服务、浏览器、云、SSH、生产 not-run。`
+- `reuse / rollback_ref`: `ruff check backend tests；安装回退使用 uv tool uninstall ruff；不改写已有审计历史或用户工作区。`
+
+### 2026-11-06T03:33:00+08:00 — xray-node-automation-20261106-01 definition
+
+- `event_id`: `xray-node-automation-20261106-01/001`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `backend/apps/{identity,nodes,subscriptions,operations}; backend/tests; backend/config; frontend/apps/web-antd/src/{api,views/system}; version/release/acceptance docs`
+- `operation`: `实现系统设置可配置的地区配额自动对齐、每日一台轮转重启、状态/IP/健康/流量同步、订阅新增/撤回和节点数量核对；分别验证 start/stop/reboot/delete、订阅签发/撤销；完成测试后同步版本发布。`
+- `authorization`: `用户明确授权测试服务器配置自行决定且总费用不超过 USD 1000；自动补足地区配额；人工将新加坡 4 改 3 时删除该地区 created_at 最早的一台服务器；分别测试启停重启删除。`
+- `implementation_scope`: `兼容 additive migration；自动化设置与审计；quota 可先调低后经策略绑定和 fresh target preview/fenced operation 删除最早本池节点，仅云端明确不存在才释放；不足走 reserve/create；每日稳定排序轮转，每当地日期最多一台；活跃订阅自动分配发布、节点数检查和撤回永久 tombstone；可信流量采集配置、运行健康；API/OpenAPI/生成类型/UI；测试与版本 Release 证据。`
+- `exclusions`: `不读取其他项目运行输入或 archive；不写生产、不触碰其他工作区/进程/会话；不输出或保存密码、密钥、token、raw URI、cookie、云凭据或敏感异常；Fake/Stub 不算真实云成功；不突破 USD 1000。`
+- `assumptions/risk`: `动态 IP 仅按实际读回变化更新；普通 Lightsail reboot 不保证换 IP，stop/start 单独验证。未知云结果继续占 quota 并进入对账，不能盲目重写或删除。启用自动策略需要 recent step-up；worker 再验证策略版本/地区超额/最早目标/所有权/资源与凭据绑定，防止排队后配额或策略改变导致过删。云 running 不等于应用健康。真实云前另记录固定计划、预算、身份、期限与清理动作。`
+- `read/command`: `已读取 AGENTS/conventions/Xray skill+acceptance/versioning；TDD+writing-good-tests/verification/debugging skills；ledger/progress/current diff；identity gate/model/view；nodes task/quota/models；system API/UI/OpenAPI；check-local/cloud authorization。后端测试统一 /tmp/xray-node-automation-pytest.lock 串行，主代理跑最终全量 gates。`
+- `result`: `scope defined；功能 tests/implementation 尚未执行。d54da54f9379d82400a14ec508be346c1566ca46 已推送 origin/main 并曾确认 clean；其后并行工作流仅追加 docs/progress.md、docs/project-ledger.md，保留。没有真实云操作，预算支出 USD 0。`
+- `exit_code`: `read/status=0；此前两个 apply_patch 上下文不匹配和一个 JS syntax error 均无文件变更，改为本次追加。`
+- `time_logic`: `审计本机 aware Asia/Shanghai；业务 datetime UTC；interval 在 now>=due 执行；每日 IANA timezone+HH:MM，以当地日期去重，覆盖 DST/跨日/边界/重复/clock skew；耗时 monotonic；同地区 created_at,id 稳定排序；结果未知不重复写/释放。`
+- `reuse`: `Operation+Outbox/fencing、NodeLifecycle 稳定读回/tags、Publisher、UsageCheckpoint、Fake fixtures；复用本项目 9537/9538 与专用 PostgreSQL/Redis，不改端口或停止服务。`
+- `rollback_ref`: `d54da54 或新版本 tag/git revert；DB expand/contract，不恢复已撤销 token/凭据/审计/云状态；仅按当前明确授权清理临时测试资源。`

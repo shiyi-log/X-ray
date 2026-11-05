@@ -106,3 +106,50 @@ class NodeStatusSyncSetting(models.Model):
                 name="node_status_sync_interval_range",
             ),
         ]
+
+
+class NodeAutomationSetting(models.Model):
+    """Database policy and local schedule state for automated node operations."""
+
+    singleton_key = models.PositiveSmallIntegerField(default=1, unique=True, editable=False)
+    pool_sync_enabled = models.BooleanField(default=False)
+    pool_sync_interval_minutes = models.PositiveSmallIntegerField(default=15)
+    pool_sync_creation_templates = models.JSONField(default=list, blank=True)
+    pool_sync_last_scheduled_at = models.DateTimeField(null=True, blank=True)
+    daily_restart_enabled = models.BooleanField(default=False)
+    daily_restart_time = models.CharField(max_length=5, default="04:00")
+    daily_restart_timezone = models.CharField(max_length=64, default="Asia/Shanghai")
+    daily_restart_last_local_date = models.DateField(null=True, blank=True)
+    daily_restart_last_node_id = models.UUIDField(null=True, blank=True)
+    daily_restart_last_scheduled_at = models.DateTimeField(null=True, blank=True)
+    usage_sync_enabled = models.BooleanField(default=True)
+    usage_sync_interval_minutes = models.PositiveSmallIntegerField(default=1)
+    usage_sync_last_scheduled_at = models.DateTimeField(null=True, blank=True)
+    policy_version = models.PositiveBigIntegerField(default=1)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(singleton_key=1),
+                name="node_automation_singleton_key_one",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    pool_sync_interval_minutes__gte=5,
+                    pool_sync_interval_minutes__lte=1440,
+                ),
+                name="node_automation_pool_interval_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(
+                    usage_sync_interval_minutes__gte=1,
+                    usage_sync_interval_minutes__lte=1440,
+                ),
+                name="node_automation_usage_interval_range",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(policy_version__gte=1),
+                name="node_automation_policy_version_positive",
+            ),
+        ]
