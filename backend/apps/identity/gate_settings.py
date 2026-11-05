@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 
+from django.conf import settings
 from django.db import transaction
 
 from apps.audit.services import AuditService
@@ -13,7 +14,8 @@ _UNSET = object()
 
 
 def _environment_provider_identity_network_enabled() -> bool:
-    return os.getenv("XRAY_ENABLE_PROVIDER_NETWORK", "0").lower() in _ENABLED_ENV_VALUES
+    default = "1" if settings.XRAY_ENV == "test" else "0"
+    return os.getenv("XRAY_ENABLE_PROVIDER_NETWORK", default).lower() in _ENABLED_ENV_VALUES
 
 
 def provider_identity_network_setting() -> dict[str, bool | str]:

@@ -242,10 +242,37 @@ def test_provider_input_gate_uses_env_fallback_and_database_override(monkeypatch
 
 
 @pytest.mark.django_db
-def test_provider_input_gate_defaults_closed_when_environment_is_absent(monkeypatch):
+def test_provider_input_gate_defaults_open_in_local_test(monkeypatch, settings):
     from providers import registry
 
+    settings.XRAY_ENV = "test"
     monkeypatch.delenv("XRAY_ENABLE_PROVIDER_NETWORK", raising=False)
+    assert registry.provider_identity_network_setting() == {
+        "enabled": True,
+        "source": "ENVIRONMENT",
+    }
+
+
+@pytest.mark.django_db
+def test_provider_input_gate_can_be_explicitly_disabled_in_local_test(monkeypatch, settings):
+    from providers import registry
+
+    settings.XRAY_ENV = "test"
+    monkeypatch.setenv("XRAY_ENABLE_PROVIDER_NETWORK", "0")
+
+    assert registry.provider_identity_network_setting() == {
+        "enabled": False,
+        "source": "ENVIRONMENT",
+    }
+
+
+@pytest.mark.django_db
+def test_provider_input_gate_defaults_closed_outside_local_test(monkeypatch, settings):
+    from providers import registry
+
+    settings.XRAY_ENV = "production"
+    monkeypatch.delenv("XRAY_ENABLE_PROVIDER_NETWORK", raising=False)
+
     assert registry.provider_identity_network_setting() == {
         "enabled": False,
         "source": "ENVIRONMENT",

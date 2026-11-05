@@ -4173,3 +4173,315 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `result`: `run 41423915567 的依赖冻结安装与接受矩阵校验通过；complete-local-delivery-gates 在全仓库 Ruff 阶段退出 1，诊断 25 项，后续门禁未执行。只读 test DB 核验 identity 5/5、nodes 7/7、subscriptions 6/6 migration 已应用，节点/订阅/配置/Token 聚合及待处理操作均为 0；无数据可修复。系统设置视图 GET 在本地绕过认证只读调用为 HTTP 200；未认证 API 返回预期 401 AUTH_REQUIRED，截图失败不可复现，可能与当时会话/运行版本有关。`
 - `rollback_ref`: `应用回退使用 v0.12.1 或对新发布提交执行 git revert；不移动/覆盖 v0.12.1 tag，不反向迁移，不恢复 Token tombstone、撤销凭据、安全事件或云状态。`
 - `time_logic`: `本轮记录时间取系统时钟 2026-11-02T17:58:41+08:00。没有新增业务时间逻辑；系统状态同步区间仍为 5–1440 整数分钟、默认关闭，数据库调度时间使用 Django aware UTC 存储并按 Asia/Shanghai 显示。`
+
+### 2026-11-06T00:04:35+08:00 — xray-remote-restore-20261106-01 scope and evidence
+
+- `event_id`: `xray-remote-restore-20261106-01/001`
+- `run_id`: `xray-remote-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / clone / decision`
+- `path_scope`: `/Users/shiyi/Documents/ChatGPT/x-ray; AGENTS.md; docs/project-conventions.md; docs/project-ledger.md final events; docs/progress.md; skills/xray-manager/SKILL.md and references/{architecture,acceptance,versioning-and-recovery}.md; VERSION; scripts/{check-boundary.sh,check-secrets.sh,validate-acceptance.py}; identity authentication and frontend authentication source; temporary login snapshot path/hash inventory`
+- `operation`: `按用户“在远端下载吧”从 GitHub 重新克隆到已确认不存在的原路径；核对当前 main、对象完整性、版本及待发布改动是否在远端。`
+- `authorization`: `用户明确授权远端下载；此前“推送发布，更新线上”的目标保持未完成。本事件只克隆、只读检查和追加审计，不执行发布、生产访问或临时源码覆盖。`
+- `assumptions`: `原路径检查 target_absent=yes 后才 git clone；远端 main 是本次下载来源，不能作为原工作树未推送内容的备份。`
+- `implementation_scope`: `创建完整远端克隆；仅追加 docs/project-ledger.md 与 docs/progress.md，不修改业务代码、VERSION、CHANGELOG、迁移、依赖或发布配置。`
+- `exclusions`: `未读取 archive 或其他项目运行输入，未读取凭据，未改数据库、已有容器、监听者、浏览器、生产、云资源、GitHub refs 或 Release。未提交、打标签、推送。`
+- `risk`: `当前远端 0.12.2 仍包含恢复码生成、校验、存储和前端入口，未包含平台升级运行时代码。临时快照保存部分认证/升级/域名功能源码，但缺少原完整工作树及可审查发布差异，不能整体覆盖或据此直接发布。`
+- `command_or_tool`: `test -e; git ls-remote; git clone https://github.com/shiyi-log/X-ray.git /Users/shiyi/Documents/ChatGPT/x-ray; git status/rev-parse/remote/fsck/diff; scoped rg and sed; temporary path inventory; lsof listener metadata; date -Iseconds; node/python/git --version; shasum; independent read-only review; repository static validators; apply_patch audit append.`
+- `result`: `目标初始不存在；clone exit 0；main HEAD 与远端 main 同为 f4263f0228c336f5ba3189353eef6c13038d8c0f；git fsck --full exit 0；追加审计前工作树干净。VERSION=0.12.2。已读回远端恢复码路径及临时快照中的 identity 0007、platform_updates 后端/前端/测试；没有恢复这些局部文件。9527/9528 监听者为 OrbStack PID 9022，未触碰。依赖版本仅盘点 Node v22.23.4、Python 3.9.6、Git 2.54.0，未安装依赖或启动服务。`
+- `exit_code`: `target check/clone/status/rev-parse/remote query/fsck/diff/boundary/acceptance/secret scan 均 0；本轮应用测试、浏览器和生产验证 not-run。`
+- `file_hash_before`: `docs/project-ledger.md SHA256=830d3cbdb2aa464feb99fd4945aff92326b320823a440112eb6fe6df4237789f；docs/progress.md SHA256=b6b38d8760facdb2febc62e0d98df221c0b59d959bac228864e4b32c050d5d1b。`
+- `time_logic`: `克隆始于 2026-11-05，本记录取本机 date -Iseconds 的 2026-11-06T00:04:35+08:00（UTC 2026-11-05T16:04:35Z）；跨午夜按实际 Asia/Shanghai 日期记录。无业务 TTL、会话、调度或迁移时间规则变化。`
+- `reuse`: `可信远端 main 可作为逐文件恢复与重新验证的基线；临时登录快照只作比较材料，不能复用历史本地登录证据证明当前克隆或生产可用。`
+- `rollback_ref`: `远端基线 f4263f0228c336f5ba3189353eef6c13038d8c0f 保持不变；审计只追加 correction，不重写历史。不删除临时快照、不回滚数据库或安全状态。无版本变化，无新 commit/tag。`
+
+### 2026-11-06T00:09:56+08:00 — xray-remote-restore-20261106-01 remote freshness check
+
+- `event_id`: `xray-remote-restore-20261106-01/002`
+- `run_id`: `xray-remote-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `current main/origin/main Git refs; docs/project-ledger.md; docs/progress.md; AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md and references/versioning-and-recovery.md`
+- `operation`: `按用户“从远端恢复项目”请求，核验既有远端克隆是否仍与最新 origin/main 一致。`
+- `authorization`: `用户明确要求从远端恢复；授权定向读取/更新 origin/main 跟踪引用并按证据恢复项目。没有授权推送、发布、生产访问或破坏性重置。`
+- `assumptions`: `当前分支为 main；现有 docs/project-ledger.md 与 docs/progress.md 包含用户未提交审计记录，必须原样保留并仅追加本轮记录。`
+- `implementation_scope`: `仅执行 git fetch origin main 并比较本地 HEAD 与更新后的 origin/main；若两者相同，不改应用源码。`
+- `exclusions`: `不执行 checkout、reset、clean、push、commit、tag，不触碰数据库、进程、服务、浏览器、云资源、生产和凭据；不读取 archive 或其他项目运行输入。`
+- `risk`: `fetch 可能更新 Git 元数据中的 origin/main 跟踪引用；不会直接改工作区文件。此前记录的基线为 f4263f0228c336f5ba3189353eef6c13038d8c0f，既有脏审计差异必须保留。`
+- `command_or_tool`: `git fetch origin main; git rev-parse HEAD origin/main; git rev-list --left-right --count HEAD...origin/main; git status --short --branch; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh (output suppressed).`
+- `result`: `执行结果待追加最终核验事件。`
+- `time_logic`: `记录时间取本机 Asia/Shanghai 时钟 2026-11-06T00:09:56+08:00。无业务时间逻辑变化。`
+- `reuse`: `若远端仍同 SHA，当前克隆即为最新 main，可继续逐文件核对；若远端前进，先检查提交和脏文件冲突，再安全快进，不覆盖本地审计记录。`
+- `rollback_ref`: `不改变应用文件或数据库；此前 origin/main 基线 f4263f0228c336f5ba3189353eef6c13038d8c0f 已记录。本轮无版本变化、commit/tag/push。`
+
+### 2026-11-06T00:11:23+08:00 — xray-remote-restore-20261106-01 final verification
+
+- `event_id`: `xray-remote-restore-20261106-01/003`
+- `run_id`: `xray-remote-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `command / validate / decision`
+- `path_scope`: `Git origin/main fetch result; docs/progress.md; docs/project-ledger.md; repository boundary and acceptance validators`
+- `operation`: `完成远端版本比较和本地静态收尾门禁。`
+- `reason`: `确认“从远端恢复项目”后的当前 checkout 是否需要快进或文件恢复。`
+- `command_or_tool`: `git fetch origin main; git rev-list --left-right --count HEAD...FETCH_HEAD; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh >/dev/null 2>&1; git status --short --branch; git rev-parse HEAD; git rev-parse FETCH_HEAD.`
+- `result`: `fetch exit 0；HEAD 与 FETCH_HEAD 均为 f4263f0228c336f5ba3189353eef6c13038d8c0f，ahead/behind 为 0/0。diff、boundary、acceptance、secret scan 均 exit 0。状态为 main...origin/main，只有 docs/progress.md 和 docs/project-ledger.md 含未提交审计记录。当前远端恢复项目已经完成且是最新 main，无需进一步改源码。`
+- `exit_code`: `fetch/relation/diff/boundary/acceptance/secret/status/rev-parse 均为 0。`
+- `status`: `passed`
+- `commit_or_tree`: `main@f4263f0228c336f5ba3189353eef6c13038d8c0f；保留两份审计文档脏差异。`
+- `evidence`: `scripts/check-boundary.sh 输出 boundary check passed；scripts/validate-acceptance.py 输出 acceptance matrix valid；secret scanner 输出保持抑制并 exit 0。`
+- `time_logic`: `记录时间取本机 Asia/Shanghai 时钟 2026-11-06T00:11:23+08:00。无业务时间逻辑变化。`
+- `reuse`: `当前 main 即最新远端基线；后续如需找回未推送或删除的特定文件，应提供目标路径/提交并以远端逐文件比较，不能用远端 main 覆盖审计记录。`
+- `rollback_ref`: `无代码、数据库、云、生产或 Release 变化；不执行 reset/clean/checkout。此前用户审计差异及本轮追加记录均保留。`
+
+### 2026-11-06T01:07:40+08:00 — xray-trash-restore-20261106-01 scope and result
+
+- `event_id`: `xray-trash-restore-20261106-01/001`
+- `run_id`: `xray-trash-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `current project metadata; /Users/shiyi/.Trash directory entries; mounted volume Trash directories and project markers; docs/project-ledger.md; docs/progress.md`
+- `operation`: `按用户“当前项目从废纸篓复制一份回来”定位 X-ray 项目废纸篓副本，并在确认来源后复制恢复。`
+- `authorization`: `用户明确要求从废纸篓复制项目；允许在核实精确来源后复制，不授权覆盖当前项目或改动其他项目。`
+- `assumptions`: `当前 checkout 和既有未提交审计记录属于用户数据，必须保留；复制目的地只有在找到 X-ray 来源并检查冲突后才能确定。`
+- `implementation_scope`: `只读枚举当前用户及已挂载卷可见废纸篓目录，检查名称/项目标记；若找到候选则核验目录身份及目标冲突后复制。`
+- `exclusions`: `未进入或读取 `sub2api-local` 内容；未复制、删除、覆盖、改名任何文件；未访问 archive、其他项目运行时数据或秘密；本轮“项目跑起来”未继续启动服务。`
+- `risk`: `废纸篓副本可能覆盖当前目录或其他用户文件，故需先确认证据和目的地。当前用户废纸篓没有匹配候选；一项挂载卷深度扫描超过 15 秒后被中断，未输出候选。`
+- `command_or_tool`: `find /Users/shiyi/.Trash -maxdepth 4 -type d (name matches x-ray/xray); find /Users/shiyi/.Trash -maxdepth 3 -mindepth 1; find /Users/shiyi/.Trash -maxdepth 6 project markers; ls -la /Volumes; mdfind scoped to /Users/shiyi; find /Volumes for Trash directories and markers; apply_patch audit append.`
+- `result`: `未找到 X-ray 项目废纸篓副本。当前用户废纸篓顶层仅有 `.DS_Store`、`fsevents.node`、`sub2api-local` 与 `uuyc_4.45.0.pkg`；已挂载卷名为 Recovery、yidong、Macintosh HD，未发现可见 `.Trashes`/`.Trash` 目录。唯一深层标记扫描在 15 秒限制后中断（exit 130），无候选输出。未执行复制；当前 checkout 未改变，既有 `docs/progress.md` 与 `docs/project-ledger.md` 审计差异保留。`
+- `exit_code`: `用户废纸篓枚举、目标名匹配、标记初查及挂载卷目录检查为 0；深层扫描 130（超时后主动中断）；最终 diff/status 检查待执行。`
+- `file_hash_before`: `docs/project-ledger.md SHA256=7b497bd0823d600da6a1610c4fbc629ab4e4da8a6f5532e29afa78561509edcf；docs/progress.md SHA256=85db409d7a41b24bb9b811571df910d2cc1e6b01ded33bf69a2d3fd0943ff6e2。`
+- `time_logic`: `记录时间取本机 Asia/Shanghai 时钟 2026-11-06T01:07:40+08:00。无业务时间逻辑变化。`
+- `reuse`: `本机当前可见废纸篓无 X-ray 候选；若项目在另一个用户/磁盘或已重新命名位置，需先使该来源在当前主机可见，再按路径和 Git/项目标记确认。`
+- `rollback_ref`: `本轮未恢复或覆盖文件，无数据/服务/云状态变化；仅新增审计事件，可通过追加 correction 纠正，不重写历史。`
+
+### 2026-11-06T01:10:34+08:00 — xray-trash-restore-20261106-01 Documents follow-up
+
+- `event_id`: `xray-trash-restore-20261106-01/002`
+- `run_id`: `xray-trash-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `read / decision / correction`
+- `path_scope`: `/Users/shiyi/Documents directory names and Trash markers; /Users/shiyi/Documents/ChatGPT/x-ray status; docs/project-ledger.md; docs/progress.md`
+- `operation`: `按用户补充“废纸篓 文稿目录遍历”继续在 Documents 范围内定位副本，并校正前一事件记录的扫描退出码。`
+- `authorization`: `用户明确要求从废纸篓复制，并指定继续遍历文稿目录；仅允许在确认来源后复制，不允许覆盖当前仓库或其他项目。`
+- `assumptions`: `可见 macOS Trash 和已挂载卷 Trash 搜索没有候选；Documents 中可能存在用户指示的副本或 Trash 目录。`
+- `implementation_scope`: `只枚举 Documents 内 Trash/废纸篓及 x-ray/Xray 目录名和 Trash 内 Git/项目标记；读取当前仓库状态；不读文件内容。`
+- `exclusions`: `不进入其他项目内容，不读 `.env`、运行凭据或 archive，不复制、删除、覆盖、改名文件，不启动服务。`
+- `risk`: `当前目录已存在远端克隆和未提交审计差异；误选来源会覆盖用户数据，因此在没有 X-ray Trash 副本时不执行文件写操作。`
+- `command_or_tool`: `find /Users/shiyi/Documents -maxdepth 4 Trash directory names; find /Users/shiyi/Documents -maxdepth 6 x-ray directory names; find /Users/shiyi/Documents -maxdepth 8 Trash project markers; git status --short --branch; apply_patch audit append.`
+- `result`: `Documents 目录名检查没有发现 Trash/废纸篓目录；x-ray/Xray 名称只命中当前仓库及其内部组件/技能/计划目录；Trash 项目标记搜索无结果。前一轮深层扫描会话在发出 Ctrl+C 后由工具返回 exit 0，故前一 progress 行将其记作 130 不准确；本条 progress 追加校正，不改写历史行。仍无可复制来源，当前 main 与既有审计修改保持不动。`
+- `exit_code`: `本轮 Documents 目录名、项目名、Trash 标记和 git status 检查均为 0；前一深层扫描会话最终工具状态为 0。`
+- `file_hash_before`: `docs/project-ledger.md SHA256=91311829d997f6d9b9ab632d19338c3131fd3979ed703a2ebe4be1c9b126168d；docs/progress.md SHA256=eade9c2b56dc637584715a67306cc88c60d822f07e07b9db938d9bafd2dd6cd8。`
+- `time_logic`: `记录时间取本机 Asia/Shanghai 时钟 2026-11-06T01:10:34+08:00。无业务时间逻辑变化。`
+- `reuse`: `已检查用户 Trash 与 Documents 内目录；如果副本位于其他账户、未挂载磁盘或云端“最近删除”，需由用户提供具体路径或挂载来源后再恢复。`
+- `rollback_ref`: `未复制或覆盖文件，无业务数据、服务、云或发布状态变化；当前 X-ray checkout 及此前所有用户审计差异继续保留。`
+
+### 2026-11-06T01:14:26+08:00 — xray-trash-restore-20261106-01 final verification
+
+- `event_id`: `xray-trash-restore-20261106-01/003`
+- `run_id`: `xray-trash-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `read / command / validate / decision`
+- `path_scope`: `/Users/shiyi/.Trash/sub2api-local path names and project markers; docs/project-ledger.md; docs/progress.md; repository boundary, acceptance, secret, diff checks`
+- `operation`: `根据用户指定继续遍历废纸篓与文稿目录，并完成恢复定位收尾核验。`
+- `authorization`: `用户明确要求从废纸篓复制项目并补充“废纸篓 文稿目录遍历”；本事件仅检查路径名和项目标记，发现候选后方可复制。`
+- `assumptions`: `之前的 Trash 与 Documents 扫描已完成；剩余 Trash 项目目录仅做名称级检查以避免读取无关项目内容。`
+- `implementation_scope`: `find /Users/shiyi/.Trash/sub2api-local 内匹配 x-ray/Xray、.git、manage.py、pyproject.toml、package.json、VERSION 的路径名；运行 git diff --check、仓库边界、验收矩阵和秘密扫描。`
+- `exclusions`: `不读取文件内容、秘密或凭据；不复制、删除、覆盖、改名文件；不启动服务或访问生产/云资源。`
+- `risk`: `sub2api-local 可能是无关项目；只检查路径名与常见项目标记，避免将无关目录误认作 X-ray。`
+- `command_or_tool`: `find /Users/shiyi/.Trash/sub2api-local -maxdepth 6 (matching project names/markers); git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; git status --short --branch; git rev-parse HEAD; apply_patch audit append.`
+- `result`: `Trash 子目录名称/标记搜索无匹配（exit 0）；之前用户 Trash 与 Documents 遍历同样无 X-ray 候选。差异、boundary、acceptance、secret scan 均 exit 0。没有可复制来源，故未执行复制；当前 checkout 与既有审计修改保留。`
+- `exit_code`: `find/diff-check/boundary/acceptance/secret scan/status/rev-parse 均 0。`
+- `status`: `source not found; no copy performed`
+- `commit_or_tree`: `main@f4263f0228c336f5ba3189353eef6c13038d8c0f = origin/main；仅 docs/progress.md 与 docs/project-ledger.md 有未提交审计差异。`
+- `evidence`: `git diff --check exit 0；scripts/check-boundary.sh 输出 boundary check passed；scripts/validate-acceptance.py 输出 acceptance matrix valid；scripts/check-secrets.sh 输出 no leaks found / secret scan passed；git status/rev-parse exit 0。`
+- `time_logic`: `记录时间取本机 Asia/Shanghai 时钟 2026-11-06T01:14:26+08:00。无业务时间逻辑变化。`
+- `reuse`: `如副本位于其他用户、未挂载磁盘或云端“最近删除”，需提供具体路径/挂载来源后再核验。`
+- `rollback_ref`: `未复制或覆盖文件；仅追加本审计记录。保留当前 main 及用户已有未提交审计记录；无版本变化、commit/tag。`
+
+### 2026-11-06T01:20:00+08:00 — xray-trash-restore-20261106-01 source identified and isolated restore
+
+- `event_id`: `xray-trash-restore-20261106-01/004`
+- `run_id`: `xray-trash-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / copy`
+- `path_scope`: `source=/Users/shiyi/Library/Mobile Documents/.Trash/Documents/ChatGPT/x-ray; destination=/Users/shiyi/Documents/ChatGPT/x-ray-trash-recovered-20261106; current checkout audit files`
+- `operation`: `根据用户提供的废纸篓精确路径核对 X-ray 项目标记，并将可安全恢复的源码副本复制到新的 sibling 目录；不覆盖现有 checkout。`
+- `authorization`: `用户明确提供废纸篓项目路径并要求复制回来；授权恢复到新目录，不授权覆盖现有项目、执行损坏 Git 元数据或复制秘密/本地运行态。`
+- `assumptions`: `当前 /Users/shiyi/Documents/ChatGPT/x-ray 是远端 main 克隆且含用户审计脏改动，必须保留；废纸篓源 `.git` 不健康，不能作为可验证 Git 历史来源。`
+- `implementation_scope`: `读取源目录元数据、项目标记、Git HEAD、工作树可读性、符号链接和敏感/运行态路径名；使用 rsync 复制源码/文档/测试到新 sibling。`
+- `exclusions`: `不读取或复制 .env、.git、.venv、frontend/node_modules、缓存、日志、artifacts、output、dist、.compose-state、.playwright-cli、gitleaks 输出、IDE/本地工具状态；不读取 archive、其他项目运行输入、秘密内容；不启动服务、不改数据库/云资源/生产。`
+- `risk`: `源 `.git` 包含损坏 pack，源工作树状态不能用 Git 可靠判定；源内的 `.env` 和运行态可能含秘密或过期状态。隔离复制到新目录并排除这些路径，保留源目录与当前 checkout，便于回退和逐文件核对。`
+- `command_or_tool`: `git -C <source> rev-parse; git -C <source> status/diff (source Git error recorded without secret output); find/du/path metadata scans; rsync with explicit exclusions to <destination>; post-copy file/path/hash/count checks.`
+- `result`: `源目录存在，顶层 README/VERSION/backend/manage.py/frontend/package.json/AGENTS.md 确认其为 X-ray；源 HEAD 声称为 f4263f0228c336f5ba3189353eef6c13038d8c0f。源 `.git` pack 损坏，无法验证工作树。隔离恢复目录预定为 <destination>，复制仅包含可审查源码和文档，排除凭据、依赖、缓存和运行态。`
+- `exit_code`: `只读路径/标记/元数据检查 0；源 git status/diff 因损坏 pack 非零/超时；复制及后验检查待执行。`
+- `time_logic`: `记录时间使用本机 Asia/Shanghai 时钟；本次无业务时间、TTL、会话或迁移规则变化。`
+- `reuse`: `当前远端 main 作为健康 Git 基线；新 sibling 副本作为废纸篓源码恢复材料，后续须重新生成依赖与本地配置，不复用源 `.env`、数据库、缓存或进程状态。`
+- `rollback_ref`: `复制可通过删除新建 sibling 目录回退；不删除源、不覆盖当前 checkout、不改 Git/数据库/云/服务状态。`
+
+### 2026-11-06T01:54:59+08:00 — xray-trash-restore-20261106-01 continuation and correction
+
+- `event_id`: `xray-trash-restore-20261106-01/005`
+- `run_id`: `xray-trash-restore-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / correction / decision`
+- `path_scope`: `current checkout AGENTS.md, project conventions, X-ray skill/references, docs/development.md, main.py, tests/launcher, deploy/compose/test.yml, .env.example, backend/pyproject.toml, ledger/progress/status/diff; source and recovery path metadata; port manager API and portctl.py`
+- `operation`: `继续将用户指定的 iCloud 废纸篓项目源码复制到既定 sibling，再准备锁定依赖和隔离本地启动；保留当前 checkout、源目录和全部既有修改。`
+- `authorization`: `用户要求从废纸篓复制当前项目并跑起来；仅本机源码恢复、依赖安装、私有测试配置、全新专用测试卷/迁移、受管 loopback 服务及本地验证。无云、SSH、生产、删除、发布授权。`
+- `assumptions`: `恢复目录原有 20 个文件约 244 KiB，不是完整恢复；iCloud 下载在后台推进，范围内 dataless=0 后才能复制并核对。`
+- `correction`: `更正 /004 及旧进度记录中对源 .git pack 损坏的确定性表述：此前 Git 错误可能由 iCloud dataless 文件造成，当前未证实 Git 元数据损坏；仍排除 .git，不修复、执行或覆盖源 Git。`
+- `implementation_scope`: `补齐恢复 sibling 中可审查源码、文档、测试和安全配置模板；生成仅本地私有 .env；独立恢复专用 Compose 项目与数据库卷，避免复用既有 xray-test 数据；端口管理器登记后受管启动。当前 checkout 仅追加审计文档。`
+- `exclusions`: `源 .env、密钥、数据库、Git 元数据、依赖、缓存、运行态、archive 与其他项目运行输入；不停止或更改已有容器/进程/端口登记，不触发云操作，不提交/tag/push。`
+- `risk`: `iCloud 下载不完整、历史源码与远端可能有差异、默认启动器固定 Compose 项目/卷名及 pnpm PATH；通过完整性门禁、单独恢复目录、新卷和本地锁定 pnpm 隔离。`
+- `command_or_tool`: `read/status/diff/listener checks; metadata-only source audit; Docker container/volume metadata; local port-manager GET projects/ports. 恢复 copy/hash、锁定安装、独立 Compose 和受管启动待执行。`
+- `result`: `当前 main=f4263f0228c336f5ba3189353eef6c13038d8c0f，仅 docs/project-ledger.md 与 docs/progress.md 保留原有未提交审计差异。最新源审计 1,345 个候选文件、219 个 dataless（exit 0，随下载变化）；恢复目录仍仅 20 个文件。9527/9528/55432/56379 无监听；旧 xray-test 容器已停止但持久卷存在。Node 22.23.4、uv 0.13.5、Docker 29.8.2、Compose 5.5.0；系统 Python 3.9.6。`
+- `time_logic`: `记录使用本机 Asia/Shanghai aware ISO-8601；下载等待和启动超时按 monotonic 时间；无业务时间规则变更。`
+- `verification`: `源/目标路径、类型、大小、哈希核对；锁定依赖安装；本地 readiness、前端/API 代理；Django check/迁移状态；boundary/acceptance/secret/diff/status。未运行门禁保持 not-run。`
+- `reuse`: `docs/development.md、main.py 与锁文件作为恢复副本本地运行依据；不复用源秘密、旧数据库或历史运行证据；无版本变化。`
+- `rollback_ref`: `仅停止本轮确认属于恢复副本的服务；新工具/配置及恢复副本可独立回退；保留原源、当前 main、旧 xray-test 卷和其他进程。数据库仅对新隔离库做前向迁移。`
+
+### 2026-11-06T02:23:39+08:00 — xray-current-run-20261106-01 scope and isolated startup
+
+- `event_id`: `xray-current-run-20261106-01/001`
+- `run_id`: `xray-current-run-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `current checkout=/Users/shiyi/Documents/ChatGPT/x-ray at main@f4263f0228c336f5ba3189353eef6c13038d8c0f; main.py; docs/development.md; .env.example; backend/pyproject.toml; frontend/package.json; deploy/compose/test.yml; .gitignore; port-manager registry/status; local listeners and Docker container/volume metadata`
+- `operation`: `按用户最新指示停止废纸篓恢复，基于当前 Git checkout 安装锁定依赖并启动当前 X-ray 本地测试应用，验证本机前后端和专用服务。`
+- `authorization`: `用户明确要求“别管恢复了，先把当前有的代码跑通”；授权当前 checkout 的忽略运行配置、锁定依赖、隔离测试数据库新卷及 loopback 开发服务。无云、SSH、生产、删除、发布授权。`
+- `assumptions`: `当前 main 为 origin/main 的 f4263f0228c336f5ba3189353eef6c13038d8c0f；用户已有 docs/project-ledger.md 和 docs/progress.md 未提交修改必须保留。恢复目录在本任务中停止处理并保持现状。根 .env、backend/.venv、frontend/node_modules 均不存在。`
+- `implementation_scope`: `新增当前 checkout 专用端口登记；仅新增被忽略的本地测试 .env 与 Compose override；安装 backend/frontend 锁定依赖；为当前运行创建新 PostgreSQL/Redis 命名卷，应用迁移并同步隔离测试管理员；通过端口管理器运行后端/Vite 并验证健康与代理。源码不改。`
+- `exclusions`: `不再检查、下载或复制废纸篓源；不读取/改动不完整恢复 sibling；不读取或复制秘密；不启动或复用旧 xray-test 容器/卷；不停止/修改其他项目进程、容器、端口、数据库或浏览器会话；provider 网络关闭，不触发云/SSH/公网操作；不提交、切分支、打 tag、push 或发布。`
+- `risk`: `默认 main.py 固定启动 xray-test 并复用旧全局命名卷，.env.example 允许 provider 网络，因此通过手工 Compose override 指定唯一项目/卷/宿主端口，并生成只含测试配置、provider networking=0 的私有 .env；端口登记后用 portctl 管理器启动，避免占用已登记给恢复副本的 9527/9528/55432/56379。迁移仅作用于全新隔离卷。`
+- `command_or_tool`: `git status/rev-parse/diff; inspect current launcher/docs/templates/Compose; Docker and listener metadata; portctl status/register/check/run; uv sync --locked; corepack pnpm@10.33.0 install --frozen-lockfile; isolated Compose config/up; current DB migrate/check/admin sync; local HTTP and process ownership probes; final diff/boundary/acceptance/secret/status verification.`
+- `result`: `实施及验证待追加。`
+- `exit_code`: `definition/read checks completed; registration, config, installation, migration, startup and runtime gates pending.`
+- `time_logic`: `本机 Asia/Shanghai 时间 2026-11-06T02:23:39+08:00；服务启动等待使用 monotonic timeout；无业务时间规则变化。`
+- `reuse`: `复用当前健康 Git checkout 的锁文件、main.py 安全 dotenv parser、项目 test settings 与 Compose base；不复用 Trash 源、旧数据库、旧卷、任何凭据或旧运行证据。`
+- `rollback_ref`: `仅停止经登记确认属于本轮的 9537/9538 服务和新 Compose 项目；保留当前 main、原有审计脏改动、旧容器/卷、端口登记及本轮新卷，Compose down 不加 -v；忽略配置可在用户后续要求时单独清理。`
+
+### 2026-11-06T02:39:52+08:00 — xray-current-run-20261106-01 application startup and verification
+
+- `event_id`: `xray-current-run-20261106-01/002`
+- `run_id`: `xray-current-run-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `command / test / validate / decision`
+- `path_scope`: `current checkout; local ignored runtime configuration; dedicated PostgreSQL/Redis stack; managed backend port 9537; managed Vite port 9538; backend and frontend test/build entrypoints`
+- `operation`: `在用户要求“别管恢复了，先把当前有的代码跑通”后，启动当前 checkout 的本地应用并完成可重复的本地门禁。`
+- `authorization`: `用户明确授权当前代码运行；范围限于本机 loopback、专用 PostgreSQL/Redis、Fake/Stub provider 和被忽略的本地配置。恢复副本、云、SSH、公网、生产、发布、删除和提交均不在本轮。`
+- `assumptions`: `当前 HEAD 为 main@f4263f0228c336f5ba3189353eef6c13038d8c0f；既有 docs/project-ledger.md 与 docs/progress.md 修改属于用户数据并保留；本地 .env 内容不读回、不写入审计。`
+- `implementation_scope`: `复用本轮已创建的隔离本地配置、锁定依赖、专用数据库/Redis 新卷和端口登记；启动 Django 与 Vite；验证健康、代理、单测、类型检查、lint、构建和静态边界门禁。`
+- `exclusions`: `不修改业务源码；不读取或复用废纸篓恢复目录；不停止其他项目服务或旧 xray-test 卷；provider network 保持关闭；不调用真实云/SSH/公网，不提交、打 tag、push 或发布。`
+- `diagnosis`: `首次 Vite 启动使用项目默认 XRAY_FRONTEND_PORT=9528，端口管理器按登记边界拒绝未授权端口并停止该进程；通过读取 vite.config.ts 确认端口由 XRAY_FRONTEND_PORT 控制。首次 backend pytest 未加载项目测试环境，随后在 backend 工作目录使用专用 .env 重跑；测试仍有 5 个认证失败，根因是运行 .env 的 XRAY_DISABLE_TOTP=1 改变了双因素测试预期，故仅对测试命令临时覆盖 XRAY_DISABLE_TOTP=0，未修改运行配置或源码。系统 pnpm 11.25.0 触发 engines 检查，最终所有前端命令均通过本地 corepack pnpm 10.33.0 包装器运行。`
+- `command_or_tool`: `portctl.py run`; `curl /health/live`; `curl /health/ready`; `curl 9538/`; `curl 9538/api/v1/auth/session`; `curl 9538/api/v1/auth/local-login/status`; `uv run --project backend --locked --group test` setup already completed; `uv run --project . --env-file ../.env pytest -q` with `XRAY_DISABLE_TOTP=0`; `PATH=.compose-state/bin:$PATH corepack pnpm@10.33.0 --dir frontend typecheck`; `... test:unit`; `... lint`; `... build`; `git diff --check`; `scripts/check-boundary.sh`; `scripts/validate-acceptance.py`; `scripts/check-secrets.sh`; final `git status/rev-parse`.`
+- `result`: `Django 9537 health/live=200 {status:ok}; health/ready=200 with database=ok and redis=ok. Vite 9538 index=200; proxied auth/session=200 unauthenticated; local-login/status=200 enabled=true. Backend full suite=271 passed, 2 skipped; skipped tests require absent pinned local Xray binary. Frontend unit=17 files/78 tests passed; typecheck=0; lint=0; production build=0. Final diff/boundary/acceptance/secret gates all exit 0; secret scanner reported no leaks. Managed services remain available on loopback for the user.`
+- `exit_code`: `frontend initial unmanaged-port attempt=1 (expected boundary rejection); initial pytest without project env=2; pytest with local env and XRAY_DISABLE_TOTP=1=1 (test configuration mismatch); corrected backend pytest=0; frontend unit/typecheck/lint/build=0; runtime probes=0; diff/boundary/acceptance/secret/status=0.`
+- `status`: `passed-local-runtime`
+- `commit_or_tree`: `main@f4263f0228c336f5ba3189353eef6c13038d8c0f`; only `docs/project-ledger.md` and `docs/progress.md` are tracked modifications; local dependencies, `.env`, compose state, caches and build output are ignored.
+- `evidence`: `managed backend session 76347 and frontend session 65739; registered ports 9537/9538/55433/56380; final runtime probes returned expected HTML/JSON; 271 backend tests passed with 2 documented binary-dependent skips and 78 frontend unit tests passed.`
+- `time_logic`: `本记录时间取本机 Asia/Shanghai 2026-11-06T02:39:52+08:00；启动等待使用 monotonic/managed process wait；无业务 TTL、会话、调度或迁移时间规则变化。`
+- `reuse`: `复用当前 checkout 的锁文件、项目测试设置、隔离数据库/Redis 和端口登记；前端启动通过 XRAY_FRONTEND_PORT=9538、XRAY_BACKEND_PORT=9537 注入，不把后端 .env 传给 Vite。`
+- `rollback_ref`: `如需停止本轮应用，仅核对归属后停止 portctl 管理的 9537/9538 服务；Compose down 不加 -v，保留新数据库/Redis 卷和用户审计文档；无源码、提交、数据库安全状态或云状态回滚。`
+
+### 2026-11-06T03:03:02+08:00 — xray-password-login-20261106-01 scope
+
+- `event_id`: `xray-password-login-20261106-01/001`
+- `run_id`: `xray-password-login-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `current checkout; local loopback frontend 9538/backend 9537; dedicated test database/Redis; ignored local test configuration; isolated browser context`
+- `operation`: `验证当前 X-ray 普通账号密码登录：匿名会话、错误密码拒绝、正确密码登录、刷新会话恢复、只读管理页状态及本次会话退出。`
+- `authorization`: `用户明确要求“测试账号密码登录”；使用现有专用本地测试管理员和 XRAY_ENV=test 运行开关，仅限 loopback 与 Fake/Stub 资源。`
+- `assumptions`: `当前服务属于本轮已登记的 9537/9538；用户现有浏览器会话不触碰；凭据只从被忽略 .env 读取到自动化进程内存，不写入命令参数、输出、截图、localStorage、sessionStorage 或台账。`
+- `implementation_scope`: `只读登录页面与认证 API 的浏览器验证；使用独立浏览器 context；登录成功后仅检查路由、会话和安全存储边界；退出仅撤销本次独立 context 的会话。`
+- `exclusions`: `不使用本地一键登录；不读取或显示密码/token/CSRF/Set-Cookie；不退出用户现有会话；不修改密码、TOTP、源码、配置、数据库数据或云资源；不截图或保存带凭据的页面状态。`
+- `risk`: `浏览器登录会在专用测试数据库建立短期会话；通过隔离 context、错误密码先验、只读检查和普通 logout 限制影响范围。`
+- `command_or_tool`: `Playwright CLI or repository-local Playwright runtime; credentials loaded in process memory from ignored .env; HTTP/browser assertions with redacted status only.`
+- `result`: `待执行。`
+- `exit_code`: `scope/read checks 0; browser verification pending.`
+- `time_logic`: `记录时间使用本机 Asia/Shanghai aware ISO-8601；本轮只验证当前会话，不改变业务 TTL 或调度规则。`
+- `reuse`: `复用已启动的 9537/9538、本轮专用数据库/Redis 与现有测试配置；不复用用户现有浏览器 context。`
+- `rollback_ref`: `仅关闭独立浏览器 context 并对其登录会话执行普通 logout；不删除数据库/Redis 卷、不停止共享服务、不回滚代码。`
+
+### 2026-11-06T03:07:08+08:00 — xray-local-provider-network-default-20261106-01 definition
+
+- `event_id`: `xray-local-provider-network-default-20261106-01/001`
+- `run_id`: `xray-local-provider-network-default-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / decision`
+- `path_scope`: `backend/apps/identity/gate_settings.py; backend/tests/test_system_gate_settings.py; ignored root .env; docs/project-ledger.md; docs/progress.md; current local test runtime metadata`
+- `operation`: `修复本地测试环境因 provider identity network 默认关闭而无法添加云账号的问题，并保留生产默认关闭及显式关闭能力。`
+- `authorization`: `用户明确要求修复截图中的本地测试限制并测试服务器创建；本轮授权限于本地 test 配置与 Fake/Stub 回归，不包含任何真实 AWS/SWAS 身份请求、云写入、SSH、生产或资源清理。`
+- `assumptions`: `本地开发身份校验允许连接云厂商 STS；该只读身份验证不授权节点生命周期写操作，后者仍受独立操作授权器控制。当前测试库读取的有效来源为 DATABASE、值为 enabled；根目录 .env 是被忽略的本地输入，文件权限 0600。`
+- `implementation_scope`: `XRAY_ENV=test 且变量缺失时默认允许 provider identity network；其他环境默认关闭；显式 XRAY_ENABLE_PROVIDER_NETWORK=0 继续关闭；本机 ignored .env 显式设为 1。仅修改相关测试、实现、本地 ignored 配置和审计文档。`
+- `exclusions`: `不调用 AWS/阿里云 STS、云资源 API 或 SDK；不创建/修改云账号数据库记录、节点、网络资源，不执行 SSH、生产操作、发布、提交或停止/重启任何服务；保留已有 progress/ledger 修改。`
+- `risk`: `开启本地身份校验后，后续用户主动提交凭据时会发起外部只读 STS 身份验证；本轮不提交凭据也不执行外部请求。`
+- `command_or_tool`: `只读源码/配置/测试/服务进程检查；先增加默认行为回归并使用专用测试数据库执行；再修改 gate helper 与 ignored .env；focused/full backend tests、Django checks、diff/boundary/acceptance/secret validators。`
+- `result`: `当前运行服务 PID 99303/9537 与 2942/9538 属于本 checkout，backend 由 portctl PID 99199 管理；当前测试库有效 gate 为 DATABASE enabled，但 ignored .env 环境回退为 disabled。测试配置成功复现：变量缺失时现状返回 enabled=false。未发出任何 provider/云请求；代码实现待完成。`
+- `exit_code`: `read-only checks 0; initial pytest invocation 1 due to omitted dedicated DB config; correctly configured red test 1 as expected.`
+- `time_logic`: `审计时间使用本机 Asia/Shanghai aware ISO-8601；未改变业务时间、TTL、过期边界或重试策略。`
+- `reuse`: `复用现有专用 xray_test 配置、系统 gate 单测和本地运行数据库；本地 Fake/Stub 生命周期测试只证明测试实现，不等同真实云验收。`
+- `rollback_ref`: `仅回退本轮 gate helper/test 变更并将 ignored .env 的该布尔项恢复为原值 0；不回滚数据库、服务、云资源、凭据或其他用户文档修改。`
+
+- `event_id`: `xray-local-provider-network-default-20261106-01/002`
+- `run_id`: `xray-local-provider-network-default-20261106-01`
+- `timestamp`: `2026-11-06T03:14:03+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify / test / validate / runtime`
+- `path_scope`: `backend/apps/identity/gate_settings.py; backend/tests/test_system_gate_settings.py; ignored root .env; docs/development.md; docs/project-ledger.md; docs/progress.md; local runtime health and gate metadata`
+- `operation`: `完成本地测试环境默认允许 provider identity network 的修复，验证生产默认关闭、显式关闭、Fake 生命周期和本地服务健康。`
+- `reason`: `测试环境缺少 XRAY_ENABLE_PROVIDER_NETWORK 时原逻辑默认 disabled，触发截图中的 CLOUD_NETWORK_DISABLED；根 .env 同时显式为 0，与 docs/development.md 的本地配置要求不一致。`
+- `authorization`: `用户要求修复本地环境限制并测试服务器创建；按仓库边界仅执行本地专用 PostgreSQL、Fake/Stub 和静态验证。没有真实云或生产写授权。`
+- `implementation_scope`: `测试环境变量缺失默认启用；生产/其他环境缺失默认关闭；显式 0 仍关闭；根 ignored .env 改为 1；更新本地开发文档。`
+- `command_or_tool`: `RED focused pytest with root dotenv injected in-memory; focused system gate + fake node lifecycle pytest; full backend pytest with command-only XRAY_DISABLE_TOTP=0; Django check; migrate --check; Ruff attempt; diff-check; check-boundary.sh; validate-acceptance.py; check-secrets.sh (output suppressed); 9537/9538 readiness probes; effective setting lookup; git status/rev-parse.`
+- `result`: `RED reproduced the original failure (environment fallback returned disabled). Focused suite passed 39 tests; a later repeat also passed 39 with a teardown warning that test_xray_test did not exist, while subsequent Django check and migration check both exited 0. Full backend suite passed 273, skipped 2 because the pinned local Xray binary is absent. Django check, migration check, diff, boundary, acceptance and secret scan exited 0. Ruff executable unavailable (127). Ignored .env boolean is enabled and remains mode 0600; database override remains enabled. Backend readiness and frontend root both HTTP 200. Existing managed backend was not restarted; no STS, provider SDK, cloud, SSH, production or resource operation occurred. Existing untracked `.playwright-cli/` was preserved.`
+- `exit_code`: `red test=1 expected; focused=0 (39 passed; repeat 0 with DB teardown warning); full backend=0 (273 passed, 2 skipped); Django check=0; migrate --check=0; Ruff=127; diff/boundary/acceptance/secret=0; runtime HTTP=200/200; config/effective-setting/status reads=0.`
+- `evidence`: `Only test summaries, gate source/value booleans, HTTP codes, process ownership, exit codes and tracked paths recorded; local configuration secrets and cloud credentials were not emitted.`
+- `status`: `passed (local Fake/Stub and static gates only; real cloud/server creation not run)`
+- `commit_or_tree`: `main@f4263f0228c336f5ba3189353eef6c13038d8c0f; preserve pre-existing docs/progress.md and docs/project-ledger.md changes and untracked .playwright-cli/.`
+- `time_logic`: `2026-11-06 Asia/Shanghai (+08:00); no business time, expiry, TTL or retry behavior changed.`
+- `reuse`: `Future local runs can reuse the test settings fallback and existing FakeCloudProvider lifecycle suite; actual AWS/SWAS identity verification and server writes remain separate actions.`
+- `rollback_ref`: `Revert only this run's gate helper, tests, development-doc hunk and ignored .env boolean to 0; preserve all previous user edits and do not roll back database, security, cloud or service state.`
+
+### 2026-11-06T03:17:19+08:00 — xray-password-login-20261106-01 browser verification
+
+- `event_id`: `xray-password-login-20261106-01/002`
+- `run_id`: `xray-password-login-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `test / runtime / validate / cleanup`
+- `path_scope`: `loopback frontend 9538/login; proxied auth/session, auth/csrf, auth/login, auth/logout and system endpoints; one-shot isolated Chrome context; local ignored test configuration`
+- `operation`: `使用一次性 Node + repository-local Playwright Chrome context 验证普通账号密码登录闭环，并在结束时注销该独立会话。`
+- `authorization`: `用户明确要求测试账号密码登录；仅使用当前专用本地测试管理员、XRAY_ENV=test 与本地 Fake/Stub 栈。`
+- `implementation_scope`: `匿名会话检查；错误密码拒绝；正确密码接受并跳转 /overview；刷新后会话恢复；登录前/后/退出后的 /api/v1/system 权限边界；密码字段清空；localStorage/sessionStorage 不保存密码或 token/secret 键；普通 logout。`
+- `exclusions`: `不使用本地一键登录；不触碰用户已有浏览器；不执行 logout-all；不读取或记录密码、CSRF 值、Cookie、响应头、token 或 secret；不修改源码、凭据、数据库记录、云资源或服务进程。`
+- `diagnosis`: `第一次凭据读取尝试因 Python cwd 不在项目根目录未导入 main（exit 1，未发起登录）；随后 Playwright 默认 Chromium 缺失（exit 1，未发起登录）；改用系统 Chrome、项目 main.load_env 内存读取和正确 csrf_token 字段后完成验证。`
+- `command_or_tool`: `one-shot /tmp Node script; execFileSync backend/.venv/bin/python with cwd project root; Playwright Chromium channel=chrome headless isolated context; sanitized JSON result only; final diff/boundary/secret/status checks.`
+- `result`: `匿名 session=200/authenticated=false，匿名 system=401；错误密码 login=401、session 仍 false、错误提示可见且 password 字段清空；正确密码 login=200、路由 /overview、session=true、system=200；刷新后路由 /overview/session=true；密码不在 localStorage/sessionStorage，未出现 token/secret 键；普通 logout=200，退出后 session=false/system=401。全部 7 项 checks=true，passed=true。`
+- `exit_code`: `browser verification=0; first cwd loader=1; first browser launch=1; git diff --check=0; generated anonymous .playwright-cli snapshot/log cleaned; no repository source changes made by this login test.`
+- `evidence`: `只保留 HTTP 状态、路由、认证布尔值、存储布尔值和清理结果；不保留凭据、Cookie、CSRF、token、secret 或截图。`
+- `status`: `passed-local-password-login`
+- `commit_or_tree`: `main@f4263f0228c336f5ba3189353eef6c13038d8c0f; preserve pre-existing tracked changes in gate_settings.py, test_system_gate_settings.py, docs/development.md, docs/progress.md and docs/project-ledger.md.`
+- `time_logic`: `记录时间使用本机 Asia/Shanghai aware ISO-8601；仅验证当前会话，不改变业务 TTL、过期或重试规则。`
+- `reuse`: `复用已登记 9537/9538、本轮专用 PostgreSQL/Redis 和现有测试配置；用户现有浏览器会话保持不变。`
+- `rollback_ref`: `独立浏览器 context 已关闭并完成普通 logout；无需代码、数据库、凭据、服务或云状态回滚。`
+
+### 2026-11-06T03:16:46+08:00 — xray-preexisting-changes-commit-push-20261106-01 scope and verification
+
+- `event_id`: `xray-preexisting-changes-commit-push-20261106-01/001`
+- `run_id`: `xray-preexisting-changes-commit-push-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `definition / read / test / decision`
+- `path_scope`: `current tracked changes in backend/apps/identity/gate_settings.py, backend/tests/test_system_gate_settings.py, docs/development.md, docs/progress.md, docs/project-ledger.md; untracked .playwright-cli/page-2026-11-05T19-04-08-329Z.yml; origin/main`
+- `operation`: `按用户“先把未提交全部提交推送，保持工作区干净再改”要求，核查所有当前差异，验证本地测试与仓库边界，将已跟踪变更提交推送；把空浏览器运行快照留在本地并排除 Git 状态。`
+- `authorization`: `用户明确要求提交并推送所有当前未提交内容。`
+- `assumptions`: `工作区已有本地云身份策略、开发文档、测试和累积审计更改；.playwright-cli 是本地浏览器运行状态，根据仓库规则不属于可提交变更。`
+- `implementation_scope`: `保留并提交当前全部已跟踪差异；对 .playwright-cli 使用仅本地 Git exclude，既不删除也不提交快照；将提交推送至当前 main。`
+- `exclusions`: `不提交 .playwright-cli 浏览器状态；不变更现有服务、数据库、云资源、凭据或版本/tag；不改写既有台账/进度历史。`
+- `risk`: `直接推送会更新共享 origin/main；先检查远端同步、完整 staged diff、测试与安全/边界门禁，仅在当前分支无远端差异时进行。`
+- `command_or_tool`: `review git status/diff; focused pytest; full pytest; inspect dedicated DB activity without modifying databases; fetch origin main and compare; check-boundary.sh; validate-acceptance.py; check-secrets.sh; git diff --check; stage tracked paths; commit; push origin main; final status/rev-parse.`
+- `result`: `聚焦系统设置测试 9 passed。第一次并发环境下全量后端测试遇到临时测试库 test_xray_test 重复/占用错误；在没有活跃测试进程后按项目规定串行重跑，273 passed、2 skipped（固定 Xray 二进制缺失）。临时改名 DB 的探索命令触发 4 项测试专用库名保护，未更改数据库；正确 xray_test 配置的重跑通过。边界检查、验收矩阵、秘密扫描、diff-check 均通过。origin/main 与本地基线同步， ahead/behind=0/0。`
+- `exit_code`: `focused pytest=0; first full pytest=1 (3 DB setup errors, 270 passed, 2 skipped); isolated-name diagnostic run=1 (4 expected test-only DB guard failures, 269 passed, 2 skipped); serial full pytest=0 (273 passed, 2 skipped); boundary/acceptance/secret/diff/fetch=0; commit/push/final status pending.`
+- `evidence`: `pytest summaries; origin/main FETCH_HEAD comparison; boundary check passed; acceptance matrix valid; Gitleaks reported no leaks; empty .playwright-cli snapshot metadata was 0 bytes and no content; no database, cloud or process mutation.`
+- `time_logic`: `记录时间按本机 Asia/Shanghai aware ISO-8601；本次没有业务时间规则变化。`
+- `file_hash_before`: `docs/project-ledger.md SHA256=1a22ac7cc141f6b33def7b21de2bb5286f7be247689e52dab8fd9c9df037b89d；docs/progress.md SHA256=fcf83975f7f851f3dfbb3625c43f1c3212cb00880ea2287834e2392b0a21e9a5。`
+- `reuse`: `复用用户既有实现与审计记录；后续功能从新提交基线继续，不重置或清理任何用户数据。`
+- `rollback_ref`: `提交后使用 git revert <commit> 回退代码/文档；不删除本地浏览器状态、不反向迁移数据库或回滚凭据/云状态；远端推送使用正向新提交修正。`
