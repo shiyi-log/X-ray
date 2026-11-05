@@ -6,9 +6,21 @@ from providers.base import AccountRef
 
 from .fakes import FakeCloudProvider
 
+_DEFAULT_HEALTH_PROBE = object()
 
-def make_lifecycle(node, *, probe=None):
+
+def make_lifecycle(node, *, probe=None, health_probe=_DEFAULT_HEALTH_PROBE):
     from apps.nodes.lifecycle import NodeLifecycle
+
+    if health_probe is _DEFAULT_HEALTH_PROBE:
+        def default_health_probe(_candidate):
+            return {
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            }
+
+        health_probe = default_health_probe
 
     holder = {}
 
@@ -25,7 +37,11 @@ def make_lifecycle(node, *, probe=None):
             holder["provider"].authorizer = authorizer
         return holder["provider"]
 
-    return NodeLifecycle(provider_factory=build, isolation_probe=probe), holder
+    return NodeLifecycle(
+        provider_factory=build,
+        isolation_probe=probe,
+        health_probe=health_probe,
+    ), holder
 
 
 def test_long_provider_operation_poll_renews_claim(monkeypatch):
@@ -164,6 +180,14 @@ def provision_node_for_delete(node):
 def make_node_action(admin, node, action):
     from apps.operations.services import OperationService
 
+    if action == "reboot":
+        from apps.nodes.models import NodeConfigRevision
+
+        if not NodeConfigRevision.objects.filter(
+            node=node, generation=node.applied_generation, usable=True
+        ).exists():
+            add_usable_config_revision(node)
+
     return OperationService.submit(
         kind=f"node.{action}",
         target_id=node.pk,
@@ -191,6 +215,21 @@ def provision_node_for_action(node):
     )
 
 
+def add_usable_config_revision(node):
+    from apps.nodes.models import NodeConfigRevision
+
+    return NodeConfigRevision.objects.create(
+        node=node,
+        generation=node.applied_generation,
+        config_hash="a" * 64,
+        xray_version="26.3.27",
+        installer_version="1.0.0",
+        bundle_hash="b" * 64,
+        usable=True,
+        probe_result={"generation": node.applied_generation, "app_health_passed": False},
+    )
+
+
 @pytest.mark.django_db
 def test_fake_lifecycle_adopts_read_after_write(prepared_node):
     node, operation = prepared_node
@@ -205,6 +244,82 @@ def test_fake_lifecycle_adopts_read_after_write(prepared_node):
     assert node.provisioning_state == "PROVISIONED"
     assert node.resources.filter(kind="instance", external_id=node.external_id).exists()
     assert operation.status == "SUCCEEDED"
+
+
+@pytest.mark.django_db
+def test_stop_confirms_stopped_without_releasing_node_quota(prepared_node, admin):
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.raw_cloud_state = "running"
+    node.save(update_fields=["raw_cloud_state", "updated_at"])
+    addresses_before = list(node.addresses)
+    operation = make_node_action(admin, node, "stop")
+    lifecycle, _holder = make_lifecycle(node)
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+    )
+
+    lifecycle.dispatch("stop", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert provider.action_calls == ["stop"]
+    assert provider.instances[node.external_id].state == "stopped"
+    assert node.raw_cloud_state == "stopped"
+    assert [item["value"] for item in node.addresses] == [
+        item["value"] for item in addresses_before
+    ]
+    assert node.consumes_quota is True
+    assert node.desired_state == "PRESENT"
+    assert operation.status == "SUCCEEDED"
+    assert operation.result["observed_state"] == "stopped"
+
+
+@pytest.mark.django_db
+def test_stale_daily_restart_is_rejected_after_configured_local_day_changes(
+    prepared_node, admin, monkeypatch
+):
+    from datetime import UTC, date, datetime
+
+    from apps.identity.models import NodeAutomationSetting
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.provisioning_state = "READY"
+    node.raw_cloud_state = "running"
+    node.save(update_fields=["provisioning_state", "raw_cloud_state", "updated_at"])
+    setting = NodeAutomationSetting.objects.create(
+        daily_restart_enabled=True,
+        daily_restart_timezone="Asia/Shanghai",
+        daily_restart_last_local_date=date(2026, 11, 6),
+        daily_restart_last_node_id=node.pk,
+    )
+    operation = make_node_action(admin, node, "reboot")
+    operation.params["automation"] = {
+        "kind": "daily_restart",
+        "policy_version": setting.policy_version,
+        "local_date": "2026-11-06",
+    }
+    operation.save(update_fields=["params"])
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 7, 0, 0, tzinfo=UTC),
+    )
+    lifecycle, holder = make_lifecycle(node)
+
+    lifecycle.dispatch("reboot", node.pk, operation_id=operation.pk)
+
+    operation.refresh_from_db()
+    assert operation.status == "FAILED"
+    assert operation.error_code == "AUTOMATION_POLICY_STALE"
+    assert holder == {}
 
 
 @pytest.mark.django_db
@@ -287,6 +402,157 @@ def test_start_and_reboot_persist_exact_readback_and_changed_addresses(
     assert refresh == [node.pk]
     assert operation.status == "SUCCEEDED"
     assert operation.result["addresses_changed"] is True
+
+
+@pytest.mark.django_db
+def test_reboot_marks_node_healthy_only_after_positive_fresh_health_probe(
+    prepared_node, admin, monkeypatch
+):
+    from apps.nodes.models import ManagedNode, NodeConfigRevision
+    from providers.base import Address
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.desired_generation = 1
+    node.applied_generation = 1
+    node.health_state = "HEALTHY"
+    node.save(
+        update_fields=[
+            "desired_generation",
+            "applied_generation",
+            "health_state",
+            "updated_at",
+        ]
+    )
+    add_usable_config_revision(node)
+    operation = make_node_action(admin, node, "reboot")
+    probes = []
+    lifecycle, _holder = make_lifecycle(
+        node,
+        health_probe=lambda candidate: probes.append(
+            (candidate.pk, candidate.addresses[0]["value"])
+        )
+        or {
+            "accepted": True,
+            "positive_control": True,
+            "fresh_connection": True,
+        },
+    )
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+    )
+    provider.addresses_after_lifecycle_write = (
+        Address("198.51.100.90", 4, "dynamic", node.external_id),
+    )
+    publication_state = []
+    monkeypatch.setattr(
+        "apps.subscriptions.publishing.Publisher.refresh_node_address",
+        lambda _node_id: publication_state.append(
+            (
+                ManagedNode.objects.get(pk=node.pk).addresses[0]["value"],
+                NodeConfigRevision.objects.get(node=node, generation=1).probe_result,
+            )
+        )
+        or {"published": 1, "failed": 0},
+    )
+
+    lifecycle.dispatch("reboot", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    revision = NodeConfigRevision.objects.get(node=node, generation=1)
+    assert probes == [(node.pk, "198.51.100.90")]
+    assert node.health_state == "HEALTHY"
+    assert revision.probe_result == {
+        "generation": 1,
+        "app_health_passed": True,
+        "accepted": True,
+        "positive_control": True,
+        "fresh_connection": True,
+    }
+    assert publication_state == [
+        (
+            "198.51.100.90",
+            {
+                "generation": 1,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        )
+    ]
+
+
+@pytest.mark.django_db
+def test_reboot_with_negative_health_probe_requires_reconciliation(
+    prepared_node, admin, monkeypatch
+):
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.desired_generation = node.applied_generation = 1
+    node.save(update_fields=["desired_generation", "applied_generation", "updated_at"])
+    add_usable_config_revision(node)
+    operation = make_node_action(admin, node, "reboot")
+    lifecycle, holder = make_lifecycle(
+        node,
+        health_probe=lambda _candidate: {
+            "accepted": False,
+            "positive_control": True,
+            "fresh_connection": True,
+        },
+    )
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+    )
+    monkeypatch.setattr(
+        "apps.subscriptions.publishing.Publisher.refresh_node_address",
+        lambda _node_id: {"published": 1, "failed": 0},
+    )
+
+    lifecycle.dispatch("reboot", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert holder["provider"].action_calls == ["reboot"]
+    assert node.health_state == "UNHEALTHY"
+    assert operation.status == "NEEDS_RECONCILIATION"
+    assert operation.error_code == "NODE_HEALTH_PROBE_FAILED"
+
+
+@pytest.mark.django_db
+def test_reboot_without_health_probe_clears_stale_health(prepared_node, admin, monkeypatch):
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.desired_generation = node.applied_generation = 1
+    node.save(update_fields=["desired_generation", "applied_generation", "updated_at"])
+    add_usable_config_revision(node)
+    node.health_state = "HEALTHY"
+    node.save(update_fields=["health_state", "updated_at"])
+    operation = make_node_action(admin, node, "reboot")
+    lifecycle, _holder = make_lifecycle(node, health_probe=None)
+    monkeypatch.setattr(
+        "apps.subscriptions.publishing.Publisher.refresh_node_address",
+        lambda _node_id: {"published": 1, "failed": 0},
+    )
+
+    lifecycle.dispatch("reboot", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    assert node.health_state in {"UNKNOWN", "UNAVAILABLE"}
 
 
 @pytest.mark.django_db
@@ -430,9 +696,7 @@ def test_unconfirmed_reboot_does_not_write_addresses_or_publish_subscriptions(
 
 
 @pytest.mark.django_db
-def test_start_waits_for_delayed_ipv4_and_stable_readback(
-    prepared_node, admin, monkeypatch
-):
+def test_start_waits_for_delayed_ipv4_and_stable_readback(prepared_node, admin, monkeypatch):
     from providers.base import Address
 
     node, _create_operation = prepared_node
@@ -914,7 +1178,6 @@ def test_missing_reboot_operation_id_is_queried_again_without_rebooting(
 def test_reboot_without_ipv4_does_not_clear_saved_address_or_publish(
     prepared_node, admin, monkeypatch
 ):
-
     node, _create_operation = prepared_node
     provision_node_for_action(node)
     operation = make_node_action(admin, node, "reboot")
@@ -950,9 +1213,7 @@ def test_reboot_without_ipv4_does_not_clear_saved_address_or_publish(
 
 
 @pytest.mark.django_db
-def test_retry_republishes_new_address_without_rebooting_again(
-    prepared_node, admin, monkeypatch
-):
+def test_retry_republishes_new_address_without_rebooting_again(prepared_node, admin, monkeypatch):
     from apps.operations.services import OperationService
     from providers.base import Address
 
@@ -973,9 +1234,7 @@ def test_retry_republishes_new_address_without_rebooting_again(
     provider.addresses_after_lifecycle_write = (
         Address("198.51.100.22", 4, "dynamic", node.external_id),
     )
-    publication_results = iter(
-        ({"published": 0, "failed": 1}, {"published": 1, "failed": 0})
-    )
+    publication_results = iter(({"published": 0, "failed": 1}, {"published": 1, "failed": 0}))
     monkeypatch.setattr(
         "apps.subscriptions.publishing.Publisher.refresh_node_address",
         lambda _node_id: next(publication_results),
@@ -1027,6 +1286,83 @@ def test_delete_releases_quota_only_after_exact_absence_readback(prepared_node, 
     assert operation.steps.filter(
         name="cloud.delete.read_after_write", status="CONFIRMED_ABSENT"
     ).exists()
+
+
+@pytest.mark.django_db
+def test_delete_invalidates_public_subscription_revision_before_success(
+    prepared_node, admin
+):
+    from django.test import Client, override_settings
+
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
+    from apps.subscriptions.credentials import CredentialService
+    from apps.subscriptions.models import AccessProfile
+    from apps.subscriptions.publishing import Publisher
+    from apps.subscriptions.tokens import TokenService
+
+    node, _create_operation = prepared_node
+    node.external_id = node.deterministic_name
+    node.provisioning_state = "READY"
+    node.raw_cloud_state = "running"
+    node.security_state = "OPEN"
+    node.health_state = "HEALTHY"
+    node.desired_generation = node.applied_generation = 1
+    node.addresses = [{"value": "192.0.2.10", "family": 4, "kind": "dynamic"}]
+    node.save()
+    protocol = NodeProtocol.objects.create(node=node, protocol="vless", port=18443)
+    profile = AccessProfile.objects.create(name="deleted-node")
+    issued = TokenService.issue(profile.pk)
+    credential = CredentialService.rotate(
+        node.pk, profile_ids=[profile.pk], protocol_ids=[protocol.pk]
+    )[0]
+    node.refresh_from_db()
+    node.applied_generation = node.desired_generation
+    node.health_state = "HEALTHY"
+    node.save(update_fields=["applied_generation", "health_state", "updated_at"])
+    credential.applied_generation = credential.desired_generation
+    credential.save(update_fields=["applied_generation"])
+    NodeConfigRevision.objects.update_or_create(
+        node=node,
+        generation=node.applied_generation,
+        defaults={
+            "config_hash": "a" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
+    published = Publisher.publish(issued.subscription_id)
+    provision_node_for_delete(node)
+    operation = make_delete_operation(admin, node)
+    lifecycle, _holder = make_lifecycle(node)
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(operation.idempotency_key),
+        },
+    )
+
+    lifecycle.dispatch("delete", node.pk, operation_id=operation.pk)
+
+    published.refresh_from_db()
+    operation.refresh_from_db()
+    assert published.usable is False
+    assert operation.result["publication_batch_status"] == "PARTIALLY_SUCCEEDED"
+    with override_settings(ROOT_URLCONF="config.subscription_urls"):
+        response = Client().get(f"/s/{issued.raw_token}")
+    assert response.status_code == 503
+    assert response.content == b"subscription unavailable\n"
 
 
 @pytest.mark.django_db
@@ -1093,9 +1429,7 @@ def test_delete_keeps_quota_when_readback_is_unavailable(prepared_node, admin):
 
 
 @pytest.mark.django_db
-def test_refresh_records_current_cloud_state_without_cloud_mutation(
-    prepared_node, admin
-):
+def test_refresh_records_current_cloud_state_without_cloud_mutation(prepared_node, admin):
     node, _create_operation = prepared_node
     provision_node_for_action(node)
     node.observation_error = "CLOUD_READ_FAILED"
@@ -1128,9 +1462,7 @@ def test_refresh_records_current_cloud_state_without_cloud_mutation(
 
 
 @pytest.mark.django_db
-def test_refresh_marks_confirmed_absence_without_deleting_or_releasing_quota(
-    prepared_node, admin
-):
+def test_refresh_marks_confirmed_absence_without_deleting_or_releasing_quota(prepared_node, admin):
     node, _create_operation = prepared_node
     provision_node_for_action(node)
     operation = make_node_action(admin, node, "refresh")
@@ -1177,9 +1509,7 @@ def test_refresh_does_not_mark_other_read_errors_as_absence(prepared_node, admin
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("provider", ["aws_lightsail", "aliyun_swas"])
-def test_both_provider_kinds_use_same_lifecycle_contract(
-    admin, cloud_account, provider
-):
+def test_both_provider_kinds_use_same_lifecycle_contract(admin, cloud_account, provider):
     from apps.nodes.models import NodePool
     from apps.nodes.quota import reserve_node
     from apps.operations.services import OperationService

@@ -127,11 +127,6 @@ def set_quota(pool_id: UUID, quota: int) -> NodePool:
     with transaction.atomic():
         pool = NodePool.objects.select_for_update().get(pk=pool_id)
         allocations = ensure_pool_allocations(pool)
-        used = ManagedNode.objects.filter(pool=pool, consumes_quota=True).count()
-        if quota < used:
-            raise DomainError(
-                "QUOTA_BELOW_USAGE", "额度不能低于当前占用", status_code=409
-            )
         # Legacy quota updates resize the single allocation. For multi-region
         # pools, callers should use set_allocations so each region is explicit.
         if len(allocations) != 1:
@@ -141,13 +136,8 @@ def set_quota(pool_id: UUID, quota: int) -> NodePool:
                 status_code=400,
             )
         allocation = allocations[0]
-        region_used = ManagedNode.objects.filter(
-            pool=pool, region=allocation.region, consumes_quota=True
-        ).count()
-        if quota < region_used:
-            raise DomainError(
-                "QUOTA_BELOW_USAGE", "额度不能低于当前占用", status_code=409
-            )
+        # Quota is the desired capacity. Existing nodes continue consuming
+        # quota until the lifecycle worker confirms cloud deletion.
         allocation.quota = quota
         allocation.save(update_fields=["quota", "updated_at"])
         pool.quota = quota
@@ -157,7 +147,7 @@ def set_quota(pool_id: UUID, quota: int) -> NodePool:
 
 
 def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
-    """Replace a pool's region allocations after enforcing current usage."""
+    """Replace desired regional quotas; automation reconciles any overage."""
 
     if not isinstance(raw_allocations, list) or not raw_allocations:
         raise ValueError("allocations must be a non-empty list")
@@ -194,13 +184,6 @@ def set_allocations(pool_id: UUID, raw_allocations: object) -> NodePool:
                 and region not in current
             ):
                 raise ValueError(f"unsupported region: {region}")
-        for region, quota in parsed:
-            if quota < current.get(region, 0):
-                raise DomainError(
-                    "QUOTA_BELOW_USAGE",
-                    f"{region} 额度不能低于当前占用",
-                    status_code=409,
-                )
         removed = set(current) - {region for region, _quota in parsed}
         if removed:
             raise DomainError(

@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from urllib.parse import quote
 from uuid import uuid4
 
 import psycopg
@@ -54,6 +55,11 @@ def test_real_encrypted_backup_restore_stays_closed_and_imports_newer_revocation
 
     database_name = connection.settings_dict["NAME"]
     assert database_name.startswith("test_xray_test")
+    database_settings = connection.settings_dict
+    pg_port = database_settings.get("PORT") or 5432
+    db_user = database_settings["USER"]
+    db_password = database_settings["PASSWORD"]
+    db_host = database_settings.get("HOST") or "127.0.0.1"
     profile = AccessProfile.objects.create(name=f"drill-{uuid4()}")
     issued = TokenService.issue(profile.pk)
     SecurityState.objects.get_or_create(singleton_key=1, defaults={"mode": "OPEN"})
@@ -75,16 +81,16 @@ def test_real_encrypted_backup_restore_stays_closed_and_imports_newer_revocation
     service_file = tmp_path / "pg_service.conf"
     service_file.write_text(
         "[xray_backup]\n"
-        "host=host.docker.internal\nport=55432\n"
-        f"dbname={database_name}\nuser=xray_test\nsslmode=disable\n"
+        f"host=host.docker.internal\nport={pg_port}\n"
+        f"dbname={database_name}\nuser={db_user}\nsslmode=disable\n"
         "[restore_admin]\n"
-        "host=host.docker.internal\nport=55432\n"
-        "dbname=postgres\nuser=xray_test\nsslmode=disable\n",
+        f"host=host.docker.internal\nport={pg_port}\n"
+        f"dbname=postgres\nuser={db_user}\nsslmode=disable\n",
         encoding="utf-8",
     )
     pgpass = tmp_path / "pgpass"
     pgpass.write_text(
-        "host.docker.internal:55432:*:xray_test:xray_test_only_password\n",
+        f"host.docker.internal:{pg_port}:*:{db_user}:{db_password}\n",
         encoding="utf-8",
     )
     pgpass.chmod(0o600)
@@ -156,8 +162,8 @@ def test_real_encrypted_backup_restore_stays_closed_and_imports_newer_revocation
                 "DJANGO_SETTINGS_MODULE": "config.settings.recovery",
                 "XRAY_ENV": "recovery",
                 "XRAY_DATABASE_URL": (
-                    "postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/"
-                    + target
+                    f"postgresql://{quote(db_user, safe='')}:{quote(db_password, safe='')}@"
+                    f"{db_host}:{pg_port}/{target}"
                 ),
                 "XRAY_ALLOWED_HOSTS": "localhost",
                 "XRAY_SECRET_KEY": "recovery-test-only-secret-key",
@@ -185,11 +191,11 @@ def test_real_encrypted_backup_restore_stays_closed_and_imports_newer_revocation
         assert reconcile.returncode == 0, reconcile.stderr
 
         with psycopg.connect(
-            host="127.0.0.1",
-            port=55432,
+            host=db_host,
+            port=pg_port,
             dbname=target,
-            user="xray_test",
-            password="xray_test_only_password",
+            user=db_user,
+            password=db_password,
         ) as restored:
             mode = restored.execute(
                 "SELECT mode FROM subscriptions_securitystate WHERE singleton_key = 1"
@@ -222,11 +228,11 @@ def test_real_encrypted_backup_restore_stays_closed_and_imports_newer_revocation
     finally:
         if target.startswith("xray_restore_"):
             with psycopg.connect(
-                host="127.0.0.1",
-                port=55432,
+                host=db_host,
+                port=pg_port,
                 dbname="postgres",
-                user="xray_test",
-                password="xray_test_only_password",
+                user=db_user,
+                password=db_password,
                 autocommit=True,
             ) as admin:
                 admin.execute(

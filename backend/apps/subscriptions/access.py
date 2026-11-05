@@ -5,18 +5,25 @@ from uuid import uuid4
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
 from apps.nodes.executor import NodeExecutor
-from apps.nodes.models import ManagedNode, NodeProtocol
+from apps.nodes.models import ManagedNode, NodePoolRegionAllocation, NodeProtocol
 from apps.operations.claims import assert_current, claim_operation, release_claim
 from apps.operations.models import Operation
 from apps.operations.services import OperationService
 from common.errors import DomainError
 
 from .credentials import CredentialService, decrypt_material
-from .models import AccessProfile, NodeCredential, SubscriptionRevision
+from .models import (
+    AccessProfile,
+    NodeCredential,
+    Subscription,
+    SubscriptionRevision,
+    SubscriptionToken,
+)
 from .policy import assert_entitled, quota_state
 from .security_barrier import SecurityBarrier
 
@@ -222,7 +229,7 @@ class AccessService:
         operation = Operation.objects.get(pk=operation_id, kind="node.access_sync")
         if operation.status in Operation.TERMINAL_STATUSES:
             return
-        claim = claim_operation(operation.pk, worker_id=f"access-sync-{uuid4()}", lease_seconds=90)
+        claim = claim_operation(operation.pk, worker_id=f"access-sync-{uuid4()}", lease_seconds=240)
         try:
             SecurityBarrier.assert_open(purpose="cloud_write")
             factory = transport_factory or configured_factory()
@@ -244,8 +251,58 @@ class AccessService:
                 node=node, revoked_at__isnull=True, desired_generation=generation
             ).update(applied_generation=generation)
             ManagedNode.objects.filter(pk=node.pk).update(provisioning_state="READY")
+            node.refresh_from_db()
+            from apps.nodes.probes import record_node_health_probe, run_node_health_probe
+
+            probe_status, health_state, evidence, health_generation = run_node_health_probe(
+                node
+            )
+            health_error = record_node_health_probe(
+                node,
+                external_id=node.external_id,
+                generation=health_generation,
+                health_state=health_state,
+                probe_status=probe_status,
+                probe_evidence=evidence,
+            )
+            result_data = {
+                "applied_generation": result.applied_generation,
+                "health_probe_status": probe_status,
+                "health_state": health_state if not health_error else "UNKNOWN",
+                "health_probe": evidence,
+                "node_reconciliation": {"scheduled": 0, "operation_ids": []},
+            }
+            if health_error:
+                Operation.objects.filter(pk=operation.pk).update(
+                    result=result_data,
+                    error_code=health_error,
+                    error_details={},
+                )
+                release_claim(claim, status="NEEDS_RECONCILIATION")
+                return
+
+            try:
+                result_data["node_reconciliation"] = (
+                    reconcile_node_for_active_subscriptions(node.pk)
+                )
+            except Exception:
+                Operation.objects.filter(pk=operation.pk).update(
+                    result=result_data,
+                    error_code="NODE_SUBSCRIPTION_RECONCILIATION_FAILED",
+                    error_details={},
+                )
+                release_claim(claim, status="NEEDS_RECONCILIATION")
+                return
+
+            from .publishing import Publisher, node_publish_ready
+
+            node.refresh_from_db()
+            if not result_data["node_reconciliation"]["operation_ids"] and node_publish_ready(node):
+                Publisher.publish_for_node(node.pk)
             Operation.objects.filter(pk=operation.pk).update(
-                result={"applied_generation": result.applied_generation}
+                result=result_data,
+                error_code="",
+                error_details={},
             )
             release_claim(claim, status="SUCCEEDED")
         except Exception as exc:
@@ -255,6 +312,127 @@ class AccessService:
             )
             release_claim(claim, status="FAILED")
             raise
+
+
+def reconcile_node_for_active_subscriptions(node_id):
+    """Idempotently assign active subscriptions to a newly available node."""
+    created_count = 0
+    operation_ids = []
+    with transaction.atomic():
+        node = ManagedNode.objects.select_for_update().select_related("pool").get(pk=node_id)
+        if (
+            node.desired_state != "PRESENT"
+            or node.provisioning_state != "READY"
+            or node.raw_cloud_state.casefold() != "running"
+            or node.security_state != "OPEN"
+            or node.observation_error
+            or node.desired_generation != node.applied_generation
+        ):
+            return {"scheduled": 0, "operation_ids": []}
+
+        from .publishing import node_publish_ready
+
+        if not node_publish_ready(node):
+            return {"scheduled": 0, "operation_ids": []}
+
+        # Honor the pool's regional allocation when present; legacy pools use region.
+        allocation = NodePoolRegionAllocation.objects.filter(
+            pool=node.pool, region=node.region
+        ).first()
+        if allocation is None and node.region != node.pool.region:
+            return {"scheduled": 0, "operation_ids": []}
+        if allocation is not None and allocation.quota == 0:
+            return {"scheduled": 0, "operation_ids": []}
+
+        protocols = list(
+            NodeProtocol.objects.filter(
+                node=node,
+                enabled=True,
+                credential_scope="profile",
+            ).order_by("pk")
+        )
+        if not protocols:
+            return {"scheduled": 0, "operation_ids": []}
+
+        now = timezone.now()
+        subscriptions = list(
+            Subscription.objects.select_for_update()
+            .select_related("profile")
+            .filter(
+                Q(profile__expires_at__isnull=True) | Q(profile__expires_at__gt=now),
+                status="ACTIVE",
+                profile__status="ACTIVE",
+                profile__publishing_frozen=False,
+            )
+            .order_by("pk")
+        )
+        active_tokens = {
+            (token.subscription_id, token.token_epoch, token.token_digest)
+            for token in SubscriptionToken.objects.filter(
+                subscription_id__in=[subscription.pk for subscription in subscriptions],
+                status="ACTIVE",
+            )
+        }
+        subscriptions = [
+            subscription
+            for subscription in subscriptions
+            if (
+                subscription.pk,
+                subscription.token_epoch,
+                subscription.token_digest,
+            )
+            in active_tokens
+        ]
+
+        existing = list(
+            NodeCredential.objects.select_for_update()
+            .filter(node=node, revoked_at__isnull=True)
+            .select_related("node", "protocol")
+            .order_by("profile_id", "protocol_id", "version")
+        )
+        existing_latest = {}
+        for credential in existing:
+            existing_latest[(credential.profile_id, credential.protocol_id)] = credential
+
+        by_profile = {}
+        for subscription in subscriptions:
+            for protocol in protocols:
+                key = (subscription.profile_id, protocol.pk)
+                current = existing_latest.get(key)
+                if current and current.credential_scope == "profile":
+                    continue
+                # Shared credentials must never be synthesized as per-profile entries.
+                if protocol.credential_scope != "profile":
+                    continue
+                by_profile.setdefault(subscription.profile_id, []).append(protocol.pk)
+
+        affected_nodes = set()
+        for profile_id, protocol_ids in by_profile.items():
+            CredentialService.rotate(
+                node.pk,
+                profile_ids=[profile_id],
+                protocol_ids=protocol_ids,
+            )
+            created_count += len(protocol_ids)
+            affected_nodes.add(node.pk)
+
+        if affected_nodes:
+            node.refresh_from_db()
+            NodeCredential.objects.filter(node=node, revoked_at__isnull=True).update(
+                desired_generation=node.desired_generation
+            )
+            operation = OperationService.submit(
+                kind="node.access_sync",
+                target_id=node.pk,
+                params={"generation": node.desired_generation},
+                key=uuid4(),
+                preview_id=None,
+                admin=None,
+                cloud_credential_version=node.cloud_credential_version,
+            )
+            operation_ids.append(str(operation.pk))
+
+    return {"scheduled": created_count, "operation_ids": operation_ids}
 
 
 def queue_policy_sync(profile):

@@ -5,7 +5,7 @@ import { resourcesApi, type SystemInfo } from '@/api/resources';
 import SystemSettings from './index.vue';
 
 const systemInfo: SystemInfo = {
-  version: '0.12.2',
+  version: '0.13.0',
   environment: 'test',
   debug: false,
   allowed_hosts: ['localhost'],
@@ -14,6 +14,26 @@ const systemInfo: SystemInfo = {
   node_status_sync: {
     enabled: false,
     interval_minutes: 60,
+    last_scheduled_at: null,
+    source: 'DEFAULT',
+  },
+  node_pool_sync: {
+    enabled: false,
+    interval_minutes: 15,
+    creation_templates: [],
+    last_scheduled_at: null,
+    source: 'DEFAULT',
+  },
+  node_daily_restart: {
+    enabled: false,
+    time: '04:00',
+    timezone: 'Asia/Shanghai',
+    last_scheduled_at: null,
+    source: 'DEFAULT',
+  },
+  usage_sync: {
+    enabled: true,
+    interval_minutes: 1,
     last_scheduled_at: null,
     source: 'DEFAULT',
   },
@@ -109,6 +129,77 @@ describe('system provider identity network setting', () => {
       await flushPromises();
       expect(wrapper.get('[role="alert"]').text()).toContain('系统设置加载失败');
       expect(wrapper.find('[role="switch"]').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+describe('node automation settings', () => {
+  it('saves pool alignment interval and an explicit per-region creation template', async () => {
+    vi.spyOn(resourcesApi, 'system').mockResolvedValue(systemInfo);
+    const update = vi.spyOn(resourcesApi, 'updateSystem').mockResolvedValue(systemInfo);
+    const wrapper = mountSystemSettings();
+
+    try {
+      await flushPromises();
+      await wrapper.get('input[aria-label="地址池同步间隔（分钟）"]').setValue('30');
+      await wrapper.findAll('button').find((button) => button.text().includes('保存地址池间隔'))!.trigger('click');
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith({ node_pool_sync_interval_minutes: 30 });
+
+      await wrapper.get('input[aria-label="创建模板地区"]').setValue('ap-southeast-1');
+      await wrapper.get('input[aria-label="创建模板云账号 ID"]').setValue('account-1');
+      await wrapper.get('input[aria-label="创建模板套餐 ID"]').setValue('small-plan');
+      await wrapper.get('input[aria-label="创建模板镜像 ID"]').setValue('ubuntu-image');
+      await wrapper.findAll('button').find((button) => button.text().includes('添加创建模板'))!.trigger('click');
+      await flushPromises();
+
+      expect(update).toHaveBeenLastCalledWith({
+        node_pool_sync_creation_templates: [{
+          region: 'ap-southeast-1',
+          cloud_account_id: 'account-1',
+          plan_id: 'small-plan',
+          image_id: 'ubuntu-image',
+        }],
+      });
+      expect(wrapper.text()).toContain('新加坡');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('saves the daily restart local time and timezone', async () => {
+    vi.spyOn(resourcesApi, 'system').mockResolvedValue(systemInfo);
+    const update = vi.spyOn(resourcesApi, 'updateSystem').mockResolvedValue(systemInfo);
+    const wrapper = mountSystemSettings();
+
+    try {
+      await flushPromises();
+      await wrapper.get('input[aria-label="每日重启时间"]').setValue('05:30');
+      await wrapper.get('input[aria-label="每日重启时区"]').setValue('America/New_York');
+      await wrapper.findAll('button').find((button) => button.text().includes('保存重启计划'))!.trigger('click');
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith({
+        node_daily_restart_time: '05:30',
+        node_daily_restart_timezone: 'America/New_York',
+      });
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('saves the scheduled traffic and subscription usage sync interval', async () => {
+    vi.spyOn(resourcesApi, 'system').mockResolvedValue(systemInfo);
+    const update = vi.spyOn(resourcesApi, 'updateSystem').mockResolvedValue(systemInfo);
+    const wrapper = mountSystemSettings();
+
+    try {
+      await flushPromises();
+      await wrapper.get('input[aria-label="流量同步间隔（分钟）"]').setValue('10');
+      await wrapper.findAll('button').find((button) => button.text().includes('保存流量间隔'))!.trigger('click');
+      await flushPromises();
+      expect(update).toHaveBeenCalledWith({ usage_sync_interval_minutes: 10 });
     } finally {
       wrapper.unmount();
     }

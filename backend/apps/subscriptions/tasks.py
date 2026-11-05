@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from uuid import uuid4
 
 from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
 
+from apps.identity.models import NodeAutomationSetting
 from apps.nodes.models import ManagedNode
 from apps.operations.services import OperationService
 
@@ -61,15 +63,30 @@ def enforce_limits():
 def refresh_usage_and_limits():
     from .metering import collect_node
 
+    now = timezone.now()
+    setting, _created = NodeAutomationSetting.objects.get_or_create(singleton_key=1)
+    with transaction.atomic():
+        setting = NodeAutomationSetting.objects.select_for_update().get(pk=setting.pk)
+        due = setting.usage_sync_enabled and (
+            setting.usage_sync_last_scheduled_at is None
+            or now
+            >= setting.usage_sync_last_scheduled_at
+            + timedelta(minutes=setting.usage_sync_interval_minutes)
+        )
+        if due:
+            setting.usage_sync_last_scheduled_at = now
+            setting.save(update_fields=["usage_sync_last_scheduled_at", "updated_at"])
+
     result = {"collected": 0, "unavailable": 0}
-    for node in ManagedNode.objects.filter(
-        provisioning_state="READY", desired_state="PRESENT", security_state="OPEN"
-    ):
-        try:
-            collect_node(node)
-            result["collected"] += 1
-        except Exception:
-            result["unavailable"] += 1
+    if due:
+        for node in ManagedNode.objects.filter(
+            provisioning_state="READY", desired_state="PRESENT", security_state="OPEN"
+        ):
+            try:
+                collect_node(node)
+                result["collected"] += 1
+            except Exception:
+                result["unavailable"] += 1
     result["enforcement_operations"] = len(enforce_limits())
-    result["at"] = timezone.now().isoformat()
+    result["at"] = now.isoformat()
     return result

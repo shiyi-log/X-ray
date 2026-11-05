@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.identity.models import SuperAdmin
-from apps.nodes.models import NodeProtocol
+from apps.nodes.models import NodeConfigRevision, NodeProtocol
 from apps.subscriptions.access import AccessService, build_node_config
 from apps.subscriptions.credentials import CredentialService
 from apps.subscriptions.models import AccessProfile
@@ -229,6 +229,25 @@ def test_assignment_pending_until_apply_and_no_shared_or_foreign_protocols(
 
     AccessService.sync(response.json()["operation_ids"][0], transport_factory=lambda _: Transport())
     assert captured[0]["config"]["inbounds"][0]["protocol"] == "vless"
+    ready_node.refresh_from_db()
+    assert profile.subscription.current_revision_id is None
+    ready_node.health_state = "HEALTHY"
+    ready_node.raw_cloud_state = "running"
+    ready_node.save(update_fields=["health_state", "raw_cloud_state", "updated_at"])
+    NodeConfigRevision.objects.filter(
+        node=ready_node, generation=ready_node.applied_generation
+    ).update(
+        probe_result={
+            "generation": ready_node.applied_generation,
+            "app_health_passed": True,
+            "accepted": True,
+            "positive_control": True,
+            "fresh_connection": True,
+        }
+    )
+    from apps.subscriptions.publishing import node_publish_ready
+
+    assert node_publish_ready(ready_node)
     assert Publisher.publish(issued.subscription_id).usable
     details = client.get(f"/api/v1/subscriptions/{issued.subscription_id}/").json()
     assert details["assignments"][0]["ready"]
@@ -582,6 +601,26 @@ def test_multiple_protocol_revision_keeps_all_credential_references(publishable_
     node.save()
     subscription.profile.node_credentials.update(
         desired_generation=node.applied_generation, applied_generation=node.applied_generation
+    )
+    from apps.nodes.models import NodeConfigRevision
+
+    NodeConfigRevision.objects.update_or_create(
+        node=node,
+        generation=node.applied_generation,
+        defaults={
+            "config_hash": "c" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
     )
     revision = Publisher.publish(subscription.pk)
     assert {v["credential_ref"] for v in revision.node_versions.values()} == {

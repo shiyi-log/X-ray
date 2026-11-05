@@ -6,6 +6,7 @@ from functools import wraps
 
 import pyotp
 from django.conf import settings
+from django.db import transaction
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
@@ -13,8 +14,10 @@ from django.views.decorators.http import require_GET, require_POST
 
 from apps.identity.gate_settings import (
     _UNSET,
+    node_automation_settings,
     node_status_sync_setting,
     provider_identity_network_setting,
+    set_node_automation_settings,
     set_node_status_sync_settings,
     set_provider_identity_network_enabled,
 )
@@ -185,11 +188,15 @@ def step_up(request):
     code = str(payload.get("code") or "")
     if not admin.totp_secret_envelope:
         raise DomainError("TOTP_SETUP_REQUIRED", "请先绑定验证器", status_code=409)
-    secret = configured_secret_store().decrypt(
-        admin.totp_secret_envelope,
-        purpose="control",
-        aad=f"totp:{admin.pk}".encode(),
-    ).decode()
+    secret = (
+        configured_secret_store()
+        .decrypt(
+            admin.totp_secret_envelope,
+            purpose="control",
+            aad=f"totp:{admin.pk}".encode(),
+        )
+        .decode()
+    )
     if not pyotp.TOTP(secret).verify(code, valid_window=0):
         raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
     until = datetime.now().astimezone() + timedelta(seconds=settings.AUTH_STEP_UP_SECONDS)
@@ -226,20 +233,79 @@ def system(request):
             "provider_identity_network_enabled",
             "node_status_sync_enabled",
             "node_status_sync_interval_minutes",
+            "node_pool_sync_enabled",
+            "node_pool_sync_interval_minutes",
+            "node_pool_sync_creation_templates",
+            "node_daily_restart_enabled",
+            "node_daily_restart_time",
+            "node_daily_restart_timezone",
+            "usage_sync_enabled",
+            "usage_sync_interval_minutes",
         }
         if not payload or set(payload) - allowed:
             raise ValueError("at least one supported system setting is required")
-        if "provider_identity_network_enabled" in payload:
-            enabled = payload["provider_identity_network_enabled"]
-            if not isinstance(enabled, bool):
-                raise ValueError("provider_identity_network_enabled must be a boolean")
-            set_provider_identity_network_enabled(enabled=enabled, actor=request.xray_admin)
-        if {"node_status_sync_enabled", "node_status_sync_interval_minutes"} & set(payload):
-            set_node_status_sync_settings(
-                actor=request.xray_admin,
-                enabled=payload.get("node_status_sync_enabled", _UNSET),
-                interval_minutes=payload.get("node_status_sync_interval_minutes", _UNSET),
-            )
+        automation_fields = allowed - {
+            "provider_identity_network_enabled",
+            "node_status_sync_enabled",
+            "node_status_sync_interval_minutes",
+        }
+        automation_values = {
+            key: value for key, value in payload.items() if key in automation_fields
+        }
+        with transaction.atomic():
+            if automation_values:
+                current = node_automation_settings()
+                pool_enabled = payload.get(
+                    "node_pool_sync_enabled", current["node_pool_sync"]["enabled"]
+                )
+                restart_enabled = payload.get(
+                    "node_daily_restart_enabled", current["node_daily_restart"]["enabled"]
+                )
+                automation_sensitive = (
+                    pool_enabled
+                    and bool(
+                        {
+                            "node_pool_sync_enabled",
+                            "node_pool_sync_interval_minutes",
+                            "node_pool_sync_creation_templates",
+                        }
+                        & automation_values.keys()
+                    )
+                ) or (
+                    restart_enabled
+                    and bool(
+                        {
+                            "node_daily_restart_enabled",
+                            "node_daily_restart_time",
+                            "node_daily_restart_timezone",
+                        }
+                        & automation_values.keys()
+                    )
+                )
+                if automation_sensitive:
+                    recent = request.session.get("recent_auth_until")
+                    try:
+                        valid_recent_auth = bool(
+                            recent and datetime.now().astimezone() < datetime.fromisoformat(recent)
+                        )
+                    except ValueError:
+                        valid_recent_auth = False
+                    if not valid_recent_auth:
+                        raise DomainError(
+                            "STEP_UP_REQUIRED", "请重新验证身份", status_code=403, retryable=True
+                        )
+                set_node_automation_settings(actor=request.xray_admin, values=automation_values)
+            if "provider_identity_network_enabled" in payload:
+                enabled = payload["provider_identity_network_enabled"]
+                if not isinstance(enabled, bool):
+                    raise ValueError("provider_identity_network_enabled must be a boolean")
+                set_provider_identity_network_enabled(enabled=enabled, actor=request.xray_admin)
+            if {"node_status_sync_enabled", "node_status_sync_interval_minutes"} & set(payload):
+                set_node_status_sync_settings(
+                    actor=request.xray_admin,
+                    enabled=payload.get("node_status_sync_enabled", _UNSET),
+                    interval_minutes=payload.get("node_status_sync_interval_minutes", _UNSET),
+                )
 
     return JsonResponse(
         {
@@ -252,5 +318,6 @@ def system(request):
             "csrf_trusted_origins": list(settings.CSRF_TRUSTED_ORIGINS),
             "provider_identity_network": provider_identity_network_setting(),
             "node_status_sync": node_status_sync_setting(),
+            **node_automation_settings(),
         }
     )

@@ -352,8 +352,16 @@ def test_node_pool_allocates_quota_per_supported_region(cloud_account):
         },
         format="json",
     )
-    assert blocked_update.status_code == 409
-    assert blocked_update.json()["code"] == "QUOTA_BELOW_USAGE"
+    assert blocked_update.status_code == 200
+    assert {
+        item["region"]: item["quota"] for item in blocked_update.json()["allocations"]
+    }["ap-southeast-1"] == 2
+    assert (
+        ManagedNode.objects.filter(
+            pool=pool, region="ap-southeast-1", consumes_quota=True
+        ).count()
+        == 3
+    )
 
     blocked_remove = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",
@@ -471,8 +479,14 @@ def test_unsupported_region_allocation_is_preserved_only_for_existing_usage(clou
         {"allocations": [{"region": "af-south-1", "quota": 1}]},
         format="json",
     )
-    assert below_usage.status_code == 409
-    assert below_usage.json()["code"] == "QUOTA_BELOW_USAGE"
+    assert below_usage.status_code == 200
+    assert below_usage.json()["allocations"][0]["quota"] == 1
+    assert (
+        ManagedNode.objects.filter(
+            pool=pool, region="af-south-1", consumes_quota=True
+        ).count()
+        == 2
+    )
 
     removed = client.patch(
         f"/api/v1/node-pools/{pool.pk}/",

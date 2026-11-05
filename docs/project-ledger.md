@@ -4625,3 +4625,68 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `审计本机 aware Asia/Shanghai；业务 datetime UTC；interval 在 now>=due 执行；每日 IANA timezone+HH:MM，以当地日期去重，覆盖 DST/跨日/边界/重复/clock skew；耗时 monotonic；同地区 created_at,id 稳定排序；结果未知不重复写/释放。`
 - `reuse`: `Operation+Outbox/fencing、NodeLifecycle 稳定读回/tags、Publisher、UsageCheckpoint、Fake fixtures；复用本项目 9537/9538 与专用 PostgreSQL/Redis，不改端口或停止服务。`
 - `rollback_ref`: `d54da54 或新版本 tag/git revert；DB expand/contract，不恢复已撤销 token/凭据/审计/云状态；仅按当前明确授权清理临时测试资源。`
+
+### 2026-11-06T03:52:17+08:00 — xray-submit-closeout-20261106-01 final verification
+
+- `event_id`: `xray-submit-closeout-20261106-01/001`
+- `run_id`: `xray-submit-closeout-20261106-01`
+- `actor / event_type`: `Codex / validate / final`
+- `path_scope`: `current branch/status; HEAD and origin/main; docs/progress.md; docs/project-ledger.md; backend/tests/test_node_automation.py`
+- `operation`: `在用户要求“提交”后，核对现有提交、登录验证记录、未提交文件边界及静态收尾门禁。`
+- `authorization`: `用户授权提交当前工作成果；本次仅提交审计文档，不提交并行节点自动化测试文件的未提交字段修正；不执行新的推送。`
+- `implementation_scope`: `读取最近提交统计与分支状态；运行差异、仓库边界、验收矩阵和秘密扫描；确认登录记录已在当前提交中。`
+- `exclusions`: `不改写历史，不 reset/revert/force-push；不提交 `backend/tests/test_node_automation.py`；不停止服务、不改数据库、凭据、云资源或浏览器状态。`
+- `command_or_tool`: `git show --stat --oneline --decorate -1; git status --short --branch; git diff --cached --stat; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh >/dev/null 2>&1.`
+- `result`: `HEAD 与 origin/main 均为 755d8508823df10b75b45dbf1b4b0384bf05d2ea；提交包含登录验证记录，同时包含节点自动化代码/测试及审计文档。工作区仅有 backend/tests/test_node_automation.py 的两处未提交字段修正。diff-check、boundary、acceptance、secret scan 均退出 0；未执行新的推送。`
+- `exit_code`: `git/status/show/diff-check=0; boundary=0; acceptance=0; secret-scan=0.`
+- `evidence`: `只记录提交哈希、文件范围、脱敏门禁结果和未提交路径；秘密扫描原始输出未打印或保存。`
+- `status / commit_or_tree`: `passed (local closeout only; no production claim) / main@755d8508823df10b75b45dbf1b4b0384bf05d2ea, origin/main 同步；本次收尾文档待本地提交。`
+- `time_logic`: `本机 Asia/Shanghai aware ISO-8601，2026-11-06T03:52:17+08:00；无业务时间、TTL、调度或迁移规则变化。`
+- `reuse`: `复用此前 xray-password-login-20261106-01/003-005 的登录证据；不创建新浏览器会话。`
+- `rollback_ref`: `仅回退本次审计文档追加即可撤销本次记录；保留 755d850、未提交测试修正及远端状态；不改数据库、凭据、服务、云或生产状态。`
+
+### 2026-11-06T03:51:29+08:00 — xray-flock-install-20261106-01 definition
+
+- `event_id`: `xray-flock-install-20261106-01/001`
+- `run_id`: `xray-flock-install-20261106-01`
+- `actor / event_type`: `Codex / definition / read`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; installer/apply-config.sh; current Git status/diff; local tool availability`
+- `operation`: `响应用户“flock”请求，安装 macOS arm64 可用的 standalone flock 文件锁命令，并验证其与仓库安装器调用边界相容。`
+- `authorization`: `用户明确提出“flock”；授权范围为本机用户级工具安装、公开上游源码下载/构建和本地临时文件锁竞争验证。`
+- `implementation_scope`: `固定上游 release v0.4.0 源码构建到 $HOME/.local，验证 $HOME/.local/bin/flock、版本/帮助输出和两个进程的排他锁竞争；只在 docs/project-ledger.md 与 docs/progress.md 追加审计证据。`
+- `exclusions`: `不安装 Homebrew/MacPorts，不修改仓库依赖、锁文件、应用源码、测试、CI 或安装器；不读取 archive/Shop/sibling runtime secrets；不启动/停止服务，不访问数据库、云、SSH、公网或生产，不提交/tag/发布。保留既有 backend/tests/test_node_automation.py 修改及其他并行文档追加。`
+- `assumptions / risk`: `当前 Darwin arm64 无 flock、brew、port、nix 或 pkgx；源码构建需要本机 clang/make。公开 GitHub release v0.4.0 作为构建输入；用户级安装会新增 ~/.local/bin/flock 和对应构建产物，可用 rm -f ~/.local/bin/flock 并删除本轮临时目录回退，不触碰其他 ~/.local 工具。`
+- `command_or_tool`: `command -v flock/brew/port/nix/pkgx; uname; clang/make/curl/tar availability; GitHub release metadata read; append ledger; curl download; tar/configure/make/make install; flock --version/--help; temporary contention probe; git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; final git status/HEAD.`
+- `result`: `范围已定义；安装与验证待执行。仓库 installer/apply-config.sh 在 flock 可用时调用 flock -x 9，当前命令缺失；当前 HEAD 为 755d8508823df10b75b45dbf1b4b0384bf05d2ea，既有用户差异为 backend/tests/test_node_automation.py。`
+- `exit_code`: `初始 status/tool probes=0；flock/brew/port/nix/pkgx command lookup returned unavailable; source build and gates pending.`
+- `time_logic`: `审计使用本机 Asia/Shanghai aware ISO-8601；本任务不改变业务时间、TTL、过期或重试规则。`
+- `reuse`: `复用 installer/apply-config.sh 已有 flock 文件描述符调用方式和仓库现有边界/验收/秘密门禁；本次不复用其他项目工具或运行输入。`
+- `rollback_ref`: `删除本轮安装的 $HOME/.local/bin/flock 及临时源码目录；不卸载或覆盖其他用户级工具，不改仓库历史。`
+
+### 2026-11-06T03:54:44+08:00 — xray-flock-install-20261106-01 install / validate
+
+- `event_id`: `xray-flock-install-20261106-01/002`
+- `run_id`: `xray-flock-install-20261106-01`
+- `actor / event_type`: `Codex / write / validate`
+- `path_scope`: `~/.local/bin/flock; ~/.local/share/man/man1/flock.1; /tmp/xray-flock-install.lILxX8 (temporary source/build only); docs/project-ledger.md`
+- `operation`: `下载公开 release v0.4.0 tar.xz，校验本地 SHA-256，使用系统 clang/make 配置并构建，执行安装前手工锁竞争验证后安装用户级 flock 和 man page。`
+- `command_or_tool`: `curl -fsSL --retry 3 .../flock-0.4.0.tar.xz; shasum -a 256; tar -xJf; ./configure --prefix="$HOME/.local"; make -j$(sysctl -n hw.ncpu); make check; make install; flock --version/--help; Python temporary-file contention probe.`
+- `result`: `构建成功；本地归档 SHA-256 为 01bbd497d168e9b7306f06794c57602da0f61ebd463a3210d63c1d8a0513c5cc；安装生成 /Users/shiyi/.local/bin/flock 与 /Users/shiyi/.local/share/man/man1/flock.1；版本输出 flock 0.4.0。普通路径和仓库使用的 fd 9 形式均能让非阻塞竞争者以 exit 1 失败，锁竞争通过。`
+- `test_status`: `make check=blocked：两组 Bats 测试均因环境缺少 bats（env: bats: No such file or directory，exit 127）而未启动断言；不是测试断言失败。未安装 Bats 或包管理器，避免扩大工具安装范围。`
+- `authorization / risk`: `仅用户级工具和本地临时文件发生变化；未改仓库源码、依赖、服务、数据库、云、凭据或生产状态。`
+- `rollback_ref`: `删除 /Users/shiyi/.local/bin/flock 和 /Users/shiyi/.local/share/man/man1/flock.1，并清理 /tmp/xray-flock-install.lILxX8；不触碰 Ruff 或其他 ~/.local 内容。`
+
+### 2026-11-06T03:55:30+08:00 — xray-flock-install-20261106-01 final verification
+
+- `event_id`: `xray-flock-install-20261106-01/003`
+- `run_id`: `xray-flock-install-20261106-01`
+- `actor / event_type`: `Codex / validate / final`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; ~/.local/bin/flock; current Git status/diff`
+- `operation`: `完成 flock 用户级安装请求的最终静态、边界、验收、秘密和工作树检查。`
+- `command_or_tool`: `git diff --check; ./scripts/check-boundary.sh; python3 scripts/validate-acceptance.py; ./scripts/check-secrets.sh; flock --version; command -v flock; test -x ~/.local/bin/flock; test ! -e /tmp/xray-flock-install.lILxX8; git status --short --branch; git diff --stat; git rev-parse HEAD.`
+- `result / exit_code`: `所有最终命令退出 0；flock 0.4.0 位于 /Users/shiyi/.local/bin/flock；临时构建目录已移除；diff-check、boundary、acceptance 和 secret scan 通过。工作树存在并行节点自动化/文档差异，均未由本任务清理或覆盖。`
+- `status / commit_or_tree`: `passed（本机用户级工具；无生产声明）/ main@755d8508823df10b75b45dbf1b4b0384bf05d2ea；未提交、未打 tag、无版本变化。`
+- `limitations`: `上游 make check 仍为 blocked，原因是环境没有 bats，未执行上游 Bats 断言；本任务未安装 Bats。业务测试、服务、数据库、浏览器、云、SSH、生产和发布均未运行。`
+- `time_logic`: `本机 Asia/Shanghai aware ISO-8601；没有业务时间、TTL、调度或迁移规则变化。`
+- `reuse`: `可复用 ~/.local/bin/flock 与 installer/apply-config.sh 的 fd 9 锁调用；仅适用于当前本机工具环境，不代表其他主机或生产环境已安装。`
+- `rollback_ref`: `删除本轮创建的 /Users/shiyi/.local/bin/flock 与 /Users/shiyi/.local/share/man/man1/flock.1；保留 Ruff、其他用户工具、仓库并行修改和审计历史。`

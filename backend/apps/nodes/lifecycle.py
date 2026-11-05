@@ -23,7 +23,7 @@ from providers.base import (
 from providers.registry import build_read_provider, build_write_provider
 
 from .execution_types import IsolationResult
-from .models import ManagedNode, NodeResource
+from .models import ManagedNode, NodeConfigRevision, NodeResource
 from .quota import release_quota
 
 UNSAFE_SECURITY_STATES = {
@@ -64,6 +64,7 @@ class NodeLifecycle:
         provider_factory=None,
         reader_factory=None,
         isolation_probe=None,
+        health_probe=None,
         worker_id: str | None = None,
     ):
         self.provider_factory = provider_factory or self._build_provider
@@ -73,6 +74,7 @@ class NodeLifecycle:
             else self._build_reader
         )
         self.isolation_probe = isolation_probe or (lambda _node: {})
+        self.health_probe = health_probe
         self.worker_id = worker_id or _default_worker_id()
 
     @staticmethod
@@ -386,6 +388,7 @@ class NodeLifecycle:
         instance,
         *,
         refresh_subscriptions: bool = False,
+        defer_subscription_refresh: bool = False,
     ) -> dict:
         if instance.ref != resource:
             raise DomainError(
@@ -437,7 +440,7 @@ class NodeLifecycle:
             )
 
             publication = {"published": 0, "failed": 0}
-            if addresses_changed or refresh_subscriptions:
+            if (addresses_changed or refresh_subscriptions) and not defer_subscription_refresh:
                 from apps.subscriptions.publishing import Publisher
 
                 publication = Publisher.refresh_node_address(locked.pk)
@@ -446,6 +449,41 @@ class NodeLifecycle:
             "published": publication["published"],
             "publication_failures": publication["failed"],
         }
+
+    def _probe_reboot_health(self, node: ManagedNode) -> tuple[str, str, dict, int]:
+        from .probes import run_node_health_probe
+
+        return run_node_health_probe(node, self.health_probe)
+
+    @staticmethod
+    def _record_reboot_health(
+        node: ManagedNode,
+        resource: ResourceRef,
+        *,
+        generation: int,
+        health_state: str,
+        probe_status: str,
+        probe_evidence: dict[str, bool | None],
+    ) -> str:
+        from .probes import record_node_health_probe
+
+        return record_node_health_probe(
+            node,
+            external_id=resource.resource_id,
+            generation=generation,
+            health_state=health_state,
+            probe_status=probe_status,
+            probe_evidence=probe_evidence,
+        )
+
+    @staticmethod
+    def _refresh_subscriptions_after_reboot(node_id: UUID) -> dict[str, int]:
+        from apps.subscriptions.publishing import Publisher
+
+        try:
+            return Publisher.refresh_node_address(node_id)
+        except Exception:
+            return {"published": 0, "failed": 1}
 
     def create(self, node_id: UUID, *, operation_id: UUID) -> None:
         node = ManagedNode.objects.select_related(
@@ -767,6 +805,40 @@ class NodeLifecycle:
             self._finish(claim, status="FAILED", error_code="PREVIEW_STALE")
             return
 
+        automation = operation.params.get("automation")
+        if automation is not None:
+            policy_version = (
+                automation.get("policy_version") if isinstance(automation, dict) else None
+            )
+            if (
+                not isinstance(automation, dict)
+                or automation.get("kind") != "pool_sync"
+                or isinstance(policy_version, bool)
+                or not isinstance(policy_version, int)
+                or policy_version < 1
+            ):
+                error_code = "AUTOMATED_DELETE_POLICY_INVALID"
+            else:
+                try:
+                    from .automation import validate_automated_delete
+
+                    validate_automated_delete(operation, node, policy_version)
+                except DomainError as exc:
+                    error_code = exc.code
+                except Exception:
+                    error_code = "AUTOMATED_DELETE_VALIDATION_FAILED"
+                else:
+                    error_code = ""
+            if error_code:
+                self._record_step(
+                    operation,
+                    name="cloud.delete.automation_preflight",
+                    status="REJECTED",
+                    evidence={"error_code": error_code},
+                )
+                self._finish(claim, status="FAILED", error_code=error_code)
+                return
+
         mutation = None
         mutation_error = None
         try:
@@ -858,21 +930,40 @@ class NodeLifecycle:
                     error_code="PREVIEW_STALE",
                 )
                 return
+            from apps.subscriptions.publishing import Publisher
+
+            publication_batch = Publisher.invalidate_node(locked_node.pk)
             release_quota(locked_node.pk, cloud_absence_confirmed=True)
 
+        self._record_step(
+            operation,
+            name="subscriptions.invalidate_deleted_node",
+            status=publication_batch.status,
+            evidence={
+                "publication_batch_id": str(publication_batch.pk),
+                "affected_subscriptions": len(publication_batch.subscription_ids),
+                "published": publication_batch.result.get("published", 0),
+                "failed": len(publication_batch.result.get("failures", [])),
+            },
+        )
         self._record_step(
             operation,
             name="cloud.delete.read_after_write",
             status="CONFIRMED_ABSENT",
             evidence={"resource_id": resource.resource_id},
         )
+        publication_failures = len(publication_batch.result.get("failures", []))
         self._finish(
             claim,
-            status="SUCCEEDED",
+            status="PARTIALLY_SUCCEEDED" if publication_failures else "SUCCEEDED",
             result={
                 "resource_id": resource.resource_id,
                 "cloud_absence_confirmed": True,
                 "quota_released": True,
+                "publication_batch_id": str(publication_batch.pk),
+                "publication_batch_status": publication_batch.status,
+                "subscriptions_published": publication_batch.result.get("published", 0),
+                "subscription_publication_failures": publication_failures,
                 "provider_request_id": mutation.request_id if mutation else None,
             },
         )
@@ -940,6 +1031,53 @@ class NodeLifecycle:
             else 60,
         )
         operation = assert_current(claim)
+        automation = operation.params.get("automation")
+        if kind == "reboot" and automation is not None:
+            policy_version = (
+                automation.get("policy_version") if isinstance(automation, dict) else None
+            )
+            if (
+                not isinstance(automation, dict)
+                or automation.get("kind") != "daily_restart"
+                or isinstance(policy_version, bool)
+                or not isinstance(policy_version, int)
+                or policy_version < 1
+                or not isinstance(automation.get("local_date"), str)
+                or not automation.get("local_date")
+            ):
+                error_code = "AUTOMATED_RESTART_POLICY_INVALID"
+            else:
+                try:
+                    from .automation import validate_automated_restart
+
+                    validate_automated_restart(operation, node, policy_version)
+                except DomainError as exc:
+                    error_code = exc.code
+                except Exception:
+                    error_code = "AUTOMATED_RESTART_VALIDATION_FAILED"
+                else:
+                    error_code = ""
+            if error_code:
+                self._record_step(
+                    operation,
+                    name="cloud.reboot.automation_preflight",
+                    status="REJECTED",
+                    evidence={"error_code": error_code},
+                )
+                self._finish(claim, status="FAILED", error_code=error_code)
+                return None
+        if kind == "reboot":
+            with transaction.atomic():
+                locked_node = ManagedNode.objects.select_for_update().get(pk=node.pk)
+                if (
+                    locked_node.external_id == node.external_id
+                    and locked_node.desired_state == "PRESENT"
+                ):
+                    locked_node.health_state = "UNKNOWN"
+                    locked_node.save(update_fields=["health_state", "updated_at"])
+                    NodeConfigRevision.objects.filter(
+                        node=locked_node, generation=locked_node.applied_generation
+                    ).update(probe_result={})
         provider = self.provider_for(node, DatabaseWriteAuthorizer(claim))
         resource = ResourceRef(self._account_ref(node), node.region, node.external_id)
         permit = self._permit(node, operation, claim, kind, resource_id=node.external_id)
@@ -1243,6 +1381,7 @@ class NodeLifecycle:
                 resource,
                 instance,
                 refresh_subscriptions=force_subscription_refresh,
+                defer_subscription_refresh=kind == "reboot",
             )
         except DomainError as exc:
             error_code = (
@@ -1290,6 +1429,64 @@ class NodeLifecycle:
             kind
         )
         state_matches = str(instance.state).casefold() == expected_state
+        health_probe_status = "NOT_REQUIRED"
+        health_state = ""
+        health_probe_evidence = {}
+        health_error_code = ""
+        node_reconciliation = {"scheduled": 0, "operation_ids": []}
+        publication = {
+            "published": observation["published"],
+            "failed": observation["publication_failures"],
+        }
+        if kind == "reboot":
+            if state_matches:
+                (
+                    health_probe_status,
+                    health_state,
+                    health_probe_evidence,
+                    health_generation,
+                ) = self._probe_reboot_health(node)
+            else:
+                health_probe_status = "SKIPPED_CLOUD_STATE_UNCONFIRMED"
+                health_state = "UNKNOWN"
+                health_generation = node.applied_generation
+                health_probe_evidence = {
+                    "accepted": None,
+                    "positive_control": None,
+                    "fresh_connection": None,
+                }
+            health_error_code = self._record_reboot_health(
+                node,
+                resource,
+                generation=health_generation,
+                health_state=health_state,
+                probe_status=(
+                    "UNAVAILABLE"
+                    if health_probe_status in {"UNAVAILABLE", "SKIPPED_CLOUD_STATE_UNCONFIRMED"}
+                    else health_probe_status
+                ),
+                probe_evidence=health_probe_evidence,
+            )
+            if not state_matches:
+                health_error_code = "CLOUD_STATE_UNEXPECTED"
+
+            if not health_error_code and health_state == "HEALTHY":
+                try:
+                    from apps.subscriptions.access import (
+                        reconcile_node_for_active_subscriptions,
+                    )
+
+                    node_reconciliation = reconcile_node_for_active_subscriptions(node.pk)
+                except Exception:
+                    health_error_code = "NODE_SUBSCRIPTION_RECONCILIATION_FAILED"
+
+            if (
+                observation["addresses_changed"]
+                or force_subscription_refresh
+                or health_state != "HEALTHY"
+            ):
+                publication = self._refresh_subscriptions_after_reboot(node.pk)
+
         operation_confirmed = (
             not tracks_provider_operation or provider_operation_status == "SUCCEEDED"
         )
@@ -1322,8 +1519,18 @@ class NodeLifecycle:
                     else {}
                 ),
                 "addresses_changed": observation["addresses_changed"],
-                "subscriptions_published": observation["published"],
-                "subscription_publication_failures": observation["publication_failures"],
+                "subscriptions_published": publication["published"],
+                "subscription_publication_failures": publication["failed"],
+                **(
+                    {
+                        "health_probe_status": health_probe_status,
+                        "health_state": health_state,
+                        "health_probe": health_probe_evidence,
+                        "node_reconciliation": node_reconciliation,
+                    }
+                    if kind == "reboot"
+                    else {}
+                ),
             },
         )
 
@@ -1342,7 +1549,7 @@ class NodeLifecycle:
         ):
             status = "SUCCEEDED" if state_matches else "NEEDS_RECONCILIATION"
             error_code = "" if state_matches else "CLOUD_STATE_UNEXPECTED"
-            if observation["publication_failures"]:
+            if publication["failed"]:
                 status = "NEEDS_RECONCILIATION"
                 error_code = "SUBSCRIPTION_ADDRESS_REFRESH_PARTIAL"
         elif write_error:
@@ -1354,12 +1561,16 @@ class NodeLifecycle:
         elif not state_matches:
             status = "NEEDS_RECONCILIATION"
             error_code = "CLOUD_STATE_UNEXPECTED"
-        elif observation["publication_failures"]:
+        elif publication["failed"]:
             status = "NEEDS_RECONCILIATION"
             error_code = "SUBSCRIPTION_ADDRESS_REFRESH_PARTIAL"
         else:
             status = "SUCCEEDED"
             error_code = ""
+
+        if kind == "reboot" and health_error_code and status != "FAILED":
+            status = "NEEDS_RECONCILIATION"
+            error_code = health_error_code
 
         self._finish(
             claim,
@@ -1386,8 +1597,18 @@ class NodeLifecycle:
                 "provider_operation_id": provider_operation_id,
                 "observed_state": str(instance.state),
                 "addresses_changed": observation["addresses_changed"],
-                "subscriptions_published": observation["published"],
-                "subscription_publication_failures": observation["publication_failures"],
+                "subscriptions_published": publication["published"],
+                "subscription_publication_failures": publication["failed"],
+                **(
+                    {
+                        "health_probe_status": health_probe_status,
+                        "health_state": health_state,
+                        "health_probe": health_probe_evidence,
+                        "node_reconciliation": node_reconciliation,
+                    }
+                    if kind == "reboot"
+                    else {}
+                ),
             },
             error_code=error_code,
             error_details=write_error.details if write_error else {},

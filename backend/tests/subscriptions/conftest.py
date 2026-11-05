@@ -22,7 +22,7 @@ def ready_node(prepared_node):
 
 @pytest.fixture
 def publishable_subscription(ready_node):
-    from apps.nodes.models import NodeProtocol
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
     from apps.subscriptions.credentials import CredentialService
     from apps.subscriptions.models import AccessProfile
     from apps.subscriptions.tokens import TokenService
@@ -44,9 +44,40 @@ def publishable_subscription(ready_node):
     )[0]
     ready_node.refresh_from_db()
     ready_node.applied_generation = ready_node.desired_generation
-    ready_node.save(update_fields=["applied_generation", "updated_at"])
+    ready_node.raw_cloud_state = "running"
+    ready_node.health_state = "HEALTHY"
+    ready_node.provisioning_state = "READY"
+    ready_node.observation_error = ""
+    ready_node.save(
+        update_fields=[
+            "applied_generation",
+            "raw_cloud_state",
+            "health_state",
+            "provisioning_state",
+            "observation_error",
+            "updated_at",
+        ]
+    )
     credential.applied_generation = credential.desired_generation
     credential.save(update_fields=["applied_generation"])
+    NodeConfigRevision.objects.update_or_create(
+        node=ready_node,
+        generation=ready_node.applied_generation,
+        defaults={
+            "config_hash": "a" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": ready_node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
     return issued, profile.subscription, ready_node, credential
 
 

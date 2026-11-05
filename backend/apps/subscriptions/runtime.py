@@ -8,6 +8,7 @@ def subscription_runtime():
     checks = {}
     for name, setting in (
         ("access_transport", "XRAY_NODE_TRANSPORT_FACTORY"),
+        ("node_health_probe", "XRAY_NODE_HEALTH_PROBE"),
         ("usage_collector", "XRAY_USAGE_FETCHER"),
     ):
         path = getattr(settings, setting, "")

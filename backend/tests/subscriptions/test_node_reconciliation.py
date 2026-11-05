@@ -1,10 +1,17 @@
+from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.utils import timezone
 
 from apps.nodes.models import ManagedNode, NodeConfigRevision, NodeProtocol
 from apps.subscriptions.credentials import CredentialService
-from apps.subscriptions.models import AccessProfile, NodeCredential, SubscriptionToken
+from apps.subscriptions.models import (
+    AccessProfile,
+    NodeCredential,
+    Subscription,
+    SubscriptionToken,
+)
 from apps.subscriptions.publishing import NoPublishableEndpoints, Publisher
 from apps.subscriptions.tokens import TokenService
 
@@ -23,7 +30,13 @@ def trusted_health(node):
             "installer_version": "1.0.0",
             "bundle_hash": "test-bundle",
             "usable": True,
-            "probe_result": {"generation": node.applied_generation, "app_health_passed": True},
+            "probe_result": {
+                "generation": node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
         },
     )
 
@@ -76,12 +89,31 @@ def test_publishing_requires_current_generation_health_evidence(ready_node):
 
     with pytest.raises(NoPublishableEndpoints):
         Publisher.publish(issued.subscription_id)
+    assert Publisher.publish_for_node(ready_node.pk) == {"published": 0, "failed": 0}
+
+
+@pytest.mark.django_db
+def test_publishing_rejects_health_evidence_without_all_positive_controls(ready_node):
+    _profile, issued, _credential = assigned_profile(ready_node, "incomplete-probe")
+    NodeConfigRevision.objects.filter(node=ready_node).update(
+        probe_result={
+            "generation": ready_node.applied_generation,
+            "app_health_passed": True,
+            "accepted": True,
+            "positive_control": True,
+        }
+    )
+
+    with pytest.raises(NoPublishableEndpoints):
+        Publisher.publish(issued.subscription_id)
+    assert Publisher.publish_for_node(ready_node.pk) == {"published": 0, "failed": 0}
 
 
 @pytest.mark.django_db
 def test_node_counts_count_distinct_ready_nodes_and_report_drift(ready_node):
     from apps.subscriptions.serializers import subscription_representation
 
+    ready_node.pool.region_allocations.update(quota=1)
     _profile, issued, _credential = assigned_profile(ready_node, "counted")
     Publisher.publish(issued.subscription_id)
     subscription = TokenService.resolve(issued.raw_token)
@@ -99,6 +131,61 @@ def test_node_counts_count_distinct_ready_nodes_and_report_drift(ready_node):
         "assigned": 1,
         "ready": 0,
         "published": 1,
+        "mismatch": True,
+    }
+
+
+@pytest.mark.django_db
+def test_node_counts_do_not_report_revoked_subscription_as_published(ready_node):
+    from apps.subscriptions.serializers import subscription_representation
+
+    ready_node.pool.region_allocations.update(quota=1)
+    _profile, issued, _credential = assigned_profile(ready_node, "revoked-count")
+    Publisher.publish(issued.subscription_id)
+    TokenService.disable(issued.subscription_id)
+    subscription = Subscription.objects.get(pk=issued.subscription_id)
+
+    assert subscription_representation(subscription)["node_counts"] == {
+        "expected": 1,
+        "assigned": 1,
+        "ready": 1,
+        "published": 0,
+        "mismatch": True,
+    }
+
+
+@pytest.mark.django_db
+def test_node_counts_ignore_shared_scope_credentials(ready_node):
+    from apps.subscriptions.serializers import subscription_representation
+
+    ready_node.pool.region_allocations.update(quota=1)
+    protocol = NodeProtocol.objects.create(
+        node=ready_node,
+        protocol="vless",
+        port=18446,
+        credential_scope="shared",
+    )
+    profile = AccessProfile.objects.create(name="shared-count")
+    issued = TokenService.issue(profile.pk)
+    credential = CredentialService.rotate(
+        ready_node.pk,
+        profile_ids=[profile.pk],
+        protocol_ids=[protocol.pk],
+    )[0]
+    ready_node.refresh_from_db()
+    ready_node.applied_generation = ready_node.desired_generation
+    ready_node.save(update_fields=["applied_generation", "updated_at"])
+    credential.applied_generation = credential.desired_generation
+    credential.save(update_fields=["applied_generation"])
+    trusted_health(ready_node)
+
+    subscription = TokenService.resolve(issued.raw_token)
+
+    assert subscription_representation(subscription)["node_counts"] == {
+        "expected": 1,
+        "assigned": 0,
+        "ready": 0,
+        "published": 0,
         "mismatch": True,
     }
 
@@ -130,8 +217,48 @@ def test_reconcile_new_node_assigns_only_live_subscriptions_once(ready_node):
     assert first["scheduled"] == 1
     assert second["scheduled"] == 0
     assert NodeCredential.objects.filter(node=new_node, protocol=protocol).count() == 1
-    assert set(NodeCredential.objects.filter(node=new_node).values_list("profile_id", flat=True)) == {
-        _profile.pk
-    }
-    assert SubscriptionToken.objects.get(subscription_id=expired.subscription_id).status == "EXPIRED"
-    assert SubscriptionToken.objects.get(subscription_id=revoked.subscription_id).status == "REVOKED"
+    assert set(
+        NodeCredential.objects.filter(node=new_node).values_list("profile_id", flat=True)
+    ) == {_profile.pk}
+    assert (
+        SubscriptionToken.objects.get(subscription_id=expired.subscription_id).status
+        == "EXPIRED"
+    )
+    assert (
+        SubscriptionToken.objects.get(subscription_id=revoked.subscription_id).status
+        == "REVOKED"
+    )
+
+
+@pytest.mark.django_db
+def test_reconcile_skips_expired_profile_with_active_token(ready_node):
+    from apps.subscriptions.access import reconcile_node_for_active_subscriptions
+
+    profile = AccessProfile.objects.create(
+        name="expired-profile", expires_at=timezone.now() - timedelta(seconds=1)
+    )
+    issued = TokenService.issue(profile.pk)
+    node = ManagedNode.objects.get(pk=ready_node.pk)
+    node.desired_state = "PRESENT"
+    node.provisioning_state = "READY"
+    node.raw_cloud_state = "running"
+    node.health_state = "HEALTHY"
+    node.save(
+        update_fields=[
+            "desired_state",
+            "provisioning_state",
+            "raw_cloud_state",
+            "health_state",
+            "updated_at",
+        ]
+    )
+    NodeProtocol.objects.create(node=node, protocol="vless", port=18445)
+    trusted_health(node)
+
+    result = reconcile_node_for_active_subscriptions(node.pk)
+
+    assert result == {"scheduled": 0, "operation_ids": []}
+    assert SubscriptionToken.objects.get(
+        subscription_id=issued.subscription_id
+    ).status == "ACTIVE"
+    assert not NodeCredential.objects.filter(profile=profile, node=node).exists()

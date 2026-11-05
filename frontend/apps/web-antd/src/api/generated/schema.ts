@@ -733,6 +733,15 @@ export interface components {
             /** @enum {string} */
             readonly region?: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
         };
+        readonly NodeDailyRestartSetting: {
+            readonly enabled: boolean;
+            /** Format: date-time */
+            readonly last_scheduled_at: string | null;
+            /** @enum {string} */
+            readonly source: "DATABASE" | "DEFAULT";
+            readonly time: string;
+            readonly timezone: string;
+        };
         readonly NodePool: {
             readonly allocations: readonly {
                 readonly available: number;
@@ -760,6 +769,23 @@ export interface components {
             readonly quota: number;
             /** @enum {string} */
             readonly region: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
+        };
+        readonly NodePoolCreationTemplate: {
+            /** Format: uuid */
+            readonly cloud_account_id: string;
+            readonly image_id: string;
+            readonly plan_id: string;
+            /** @enum {string} */
+            readonly region: "ap-east-1" | "ap-northeast-1" | "ap-northeast-2" | "ap-south-1" | "ap-southeast-1" | "ap-southeast-2" | "ap-southeast-3" | "ap-southeast-5" | "ca-central-1" | "eu-central-1" | "eu-north-1" | "eu-south-2" | "eu-west-1" | "eu-west-2" | "eu-west-3" | "sa-east-1" | "us-east-1" | "us-east-2" | "us-west-2";
+        };
+        readonly NodePoolSyncSetting: {
+            readonly creation_templates: readonly components["schemas"]["NodePoolCreationTemplate"][];
+            readonly enabled: boolean;
+            readonly interval_minutes: number;
+            /** Format: date-time */
+            readonly last_scheduled_at: string | null;
+            /** @enum {string} */
+            readonly source: "DATABASE" | "DEFAULT";
         };
         readonly NodePoolWriteRequest: {
             readonly allocations?: readonly components["schemas"]["NodePoolAllocationInput"][];
@@ -911,6 +937,7 @@ export interface components {
             readonly formats?: readonly string[];
             /** Format: uuid */
             readonly id: string;
+            readonly node_counts: components["schemas"]["SubscriptionNodeCounts"];
             readonly policy?: components["schemas"]["AccessProfile"];
             /** Format: uuid */
             readonly pool_id: string;
@@ -928,6 +955,13 @@ export interface components {
             };
             /** Format: date-time */
             readonly updated_at?: string;
+        };
+        readonly SubscriptionNodeCounts: {
+            readonly assigned: number;
+            readonly expected: number;
+            readonly mismatch: boolean;
+            readonly published: number;
+            readonly ready: number;
         };
         readonly SubscriptionPlan: {
             readonly duration_days?: number | null;
@@ -979,14 +1013,33 @@ export interface components {
             readonly csrf_trusted_origins?: readonly string[];
             readonly debug?: boolean;
             readonly environment?: string;
+            readonly node_daily_restart?: components["schemas"]["NodeDailyRestartSetting"];
+            readonly node_pool_sync?: components["schemas"]["NodePoolSyncSetting"];
             readonly node_status_sync?: components["schemas"]["NodeStatusSyncSetting"];
             readonly provider_identity_network?: components["schemas"]["ProviderIdentityNetworkSetting"];
+            readonly usage_sync?: components["schemas"]["UsageSyncSetting"];
             readonly version?: string;
         };
         readonly SystemSettingsPatch: {
+            readonly node_daily_restart_enabled?: boolean;
+            readonly node_daily_restart_time?: string;
+            readonly node_daily_restart_timezone?: string;
+            readonly node_pool_sync_creation_templates?: readonly components["schemas"]["NodePoolCreationTemplate"][];
+            readonly node_pool_sync_enabled?: boolean;
+            readonly node_pool_sync_interval_minutes?: number;
             readonly node_status_sync_enabled?: boolean;
             readonly node_status_sync_interval_minutes?: number;
             readonly provider_identity_network_enabled?: boolean;
+            readonly usage_sync_enabled?: boolean;
+            readonly usage_sync_interval_minutes?: number;
+        };
+        readonly UsageSyncSetting: {
+            readonly enabled: boolean;
+            readonly interval_minutes: number;
+            /** Format: date-time */
+            readonly last_scheduled_at: string | null;
+            /** @enum {string} */
+            readonly source: "DATABASE" | "DEFAULT";
         };
     };
     responses: never;

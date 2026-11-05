@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "X-ray Manager API",
     "DESCRIPTION": "Private administrator API. Secrets are write-only or delivered once.",
-    "VERSION": "0.12.2",
+    "VERSION": "0.13.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": ["config.openapi.inject_contract"],
 }
@@ -142,6 +142,7 @@ LOGGING = {
 
 # Explicit node transport configuration; raw keys never enter settings or logs.
 XRAY_NODE_TRANSPORT_FACTORY = os.getenv("XRAY_NODE_TRANSPORT_FACTORY", "")
+XRAY_NODE_HEALTH_PROBE = os.getenv("XRAY_NODE_HEALTH_PROBE", "")
 XRAY_USAGE_FETCHER = os.getenv("XRAY_USAGE_FETCHER", "")
 XRAY_ALLOW_REGIONAL_DEFAULT_KEY = env_bool("XRAY_ALLOW_REGIONAL_DEFAULT_KEY", False)
 XRAY_PUBLIC_SUBSCRIPTION_BASE_URL = os.getenv("XRAY_PUBLIC_SUBSCRIPTION_BASE_URL", "")
@@ -151,5 +152,11 @@ CELERY_BEAT_SCHEDULE = {
     },
     "node-status-refresh-scheduler": {
         "task": "apps.nodes.tasks.schedule_node_status_refreshes", "schedule": 60.0,
+    },
+    "node-pool-quota-scheduler": {
+        "task": "apps.nodes.tasks.schedule_node_pool_sync", "schedule": 60.0,
+    },
+    "node-daily-restart-scheduler": {
+        "task": "apps.nodes.tasks.schedule_daily_node_restart", "schedule": 60.0,
     },
 }

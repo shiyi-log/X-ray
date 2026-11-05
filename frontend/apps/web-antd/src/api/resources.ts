@@ -55,6 +55,13 @@ export type SubscriptionToken = components['schemas']['SubscriptionToken'];
 export type AuditEvent = components['schemas']['AuditEvent'];
 export type Overview = components['schemas']['Overview'];
 export type ProviderIdentityChecksNetworkSource = 'DATABASE' | 'ENVIRONMENT';
+export type NodeAutomationSettingSource = 'DATABASE' | 'DEFAULT';
+export interface NodePoolCreationTemplate {
+  region: string;
+  cloud_account_id: string;
+  plan_id: string;
+  image_id: string;
+}
 export type SystemInfo = components['schemas']['SystemInfo'] & {
   provider_identity_network: {
     enabled: boolean;
@@ -65,6 +72,26 @@ export type SystemInfo = components['schemas']['SystemInfo'] & {
     interval_minutes: number;
     last_scheduled_at: string | null;
     source: 'DATABASE' | 'DEFAULT';
+  };
+  node_pool_sync: {
+    enabled: boolean;
+    interval_minutes: number;
+    creation_templates: NodePoolCreationTemplate[];
+    last_scheduled_at: string | null;
+    source: NodeAutomationSettingSource;
+  };
+  node_daily_restart: {
+    enabled: boolean;
+    time: string;
+    timezone: string;
+    last_scheduled_at: string | null;
+    source: NodeAutomationSettingSource;
+  };
+  usage_sync: {
+    enabled: boolean;
+    interval_minutes: number;
+    last_scheduled_at: string | null;
+    source: NodeAutomationSettingSource;
   };
 };
 export type ActionPreview = components['schemas']['ActionPreview'];
@@ -169,6 +196,14 @@ export const resourcesApi = {
     provider_identity_network_enabled?: boolean;
     node_status_sync_enabled?: boolean;
     node_status_sync_interval_minutes?: number;
+    node_pool_sync_enabled?: boolean;
+    node_pool_sync_interval_minutes?: number;
+    node_pool_sync_creation_templates?: NodePoolCreationTemplate[];
+    node_daily_restart_enabled?: boolean;
+    node_daily_restart_time?: string;
+    node_daily_restart_timezone?: string;
+    usage_sync_enabled?: boolean;
+    usage_sync_interval_minutes?: number;
   }) =>
     apiRequest<SystemInfo>('/api/v1/system', json('PATCH', payload)),
   cloudAccounts: () => apiRequest<Page<CloudAccount>>('/api/v1/cloud-accounts/'),

@@ -49,9 +49,7 @@ def test_one_shot_collection_targets_only_the_requested_ready_node(ready_node, m
         ("external_id", ""),
     ],
 )
-def test_one_shot_collection_rejects_nodes_outside_ready_open_scope(
-    ready_node, field, value
-):
+def test_one_shot_collection_rejects_nodes_outside_ready_open_scope(ready_node, field, value):
     from apps.subscriptions.metering import collect_node_once
     from common.errors import DomainError
 
@@ -96,3 +94,81 @@ def test_one_shot_collection_command_does_not_emit_fetcher_exception(ready_node,
         call_command("refresh_node_usage", "--node-id", str(ready_node.pk), stdout=io.StringIO())
 
     assert "credential-fixture" not in str(error.value)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "enabled,last_scheduled_at,expected_collections",
+    [
+        (False, None, 0),
+        (True, "2026-11-06T00:55:00+00:00", 0),
+        (True, "2026-11-06T00:40:00+00:00", 1),
+        (True, None, 1),
+    ],
+)
+def test_periodic_usage_collection_obeys_enabled_interval_and_due_time(
+    ready_node, monkeypatch, enabled, last_scheduled_at, expected_collections
+):
+    from datetime import UTC, datetime
+
+    from django.utils.dateparse import parse_datetime
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    NodeAutomationSetting.objects.create(
+        usage_sync_enabled=enabled,
+        usage_sync_interval_minutes=10,
+        usage_sync_last_scheduled_at=(
+            parse_datetime(last_scheduled_at) if last_scheduled_at else None
+        ),
+    )
+    monkeypatch.setattr(
+        tasks.timezone,
+        "now",
+        lambda: datetime(2026, 11, 6, 1, 0, tzinfo=UTC),
+    )
+    collected = []
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node",
+        lambda node: collected.append(node.pk),
+    )
+
+    result = tasks.refresh_usage_and_limits()
+
+    assert len(collected) == expected_collections
+    assert result["collected"] == expected_collections
+    setting = NodeAutomationSetting.objects.get(singleton_key=1)
+    if enabled and expected_collections:
+        assert setting.usage_sync_last_scheduled_at == datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+
+
+@pytest.mark.django_db
+def test_periodic_usage_collection_keeps_legacy_enabled_default(ready_node, monkeypatch):
+    from datetime import UTC, datetime
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    monkeypatch.setattr(
+        tasks.timezone,
+        "now",
+        lambda: datetime(2026, 11, 6, 1, 0, tzinfo=UTC),
+    )
+    collected = []
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node",
+        lambda node: collected.append(node.pk),
+    )
+
+    result = tasks.refresh_usage_and_limits()
+
+    assert collected == [ready_node.pk]
+    assert result["collected"] == 1
+    assert NodeAutomationSetting.objects.get(singleton_key=1).usage_sync_enabled is True

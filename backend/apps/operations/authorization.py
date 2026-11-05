@@ -79,3 +79,61 @@ class DatabaseWriteAuthorizer:
             or operation.cloud_credential_version.version != account.credential_version
         ):
             raise DomainError("CLOUD_WRITE_NOT_AUTHORIZED", "云凭据版本不匹配", status_code=403)
+
+        automation = operation.params.get("automation")
+        if automation is not None and action in {"delete", "reboot"}:
+            if operation.target_type != "node":
+                raise DomainError(
+                    "AUTOMATION_TARGET_INVALID", "自动化目标无效", status_code=409
+                )
+            from apps.nodes.models import ManagedNode
+
+            node = ManagedNode.objects.filter(pk=operation.target_id).first()
+            if node is None:
+                raise DomainError(
+                    "AUTOMATION_TARGET_INVALID", "自动化目标无效", status_code=409
+                )
+            policy_version = (
+                automation.get("policy_version") if isinstance(automation, dict) else None
+            )
+            if (
+                not isinstance(policy_version, int)
+                or isinstance(policy_version, bool)
+                or policy_version < 1
+            ):
+                raise DomainError(
+                    "AUTOMATION_POLICY_INVALID", "自动化策略版本无效", status_code=409
+                )
+            try:
+                if action == "delete" and operation.kind == "node.delete":
+                    from apps.nodes.automation import validate_automated_delete
+
+                    if not isinstance(automation, dict) or automation.get("kind") != "pool_sync":
+                        raise DomainError(
+                            "AUTOMATION_POLICY_INVALID", "自动化策略无效", status_code=409
+                        )
+                    validate_automated_delete(operation, node, policy_version)
+                elif action == "reboot" and operation.kind == "node.reboot":
+                    from apps.nodes.automation import validate_automated_restart
+
+                    if (
+                        not isinstance(automation, dict)
+                        or automation.get("kind") != "daily_restart"
+                    ):
+                        raise DomainError(
+                            "AUTOMATION_POLICY_INVALID", "自动化策略无效", status_code=409
+                        )
+                    validate_automated_restart(operation, node, policy_version)
+                else:
+                    raise DomainError(
+                        "AUTOMATION_ACTION_INVALID", "自动化操作类型无效", status_code=409
+                    )
+            except DomainError:
+                raise
+            except Exception as exc:
+                code = (
+                    "AUTOMATED_DELETE_VALIDATION_FAILED"
+                    if action == "delete"
+                    else "AUTOMATED_RESTART_VALIDATION_FAILED"
+                )
+                raise DomainError(code, "自动化策略核验失败", status_code=409) from exc

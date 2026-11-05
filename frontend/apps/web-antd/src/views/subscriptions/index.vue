@@ -4,7 +4,7 @@ import { KeyRound, Plus, Settings, RefreshCw, RotateCw, Send, ShieldX } from 'lu
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
-import { Alert, Button, Card, Input, Space, Table } from 'ant-design-vue';
+import { Alert, Button, Card, Input, Space, Table, Tag } from 'ant-design-vue';
 
 import {
   resourcesApi,
@@ -94,6 +94,7 @@ const columns = [
   { title: 'Token', key: 'profile_name', dataIndex: 'profile_name' },
   { title: '状态', key: 'status', dataIndex: 'status' },
   { title: '流量', key: 'usage' },
+  { title: '节点核对', key: 'node_counts' },
   { title: '修订', key: 'current_revision', dataIndex: 'current_revision' },
   { title: '格式', key: 'formats', dataIndex: 'formats' },
   { title: '可用', key: 'revision_usable', dataIndex: 'revision_usable' },
@@ -321,6 +322,15 @@ function closeDanger() {
             </template>
             <StatusBadge v-else-if="column.key === 'status'" :value="record.current_token_status || record.status" />
             <template v-else-if="column.key === 'usage'">{{ usage(record as Subscription) }}</template>
+            <Space v-else-if="column.key === 'node_counts' && record.node_counts" size="small" wrap>
+              <span>已分配 {{ record.node_counts.assigned }} / {{ record.node_counts.expected }}</span>
+              <span>健康 {{ record.node_counts.ready }}</span>
+              <span>已发布 {{ record.node_counts.published }}</span>
+              <Tag :color="record.node_counts.mismatch ? 'error' : 'success'">
+                {{ record.node_counts.mismatch ? '节点不匹配' : '节点一致' }}
+              </Tag>
+            </Space>
+            <span v-else-if="column.key === 'node_counts'" class="text-muted-foreground">未核对</span>
             <template v-else-if="column.key === 'current_revision'">{{ record.current_revision || '-' }}</template>
             <template v-else-if="column.key === 'formats'">{{ record.formats?.join(' / ') || '-' }}</template>
             <StatusBadge v-else-if="column.key === 'revision_usable'" :value="record.revision_usable" />

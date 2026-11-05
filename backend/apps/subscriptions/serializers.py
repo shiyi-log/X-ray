@@ -45,10 +45,74 @@ def profile_representation(profile) -> dict:
 
 
 def subscription_representation(subscription) -> dict:
+    from apps.nodes.models import NodePool, NodePoolRegionAllocation
+
+    from .publishing import credential_publish_ready
+
     revision = subscription.current_revision
-    current_token_status = subscription.token_history.filter(
+    current_token = subscription.token_history.filter(
         token_epoch=subscription.token_epoch
-    ).values_list("status", flat=True).first()
+    ).first()
+    current_token_status = current_token.status if current_token else None
+    current_token_is_active = bool(
+        current_token
+        and current_token.status == "ACTIVE"
+        and current_token.token_digest == subscription.token_digest
+    )
+    credentials = list(
+        subscription.profile.node_credentials.filter(
+            revoked_at__isnull=True,
+            credential_scope="profile",
+            protocol__enabled=True,
+            protocol__credential_scope="profile",
+        )
+        .select_related("node", "protocol")
+        .order_by("node_id", "protocol_id", "version")
+    )
+    latest = {}
+    for credential in credentials:
+        latest[(credential.node_id, credential.protocol_id)] = credential
+    assigned_node_ids = {credential.node_id for credential in latest.values()}
+    ready_node_ids = {
+        credential.node_id
+        for credential in latest.values()
+        if credential_publish_ready(credential)
+    }
+    pool = NodePool.objects.filter(singleton_key=1).first()
+    if pool is None:
+        expected_nodes = 0
+    else:
+        allocations = NodePoolRegionAllocation.objects.filter(pool=pool)
+        expected_nodes = (
+            sum(allocations.values_list("quota", flat=True))
+            if allocations.exists()
+            else pool.quota
+        )
+    published_node_ids = set()
+    if (
+        revision
+        and revision.usable
+        and subscription.status == "ACTIVE"
+        and subscription.profile.status == "ACTIVE"
+        and not subscription.profile.publishing_frozen
+        and current_token_is_active
+    ):
+        published_node_ids = {
+            str(value.get("node_id"))
+            for value in (revision.node_versions or {}).values()
+            if isinstance(value, dict) and value.get("node_id")
+        }
+    node_counts = {
+        "expected": expected_nodes,
+        "assigned": len(assigned_node_ids),
+        "ready": len(ready_node_ids),
+        "published": len(published_node_ids),
+    }
+    node_counts["mismatch"] = (
+        node_counts["assigned"] != expected_nodes
+        or node_counts["ready"] != expected_nodes
+        or node_counts["published"] != expected_nodes
+    )
     return {
         "id": str(subscription.pk),
         "pool_id": str(subscription.pool_id),
@@ -63,6 +127,7 @@ def subscription_representation(subscription) -> dict:
         "current_revision": revision.number if revision else None,
         "public_version": revision.public_version if revision else None,
         "revision_usable": revision.usable if revision else False,
+        "node_counts": node_counts,
         "formats": sorted(revision.payloads) if revision else [],
         "unavailable_reasons": revision.unavailable_reasons if revision else {},
         "created_at": subscription.created_at.isoformat(),

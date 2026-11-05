@@ -6,6 +6,7 @@
 
 | 版本 | 阶段 | 提交 | 标签 | 日期 | 迁移 | 本地门禁 | 外部验收 | 回退点 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.13.0 | 地址池自动对齐、每日轮转重启、状态/IP/流量同步与订阅节点对账 | `pending` | `v0.13.0` | 2026-11-06 | identity `0006_nodeautomationsetting`；单例配置表为 additive migration，生产部署前由 migrator 应用 | 后端 `395 passed, 9 skipped`；前端 `82 passed`；Ruff、Django check、迁移漂移、typecheck/lint/build 初步通过；完整 delivery-gates、E2E、OpenAPI 确定性、安装器包和静态最终门禁待完成 | 真实 AWS 创建尚未运行；自动创建不包含 SSH 安装/配置/健康确认；AWS 测试还需关闭 Lightsail 默认公共入站规则；云验收/SSH/设备/生产仍 `blocked` 或 `not-run` | `v0.12.2` 或对本次提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、撤销凭据、安全事件或云状态 |
 | 0.0.0 | 基线 | `2da51e7` | `v0.0.0-baseline` | 2026-09-17 | 初始骨架 | `not-run` | `not-run` | `v0.0.0-baseline` |
 | 0.0.1 | P0 | `2885503` | `v0.0.1` | 2026-09-17 | 无业务迁移 | runtime/skill/backend tests passed | `blocked` | `v0.0.0-baseline` |
 | 0.1.0 | P1 | `fb0a2db` | `v0.1.0` | 2026-09-17 | identity 0001-0003 | 13 backend tests passed | `blocked` | `v0.0.1` |

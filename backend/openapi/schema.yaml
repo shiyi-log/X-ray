@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: X-ray Manager API
-  version: 0.12.2
+  version: 0.13.0
   description: Private administrator API. Secrets are write-only or delivered once.
 paths:
   /api/v1/auth/session:
@@ -2331,6 +2331,7 @@ components:
       - status
       - current_token_status
       - token_epoch
+      - node_counts
       properties:
         id:
           type: string
@@ -2366,6 +2367,8 @@ components:
           nullable: true
         revision_usable:
           type: boolean
+        node_counts:
+          $ref: '#/components/schemas/SubscriptionNodeCounts'
         formats:
           type: array
           items:
@@ -2486,6 +2489,12 @@ components:
           $ref: '#/components/schemas/ProviderIdentityNetworkSetting'
         node_status_sync:
           $ref: '#/components/schemas/NodeStatusSyncSetting'
+        node_pool_sync:
+          $ref: '#/components/schemas/NodePoolSyncSetting'
+        node_daily_restart:
+          $ref: '#/components/schemas/NodeDailyRestartSetting'
+        usage_sync:
+          $ref: '#/components/schemas/UsageSyncSetting'
     ProviderIdentityNetworkSetting:
       type: object
       required:
@@ -2522,6 +2531,149 @@ components:
           enum:
           - DATABASE
           - DEFAULT
+    NodePoolCreationTemplate:
+      type: object
+      required:
+      - region
+      - cloud_account_id
+      - plan_id
+      - image_id
+      additionalProperties: false
+      properties:
+        region:
+          type: string
+          enum:
+          - ap-east-1
+          - ap-northeast-1
+          - ap-northeast-2
+          - ap-south-1
+          - ap-southeast-1
+          - ap-southeast-2
+          - ap-southeast-3
+          - ap-southeast-5
+          - ca-central-1
+          - eu-central-1
+          - eu-north-1
+          - eu-south-2
+          - eu-west-1
+          - eu-west-2
+          - eu-west-3
+          - sa-east-1
+          - us-east-1
+          - us-east-2
+          - us-west-2
+        cloud_account_id:
+          type: string
+          format: uuid
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 160
+        image_id:
+          type: string
+          minLength: 1
+          maxLength: 160
+    NodePoolSyncSetting:
+      type: object
+      required:
+      - enabled
+      - interval_minutes
+      - creation_templates
+      - last_scheduled_at
+      - source
+      properties:
+        enabled:
+          type: boolean
+        interval_minutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+        creation_templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodePoolCreationTemplate'
+        last_scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        source:
+          type: string
+          enum:
+          - DATABASE
+          - DEFAULT
+    NodeDailyRestartSetting:
+      type: object
+      required:
+      - enabled
+      - time
+      - timezone
+      - last_scheduled_at
+      - source
+      properties:
+        enabled:
+          type: boolean
+        time:
+          type: string
+          pattern: ^(?:[01]\d|2[0-3]):[0-5]\d$
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+        last_scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        source:
+          type: string
+          enum:
+          - DATABASE
+          - DEFAULT
+    UsageSyncSetting:
+      type: object
+      required:
+      - enabled
+      - interval_minutes
+      - last_scheduled_at
+      - source
+      properties:
+        enabled:
+          type: boolean
+        interval_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        last_scheduled_at:
+          type: string
+          format: date-time
+          nullable: true
+        source:
+          type: string
+          enum:
+          - DATABASE
+          - DEFAULT
+    SubscriptionNodeCounts:
+      type: object
+      required:
+      - expected
+      - assigned
+      - ready
+      - published
+      - mismatch
+      properties:
+        expected:
+          type: integer
+          minimum: 0
+        assigned:
+          type: integer
+          minimum: 0
+        ready:
+          type: integer
+          minimum: 0
+        published:
+          type: integer
+          minimum: 0
+        mismatch:
+          type: boolean
     SystemSettingsPatch:
       type: object
       additionalProperties: false
@@ -2533,6 +2685,31 @@ components:
         node_status_sync_interval_minutes:
           type: integer
           minimum: 5
+          maximum: 1440
+        node_pool_sync_enabled:
+          type: boolean
+        node_pool_sync_interval_minutes:
+          type: integer
+          minimum: 5
+          maximum: 1440
+        node_pool_sync_creation_templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/NodePoolCreationTemplate'
+        node_daily_restart_enabled:
+          type: boolean
+        node_daily_restart_time:
+          type: string
+          pattern: ^(?:[01]\d|2[0-3]):[0-5]\d$
+        node_daily_restart_timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+        usage_sync_enabled:
+          type: boolean
+        usage_sync_interval_minutes:
+          type: integer
+          minimum: 1
           maximum: 1440
     ActionPreview:
       type: object

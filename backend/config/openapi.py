@@ -380,6 +380,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "status",
                     "current_token_status",
                     "token_epoch",
+                    "node_counts",
                 ],
                 "properties": {
                     "id": {"type": "string", "format": "uuid"},
@@ -398,6 +399,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "current_revision": {"type": "integer", "nullable": True},
                     "public_version": {"type": "string", "nullable": True},
                     "revision_usable": {"type": "boolean"},
+                    "node_counts": _ref("SubscriptionNodeCounts"),
                     "formats": {"type": "array", "items": {"type": "string"}},
                     "unavailable_reasons": {"type": "object", "additionalProperties": True},
                     "created_at": {"type": "string", "format": "date-time"},
@@ -459,6 +461,9 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "csrf_trusted_origins": {"type": "array", "items": {"type": "string"}},
                     "provider_identity_network": _ref("ProviderIdentityNetworkSetting"),
                     "node_status_sync": _ref("NodeStatusSyncSetting"),
+                    "node_pool_sync": _ref("NodePoolSyncSetting"),
+                    "node_daily_restart": _ref("NodeDailyRestartSetting"),
+                    "usage_sync": _ref("UsageSyncSetting"),
                 },
             },
             "ProviderIdentityNetworkSetting": {
@@ -488,6 +493,81 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "source": {"type": "string", "enum": ["DATABASE", "DEFAULT"]},
                 },
             },
+            "NodePoolCreationTemplate": {
+                "type": "object",
+                "required": ["region", "cloud_account_id", "plan_id", "image_id"],
+                "additionalProperties": False,
+                "properties": {
+                    "region": {"type": "string", "enum": list(SUPPORTED_REGIONS)},
+                    "cloud_account_id": {"type": "string", "format": "uuid"},
+                    "plan_id": {"type": "string", "minLength": 1, "maxLength": 160},
+                    "image_id": {"type": "string", "minLength": 1, "maxLength": 160},
+                },
+            },
+            "NodePoolSyncSetting": {
+                "type": "object",
+                "required": [
+                    "enabled",
+                    "interval_minutes",
+                    "creation_templates",
+                    "last_scheduled_at",
+                    "source",
+                ],
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "interval_minutes": {"type": "integer", "minimum": 5, "maximum": 1440},
+                    "creation_templates": {
+                        "type": "array",
+                        "items": _ref("NodePoolCreationTemplate"),
+                    },
+                    "last_scheduled_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": True,
+                    },
+                    "source": {"type": "string", "enum": ["DATABASE", "DEFAULT"]},
+                },
+            },
+            "NodeDailyRestartSetting": {
+                "type": "object",
+                "required": ["enabled", "time", "timezone", "last_scheduled_at", "source"],
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "time": {"type": "string", "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"},
+                    "timezone": {"type": "string", "minLength": 1, "maxLength": 64},
+                    "last_scheduled_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": True,
+                    },
+                    "source": {"type": "string", "enum": ["DATABASE", "DEFAULT"]},
+                },
+            },
+            "UsageSyncSetting": {
+                "type": "object",
+                "required": ["enabled", "interval_minutes", "last_scheduled_at", "source"],
+                "properties": {
+                    "enabled": {"type": "boolean"},
+                    "interval_minutes": {"type": "integer", "minimum": 1, "maximum": 1440},
+                    "last_scheduled_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": True,
+                    },
+                    "source": {"type": "string", "enum": ["DATABASE", "DEFAULT"]},
+                },
+            },
+            "SubscriptionNodeCounts": {
+                "type": "object",
+                "required": ["expected", "assigned", "ready", "published", "mismatch"],
+                "properties": {
+                    "expected": {"type": "integer", "minimum": 0},
+                    "assigned": {"type": "integer", "minimum": 0},
+                    "ready": {"type": "integer", "minimum": 0},
+                    "published": {"type": "integer", "minimum": 0},
+                    "mismatch": {"type": "boolean"},
+                },
+            },
             "SystemSettingsPatch": {
                 "type": "object",
                 "additionalProperties": False,
@@ -496,6 +576,28 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "node_status_sync_enabled": {"type": "boolean"},
                     "node_status_sync_interval_minutes": {
                         "type": "integer", "minimum": 5, "maximum": 1440
+                    },
+                    "node_pool_sync_enabled": {"type": "boolean"},
+                    "node_pool_sync_interval_minutes": {
+                        "type": "integer", "minimum": 5, "maximum": 1440
+                    },
+                    "node_pool_sync_creation_templates": {
+                        "type": "array",
+                        "items": _ref("NodePoolCreationTemplate"),
+                    },
+                    "node_daily_restart_enabled": {"type": "boolean"},
+                    "node_daily_restart_time": {
+                        "type": "string",
+                        "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+                    },
+                    "node_daily_restart_timezone": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                    },
+                    "usage_sync_enabled": {"type": "boolean"},
+                    "usage_sync_interval_minutes": {
+                        "type": "integer", "minimum": 1, "maximum": 1440
                     },
                 },
             },

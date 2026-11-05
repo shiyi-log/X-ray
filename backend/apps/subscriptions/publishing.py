@@ -18,10 +18,87 @@ from .models import (
     PublicationBatch,
     Subscription,
     SubscriptionRevision,
+    SubscriptionToken,
 )
 from .policy import assert_entitled
 from .renderers import NoCompatibleEndpoints, render_subscription
 from .security_barrier import SecurityBarrier
+
+
+def _usable_addresses(node) -> list[tuple[int, str]]:
+    """Return deduplicated addresses whose declared family matches the IP value."""
+    addresses = node.addresses if isinstance(node.addresses, list) else []
+    usable = []
+    seen_hosts = set()
+    for item in addresses:
+        if not isinstance(item, dict) or not item.get("value"):
+            continue
+        host = str(item["value"])
+        try:
+            address = ipaddress.ip_address(host)
+            family = int(item.get("family") or address.version)
+        except (TypeError, ValueError):
+            continue
+        if family != address.version or family not in {4, 6} or host in seen_hosts:
+            continue
+        seen_hosts.add(host)
+        usable.append((family, host))
+    return usable
+
+
+def node_publish_ready(node) -> bool:
+    """Return whether a node has current, independently verified publish evidence."""
+    if (
+        node.raw_cloud_state.casefold() != "running"
+        or node.desired_state != "PRESENT"
+        or node.provisioning_state != "READY"
+        or node.health_state != "HEALTHY"
+        or node.security_state != "OPEN"
+        or node.observation_error
+        or node.desired_generation != node.applied_generation
+        or not _usable_addresses(node)
+    ):
+        return False
+    from apps.nodes.models import NodeConfigRevision
+
+    revision = (
+        NodeConfigRevision.objects.filter(
+            node=node,
+            generation=node.applied_generation,
+            usable=True,
+        )
+        .order_by("-created_at")
+        .first()
+    )
+    if revision is None:
+        return False
+    probe = revision.probe_result if isinstance(revision.probe_result, dict) else {}
+    return (
+        probe.get("generation") == node.applied_generation
+        and probe.get("app_health_passed") is True
+        and probe.get("accepted") is True
+        and probe.get("positive_control") is True
+        and probe.get("fresh_connection") is True
+    )
+
+
+def credential_publish_ready(credential) -> bool:
+    node = credential.node
+    protocol = credential.protocol
+    return (
+        node_publish_ready(node)
+        and node.security_state == "OPEN"
+        and node.desired_generation == node.applied_generation
+        and credential.desired_generation == credential.applied_generation
+        and credential.applied_generation == node.applied_generation
+        and credential.revoked_at is None
+        and protocol.enabled
+        and protocol.credential_scope == "profile"
+        and (
+            protocol.protocol != "trojan"
+            or (protocol.tls_enabled and bool(protocol.server_name))
+        )
+    )
 
 FORMATS = ("shadowrocket", "clash", "mihomo", "v2ray")
 
@@ -61,37 +138,9 @@ class Publisher:
             protocol = credential.protocol
             if node.pk in excluded_node_ids:
                 continue
-            if (
-                node.provisioning_state != "READY"
-                or node.security_state != "OPEN"
-                or node.desired_generation != node.applied_generation
-                or credential.desired_generation != credential.applied_generation
-                or credential.applied_generation != node.applied_generation
-                or not protocol.enabled
-            ):
+            if not credential_publish_ready(credential):
                 continue
-            if protocol.protocol == "trojan" and (
-                not protocol.tls_enabled or not protocol.server_name
-            ):
-                continue
-            addresses = node.addresses if isinstance(node.addresses, list) else []
-            usable_addresses = []
-            seen_hosts = set()
-            for item in addresses:
-                if not isinstance(item, dict) or not item.get("value"):
-                    continue
-                host = str(item["value"])
-                if host in seen_hosts:
-                    continue
-                try:
-                    family = int(item.get("family") or ipaddress.ip_address(host).version)
-                except (TypeError, ValueError):
-                    continue
-                if family not in {4, 6}:
-                    continue
-                seen_hosts.add(host)
-                usable_addresses.append((family, host))
-            for family, host in usable_addresses:
+            for family, host in _usable_addresses(node):
                 endpoints.append(
                     {
                         "node_id": str(node.pk),
@@ -128,6 +177,15 @@ class Publisher:
             or subscription.profile.publishing_frozen
         ):
             raise DomainError("SUBSCRIPTION_PUBLISHING_FROZEN", "订阅发布已冻结", status_code=409)
+        if not SubscriptionToken.objects.filter(
+            subscription=subscription,
+            token_epoch=subscription.token_epoch,
+            token_digest=subscription.token_digest,
+            status="ACTIVE",
+        ).exists():
+            raise DomainError(
+                "SUBSCRIPTION_TOKEN_INACTIVE", "订阅令牌不是活动状态", status_code=409
+            )
         assert_entitled(subscription.profile)
         endpoints = cls._endpoints(subscription, excluded_node_ids=excluded_node_ids or set())
         if not endpoints:
@@ -294,3 +352,41 @@ class Publisher:
             batch.completed_at = timezone.now()
             batch.save(update_fields=["status", "result", "completed_at"])
             return batch
+
+    @classmethod
+    def publish_for_node(cls, node_id: UUID) -> dict[str, int]:
+        """Publish active subscriptions assigned to a node after access sync."""
+        from apps.nodes.models import ManagedNode
+
+        with transaction.atomic():
+            node = ManagedNode.objects.select_for_update().get(pk=node_id)
+            if not node_publish_ready(node):
+                return {"published": 0, "failed": 0}
+            subscriptions = list(
+                Subscription.objects.select_for_update()
+                .filter(
+                    status="ACTIVE",
+                    profile__status="ACTIVE",
+                    profile__publishing_frozen=False,
+                    profile__node_credentials__node_id=node_id,
+                    profile__node_credentials__revoked_at__isnull=True,
+                )
+                .distinct()
+                .order_by("pk")
+            )
+            profiles = {
+                profile.pk: profile
+                for profile in AccessProfile.objects.select_for_update().filter(
+                    pk__in=[subscription.profile_id for subscription in subscriptions]
+                )
+            }
+            published = 0
+            failed = 0
+            for subscription in subscriptions:
+                subscription.profile = profiles[subscription.profile_id]
+                try:
+                    cls._publish_locked(subscription)
+                    published += 1
+                except Exception:
+                    failed += 1
+            return {"published": published, "failed": failed}
