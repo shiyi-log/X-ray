@@ -4883,3 +4883,25 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `业务时间和每日重启语义未改变；本次仅使用本机 Asia/Shanghai aware 时间记录验证。`
 - `reuse`: `最终 gate 命令和 `/tmp` 证据可复用于推送前后回读；Fake/Stub/容器证据不代表真实云或生产。`
 - `rollback_ref`: `推送前可用后续 git revert 回退本次资料追加；代码回退使用 b76d62f 的 git revert 或 v0.12.2，不恢复数据库、Token、凭据或云状态。`
+
+### 2026-11-06T16:36:37+08:00 — xray-node-automation-20261106-01 remote publication readback
+
+- `event_id`: `xray-node-automation-20261106-01/013`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T16:36:37+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate / runtime`
+- `path_scope`: `GitHub repository shiyi-log/X-ray; main; v0.13.0; Actions runs 42187129135 and 42187198168`
+- `operation`: `推送后回读远端 main、注释标签、Actions 和 Release API，确认发布结果，不用历史 Release 替代当前证据。`
+- `reason`: `用户要求测试同步发布新版本；项目契约要求当前 SHA 的 CI/Release 必须单独回读。`
+- `authorization`: `用户已明确授权提交、推送和版本发布准备；本次为只读远端回读，不新增外部写入。`
+- `implementation_scope`: `读取 main commit、tag ref/annotated tag、两次 push-triggered workflow run、job steps 和 release-by-tag。`
+- `exclusions`: `不重跑或批准失败 workflow，不修改 GitHub Release，不强推或重写 v0.13.0 标签，不操作云、SSH、公网或生产。`
+- `command_or_tool`: `mcp__codex_apps__github_fetch on commit/ref/tag/release/workflow URLs; github_fetch_workflow_run_jobs; github_fetch_workflow_job_steps。`
+- `result`: `远端 main=2544e21e29b79927d26ab940bfdd6e6f6ea0d197；v0.13.0 annotated tag peeled 到同一 SHA；delivery-gates run 42187129135 和 release run 42187198168 均 completed/failure，job steps=0；release-by-tag 返回 404，无远端 Release 和资产。`
+- `exit_code`: `所有 API 读取完成；Release 404 按预期记录为 not-created/blocked，不作为命令错误。`
+- `status`: `blocked（远端 workflow/Release）；本地 19 gate、417/2、82、8 证据保持 passed。`
+- `commit_or_tree`: `2544e21 已推送；本次回读资料追加待新提交。`
+- `time_logic`: `使用远端 UTC 时间戳；未改变业务调度或时间规则。`
+- `reuse`: `后续发布可复用 run IDs、tag peeled SHA 和 release-by-tag 检查；不得用历史 v0.11.0/v0.12.x Release 代替。`
+- `rollback_ref`: `资料追加可由后续 git revert 回退；不删除/重写标签，不回退数据库、Token、凭据或云状态。`

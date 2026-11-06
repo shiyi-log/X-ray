@@ -9,7 +9,7 @@
 - [x] OpenAPI 确定性、固定 Xray、四种订阅格式、安装器/交付测试、类型检查、Lint、构建、边界、秘密、skill 和验收矩阵门禁均记录为 exit 0；两个 Linux/systemd 专用集成测试因环境要求跳过。
 - [x] E2E 已在 run-id 隔离的 disposable PostgreSQL/Redis 栈复跑：数据库护栏 6 passed，package-level Playwright wrapper 8 passed，teardown 清理本轮容器；历史 55433 `xray_test` 清库事故仍保留在验收矩阵和台账中，未覆盖或恢复旧数据。
 - [x] 每日重启按配置的 IANA 时区轮转，每个本地日最多排队一台；调度时即记账，因此云重启或健康探针失败后当天不会自动重试，失败操作须人工重试或等待下一本地日。
-- [ ] GitHub 当前提交的 delivery-gates/Release 结果及 `v0.13.0` 远端资产摘要未回读；不得用历史版本 Release 代替。
+- [ ] GitHub 当前提交的 delivery-gates（run `42187129135`）和 Release workflow（run `42187198168`）均在无步骤执行的情况下 `failure`；`v0.13.0` 标签已推送但 GitHub Release API 返回 404、无远端资产，不能将远端发布标为通过。
 - [ ] 真实 AWS 端到端验收阻塞：创建链路没有安装与健康确认；AWS 测试前还需完成新实例入站规则的安全收敛。
 - [ ] 自动补池尚未贯通 SSH 主机身份批准、安装、协议/入站规则初始化、健康确认和首次订阅发布，当前仅到 `PROVISIONED`。
 - [ ] SSH、公网探测、生产部署、生产 TLS、设备验收和生产切换未运行；生产发布保持 `blocked`。

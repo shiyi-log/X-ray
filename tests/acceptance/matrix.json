@@ -1,6 +1,6 @@
 {
   "version": "0.13.0",
-  "generated_at": "2026-11-06T16:01:26+08:00",
+  "generated_at": "2026-11-06T16:36:37+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -114,12 +114,16 @@
         },
         {
           "kind": "current_commit_actions",
-          "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
-          "status": "not-queried",
-          "reason": "Current GitHub Actions run has not been read back."
+          "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
+          "status": "blocked",
+          "runs": [
+            {"run_id": 42187129135, "workflow": "X-ray delivery gates", "conclusion": "failure", "job_steps": 0},
+            {"run_id": 42187198168, "workflow": "发布 X-ray 版本", "conclusion": "failure", "job_steps": 0}
+          ],
+          "reason": "Both push-triggered workflows completed with failure before any job step ran; no successful remote CI evidence exists."
         }
       ],
-      "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
+      "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
       "provider": null,
       "region": null,
       "cost": null,
@@ -147,12 +151,12 @@
         {
           "kind": "current_candidate_release",
           "tag": "v0.13.0",
-          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+          "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
           "status": "not-created",
-          "reason": "No v0.13.0 tag, release workflow, or remote asset checksum has been verified."
+          "reason": "The v0.13.0 tag exists and points to 2544e21, but the release workflow failed before steps ran; GitHub API returned 404 for the v0.13.0 Release and no remote assets exist."
         }
       ],
-      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+      "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
       "provider": "github",
       "region": null,
       "cost": null,
