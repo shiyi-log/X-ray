@@ -1,6 +1,6 @@
 {
   "version": "0.14.0",
-  "generated_at": "2026-11-07T06:07:49+08:00",
+  "generated_at": "2026-11-07T06:26:18+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -16,20 +16,21 @@
       "evidence": [
         {
           "kind": "final_delivery_gate_summary",
-          "summary_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r9/summary.tsv",
-          "junit_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r9/backend-and-delivery.junit.xml",
+          "summary_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r10/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r10/backend-and-delivery.junit.xml",
           "gates": 19,
           "nonzero_exit_codes": 0,
           "backend_tests": {"total": 449, "passed": 447, "skipped": 2, "failures": 0, "errors": 0},
           "frontend_unit_tests": 84,
           "browser_e2e": 8,
           "candidate_base_commit": "3294abad3c6d918c8ebe9cfb3502b33071955449",
-          "candidate_worktree": true,
-          "started_at": "2026-11-06T22:04:17Z",
-          "finished_at": "2026-11-06T22:06:40Z"
+          "candidate_commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
+          "candidate_worktree": false,
+          "started_at": "2026-11-06T22:17:19Z",
+          "finished_at": "2026-11-06T22:20:24Z"
         }
       ],
-      "commit": "3294abad3c6d918c8ebe9cfb3502b33071955449",
+      "commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
       "provider": null,
       "region": null,
       "cost": 0,
@@ -167,6 +168,14 @@
           ],
           "candidate_status": "not-run",
           "reason": "This run covered the pushed base commit before the success-cursor implementation and current release candidate."
+        },
+        {
+          "kind": "current_candidate_pre_push",
+          "commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
+          "status": "not-run",
+          "job_started": false,
+          "steps_started": 0,
+          "reason": "The local candidate passed r10 gates; push-triggered CI has not yet been observed."
         }
       ],
       "commit": null,
@@ -204,9 +213,9 @@
         {
           "kind": "current_candidate_release",
           "tag": "v0.14.0",
-          "commit": null,
+          "commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
           "status": "not-created",
-          "reason": "The verified local candidate has not yet been committed or pushed."
+          "reason": "The local candidate commit passed r10 gates; the version tag and release have not yet been pushed."
         }
       ],
       "commit": null,

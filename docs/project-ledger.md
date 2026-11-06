@@ -5098,3 +5098,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `操作租约采用 Django aware UTC wall clock 与 [start,end) 失效边界；renewal 在数据库行锁获取、assert_current fence 成功之后取当前时间，再设置 now + lease_seconds；耗时仍以 monotonic clock 衡量。heartbeat 测试的等待和循环边界显式记录，自动重启仍按设置 IANA timezone 的当地日期幂等。`
 - `reuse`: `复用专用健康 xray-test PostgreSQL/Redis、现有 Operation claim/fence 机制、run-id 隔离 Playwright 和 pinned Xray/订阅 parser fixtures；Fake/Stub 与容器测试不代表真实 AWS/SSH/客户端设备通过。`
 - `rollback_ref`: `应用源代码回退到 v0.13.0 或使用版本提交的 git revert；0007 migration 保持 nullable additive，不反向迁移；不恢复 Token tombstone、凭据、安全事件或云状态。当前事件无数据库写入和云写入。`
+
+### 2026-11-07T06:28:22+08:00 — xray-node-automation-20261106-01 r10 clean-commit evidence correction
+
+- `event_id`: `xray-node-automation-20261106-01/022`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T06:28:22+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / write / validate / release-evidence`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; docs/project-ledger.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.0.md; tests/acceptance/matrix.json; artifacts/acceptance/0.14.0/final-gates-20261107-r10/{summary.tsv,backend-and-delivery.junit.xml}; VERSION; CHANGELOG.md; commit c882ac03a29091825d4597b39bd753c3e70f7d18`
+- `operation`: `把最终本地交付证据从工作树验证 r9 修正为提交 c882ac0 上干净工作树验证的 r10；同步验收矩阵、进度、版本索引和发布清单。`
+- `reason`: `r9 的本地门禁通过，但其资料曾绑定候选工作树；c882ac0 之后产生 r10 干净提交证据，现应以该可追溯证据替代 r9 作为最终本地验收记录。`
+- `authorization`: `用户要求完成自动化开发、测试并同步发布新版本；先行未提交修改已依用户要求提交并推送，后续功能基线为 origin/main/main@3294abad3c6d918c8ebe9cfb3502b33071955449。用户授权测试服务器预算不超过 USD 1,000；应用绑定 AWS credential version 1 解密失败，故未创建云资源且本轮成本 USD 0。`
+- `implementation_scope`: `只改 docs/progress.md、docs/version-record.md、docs/release-checklist-v0.14.0.md、tests/acceptance/matrix.json，并将既有 r10 summary/JUnit 作为可提交验收证据；代码提交 c882ac0 不变。矩阵将 local-delivery-gates 绑定 r10 和 c882ac0，candidate_worktree=false；CI/tag/release 仍按尚未推送状态记录。`
+- `exclusions`: `不修改应用逻辑、版本号或 CHANGELOG；不执行 AWS/SWAS 写入、SSH、公网探测、实例删除、订阅实机操作或生产发布；不修改历史 r6-r9 产物；不触碰其他项目、凭据、数据库和运行进程。`
+- `assumptions`: `r10 summary.tsv 与 JUnit 已由完整 check-local.sh 在干净 c882ac0 上生成，且当时无 tracked/untracked 源码差异；后续仅版本/验收文档同步不改变被测试的应用代码。`
+- `risks`: `本地专用 PostgreSQL/Redis、Fake/Stub 和浏览器门禁不能证明真实 AWS 重启后的公网 IP、运行状态、真实订阅修订或云端删除行为；远端 CI/Release 需推送后读取；两项 Linux/systemd 集成测试因宿主条件 skip。`
+- `command_or_tool`: `读取 AGENTS.md、docs/project-conventions.md、进度/版本/发布清单/验收矩阵、r10 summary/JUnit 与 c882ac0 统计；`XRAY_TEST_SERVICES_EXTERNAL=1 PATH=/tmp/xray-pnpm10-bin:$PATH XRAY_ACCEPTANCE_ARTIFACT_DIR=artifacts/acceptance/0.14.0/final-gates-20261107-r10 ./scripts/check-local.sh`（已在 c882ac0 干净提交执行）；`python3 scripts/validate-acceptance.py`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; `uv run --project backend python scripts/vendor/skill-quick-validate.py skills/xray-manager`; `git diff --check`; `jq` matrix parse/read; `date` local Asia/Shanghai clock。`
+- `result`: `r10：19/19 gate exit 0；JUnit 449 total、447 passed、2 skipped、0 failures/errors；前端单测 84 passed、Playwright 8 passed；覆盖 summary 开始/结束时间 2026-11-06T22:17:19Z 至 22:20:24Z。当前文档同步后的 acceptance validator、boundary、secret scan、skill validator 与 git diff --check 均 exit 0；secret scan no leaks found；矩阵有效。r9 及 r6-r8 保留为历史证据，r10 成为最终本地证据。`
+- `exit_code`: `r10 check-local=0（19/19）；acceptance=0；boundary=0；secrets=0；skill=0；diff-check=0；jq parse=0。`
+- `status`: `源码候选本地交付门禁 passed；真实 AWS/SSH/真实订阅/设备/生产仍 blocked 或 not-run（credential 解密失败，未写云，USD 0）；candidate GitHub CI、tag、Release 与资产推送后读回待完成。`
+- `commit_or_tree`: `源码门禁绑定 main@c882ac03a29091825d4597b39bd753c3e70f7d18，基线 origin/main@3294abad3c6d918c8ebe9cfb3502b33071955449；发布资料和 r10 报告当前为待提交差异。`
+- `time_logic`: `本次只记录执行机器 Asia/Shanghai aware 时间；自动化和测试业务时间规则未改。r10 完整门禁时间戳为 UTC Z；daily restart 和租约语义由已测试源码保持。`
+- `reuse`: `复用专用 xray-test PostgreSQL/Redis、Fake/Stub providers、固定 Xray parser fixtures、r10 summary/JUnit；这些仅证明本地交付，不代表真实云或生产通过。`
+- `rollback_ref`: `发布前，资料和 evidence commit 可用后续 git revert 撤销；业务代码退回 v0.13.0 或对 c882ac0 执行 git revert；0007 保持 nullable additive，不反向迁移或恢复 Token tombstone、凭据、安全事件或云状态。`

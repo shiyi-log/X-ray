@@ -8,7 +8,7 @@
 - [x] 节点配额、每日轮转、状态/IP/流量对账、节点数核对、订阅创建/撤回和独立生命周期测试已覆盖；新增多格式备用订阅缩容回归通过。
 - [x] `git diff --check`、边界、秘密、skill、OpenAPI、迁移漂移和验收矩阵通过。
 
-最终完整门禁证据位于 `artifacts/acceptance/0.14.0/final-gates-20261107-r9/`；19/19 gates exit 0，JUnit 449 total、447 passed、2 skipped，前端单测 84 passed、Playwright 8 passed。每日重启成功游标由 identity `0007_dailyrestartsuccesscursor` nullable additive migration 保存；只有自动重启 operation 最终 SUCCEEDED 才前移，失败后下一计划日继续同一轮转位置，结果待对账时保持阻塞且不自动重放。每个地区每轮最多排队一台最早节点删除，超额节点按后续同步间隔逐步收敛。Operation 租约续期从取得行锁并确认 fence 仍有效后开始计时。
+最终完整门禁证据位于 `artifacts/acceptance/0.14.0/final-gates-20261107-r10/`；r10 在源码候选 `c882ac03a29091825d4597b39bd753c3e70f7d18` 的干净工作树上运行，19/19 gates exit 0，JUnit 449 total、447 passed、2 skipped，前端单测 84 passed、Playwright 8 passed。每日重启成功游标由 identity `0007_dailyrestartsuccesscursor` nullable additive migration 保存；只有自动重启 operation 最终 SUCCEEDED 才前移，失败后下一计划日继续同一轮转位置，结果待对账时保持阻塞且不自动重放。每个地区每轮最多排队一台 `(created_at, pk)` 最早节点删除，超额节点按后续同步间隔逐步收敛。Operation 租约续期从取得行锁并确认 fence 仍有效后开始计时。两个跳过项要求一次性 Linux 与 systemd 主机。
 
 ## 发布读回
 
