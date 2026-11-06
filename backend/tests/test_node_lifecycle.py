@@ -405,6 +405,124 @@ def test_start_and_reboot_persist_exact_readback_and_changed_addresses(
 
 
 @pytest.mark.django_db
+def test_reboot_readback_republishes_active_subscription_with_new_dynamic_ip(
+    prepared_node, admin
+):
+    from base64 import b64decode
+
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
+    from apps.subscriptions.credentials import CredentialService
+    from apps.subscriptions.models import AccessProfile
+    from apps.subscriptions.publishing import Publisher, decrypt_payload
+    from apps.subscriptions.tokens import TokenService
+    from providers.base import Address
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.raw_cloud_state = "running"
+    node.desired_generation = node.applied_generation = 1
+    node.health_state = "HEALTHY"
+    node.save(
+        update_fields=[
+            "raw_cloud_state",
+            "desired_generation",
+            "applied_generation",
+            "health_state",
+            "updated_at",
+        ]
+    )
+    add_usable_config_revision(node)
+
+    protocol = NodeProtocol.objects.create(
+        node=node,
+        protocol="vless",
+        port=18443,
+        credential_scope="profile",
+    )
+    profile = AccessProfile.objects.create(name="reboot-ip-refresh")
+    issued = TokenService.issue(profile.pk)
+    credential = CredentialService.rotate(
+        node.pk,
+        profile_ids=[profile.pk],
+        protocol_ids=[protocol.pk],
+    )[0]
+    node.refresh_from_db()
+    node.applied_generation = node.desired_generation
+    node.health_state = "HEALTHY"
+    node.save(
+        update_fields=["applied_generation", "health_state", "updated_at"]
+    )
+    credential.applied_generation = node.applied_generation
+    credential.save(update_fields=["applied_generation"])
+    NodeConfigRevision.objects.update_or_create(
+        node=node,
+        generation=node.applied_generation,
+        defaults={
+            "config_hash": "a" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
+    old_revision = Publisher.publish(issued.subscription_id)
+    operation = make_node_action(admin, node, "reboot")
+    lifecycle, holder = make_lifecycle(node)
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+    )
+    provider.addresses_after_lifecycle_write = (
+        Address("198.51.100.93", 4, "dynamic", node.external_id),
+    )
+
+    lifecycle.dispatch("reboot", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    subscription = profile.subscription
+    subscription.refresh_from_db()
+    old_revision.refresh_from_db()
+    new_revision = subscription.current_revision
+    assert holder["provider"].action_calls == ["reboot"]
+    assert node.raw_cloud_state == "running"
+    assert node.addresses == [
+        {
+            "value": "198.51.100.93",
+            "family": 4,
+            "kind": "dynamic",
+            "resource_id": node.external_id,
+        }
+    ]
+    assert node.health_state == "HEALTHY"
+    assert operation.status == "SUCCEEDED"
+    assert operation.result["subscriptions_published"] == 1
+    assert new_revision.pk != old_revision.pk
+    assert old_revision.usable is False
+    assert new_revision.usable is True
+    assert {value["host"] for value in new_revision.node_versions.values()} == {
+        "198.51.100.93"
+    }
+    payload = b64decode(decrypt_payload(new_revision, "shadowrocket")).decode()
+    assert "198.51.100.93" in payload
+    assert "192.0.2.10" not in payload
+    assert TokenService.resolve(issued.raw_token).pk == subscription.pk
+
+
+@pytest.mark.django_db
 def test_reboot_marks_node_healthy_only_after_positive_fresh_health_probe(
     prepared_node, admin, monkeypatch
 ):

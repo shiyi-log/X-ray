@@ -104,14 +104,16 @@ async function updateAutomation(
   patch: Parameters<typeof resourcesApi.updateSystem>[0],
   saving: typeof savingPoolSync,
   errorMessage: string,
-) {
-  if (saving.value || !data.value) return;
+): Promise<boolean> {
+  if (saving.value || !data.value) return false;
   saving.value = true;
   updateError.value = '';
   try {
     data.value = await resourcesApi.updateSystem(patch);
+    return true;
   } catch (caught) {
     updateError.value = caught instanceof Error ? caught.message : errorMessage;
+    return false;
   } finally {
     saving.value = false;
   }
@@ -138,7 +140,7 @@ function savePoolSyncInterval() {
   );
 }
 
-function addPoolTemplate() {
+async function addPoolTemplate() {
   const template = {
     region: templateRegion.value.trim(),
     cloud_account_id: templateCloudAccountId.value.trim(),
@@ -150,22 +152,21 @@ function addPoolTemplate() {
     return;
   }
   const nextTemplates = [...poolTemplates.value, template];
-  poolTemplates.value = nextTemplates;
-  templateRegion.value = '';
-  templateCloudAccountId.value = '';
-  templatePlanId.value = '';
-  templateImageId.value = '';
-  void updateAutomation(
+  const saved = await updateAutomation(
     { node_pool_sync_creation_templates: nextTemplates },
     savingPoolSync,
     '地址池创建模板保存失败',
   );
+  if (!saved) return;
+  templateRegion.value = '';
+  templateCloudAccountId.value = '';
+  templatePlanId.value = '';
+  templateImageId.value = '';
 }
 
-function removePoolTemplate(index: number) {
+async function removePoolTemplate(index: number) {
   const nextTemplates = poolTemplates.value.filter((_template, itemIndex) => itemIndex !== index);
-  poolTemplates.value = nextTemplates;
-  void updateAutomation(
+  await updateAutomation(
     { node_pool_sync_creation_templates: nextTemplates },
     savingPoolSync,
     '地址池创建模板保存失败',

@@ -136,9 +136,76 @@ describe('system provider identity network setting', () => {
 });
 
 describe('node automation settings', () => {
+  it('keeps the template form and list unchanged when adding a template fails', async () => {
+    vi.spyOn(resourcesApi, 'system').mockResolvedValue(systemInfo);
+    vi.spyOn(resourcesApi, 'updateSystem').mockRejectedValue(new Error('模板保存失败'));
+    const wrapper = mountSystemSettings();
+
+    try {
+      await flushPromises();
+      await wrapper.get('input[aria-label="创建模板地区"]').setValue('ap-southeast-1');
+      await wrapper.get('input[aria-label="创建模板云账号 ID"]').setValue('account-1');
+      await wrapper.get('input[aria-label="创建模板套餐 ID"]').setValue('small-plan');
+      await wrapper.get('input[aria-label="创建模板镜像 ID"]').setValue('ubuntu-image');
+      await wrapper.findAll('button').find((button) => button.text().includes('添加创建模板'))!.trigger('click');
+      await flushPromises();
+
+      expect(wrapper.text()).not.toContain('新加坡');
+      expect((wrapper.get('input[aria-label="创建模板地区"]').element as HTMLInputElement).value).toBe('ap-southeast-1');
+      expect(wrapper.get('[role="alert"]').text()).toContain('模板保存失败');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps an existing template visible when its removal fails', async () => {
+    const existingTemplateInfo: SystemInfo = {
+      ...systemInfo,
+      node_pool_sync: {
+        ...systemInfo.node_pool_sync,
+        creation_templates: [{
+          region: 'ap-southeast-1',
+          cloud_account_id: 'account-1',
+          plan_id: 'small-plan',
+          image_id: 'ubuntu-image',
+        }],
+      },
+    };
+    vi.spyOn(resourcesApi, 'system').mockResolvedValue(existingTemplateInfo);
+    vi.spyOn(resourcesApi, 'updateSystem').mockRejectedValue(new Error('模板保存失败'));
+    const wrapper = mountSystemSettings();
+
+    try {
+      await flushPromises();
+      expect(wrapper.text()).toContain('新加坡');
+      await wrapper.findAll('button').find((button) => button.text().includes('删除'))!.trigger('click');
+      await flushPromises();
+
+      expect(wrapper.text()).toContain('新加坡');
+      expect(wrapper.get('[role="alert"]').text()).toContain('模板保存失败');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('saves pool alignment interval and an explicit per-region creation template', async () => {
     vi.spyOn(resourcesApi, 'system').mockResolvedValue(systemInfo);
-    const update = vi.spyOn(resourcesApi, 'updateSystem').mockResolvedValue(systemInfo);
+    const template = {
+      region: 'ap-southeast-1',
+      cloud_account_id: 'account-1',
+      plan_id: 'small-plan',
+      image_id: 'ubuntu-image',
+    } satisfies SystemInfo['node_pool_sync']['creation_templates'][number];
+    const savedSystemInfo: SystemInfo = {
+      ...systemInfo,
+      node_pool_sync: {
+        ...systemInfo.node_pool_sync,
+        creation_templates: [template],
+      },
+    };
+    const update = vi.spyOn(resourcesApi, 'updateSystem')
+      .mockResolvedValueOnce(systemInfo)
+      .mockResolvedValueOnce(savedSystemInfo);
     const wrapper = mountSystemSettings();
 
     try {
@@ -156,12 +223,7 @@ describe('node automation settings', () => {
       await flushPromises();
 
       expect(update).toHaveBeenLastCalledWith({
-        node_pool_sync_creation_templates: [{
-          region: 'ap-southeast-1',
-          cloud_account_id: 'account-1',
-          plan_id: 'small-plan',
-          image_id: 'ubuntu-image',
-        }],
+        node_pool_sync_creation_templates: [template],
       });
       expect(wrapper.text()).toContain('新加坡');
     } finally {

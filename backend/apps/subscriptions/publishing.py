@@ -6,6 +6,7 @@ import secrets
 from uuid import UUID, uuid4
 
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from django.utils import timezone
 
 from common.crypto import configured_subscription_store
@@ -362,16 +363,19 @@ class Publisher:
             node = ManagedNode.objects.select_for_update().get(pk=node_id)
             if not node_publish_ready(node):
                 return {"published": 0, "failed": 0}
+            node_credential = NodeCredential.objects.filter(
+                profile_id=OuterRef("profile_id"),
+                node_id=node_id,
+                revoked_at__isnull=True,
+            )
             subscriptions = list(
                 Subscription.objects.select_for_update()
                 .filter(
                     status="ACTIVE",
                     profile__status="ACTIVE",
                     profile__publishing_frozen=False,
-                    profile__node_credentials__node_id=node_id,
-                    profile__node_credentials__revoked_at__isnull=True,
                 )
-                .distinct()
+                .filter(Exists(node_credential))
                 .order_by("pk")
             )
             profiles = {

@@ -144,6 +144,7 @@ LOGGING = {
 XRAY_NODE_TRANSPORT_FACTORY = os.getenv(
     "XRAY_NODE_TRANSPORT_FACTORY", "apps.subscriptions.node_agent.aws_transport"
 )
+XRAY_NODE_BOOTSTRAP_FACTORY = os.getenv("XRAY_NODE_BOOTSTRAP_FACTORY", "")
 XRAY_NODE_HEALTH_PROBE = os.getenv("XRAY_NODE_HEALTH_PROBE", "")
 XRAY_USAGE_FETCHER = os.getenv(
     "XRAY_USAGE_FETCHER", "apps.subscriptions.node_agent.fetch_usage"

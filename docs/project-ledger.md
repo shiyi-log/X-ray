@@ -4905,3 +4905,49 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `使用远端 UTC 时间戳；未改变业务调度或时间规则。`
 - `reuse`: `后续发布可复用 run IDs、tag peeled SHA 和 release-by-tag 检查；不得用历史 v0.11.0/v0.12.x Release 代替。`
 - `rollback_ref`: `资料追加可由后续 git revert 回退；不删除/重写标签，不回退数据库、Token、凭据或云状态。`
+
+### 2026-11-06T16:50:31+08:00 — xray-node-automation-20261106-01 current baseline and implementation scope
+
+- `event_id`: `xray-node-automation-20261106-01/014`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T16:50:31+08:00`
+- `actor`: `Codex`
+- `event_type`: `inventory / decision`
+- `path_scope`: `main worktree; AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; node automation, bootstrap, lifecycle, subscription, system settings and relevant tests`
+- `operation`: `复核当前提交/工作区、项目规则、定时任务与系统设置实现，明确本次自动化闭环验收范围。`
+- `reason`: `继续用户要求的地区配额对齐、每日单节点轮换、节点 IP/健康/订阅同步、流量统计及独立生命周期测试。`
+- `authorization`: `用户要求先提交并推送既有未提交工作后再改；当前 main@6b3e6f57149d7eee5df350f664876e152adf01c3 与 origin/main 一致且工作区干净，故无先行提交/推送。用户授权本次测试环境创建服务器、执行方自行选择配置、总费用不超过 USD 1000；用户明确配额调低时按对应地区 created_at 最早节点缩容。该范围不授权触碰非本次测试创建的现存节点、生产资源、静态 IP 释放或未绑定账号的云资源。`
+- `implementation_scope`: `节点池按地区核对 consumes_quota 数量并创建/缩容；先初始化健康后发布订阅；每日按排序最多排队一台重启并读回新 IP、运行状态、健康与订阅 revision；系统设置 UI、Beat 注册、节点数量/IP/流量同步；start/stop/reboot/delete 与订阅签发/撤销覆盖；本地专用 PostgreSQL/Redis 与 Fake/Stub 测试；通过全部门禁后准备新版本提交、标签、推送及远端回读。`
+- `exclusions`: `不访问 Shop、vue-shop-admin、shop-xray-installer、archive；不改动或停止既有服务、数据库或浏览器会话；不使用未经验证账号做 AWS/SWAS 写入，不触碰非本次创建目标，不释放静态 IP，不把 Fake/Stub 证据声明为云或生产通过；不重写 v0.13.0 标签。`
+- `assumptions`: `用户确认的“最早创建”按地区 `created_at`、主键稳定排序；若删除会使任一活跃订阅失去可发布替代端点，则 fail closed 并保留超额以待人工处理。自动创建需使用系统设置中显式配置的地区模板。`
+- `risks`: `自动缩容可能影响订阅；节点安装/防火墙/可信健康探针未闭环时不能 READY 或创建凭据；AWS 重启可能变更 IP，必须读回确认后才更新订阅；每日日期/时区、DST、重试和操作幂等必须验证；当前本地 AWS CLI profile 不能证明 X-ray CloudAccount 目标绑定。`
+- `command_or_tool`: `git status --short --branch; git rev-parse HEAD/origin/main; date; sed/rg over listed in-scope files; local listener inventory; read-only AWS capability inventory by delegated agent; collaboration agents for bootstrap, workflow and UI review.`
+- `result`: `初始工作区 clean；主/远端 SHA 相同；系统设置 UI、Beat、按地区最早删除、订阅替代检查、每日轮换及多数状态/流量同步已有实现和测试；`NodeBootstrapService` 仍 fail-closed，自动新节点不能完成固定安装/防火墙/健康/协议凭据/首次订阅；Actions 失败时 job steps 为空且日志不可读取；AWS CLI 及 profile 文件存在但账号与应用 CloudAccount 未验证。`
+- `exit_code`: `status/diff/listener and read-only file inventory commands exit 0; no external cloud API or writes executed.`
+- `status`: `in-progress；云/SSH not-run；旧 progress 中声称“main@d54da54”与本次实际基线冲突，以本事件记录的 `6b3e6f5` 及 `git rev-parse` 输出为准。`
+- `commit_or_tree`: `main@6b3e6f57149d7eee5df350f664876e152adf01c3, initially clean; this documentation append is the first current-run worktree change.`
+- `time_logic`: `执行时间取机器 Asia/Shanghai 时区，业务计划使用 timezone-aware UTC 存储与 IANA zone 显示；每日重启按所配 IANA 本地日期/时间判定，每本地日期最多排队一次；缩容排序按同一地区 `(created_at, pk)`。将验证边界时刻、DST、重复调度与幂等。`
+- `reuse`: `复用现有 Beat/tasks、quota、lifecycle/read-after-write、subscription publisher/revocation、系统设置及 Fake/Stub fixtures；仅用于本地证据。`
+- `rollback_ref`: `源代码与测试用后续版本提交的 `git revert` 回退；数据库采用兼容迁移和 expand/contract，绝不恢复撤销 token、凭据、安全事件或云操作；测试云目标清理仅限本次创建且另记读回证据。`
+
+### 2026-11-06T17:06:34+08:00 — xray-node-automation-20261106-01 AWS identity preflight
+
+- `event_id`: `xray-node-automation-20261106-01/015`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T17:06:34+08:00`
+- `actor`: `Codex`
+- `event_type`: `runtime / decision`
+- `path_scope`: `AWS STS identity API via local AWS CLI profile default; no repository/runtime secret contents`
+- `operation`: `验证当前默认 AWS 凭据身份可用性，仅输出 AWS account ID 的 SHA-256 前 12 位脱敏引用。`
+- `reason`: `用户授权本次任务创建测试服务器并自行选择配置；需要确定是否存在可绑定的测试账号，避免误用其他 profile。`
+- `authorization`: `当前用户任务明确授权测试服务器创建、配置自行决定、总费用不超过 USD 1000；此次仅为只读 GetCallerIdentity，不创建云资源。`
+- `implementation_scope`: `单次 AWS STS GetCallerIdentity read-only；profile 名为 default；响应账号号仅在进程内哈希，不进入工具输出、文件、台账或日志。`
+- `exclusions`: `未调用 Lightsail/SWAS API；未读取或输出 access key/session token；未 SSH、创建、重启、停止、删除、探测或释放 IP；未配置 X-ray CloudAccount。`
+- `command_or_tool`: `aws sts get-caller-identity --profile default --no-cli-pager --cli-connect-timeout 3 --cli-read-timeout 5 --query Account --output text; shell captures result and emits only SHA-256 prefix.`
+- `result`: `exit 0; account_ref=sha256:b1746f68f5be. Account identity is available but not yet represented by an X-ray CloudAccount credential-version reference; no resource scope or provider price readback yet.`
+- `exit_code`: `0`
+- `status`: `passed (identity read-only); cloud writes remain not-run.`
+- `commit_or_tree`: `main@6b3e6f57149d7eee5df350f664876e152adf01c3 plus in-progress local source/test and audit changes.`
+- `time_logic`: `本地 read-only API 请求有 3 秒连接与 5 秒读取超时；未涉及业务计划日期。`
+- `reuse`: `脱敏 `account_ref` 可用于授权单目标绑定；profile 名不代表允许其他账号或资源。`
+- `rollback_ref`: `无远端状态变化；仅本地脱敏审计记录，后续可通过追加纠正说明，不删除历史。`
