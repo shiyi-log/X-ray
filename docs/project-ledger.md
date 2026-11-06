@@ -5146,3 +5146,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `本次不改变业务或发布触发时间规则；台账按执行机器 Asia/Shanghai 时间记录，远端 GitHub run 时间为 UTC。`
 - `reuse`: `复用仓库 package-installer-release.sh、CHANGELOG 版本摘录、GitHub 官方资产 API digest、tag/ref API 和 r10 专用容器/fake 门禁证据；本地构建资产与远端 Release SHA 对齐。`
 - `rollback_ref`: `不删除或重写已发布 v0.14.0 tag/Release；应用回退到 v0.13.0 或对源码候选 c882ac03a29091825d4597b39bd753c3e70f7d18 执行 git revert；不反向迁移、不恢复 Token tombstone、凭据、安全事件或云状态。`
+
+### 2026-11-07T06:48:19+08:00 — xray-node-automation-20261106-01 final branch/tag/release audit
+
+- `event_id`: `xray-node-automation-20261106-01/024`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T06:48:19+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / validate / release-evidence`
+- `path_scope`: `main@578490344dbdff1e58ac9e106f46578c2b1c35a4; refs/tags/v0.14.0; GitHub Release v0.14.0; GitHub Actions run 42307090391; tests/acceptance/matrix.json; docs/progress.md; docs/project-ledger.md`
+- `operation`: `最终核对 release-readback 文档提交已推送，main、版本标签 peeled commit 与远端 Release/资产仍一致；记录该只改文档提交的 Actions 结果。`
+- `reason`: `完成前的远端与工作区复核要求验证分支/tag/Release 一致，并记录发布后主分支读回。`
+- `authorization`: `用户已授权提交、推送和同步发布 v0.14.0；本次仅读 GitHub 元数据和资产摘要，没有云写入。`
+- `implementation_scope`: `只读核对 origin/main、refs/tags/v0.14.0、tag peeled SHA、GitHub Release id/draft/assets/digests 及 release-readback commit 的 Actions job；追加最终进度与矩阵证据。`
+- `exclusions`: `不修改业务代码、tag、Release 资产或任何云/数据库状态；不重跑已在零 steps 失败的同类 CI。`
+- `assumptions`: `main@5784903 是纯发布读回文档提交，其父提交 1c2a5ca 是 v0.14.0 tag peeled release commit；被发布源码为其祖先 c882ac0，且 c882ac0 已绑定干净 r10 全量门禁。`
+- `risks`: `delivery-gates 对 5784903 的推送再次 failure，verify job 未返回任何 step；不能作为远端 CI 通过证据，和本地 r10 通过结果分开记录。真实 AWS credential 解封与设备/生产验收仍受阻。`
+- `command_or_tool`: `git status --short --branch; git log -3 --oneline --decorate; git ls-remote origin refs/heads/main refs/tags/v0.14.0 refs/tags/v0.14.0^{}; GitHub API branch main/release tag v0.14.0/assets/actions runs for full commit 578490344dbdff1e58ac9e106f46578c2b1c35a4/job 128199039686; acceptance matrix update.`
+- `result`: `本地与远端 main 均为 578490344dbdff1e58ac9e106f46578c2b1c35a4。远端 annotated tag object 8ad91ccf12fe3aa1889fbb7ac8f91c02998fce01 peeled 到 1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d。Release id 437133468 非草稿且三项 asset digest 与上轮本地 SHA-256 完全相同。commit 5784903 的 CI run 42307090391 结论 failure，verify job steps=[]；没有产品代码变化。`
+- `exit_code`: `git status/readback=0; GitHub branch/release/actions read=0; Actions run conclusion=failure with zero steps。`
+- `status`: `发布/tag/远端资产 SHA 及本地门禁证据 passed；最新远端 CI 仍 blocked；真实 AWS/SSH/订阅/设备/生产仍 blocked 或 not-run；云成本 USD 0。`
+- `commit_or_tree`: `main/origin/main@578490344dbdff1e58ac9e106f46578c2b1c35a4 before this final ledger/matrix/progress append; tag remains peeled at 1c2a5ca; this audit append is to be committed and pushed without altering the tag.`
+- `time_logic`: `没有业务时间逻辑变化；执行机时间 Asia/Shanghai，GitHub workflow timestamp 为 UTC。`
+- `reuse`: `复用 r10 summary/JUnit、官方 GitHub Release asset digest、refs API、GitHub actions run/job API 与本地发布包 SHA256SUMS。`
+- `rollback_ref`: `不改写 tag 或删除 Release；应用代码回退到 v0.13.0 或 `git revert c882ac03a29091825d4597b39bd753c3e70f7d18`；不反向迁移、不恢复 Token、凭据、安全事件或云状态。`

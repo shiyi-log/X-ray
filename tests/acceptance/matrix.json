@@ -1,6 +1,6 @@
 {
   "version": "0.14.0",
-  "generated_at": "2026-11-07T06:43:06+08:00",
+  "generated_at": "2026-11-07T06:48:19+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -178,6 +178,15 @@
             {"run_id": 42305314132, "workflow": "发布 X-ray 版本", "attempt": 2, "conclusion": "failure", "job_steps": 0}
           ],
           "reason": "Both push-triggered workflows and one explicit retry completed without any job steps; local r10 gates passed, but remote CI evidence is blocked."
+        },
+        {
+          "kind": "post_release_documentation_sync_actions",
+          "commit": "578490344dbdff1e58ac9e106f46578c2b1c35a4",
+          "status": "blocked",
+          "runs": [
+            {"run_id": 42307090391, "workflow": "X-ray delivery gates", "attempt": 1, "conclusion": "failure", "job_steps": 0}
+          ],
+          "reason": "This follow-up commit only recorded release readback; its push-triggered workflow also failed with no job steps."
         }
       ],
       "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
