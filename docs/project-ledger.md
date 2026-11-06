@@ -4861,3 +4861,25 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `未改变业务时间逻辑；仅记录本机 Asia/Shanghai aware 时间。`
 - `reuse`: `后续发布回读复用 b76d62f 的代码、final-gates-2 摘要和矩阵证据。`
 - `rollback_ref`: `资料校正可由后续 git revert 回退；不回退代码安全状态、数据库、Token 或云资源。`
+
+### 2026-11-06T16:18:48+08:00 — xray-node-automation-20261106-01 final verification
+
+- `event_id`: `xray-node-automation-20261106-01/012`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T16:18:48+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate / runtime`
+- `path_scope`: `repository working tree; /tmp/xray-final-verification-20261106; Docker project xray-test`
+- `operation`: `在最终文档提交后重新执行完整本地交付门禁，并核对容器与工作区状态。`
+- `reason`: `verification-before-completion 要求在提交、推送和标签前使用当前提交的新证据，不复用仅针对早期工作树的口头结论。`
+- `authorization`: `用户已授权本轮实现、测试、提交、推送和版本发布准备；本次验证仅使用本地专用容器与 Fake/Stub，不执行真实云或生产写入。`
+- `implementation_scope`: `只读复验 runtime、Compose、Django、迁移漂移、Ruff、417/2 后端、OpenAPI、固定 Xray、订阅格式、前端 typecheck/lint/unit/build、Playwright 8、ShellCheck、boundary、secrets、skill、acceptance matrix；检查脚本运行后 gate 容器清理情况。`
+- `exclusions`: `不触碰 xray-current-run-* 或 xray-test-* 既有栈；不执行数据库恢复、AWS/SWAS 创建/删除、SSH、公网探测、GitHub Release 或生产发布。`
+- `command_or_tool`: `XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test PATH=/tmp/xray-pnpm10-bin:$PATH XRAY_ACCEPTANCE_ARTIFACT_DIR=/tmp/xray-final-verification-20261106 ./scripts/check-local.sh; docker ps -a; git status; git rev-parse HEAD; git diff --check。`
+- `result`: `19/19 gate exit 0；后端 417 passed/2 skipped；前端 unit 82 passed；Playwright 8 passed；边界、秘密、skill、验收矩阵通过；未发现本轮 gate 容器残留；工作区在本次资料追加前干净，当前 HEAD 为 50d28a274b3af33763d56b56804d818c9d2d2393。`
+- `exit_code`: `check-local=0; docker inventory=0; git status/diff-check=0。`
+- `status`: `passed（最终提交本地验证）；GitHub CI/Release、真实 AWS/SSH/公网/生产仍 blocked 或 not-run。`
+- `commit_or_tree`: `50d28a274b3af33763d56b56804d818c9d2d2393 plus this ledger/progress append pending commit。`
+- `time_logic`: `业务时间和每日重启语义未改变；本次仅使用本机 Asia/Shanghai aware 时间记录验证。`
+- `reuse`: `最终 gate 命令和 `/tmp` 证据可复用于推送前后回读；Fake/Stub/容器证据不代表真实云或生产。`
+- `rollback_ref`: `推送前可用后续 git revert 回退本次资料追加；代码回退使用 b76d62f 的 git revert 或 v0.12.2，不恢复数据库、Token、凭据或云状态。`
