@@ -4839,3 +4839,25 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `业务时间使用 Django aware UTC；每日重启使用配置 IANA timezone 的 local date，调度条件为达到配置时间后每本地日一次，排队即写入日期/节点；E2E run-id 只隔离资源生命周期。`
 - `reuse`: `后续本地 E2E 复用 run-id wrapper、数据库 marker、tmpfs/loopback 约束、global teardown 和 final-gates-2 证据格式；Fake/Stub/容器结果不转换为真实云或生产成功。`
 - `rollback_ref`: `应用回退使用最终提交的 git revert 或 v0.12.2；资料提交可单独 revert；不反向迁移、不恢复 Token tombstone、撤销凭据、安全事件、数据库旧状态或云状态。`
+
+### 2026-11-06T16:08:12+08:00 — xray-node-automation-20261106-01 commit reference correction
+
+- `event_id`: `xray-node-automation-20261106-01/011`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T16:08:12+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `docs/progress.md; docs/version-record.md; tests/acceptance/matrix.json`
+- `operation`: `将最终本地门禁与验收矩阵的当前提交引用从工作树/候选值校正为实际提交 SHA。`
+- `reason`: `代码与首轮资料已提交为 b76d62fcb06f83042fee496f5ded6f1de06c79ac；版本索引和矩阵必须指向可验证的 40 字符提交，而不是工作树占位符。`
+- `authorization`: `用户要求提交、推送和同步发布资料；本次仅更新本地索引，不执行外部发布。`
+- `implementation_scope`: `只更新当前 0.13.0 row、最终门禁进度行和 matrix 当前项；保留历史 4eaa45b 与 55433 数据安全事故记录。`
+- `exclusions`: `不修改源码、数据库、云资源、SSH、订阅 Token、CI 或 Release。`
+- `command_or_tool`: `git rev-parse HEAD; apply_patch; git add; python3 scripts/validate-acceptance.py。`
+- `result`: `当前提交引用统一为 b76d62fcb06f83042fee496f5ded6f1de06c79ac；GitHub CI/Release 仍 blocked/not-created。`
+- `exit_code`: `git rev-parse=0; acceptance validator pending after this documentation commit。`
+- `status`: `passed（资料引用校正；外部发布未执行）。`
+- `commit_or_tree`: `b76d62fcb06f83042fee496f5ded6f1de06c79ac plus documentation changes staged for follow-up commit。`
+- `time_logic`: `未改变业务时间逻辑；仅记录本机 Asia/Shanghai aware 时间。`
+- `reuse`: `后续发布回读复用 b76d62f 的代码、final-gates-2 摘要和矩阵证据。`
+- `rollback_ref`: `资料校正可由后续 git revert 回退；不回退代码安全状态、数据库、Token 或云资源。`

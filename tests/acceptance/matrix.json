@@ -23,7 +23,7 @@
           "backend_tests": {"passed": 417, "skipped": 2, "failures": 0, "errors": 0},
           "frontend_unit_tests": 82,
           "browser_e2e": 8,
-          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+          "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
           "started_at": "2026-11-06T15:48:25+08:00",
           "finished_at": "2026-11-06T15:50:24+08:00"
         },
@@ -64,7 +64,7 @@
           "finished_at": "2026-11-06T05:51:48+08:00"
         }
       ],
-      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+      "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
       "provider": null,
       "region": null,
       "cost": null,
@@ -91,7 +91,7 @@
           "scope": "run-id labels, loopback ports, tmpfs-only storage, reset marker and environment binding"
         }
       ],
-      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+      "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
       "provider": null,
       "region": null,
       "cost": 0,
@@ -114,12 +114,12 @@
         },
         {
           "kind": "current_commit_actions",
-          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+          "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
           "status": "not-queried",
           "reason": "Current GitHub Actions run has not been read back."
         }
       ],
-      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+      "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
       "provider": null,
       "region": null,
       "cost": null,
