@@ -47,12 +47,15 @@ def _usable_addresses(node) -> list[tuple[int, str]]:
     return usable
 
 
-def node_publish_ready(node) -> bool:
+def node_publish_ready(node, *, allow_bootstrapping: bool = False) -> bool:
     """Return whether a node has current, independently verified publish evidence."""
+    allowed_states = {"READY"}
+    if allow_bootstrapping:
+        allowed_states.update({"PROVISIONED", "RECONCILIATION"})
     if (
         node.raw_cloud_state.casefold() != "running"
         or node.desired_state != "PRESENT"
-        or node.provisioning_state != "READY"
+        or node.provisioning_state not in allowed_states
         or node.health_state != "HEALTHY"
         or node.security_state != "OPEN"
         or node.observation_error
@@ -83,11 +86,11 @@ def node_publish_ready(node) -> bool:
     )
 
 
-def credential_publish_ready(credential) -> bool:
+def credential_publish_ready(credential, *, allow_bootstrapping: bool = False) -> bool:
     node = credential.node
     protocol = credential.protocol
     return (
-        node_publish_ready(node)
+        node_publish_ready(node, allow_bootstrapping=allow_bootstrapping)
         and node.security_state == "OPEN"
         and node.desired_generation == node.applied_generation
         and credential.desired_generation == credential.applied_generation
@@ -123,7 +126,12 @@ def decrypt_payload(revision: SubscriptionRevision, format: str) -> bytes:
 
 class Publisher:
     @staticmethod
-    def _endpoints(subscription: Subscription, *, excluded_node_ids: set[UUID]) -> list[dict]:
+    def _endpoints(
+        subscription: Subscription,
+        *,
+        excluded_node_ids: set[UUID],
+        allow_bootstrapping: bool = False,
+    ) -> list[dict]:
         credentials = list(
             NodeCredential.objects.select_for_update()
             .select_related("node", "protocol", "profile")
@@ -139,7 +147,9 @@ class Publisher:
             protocol = credential.protocol
             if node.pk in excluded_node_ids:
                 continue
-            if not credential_publish_ready(credential):
+            if not credential_publish_ready(
+                credential, allow_bootstrapping=allow_bootstrapping
+            ):
                 continue
             for family, host in _usable_addresses(node):
                 endpoints.append(
@@ -171,6 +181,7 @@ class Publisher:
         subscription: Subscription,
         *,
         excluded_node_ids: set[UUID] | None = None,
+        allow_bootstrapping: bool = False,
     ) -> SubscriptionRevision:
         if (
             subscription.status != "ACTIVE"
@@ -188,7 +199,11 @@ class Publisher:
                 "SUBSCRIPTION_TOKEN_INACTIVE", "订阅令牌不是活动状态", status_code=409
             )
         assert_entitled(subscription.profile)
-        endpoints = cls._endpoints(subscription, excluded_node_ids=excluded_node_ids or set())
+        endpoints = cls._endpoints(
+            subscription,
+            excluded_node_ids=excluded_node_ids or set(),
+            allow_bootstrapping=allow_bootstrapping,
+        )
         if not endpoints:
             raise NoPublishableEndpoints()
         number = (
@@ -355,42 +370,66 @@ class Publisher:
             return batch
 
     @classmethod
-    def publish_for_node(cls, node_id: UUID) -> dict[str, int]:
+    def publish_for_node(
+        cls,
+        node_id: UUID,
+        *,
+        allow_bootstrapping: bool = False,
+        require_all: bool = False,
+    ) -> dict[str, int]:
         """Publish active subscriptions assigned to a node after access sync."""
         from apps.nodes.models import ManagedNode
 
-        with transaction.atomic():
-            node = ManagedNode.objects.select_for_update().get(pk=node_id)
-            if not node_publish_ready(node):
-                return {"published": 0, "failed": 0}
-            node_credential = NodeCredential.objects.filter(
-                profile_id=OuterRef("profile_id"),
-                node_id=node_id,
-                revoked_at__isnull=True,
-            )
-            subscriptions = list(
-                Subscription.objects.select_for_update()
-                .filter(
-                    status="ACTIVE",
-                    profile__status="ACTIVE",
-                    profile__publishing_frozen=False,
+        class _RequiredPublicationFailure(Exception):
+            pass
+
+        failed = 0
+        try:
+            with transaction.atomic():
+                node = ManagedNode.objects.select_for_update().get(pk=node_id)
+                if not node_publish_ready(node, allow_bootstrapping=allow_bootstrapping):
+                    if require_all:
+                        raise DomainError(
+                            "NODE_NOT_READY_FOR_PUBLICATION",
+                            "节点当前不满足订阅发布条件",
+                            status_code=409,
+                        )
+                    return {"published": 0, "failed": 0}
+                node_credential = NodeCredential.objects.filter(
+                    profile_id=OuterRef("profile_id"),
+                    node_id=node_id,
+                    revoked_at__isnull=True,
                 )
-                .filter(Exists(node_credential))
-                .order_by("pk")
-            )
-            profiles = {
-                profile.pk: profile
-                for profile in AccessProfile.objects.select_for_update().filter(
-                    pk__in=[subscription.profile_id for subscription in subscriptions]
+                subscriptions = list(
+                    Subscription.objects.select_for_update()
+                    .filter(
+                        status="ACTIVE",
+                        profile__status="ACTIVE",
+                        profile__publishing_frozen=False,
+                    )
+                    .filter(Exists(node_credential))
+                    .order_by("pk")
                 )
-            }
-            published = 0
-            failed = 0
-            for subscription in subscriptions:
-                subscription.profile = profiles[subscription.profile_id]
-                try:
-                    cls._publish_locked(subscription)
-                    published += 1
-                except Exception:
-                    failed += 1
-            return {"published": published, "failed": failed}
+                profiles = {
+                    profile.pk: profile
+                    for profile in AccessProfile.objects.select_for_update().filter(
+                        pk__in=[subscription.profile_id for subscription in subscriptions]
+                    )
+                }
+                published = 0
+                for subscription in subscriptions:
+                    subscription.profile = profiles[subscription.profile_id]
+                    try:
+                        cls._publish_locked(
+                            subscription,
+                            allow_bootstrapping=allow_bootstrapping,
+                        )
+                        published += 1
+                    except Exception:
+                        failed += 1
+                        if require_all:
+                            failed = len(subscriptions) - published
+                            raise _RequiredPublicationFailure from None
+                return {"published": published, "failed": failed}
+        except _RequiredPublicationFailure:
+            return {"published": 0, "failed": failed}

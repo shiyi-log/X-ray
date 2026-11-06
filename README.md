@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-11-06：当前交付候选版本为 `0.13.0`。本版增加地区地址池配额对齐、每日轮转重启、定时状态/IP 与流量同步、订阅节点数核对，以及节点变化后的订阅刷新和撤回处理。自动创建会先预留并创建云实例；完成受信任安装、配置下发和健康探测前，节点不会进入可发布的 `READY` 状态。实际云、SSH、生产和设备验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
+2026-11-07：当前交付候选版本为 `0.14.0`。本版完善地区地址池配额对齐、每日轮转重启、定时状态/IP 与流量同步、订阅节点数核对，以及节点变化后的订阅刷新和撤回处理；bootstrap 使用租约续期与 fence 校验，只有健康且所有活动订阅发布成功后才进入 `READY`。真实 AWS bootstrap 尚未验收；自动创建仍可能停在 `PROVISIONED`/`NEEDS_RECONCILIATION`，实际云、SSH、生产和设备验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 

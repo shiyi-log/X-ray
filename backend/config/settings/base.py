@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "X-ray Manager API",
     "DESCRIPTION": "Private administrator API. Secrets are write-only or delivered once.",
-    "VERSION": "0.13.0",
+    "VERSION": "0.14.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": ["config.openapi.inject_contract"],
 }
@@ -144,8 +144,12 @@ LOGGING = {
 XRAY_NODE_TRANSPORT_FACTORY = os.getenv(
     "XRAY_NODE_TRANSPORT_FACTORY", "apps.subscriptions.node_agent.aws_transport"
 )
-XRAY_NODE_BOOTSTRAP_FACTORY = os.getenv("XRAY_NODE_BOOTSTRAP_FACTORY", "")
-XRAY_NODE_HEALTH_PROBE = os.getenv("XRAY_NODE_HEALTH_PROBE", "")
+XRAY_NODE_BOOTSTRAP_FACTORY = os.getenv(
+    "XRAY_NODE_BOOTSTRAP_FACTORY", "apps.nodes.bootstrap_runtime.NodeBootstrapRuntime"
+)
+XRAY_NODE_HEALTH_PROBE = os.getenv(
+    "XRAY_NODE_HEALTH_PROBE", "apps.nodes.bootstrap_runtime.health_probe"
+)
 XRAY_USAGE_FETCHER = os.getenv(
     "XRAY_USAGE_FETCHER", "apps.subscriptions.node_agent.fetch_usage"
 )

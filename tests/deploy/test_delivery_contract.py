@@ -139,6 +139,14 @@ def test_local_gate_lists_complete_order_without_real_cloud_actions():
         assert forbidden not in lowered
 
 
+def test_local_gate_summary_uses_the_selected_artifact_directory():
+    script = (ROOT / "scripts/check-local.sh").read_text(encoding="utf-8")
+
+    assert "local summary_log_path=$log_file" in script
+    assert '"$summary_log_path" >>"$summary_file"' in script
+    assert '"artifacts/acceptance/$version/gates/$gate.log"' not in script
+
+
 def test_ci_uses_dedicated_services_and_the_same_local_gate():
     workflow = yaml.load(
         (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"),

@@ -7,6 +7,10 @@ import os
 from .base import *  # noqa: F403
 from .base import database_from_url, env_list
 
+# Local tests must inject Fake/Stub adapters instead of opening cloud or SSH connections.
+XRAY_NODE_BOOTSTRAP_FACTORY = ""
+XRAY_NODE_HEALTH_PROBE = ""
+
 TEST_DATABASE_URL = os.getenv("XRAY_TEST_DATABASE_URL")
 if not TEST_DATABASE_URL:
     raise RuntimeError("XRAY_TEST_DATABASE_URL is required; tests must use dedicated PostgreSQL")

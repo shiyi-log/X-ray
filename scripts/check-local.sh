@@ -72,6 +72,8 @@ printf 'gate\texit_code\tstarted_at\tfinished_at\tlog\n' >"$summary_file"
 export XRAY_TEST_DATABASE_URL=${XRAY_TEST_DATABASE_URL:-postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/xray_test}
 export XRAY_REDIS_URL=${XRAY_REDIS_URL:-redis://127.0.0.1:56379/0}
 export XRAY_REQUIRE_FIXED_BINARY=1
+export XRAY_ENV=test
+export DJANGO_SETTINGS_MODULE=config.settings.test
 export XRAY_TEST_BINARY=${XRAY_TEST_BINARY:-"$root_dir/runtime/xray/v26.3.27/xray"}
 export XRAY_BACKEND_TEST_IMAGE=${XRAY_BACKEND_TEST_IMAGE:-"xray-manager-backend:$version-local"}
 export XRAY_FRONTEND_TEST_IMAGE=${XRAY_FRONTEND_TEST_IMAGE:-"xray-manager-frontend:$version-local"}
@@ -81,7 +83,11 @@ run_gate() {
   local gate=$1
   shift
   local log_file="$artifact_dir/$gate.log"
+  local summary_log_path=$log_file
   local started_at finished_at exit_code
+  if [[ $summary_log_path == "$root_dir/"* ]]; then
+    summary_log_path=${summary_log_path#"$root_dir"/}
+  fi
   started_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   printf '\n[%s] %s\n' "$gate" "$started_at"
   set +e
@@ -91,7 +97,7 @@ run_gate() {
   finished_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   printf '%s\t%s\t%s\t%s\t%s\n' \
     "$gate" "$exit_code" "$started_at" "$finished_at" \
-    "artifacts/acceptance/$version/gates/$gate.log" >>"$summary_file"
+    "$summary_log_path" >>"$summary_file"
   if [[ $exit_code -ne 0 ]]; then
     printf 'gate failed: %s (exit %s)\n' "$gate" "$exit_code" >&2
     return "$exit_code"

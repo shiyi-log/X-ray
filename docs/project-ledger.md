@@ -4951,3 +4951,102 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `本地 read-only API 请求有 3 秒连接与 5 秒读取超时；未涉及业务计划日期。`
 - `reuse`: `脱敏 `account_ref` 可用于授权单目标绑定；profile 名不代表允许其他账号或资源。`
 - `rollback_ref`: `无远端状态变化；仅本地脱敏审计记录，后续可通过追加纠正说明，不删除历史。`
+
+### 2026-11-07T01:15:54+08:00 — xray-node-automation-20261106-01 bootstrap lease and publication recovery
+
+- `event_id`: `xray-node-automation-20261106-01/016`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T01:15:54+08:00`
+- `actor`: `Codex`
+- `event_type`: `inventory / decision`
+- `path_scope`: `main worktree; backend/apps/nodes/bootstrap.py; backend/apps/nodes/tasks.py; backend/apps/nodes/executor.py; backend/apps/subscriptions/publishing.py; relevant tests; docs/project-ledger.md`
+- `operation`: `先审阅并提交本任务已有差异，再定义 lease/fence 与部分订阅发布的回归修复范围。`
+- `reason`: `只读安全审阅发现固定 worker owner 可被重复领取递增 fence、bootstrap 副作用阶段缺少 fence 边界校验，以及部分订阅发布失败后节点仍 READY 且无自动重试。`
+- `authorization`: `用户明确要求先提交并推送全部未提交改动；10 个变更文件均经只读审阅确认属于当前任务，秘密扫描和仓库边界扫描通过。提交 938c3c5 已推送 origin/main，随后回读 HEAD 与 origin/main 相同且工作区干净。用户授权本任务自行创建隔离测试服务器、费用上限 USD 1000；本轮代码测试仍只使用专用 PostgreSQL/Redis 与 Fake runtime，不进行 AWS、SSH 或生产写入。`
+- `implementation_scope`: `先新增真实行为回归测试；随后以每次运行唯一 owner、lease 续期及副作用前后 fence 检查保护 bootstrap；要求所有活动订阅原子发布成功后才置 READY；对仅因发布不完整而进入 NEEDS_RECONCILIATION 的节点提供按现有 pool_sync_interval_minutes 限频的发布重试。`
+- `exclusions`: `不更改节点池缩容、每日重启或其他账号节点；不触碰现有云资源、SSH、静态 IP、凭据、Token 或生产发布；不改写 v0.13.0 标签。真实 bootstrap runtime 仍需单独验证固定 Linux 安装材料、防火墙授权读回和健康探针。`
+- `assumptions`: `同一 operation 的并行执行必须互相视为不同 worker；订阅发布是 bootstrap READY 的必要条件；发布失败时回滚本批次已生成的 revision，保留节点 PROVISIONED/RECONCILIATION 并由 scheduler 仅重试发布阶段。`
+- `risks`: `后台续租线程需在退出时停止并关闭其 Django 连接；租约丢失的旧 worker 不得写 operation 错误或清除新 owner；自动发布重试须验证健康证据仍有效且不得绕过订阅撤销/冻结检查。`
+- `command_or_tool`: `git diff/status; scripts/check-secrets.sh; scripts/check-boundary.sh; diff review; claims/NodeExecutor/Publisher/task/test reads; TDD skill and writing-good-tests reference; collaboration read-only reviews; git add/commit/push/readback.`
+- `result`: `预提交秘密扫描、边界检查和 diff check 通过；提交 938c3c5（10 files, 938 insertions/55 deletions）已推送到 main，HEAD=origin/main=938c3c5c7bbe088d08cb47031567074f9f9d9e1f，工作区干净。GitHub push 提示默认分支存在 104 个 Dependabot alerts（1 critical/40 high/49 moderate/14 low），本轮未开展依赖风险审计。只读审阅确认上述三项 bootstrap 缺口；未执行云/SSH操作。`
+- `exit_code`: `secret scan=0; boundary=0; diff check=0; commit=0; push=0; status/SHA readback=0。`
+- `status`: `in-progress；待先运行新增测试确认 RED，再实施与复验。真实 AWS/bootstrap/device/production 状态未改变。`
+- `commit_or_tree`: `main@938c3c5c7bbe088d08cb47031567074f9f9d9e1f, pushed and clean before this ledger append。`
+- `time_logic`: `租约使用 Django aware UTC wall-clock、[start,end) 失效语义；续租需要在旧 fence 仍当前时成功；自动发布重试最早时间为上次 operation 更新时间加现有 pool_sync_interval_minutes；执行耗时仍用 monotonic timeout。`
+- `reuse`: `复用已有 OperationClaim、NodeAutomationSetting.pool_sync_interval_minutes、Publisher、bootstrap OperationStep、专用测试数据库和 Fake runtime；不复用 Stub 云证据作为真实 bootstrap 结论。`
+- `rollback_ref`: `本轮源代码改动使用后续提交的 git revert 回退，不回退数据库安全状态或云状态；938c3c5 是推送前检查点，回退它需单独 git revert 且不改写远端历史。`
+
+#### Correction to event 014
+
+event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initial worktree. At the start of this resumed turn, `main@6b3e6f57149d7eee5df350f664876e152adf01c3` had 10 task-related modified files. Per the user's explicit instruction those files were reviewed, committed as `938c3c5`, pushed, and verified equal to `origin/main` before any new code edits. This correction preserves the historical event and clarifies its baseline.
+
+### 2026-11-07T03:28:02+08:00 — xray-node-automation-20261106-01 runtime closure and 0.14.0 release continuation
+
+- `event_id`: `xray-node-automation-20261106-01/017`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T03:28:02+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / inventory / decision`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.0.md; tests/acceptance/matrix.json; backend/apps/nodes/{automation.py,bootstrap.py,executor.py,lifecycle.py,models.py,probes.py,tasks.py}; backend/apps/subscriptions/{access.py,credentials.py,node_agent.py,publishing.py}; backend/apps/operations/{authorization.py,claims.py,handlers.py}; backend/apps/cloud_accounts/{models.py,services.py}; backend/providers/{aws_lightsail.py,authorization.py,registry.py}; installer manifest/scripts; relevant focused tests`
+- `operation`: `继续完成 0.14.0 自动化闭环：验证真实 bootstrap 运行时是否可在项目安全约束下补齐，覆盖自动缩容执行前订阅备用节点变化竞态，并在本地门禁、验收资料、发布提交/tag/远端回读完成后再收尾。`
+- `reason`: `用户已先授权将原有未提交改动全部提交并推送；基线提交 938c3c5 已回读与 origin/main 一致后才继续。用户授权自主创建仅供本任务的 AWS 测试服务器、配置自定且累计费用不超过 USD 1000，并要求缺失环境自行补齐、测试服务器生命周期与订阅创建/撤回。用户随后确认下调地区配额时按同地区 created_at 最早节点缩容。`
+- `implementation_scope`: `仅当前 main 工作树的本任务自动化/测试/运行时/发布证据；先补真实行为测试，再改运行时；防火墙替换必须读回保留现有完整规则并写后读回；安装器和 Xray 使用 manifest 固定 SHA-256；SSH 只使用 AWS 证明的主机密钥；健康验收必须真实验证协议接受有效凭据、拒绝无效凭据并建立新连接；发布资料必须区别本地 Fake/Stub 与真实 AWS。`
+- `exclusions`: `不读取或输出忽略环境文件、密码、密钥、AWS/云凭据、订阅 token、原始 URI 或带秘密异常；不触碰 Shop、vue-shop-admin、shop-xray-installer、archive、其他项目进程/数据库/浏览器/端口；不操作既有 AWS 服务器、静态 IP 或生产；仅当本轮测试服务器可精确识别且符合预算时执行云测试及其清理。`
+- `assumptions`: `用户“缺失环境直接补齐”授权为本任务新建测试服务器实现必要的固定安装/SSH/健康适配器；不授权真实生产服务器或非本轮测试资源。普通 Lightsail reboot 只承诺读回并同步实际地址，不承诺 IP 必定改变。无活动凭据或无法证实协议健康时保持 fail-closed。`
+- `risks`: `Bootstrap 涉及真实 AWS 写入、整组防火墙替换、SSH 安装和临时数据面探测；错误实现可能中断 SSH、造成不健康节点订阅或留下计费资源。需逐步读回、使用单个低价隔离实例、严守预算并确认本轮实例后清理；任何身份/归属/防火墙/运行/健康不确定即不继续。发布写入远端 Git/tag/release；只能正常提交推送、不得 force-push 或覆盖既有标签。`
+- `command_or_tool`: `git status/log/diff; project contract/skill/source/test and release evidence reads; process/port ownership inventory; read-only child-agent audits; official Xray CLI documentation lookup for stdin config behavior; subsequent focused RED/GREEN tests, full local acceptance, static/boundary/secret gates, authorized GitHub publication and external readback.`
+- `result`: `HEAD=origin/main=938c3c5c7bbe088d08cb47031567074f9f9d9e1f；工作树保留该提交之后的 0.14.0 功能/测试/资料改动。只读确认自动缩容按同地区 (created_at, pk) 选最早节点并执行前复核；订阅/生命周期覆盖较广但缺端到端执行前备用节点失效测试。default AWS profile 指纹与绑定账号不匹配；root profile 已有只读审计指纹匹配。真实 bootstrap factory/health probe 尚未配置；Lightsail firewall 整组替换必须保留现有全部规则。未发生 AWS/SSH 写入。`
+- `exit_code`: `只读 Git/文件/端口检查均 0；官方 Xray 文档搜索完成；工作树 diff check=0（本事件新增审计记录前）。`
+- `status`: `in-progress；真实 AWS、SSH、订阅、生命周期和发布状态待本轮新证据，不将上轮本地摘要当作本轮最终证据。`
+- `commit_or_tree`: `main@938c3c5c7bbe088d08cb47031567074f9f9d9e1f + 后续本地 0.14.0 工作树差异。`
+- `time_logic`: `配额日常调度及每日单节点重启使用数据库 aware UTC 时间、显式 IANA 时区、每个地区 created_at/pk 升序；计划边界与 DST 由聚焦测试固定时钟验证。SSH/HTTP 等执行超时使用 monotonic 时钟；AWS 运行时不以墙钟推断耗时。`
+- `reuse`: `复用现有 AWS Read/Write Provider、DatabaseWriteAuthorizer/Operation claim、AWS-attested Paramiko 传输、固定安装 manifest、NodeExecutor、健康代际及 Publisher；本地 Compose/Fake/Stub 仅作为本地证据。`
+- `rollback_ref`: `代码使用本版本提交的 git revert 或回退至 v0.13.0；数据库不反向迁移，不恢复 revoked token/credential/security event；只清理由本任务创建、带唯一任务标识并读回核实的测试云资源，不碰既有资源。`
+
+### 2026-11-07T04:26:48+08:00 — xray-node-automation-20261106-01 IPv6 firewall and cloud preflight continuation
+
+- `event_id`: `xray-node-automation-20261106-01/018`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T04:26:48+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / write / validate / runtime`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; docs/release-checklist-v0.14.0.md; tests/acceptance/matrix.json; backend/apps/nodes/bootstrap_runtime.py; backend/tests/test_bootstrap_runtime.py; local ignored .env (loaded in process, never echoed); xray_test CloudAccount credential metadata; AWS STS identity API; current process/container/port inventory; GitHub workflow/release metadata`
+- `operation`: `修复双栈节点防火墙端口族同步，并在 Lightsail 整组规则替换前要求当前规则具有有效的 TCP/22 SSH 入口；安全复核绑定凭据与本地 X-ray app key 是否可解封，只读查验 GitHub 发布能力。`
+- `reason`: `只读审查发现订阅可能发布 IPv6 地址但 bootstrap 仅开放 IPv4；Lightsail API 整组替换若缺少 SSH 规则可能切断远程安装通道。发布资料有旧门禁计数/旧提交状态。`
+- `authorization`: `用户要求先提交推送原有工作，随后明确授权本任务测试服务器且总费用不超过 USD 1000、缺失环境自行补齐，并确认下调配额时删除本地区 created_at 最早节点。基线 938c3c5 已推送且初始工作树曾干净；后续全部脏文件属于本任务候选。真实 AWS 写入仍限定应用数据库绑定账号、当前可解密 credential version、唯一新建且可读回标记的测试节点。`
+- `implementation_scope`: `bootstrap_runtime.merge_firewall_rules 根据 ManagedNode 已读回地址族补充 Xray TCP/UDP 规则；IPv4-only 节点不开放 IPv6；校验已有 CIDR 与 family 一致并保留全部读回规则；若当前规则不含 TCP/22（或涵盖 22 的 all/range 规则）则拒绝完整规则集合写入。聚焦测试先验证旧行为失败再验证修复。`
+- `exclusions`: `不读取/回显密钥值、AWS access key/session token、解密后凭据、Token 或异常原文；不读取 Shop、vue-shop-admin、shop-xray-installer、archive；不停止/修改 DNS 及其他项目进程、数据库、容器、端口或会话；不触碰已有 AWS 服务器、订阅、静态 IP；不使用 CLI profile 绕过 app CloudAccount/Operation 授权。`
+- `assumptions`: `已读回的节点 addresses.family 是 subscription 发布 IPv4/IPv6 endpoint 的可信来源；应用内有显式传输许可的有效 TCP/22 规则才足以允许全组替换。AWS profile 的 account fingerprint 只用于比对，不代表其密钥可以替代数据库绑定凭据。`
+- `risks`: `防火墙整组替换可能移除 SSH；新增 IPv6 端口会扩大可达面，仅对已读回公开 IPv6 地址族开放。当前 root AWS profile 账号指纹与唯一启用的 Lightsail CloudAccount 一致，但当前应用 master key 对该现存不可变凭据 version 1 解密时返回固定认证失败（cause type `InvalidTag`）；在不改变既有账号凭据版本或绕过 app 授权的前提下不能创建/验证测试实例。`
+- `command_or_tool`: `git status/log/ls-remote/diff; docker ps/inspect; lsof/nc; bounded root-profile `aws sts get-caller-identity` hashed in process; Django test-settings metadata/decrypt-only query using ignored local .env in process; collaboration read-only audits; GitHub MCP GET; `uv run --project backend pytest -c backend/pyproject.toml backend/tests/test_bootstrap_runtime.py`。`
+- `result`: `HEAD=origin/main=938c3c5c7bbe088d08cb47031567074f9f9d9e1f；xray-test PostgreSQL/Redis 容器 healthy 且归属当前仓库，其他 listener/container 均为其他项目并保持原样；root profile fingerprint 与当前 DB CloudAccount fingerprint 均 `sha256:4a0ef08458dd`，app-bound version 1 存在、purpose/version metadata 正确但 AES-GCM authentication failed；未调用 Lightsail API、未写云、未 SSH、未创建订阅。GitHub MCP 可读但本机缺 gh；当前基线 Actions job runner_id=0、steps=0，v0.14.0 tag/Release 均不存在。`
+- `exit_code`: `AWS STS read-only hash=0; container/ports=0; Django credential metadata/decrypt query=0 (decrypt classified failed); IPv6 test before fix=1 (expected: missing v6 rule); TDD SSH guard before fix=1 (expected: did not reject empty rules); focused runtime tests after fixes=0 (`9 passed in 3.58s`); pre-edit diff check=0. No external AWS write was attempted.`
+- `status`: `局部代码修复及聚焦测试 passed；真实云/SSH/订阅/设备验收 blocked，原因是 app-bound credentials cannot decrypt; existing account version was not rotated and no CLI bypass was used. Full 19-gate rerun, final local report, commit/tag/push and remote readback remain pending.`
+- `commit_or_tree`: `main@938c3c5c7bbe088d08cb47031567074f9f9d9e1f plus v0.14.0 candidate worktree and the scoped bootstrap firewall/test edits.`
+- `time_logic`: `ledger timestamps use system Asia/Shanghai offset; STS identity call had 3s connect/5s read timeout. No business scheduling rule changed; quota order remains same-region (created_at, pk), daily restart remains UTC-aware with configured IANA timezone and idempotent local-date boundary.`
+- `reuse`: `reuse existing xray-test Compose service, provider firewall merge/read-after-write, app credential-version AAD, AWS profile fingerprint hash, and focused bootstrap runtime tests; no Fake/Stub evidence is represented as AWS success.`
+- `rollback_ref`: `revert the final 0.14.0 code commit or return application code to v0.13.0; do not reverse migrations or restore token/credential/security/cloud state. This event made no database or cloud writes; ignored .env and unrelated processes/data are preserved.`
+
+### 2026-11-07T05:02:02+08:00 — xray-node-automation-20261106-01 final regression and evidence correction
+
+- `event_id`: `xray-node-automation-20261106-01/019`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T05:02:02+08:00`
+- `actor`: `Codex`
+- `event_type`: `write / validate / release-evidence`
+- `path_scope`: `backend/apps/nodes/automation.py; backend/tests/test_node_automation.py; scripts/check-local.sh; tests/deploy/test_delivery_contract.py; tests/acceptance/matrix.json; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.0.md; CHANGELOG.md; README.md; .gitignore; artifacts/acceptance/0.14.0/final-gates-20261107-r{3,4,5}`
+- `operation`: `要求自动缩容保留当前订阅修订已发布的每种格式；修正交付摘要日志路径从实际选定的 artifact directory 生成；完成修复后的全量本地门禁，并同步版本和验收资料。`
+- `reason`: `只读覆盖审查发现旧订阅含 Clash、但剩余节点只有 VLESS 时当前“任意一种格式可渲染”仍放行删除；发布审查发现 summary.tsv 指向旧默认 gates 日志；矩阵和进度还记录旧测试数字、旧 AWS 账号判断和旧 bootstrap 配置状态。`
+- `authorization`: `用户要求先提交推送原有未提交工作；基线 938c3c5 已提交推送并确认工作树干净后才开始本候选。用户授权本任务创建测试 AWS 服务器、费用上限 USD 1000，并明确地区配额下调时删除同地区 created_at 最早服务器；本轮真实云写入仍必须经可解密的 CloudAccount 版本和应用 Operation 授权。`
+- `implementation_scope`: `has_subscription_endpoint_fallback 逐一渲染 current_revision.payloads 的每种既有格式，未知/空 payload 集合 fail closed；check-local summary 记录实际 log_file，并仅在仓库内路径时转成相对路径；新增异构协议缩容回归和摘要目录 contract test；更新当前本地证据、历史纠正、AWS preflight、版本清单和生成浏览器报告 ignore 规则。`
+- `exclusions`: `不读取或输出密钥、密码、AWS 凭据、解密明文、订阅 token、原始 URI 或异常原文；不读 Shop、vue-shop-admin、shop-xray-installer 或 archive；不停止/改动其他项目进程、容器、数据库、端口或浏览器会话；不执行 AWS/SWAS 写入、SSH、订阅签发/撤回、生产或静态 IP 操作。`
+- `assumptions`: `每日轮转仍采用每个配置当地日最多提交一个重启操作；失败或云结果不明时不自动重放，未知结果需 reconciliation。每个地区每次池同步最多提交一台最早节点删除，多余节点按后续同步间隔收敛。`
+- `risks`: `缩容时任何已发布格式缺少剩余兼容端点都会阻塞删除；自动每日重启并不保证失败日有第二次尝试。root AWS 身份与应用 CloudAccount 匹配，但应用无法解密 version 1，因此本轮不能进行隔离实例验收。`
+- `command_or_tool`: `两项新增回归在配置 XRAY_TEST_DATABASE_URL/XRAY_REDIS_URL 后先 RED 再 GREEN；`PATH=/tmp/xray-pnpm10-bin:$PATH XRAY_ACCEPTANCE_ARTIFACT_DIR=artifacts/acceptance/0.14.0/final-gates-20261107-r5 ./scripts/check-local.sh`; `python3 scripts/validate-acceptance.py`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; `uv run --project backend python scripts/vendor/skill-quick-validate.py skills/xray-manager`; `bash -n scripts/check-local.sh`; summary.tsv row/path audit; `git diff --check`。`
+- `result`: `新增缩容多格式用例原先复现 deleted=1，修复后 1 passed；摘要目录测试原先缺少 summary_log_path，修复后 1 passed。`r4` 使用默认 pnpm 11.25.0 在 runtime gate exit 1；`r5` 使用 pinned pnpm 10.33.0 后完整 19/19 gate exit 0，JUnit 445 total、443 passed、2 skipped、0 failures/errors，前端 84 passed，Playwright 8 passed；summary 的 19 条 log 全部指向 r5 目录。验收矩阵、边界、秘密、技能和差异门禁通过。旧 r3/r4 产物保留，Playwright 原始本地输出文件被忽略规则排除且未删除。AWS root profile 与数据库 CloudAccount 指纹相同，但绑定 credential version 1 AES-GCM 解密失败；未调用 Lightsail 写接口、未 SSH、未建实例或订阅，费用 USD 0。`
+- `exit_code`: `两项新增回归 RED=1（预期）；GREEN=0、各 1 passed；初次 pytest 未提供必需专用 DB 环境=1（未收集），配置后重跑；r4 runtime=1（pnpm 版本不匹配）；r5 check-local=0（19/19）；summary path audit=0；acceptance=0；boundary=0；secret=0；skill quick validator 系统 Python=1（缺 PyYAML），项目 uv 环境=0；shell syntax=0；diff-check=0。`
+- `status`: `本地代码/交付验收 passed；真实 AWS、SSH、真实订阅与实例生命周期 blocked（应用无法解密绑定凭据）；GitHub CI、0.14.0 tag/Release 和资产远端读回待提交推送后执行。两项安装器测试因需专用 Linux/systemd 主机而显式 skipped。`
+- `commit_or_tree`: `main@938c3c5c7bbe088d08cb47031567074f9f9d9e1f plus the scoped v0.14.0 candidate worktree; no candidate commit or tag exists yet.`
+- `time_logic`: `业务时间策略未改变；调度仍按配置 IANA 时区的当地日期去重并以 aware UTC 存储，缩容顺序按同地区 (created_at, pk)；本轮只记录 Asia/Shanghai offset 时间。`
+- `reuse`: `复用专用 xray-test PostgreSQL/Redis、Fake/Stub fixtures、current revision payload formats、现有 Publisher renderers 和 run-id isolated Playwright；本地证据不推定 AWS、SSH、设备或生产成功。`
+- `rollback_ref`: `最终应用代码使用 v0.14.0 的 git revert 或回退到 v0.13.0；验收文档与 .gitignore 可由 docs/code revert 回退。没有数据库/cloud 写入，本地生成浏览器截图和报告保留在磁盘。不得恢复已撤销 token/credential/security/cloud state。`

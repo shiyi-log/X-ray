@@ -1,6 +1,6 @@
 {
-  "version": "0.13.0",
-  "generated_at": "2026-11-06T16:36:37+08:00",
+  "version": "0.14.0",
+  "generated_at": "2026-11-07T04:56:53+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -11,6 +11,32 @@
   "items": [
     {
       "id": "local-delivery-gates",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r5/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r5/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {"total": 445, "passed": 443, "skipped": 2, "failures": 0, "errors": 0},
+          "frontend_unit_tests": 84,
+          "browser_e2e": 8,
+          "candidate_base_commit": "938c3c5c7bbe088d08cb47031567074f9f9d9e1f",
+          "candidate_worktree": true,
+          "started_at": "2026-11-06T20:48:29Z",
+          "finished_at": "2026-11-06T20:51:03Z"
+        }
+      ],
+      "commit": "938c3c5c7bbe088d08cb47031567074f9f9d9e1f",
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": []
+    },
+    {
+      "id": "historical-0.13-delivery-gates",
       "environment": "local",
       "status": "failed",
       "evidence": [
@@ -100,7 +126,7 @@
     {
       "id": "github-ci",
       "environment": "ci",
-      "status": "blocked",
+      "status": "not-run",
       "evidence": [
         {
           "kind": "historical_github_actions",
@@ -113,7 +139,7 @@
           "timestamp": "2026-10-31T03:06:34+08:00"
         },
         {
-          "kind": "current_commit_actions",
+          "kind": "historical_commit_actions",
           "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
           "status": "blocked",
           "runs": [
@@ -121,9 +147,19 @@
             {"run_id": 42187198168, "workflow": "发布 X-ray 版本", "conclusion": "failure", "job_steps": 0}
           ],
           "reason": "Both push-triggered workflows completed with failure before any job step ran; no successful remote CI evidence exists."
+        },
+        {
+          "kind": "candidate_pre_push_baseline_actions",
+          "commit": "938c3c5c7bbe088d08cb47031567074f9f9d9e1f",
+          "status": "blocked",
+          "runs": [
+            {"run_id": 42258919918, "workflow": "X-ray delivery gates", "conclusion": "failure", "runner_id": 0, "job_steps": 0}
+          ],
+          "candidate_status": "not-run",
+          "reason": "This run tested only the baseline commit before the v0.14.0 candidate was pushed."
         }
       ],
-      "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
+      "commit": null,
       "provider": null,
       "region": null,
       "cost": null,
@@ -132,7 +168,7 @@
     {
       "id": "github-release",
       "environment": "release",
-      "status": "blocked",
+      "status": "not-run",
       "evidence": [
         {
           "kind": "historical_github_release",
@@ -154,9 +190,16 @@
           "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
           "status": "not-created",
           "reason": "The v0.13.0 tag exists and points to 2544e21, but the release workflow failed before steps ran; GitHub API returned 404 for the v0.13.0 Release and no remote assets exist."
+        },
+        {
+          "kind": "current_candidate_release",
+          "tag": "v0.14.0",
+          "commit": null,
+          "status": "not-created",
+          "reason": "The verified local candidate has not yet been committed or pushed."
         }
       ],
-      "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
+      "commit": null,
       "provider": "github",
       "region": null,
       "cost": null,
@@ -199,7 +242,43 @@
       "id": "aws-real-cloud",
       "environment": "real_cloud",
       "status": "blocked",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "historical_aws_identity_preflight",
+          "profile": "default",
+          "cli_account_ref": "sha256:b1746f68f5be",
+          "xray_cloud_account_ref": "sha256:4a0ef08458dd",
+          "identity_matches": false,
+          "writes_attempted": false,
+          "timestamp": "2026-11-06T17:06:34+08:00"
+        },
+        {
+          "kind": "aws_identity_preflight",
+          "profile": "root",
+          "cli_account_ref": "sha256:4a0ef08458dd",
+          "xray_cloud_account_ref": "sha256:4a0ef08458dd",
+          "identity_matches": true,
+          "writes_attempted": false,
+          "timestamp": "2026-11-07T04:26:48+08:00"
+        },
+        {
+          "kind": "aws_application_credential_preflight",
+          "credential_version": 1,
+          "metadata_verified": true,
+          "decryption_status": "failed",
+          "failure_class": "AES-GCM authentication failure",
+          "writes_attempted": false,
+          "timestamp": "2026-11-07T04:26:48+08:00"
+        },
+        {
+          "kind": "bootstrap_runtime_preflight",
+          "bootstrap_factory_configured": true,
+          "health_probe_configured": true,
+          "real_cloud_execution": "not-run",
+          "writes_attempted": false,
+          "source": "apps.nodes.bootstrap_runtime"
+        }
+      ],
       "commit": null,
       "provider": "aws-lightsail",
       "region": null,

@@ -7,6 +7,7 @@ from uuid import UUID
 from django.conf import settings
 from django.db import transaction
 
+from apps.operations.claims import Claim, assert_current
 from apps.operations.models import Operation
 from common.errors import DomainError
 
@@ -55,10 +56,17 @@ class NodeExecutor:
         config: dict,
         operation_id: UUID,
         allow_security_rollback: bool = False,
+        claim: Claim | None = None,
     ) -> ApplyResult:
+        if claim is not None and claim.operation_id != operation_id:
+            raise DomainError(
+                "OPERATION_TARGET_MISMATCH", "claim 与配置操作不匹配", status_code=409
+            )
         with transaction.atomic():
             node = ManagedNode.objects.select_for_update().get(pk=node_id)
             self._scope(node, operation_id)
+            if claim is not None:
+                assert_current(claim)
             if generation <= node.applied_generation or generation < node.desired_generation:
                 raise DomainError(
                     "STALE_CONFIG_GENERATION", "配置 generation 不是严格递增", status_code=409
@@ -68,9 +76,13 @@ class NodeExecutor:
                 node.desired_generation = generation
                 node.save(update_fields=["desired_generation", "updated_at"])
 
+        if claim is not None:
+            assert_current(claim)
         transport = self.transport_factory(node)
         if transport is None:
             raise DomainError("NODE_TRANSPORT_UNAVAILABLE", "节点传输不可用", status_code=503)
+        if claim is not None:
+            assert_current(claim)
         response = transport.apply(
             {
                 "schema_version": 1,
@@ -81,6 +93,8 @@ class NodeExecutor:
                 "action": "normal" if allow_security_rollback else "security",
             }
         )
+        if claim is not None:
+            assert_current(claim)
         result = ApplyResult(
             applied_generation=int(response.get("applied_generation", 0)),
             config_test_passed=bool(response.get("config_test_passed")),
@@ -112,6 +126,8 @@ class NodeExecutor:
         digest = _config_hash(config)
         with transaction.atomic():
             node = ManagedNode.objects.select_for_update().get(pk=node_id)
+            if claim is not None:
+                assert_current(claim)
             if node.desired_generation != generation:
                 raise DomainError(
                     "CONFIG_GENERATION_RACE", "节点期望 generation 已变化", status_code=409

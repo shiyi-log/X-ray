@@ -261,13 +261,28 @@ def schedule_node_bootstrap():
 
     setting = NodeAutomationSetting.objects.filter(singleton_key=1).first()
     if setting is None or not setting.pool_sync_enabled:
-        return {"scheduled": 0, "skipped": 0, "disabled": True}
+        return {
+            "scheduled": 0,
+            "retried": 0,
+            "reconciled": 0,
+            "skipped": 0,
+            "disabled": True,
+        }
     admin = SuperAdmin.objects.filter(singleton_key=1, is_active=True).first()
     if admin is None:
-        return {"scheduled": 0, "skipped": 0, "admin_unavailable": True}
+        return {
+            "scheduled": 0,
+            "retried": 0,
+            "reconciled": 0,
+            "skipped": 0,
+            "admin_unavailable": True,
+        }
 
-    scheduled = skipped = 0
+    scheduled = retried = reconciled = skipped = 0
+    publication_retries = []
     with transaction.atomic():
+        now = timezone.now()
+        retry_before = now - timedelta(minutes=setting.pool_sync_interval_minutes)
         candidates = (
             ManagedNode.objects.select_for_update()
             .filter(
@@ -293,12 +308,45 @@ def schedule_node_bootstrap():
             if create_operation is None:
                 skipped += 1
                 continue
-            # A blocked bootstrap remains operator-retryable on the same
-            # operation. Never create replacement operations on each beat tick.
-            if Operation.objects.filter(
-                kind="node.bootstrap", target_type="node", target_id=node.pk
-            ).exists():
-                skipped += 1
+            existing = (
+                Operation.objects.filter(
+                    kind="node.bootstrap", target_type="node", target_id=node.pk
+                )
+                .select_for_update()
+                .order_by("-created_at", "-pk")
+                .first()
+            )
+            if existing is not None:
+                if (
+                    existing.status == "RUNNING"
+                    and existing.lease_expires_at is not None
+                    and existing.lease_expires_at <= now
+                ):
+                    existing.status = "NEEDS_RECONCILIATION"
+                    existing.error_code = "BOOTSTRAP_LEASE_EXPIRED"
+                    existing.error_details = {}
+                    existing.lease_owner = ""
+                    existing.lease_expires_at = None
+                    existing.save(
+                        update_fields=[
+                            "status",
+                            "error_code",
+                            "error_details",
+                            "lease_owner",
+                            "lease_expires_at",
+                            "updated_at",
+                        ]
+                    )
+                    reconciled += 1
+                    continue
+                if (
+                    existing.status == "NEEDS_RECONCILIATION"
+                    and existing.error_code == "BOOTSTRAP_SUBSCRIPTION_PUBLISH_FAILED"
+                    and existing.updated_at <= retry_before
+                ):
+                    publication_retries.append(existing.pk)
+                else:
+                    skipped += 1
                 continue
             params = {
                 "region": node.region,
@@ -321,7 +369,28 @@ def schedule_node_bootstrap():
                 cloud_credential_version=node.cloud_credential_version,
             )
             scheduled += 1
-    return {"scheduled": scheduled, "skipped": skipped}
+
+    if publication_retries:
+        from apps.nodes.bootstrap import NodeBootstrapService
+
+        for operation_id in publication_retries:
+            try:
+                outcome = NodeBootstrapService.retry_publication(operation_id)
+            except DomainError as exc:
+                if exc.code != "OPERATION_LEASED":
+                    raise
+                skipped += 1
+            else:
+                if outcome["ignored"]:
+                    skipped += 1
+                else:
+                    retried += 1
+    return {
+        "scheduled": scheduled,
+        "retried": retried,
+        "reconciled": reconciled,
+        "skipped": skipped,
+    }
 
 
 @shared_task
@@ -369,6 +438,7 @@ def schedule_daily_node_restart():
             .filter(
                 external_id__gt="",
                 provisioning_state="READY",
+                health_state="HEALTHY",
                 desired_state="PRESENT",
                 security_state="OPEN",
                 raw_cloud_state__iexact="running",

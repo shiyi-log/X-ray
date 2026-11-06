@@ -61,9 +61,19 @@ def test_aws_transport_limits_first_connection_to_provider_attested_host_keys(mo
             }
         )
     )
+    provider_selection = {}
+
+    def read_provider(account_id, region, *, credential_version=None):
+        provider_selection.update(
+            account_id=account_id,
+            region=region,
+            credential_version=credential_version,
+        )
+        return SimpleNamespace(_provider=provider)
+
     monkeypatch.setattr(
         "apps.subscriptions.node_agent.build_read_provider",
-        lambda *_args: SimpleNamespace(_provider=provider),
+        read_provider,
     )
     captured = {}
 
@@ -80,12 +90,18 @@ def test_aws_transport_limits_first_connection_to_provider_attested_host_keys(mo
         external_id="node-automation-test",
         cloud_account_id=uuid4(),
         cloud_account=SimpleNamespace(provider="aws_lightsail"),
+        cloud_credential_version=SimpleNamespace(version=7),
     )
 
     aws_transport(node)
 
     assert captured["host"] == "198.51.100.20"
     assert captured["attested_fingerprints"] == (fingerprint,)
+    assert provider_selection == {
+        "account_id": node.cloud_account_id,
+        "region": node.region,
+        "credential_version": 7,
+    }
 
 
 def test_usage_collection_defaults_to_the_builtin_lightsail_agent(settings, monkeypatch):

@@ -77,7 +77,11 @@ def aws_transport(node):
         raise DomainError(
             "NODE_EXECUTOR_UNAVAILABLE", "该云平台尚未配置 SSH 适配器", status_code=503
         )
-    reader = build_read_provider(node.cloud_account_id, node.region)
+    reader = build_read_provider(
+        node.cloud_account_id,
+        node.region,
+        credential_version=node.cloud_credential_version.version,
+    )
     client = reader._provider.lightsail
     details = client.get_instance_access_details(instanceName=node.external_id, protocol="ssh")[
         "accessDetails"

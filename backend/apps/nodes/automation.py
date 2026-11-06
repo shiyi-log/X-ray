@@ -43,7 +43,7 @@ def has_confirmed_instance_resource(node: ManagedNode) -> bool:
 def has_subscription_endpoint_fallback(node: ManagedNode) -> bool:
     """Require affected active subscriptions to retain a publishable endpoint."""
     from apps.subscriptions.models import Subscription
-    from apps.subscriptions.publishing import FORMATS, Publisher
+    from apps.subscriptions.publishing import Publisher
     from apps.subscriptions.renderers import NoCompatibleEndpoints, render_subscription
 
     node_id = str(node.pk)
@@ -62,11 +62,14 @@ def has_subscription_endpoint_fallback(node: ManagedNode) -> bool:
             for key, value in node_versions.items()
         ):
             continue
+        required_formats = revision.payloads if revision else {}
+        if not isinstance(required_formats, dict) or not required_formats:
+            return False
         try:
             endpoints = Publisher._endpoints(subscription, excluded_node_ids={node.pk})
             if not endpoints:
                 return False
-            for subscription_format in FORMATS:
+            for subscription_format in required_formats:
                 try:
                     render_subscription(
                         subscription_format,
@@ -74,10 +77,7 @@ def has_subscription_endpoint_fallback(node: ManagedNode) -> bool:
                         public_version="fallback-check",
                     )
                 except NoCompatibleEndpoints:
-                    continue
-                break
-            else:
-                return False
+                    return False
         except Exception:
             return False
     return True
@@ -223,6 +223,7 @@ def validate_automated_restart(
     if (
         node.desired_state != "PRESENT"
         or node.provisioning_state != "READY"
+        or node.health_state != "HEALTHY"
         or node.security_state != "OPEN"
         or node.raw_cloud_state.casefold() != "running"
         or node.observation_error

@@ -400,6 +400,120 @@ def test_automated_delete_rechecks_subscription_fallback_before_cloud_write(prep
 
 
 @pytest.mark.django_db
+def test_automated_delete_dispatch_rejects_lost_subscription_fallback(prepared_node):
+    from types import SimpleNamespace
+
+    from apps.nodes.lifecycle import NodeLifecycle
+    from apps.nodes.tasks import schedule_node_pool_sync
+
+    oldest, _operation = prepared_node
+    _ready_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _publish_subscription_on_nodes("dispatch-changing-fallback", [oldest, younger])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    set_allocations(oldest.pool_id, [{"region": oldest.region, "quota": 1}])
+    NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+    assert schedule_node_pool_sync()["deleted"] == 1
+    deletion = Operation.objects.get(kind="node.delete")
+
+    younger.health_state = "UNHEALTHY"
+    younger.save(update_fields=["health_state", "updated_at"])
+
+    class WriteRecorder:
+        def __init__(self):
+            self.delete_calls = 0
+
+        def delete_instance(self, _resource, *, permit):
+            self.delete_calls += 1
+            return SimpleNamespace(outcome="accepted", request_id="fake")
+
+        def get_instance(self, resource):
+            return SimpleNamespace(ref=resource)
+
+    provider = WriteRecorder()
+    NodeLifecycle(provider_factory=lambda _node, _authorizer: provider).dispatch(
+        "delete", oldest.pk, operation_id=deletion.pk
+    )
+
+    deletion.refresh_from_db()
+    assert provider.delete_calls == 0
+    assert deletion.status == "FAILED"
+    assert deletion.error_code == "AUTOMATION_SUBSCRIPTION_FALLBACK_REQUIRED"
+
+
+@pytest.mark.django_db
+def test_pool_sync_requires_fallback_for_each_existing_subscription_format(prepared_node):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
+    from apps.nodes.tasks import schedule_node_pool_sync
+    from apps.subscriptions.credentials import CredentialService
+    from apps.subscriptions.models import NodeCredential
+    from apps.subscriptions.publishing import Publisher
+
+    oldest, _operation = prepared_node
+    _ready_node(oldest)
+    younger = _sibling(oldest, "younger")
+    subscription = _publish_subscription_on_nodes(
+        "format-fallback", [oldest, younger]
+    )
+    shadowsocks = NodeProtocol.objects.create(
+        node=oldest,
+        protocol="shadowsocks",
+        port=18444,
+        credential_scope="profile",
+    )
+    credential = CredentialService.rotate(
+        oldest.pk,
+        profile_ids=[subscription.profile_id],
+        protocol_ids=[shadowsocks.pk],
+    )[0]
+    oldest.refresh_from_db()
+    generation = oldest.desired_generation
+    NodeCredential.objects.filter(
+        node=oldest, profile_id=subscription.profile_id, revoked_at__isnull=True
+    ).update(desired_generation=generation, applied_generation=generation)
+    NodeCredential.objects.filter(pk=credential.pk).update(applied_generation=generation)
+    oldest.applied_generation = generation
+    oldest.health_state = "HEALTHY"
+    oldest.save(update_fields=["applied_generation", "health_state", "updated_at"])
+    NodeConfigRevision.objects.update_or_create(
+        node=oldest,
+        generation=generation,
+        defaults={
+            "config_hash": "b" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
+    Publisher.publish(subscription.pk)
+    subscription.refresh_from_db()
+    assert "clash" in subscription.current_revision.payloads
+
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    set_allocations(oldest.pool_id, [{"region": oldest.region, "quota": 1}])
+    NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+
+    result = schedule_node_pool_sync()
+
+    assert result["deleted"] == 0
+    assert result["blocked"] == 1
+    assert not Operation.objects.filter(kind="node.delete").exists()
+
+
+@pytest.mark.django_db
 def test_pool_sync_does_not_skip_oldest_ineligible_quota_consumer(prepared_node):
     from apps.nodes.tasks import schedule_node_pool_sync
 
@@ -521,6 +635,45 @@ def test_daily_restart_blocks_when_health_probe_is_unavailable(prepared_node, mo
 
 
 @pytest.mark.django_db
+def test_daily_restart_skips_known_unhealthy_node_without_consuming_its_turn(
+    prepared_node, monkeypatch
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+
+    oldest, _ = prepared_node
+    _ready_node(oldest)
+    _rebootable_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _rebootable_node(younger)
+    ManagedNode.objects.filter(pk=oldest.pk).update(health_state="UNHEALTHY")
+    setting = NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+
+    result = schedule_daily_node_restart()
+
+    setting.refresh_from_db()
+    assert result["scheduled"] == 1
+    assert result["node_id"] == str(younger.pk)
+    assert setting.daily_restart_last_node_id == younger.pk
+    assert Operation.objects.filter(kind="node.reboot", target_id=oldest.pk).count() == 0
+
+    reboot = Operation.objects.get(kind="node.reboot", target_id=younger.pk)
+    ManagedNode.objects.filter(pk=younger.pk).update(health_state="UNHEALTHY")
+    from apps.nodes.automation import validate_automated_restart
+
+    with pytest.raises(DomainError) as error:
+        validate_automated_restart(
+            reboot, younger, reboot.params["automation"]["policy_version"]
+        )
+    assert error.value.code == "AUTOMATION_TARGET_INELIGIBLE"
+
+
+@pytest.mark.django_db
 def test_daily_restart_fall_back_hour_runs_once_per_local_date(prepared_node, monkeypatch):
     from apps.identity.models import NodeAutomationSetting
     from apps.nodes.tasks import schedule_daily_node_restart
@@ -548,3 +701,36 @@ def test_daily_restart_fall_back_hour_runs_once_per_local_date(prepared_node, mo
     assert repeated_hour["scheduled"] == 0
     assert repeated_hour["local_date"] == "2026-11-01"
     assert Operation.objects.filter(kind="node.reboot").count() == 1
+
+
+@pytest.mark.django_db
+def test_daily_restart_schedules_after_spring_forward_skips_configured_time(
+    prepared_node, monkeypatch
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+
+    node, _ = prepared_node
+    _ready_node(node)
+    _rebootable_node(node)
+    NodeAutomationSetting.objects.create(
+        daily_restart_enabled=True,
+        daily_restart_time="02:30",
+        daily_restart_timezone="America/New_York",
+    )
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 3, 8, 6, 59, 59, tzinfo=UTC),
+    )
+    assert schedule_daily_node_restart()["scheduled"] == 0
+
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 3, 8, 7, 0, tzinfo=UTC),
+    )
+    result = schedule_daily_node_restart()
+
+    assert result["scheduled"] == 1
+    assert result["local_date"] == "2026-03-08"
+    assert Operation.objects.get(kind="node.reboot").target_id == node.pk

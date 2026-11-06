@@ -38,6 +38,10 @@ coverage/
 playwright-report/
 test-results/
 frontend/.playwright/
+/frontend/artifacts/
+/artifacts/acceptance/*/playwright-report.json
+/artifacts/acceptance/*/*.zip
+/artifacts/acceptance/*/screenshots/
 
 # Local editor and operating system metadata
 .DS_Store
