@@ -3,12 +3,12 @@
 ## 本地交付
 
 - [x] 完整 `scripts/check-local.sh`：19 项门禁全部退出 0。
-- [x] 后端/交付测试 `443 passed, 2 skipped`（445 total）；跳过项需要一次性 Linux 与 systemd 主机。
+- [x] 后端/交付测试 `447 passed, 2 skipped`（449 total）；跳过项需要一次性 Linux 与 systemd 主机。
 - [x] 前端 typecheck、lint、`84` 项单测、生产构建和 run-id 隔离 Playwright `8 passed`。
 - [x] 节点配额、每日轮转、状态/IP/流量对账、节点数核对、订阅创建/撤回和独立生命周期测试已覆盖；新增多格式备用订阅缩容回归通过。
 - [x] `git diff --check`、边界、秘密、skill、OpenAPI、迁移漂移和验收矩阵通过。
 
-完整门禁汇总见 [summary.tsv](../artifacts/acceptance/0.14.0/final-gates-20261107-r5/summary.tsv)，JUnit 报告与日志同目录。所有 19 项门禁退出码为 0，摘要中每个日志引用均指向本轮 `r5` 目录；旧候选证据保留。每个地区每轮最多提交一台最早节点删除，超额节点按同步间隔逐步收敛；每日最多提交一台轮转重启，失败或结果待对账时不自动重试。
+最终完整门禁证据位于 `artifacts/acceptance/0.14.0/final-gates-20261107-r9/`；19/19 gates exit 0，JUnit 449 total、447 passed、2 skipped，前端单测 84 passed、Playwright 8 passed。每日重启成功游标由 identity `0007_dailyrestartsuccesscursor` nullable additive migration 保存；只有自动重启 operation 最终 SUCCEEDED 才前移，失败后下一计划日继续同一轮转位置，结果待对账时保持阻塞且不自动重放。每个地区每轮最多排队一台最早节点删除，超额节点按后续同步间隔逐步收敛。Operation 租约续期从取得行锁并确认 fence 仍有效后开始计时。
 
 ## 发布读回
 

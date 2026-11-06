@@ -612,6 +612,40 @@ def test_daily_restart_runs_one_at_boundary_and_rotates_on_next_local_day(
 
 
 @pytest.mark.django_db
+def test_daily_restart_does_not_advance_rotation_after_failed_attempt(
+    prepared_node, monkeypatch
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+
+    oldest, _ = prepared_node
+    _ready_node(oldest)
+    _rebootable_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _rebootable_node(younger)
+    NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+
+    first = schedule_daily_node_restart()
+    failed = Operation.objects.get(pk=first["operation_id"])
+    failed.status = "FAILED"
+    failed.save(update_fields=["status", "updated_at"])
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+
+    next_day = schedule_daily_node_restart()
+
+    assert next_day["node_id"] == str(oldest.pk)
+    assert next_day["node_id"] != str(younger.pk)
+
+
+@pytest.mark.django_db
 def test_daily_restart_blocks_when_health_probe_is_unavailable(prepared_node, monkeypatch):
     from apps.identity.models import NodeAutomationSetting
     from apps.nodes.tasks import schedule_daily_node_restart

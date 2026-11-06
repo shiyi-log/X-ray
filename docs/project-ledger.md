@@ -5050,3 +5050,51 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `业务时间策略未改变；调度仍按配置 IANA 时区的当地日期去重并以 aware UTC 存储，缩容顺序按同地区 (created_at, pk)；本轮只记录 Asia/Shanghai offset 时间。`
 - `reuse`: `复用专用 xray-test PostgreSQL/Redis、Fake/Stub fixtures、current revision payload formats、现有 Publisher renderers 和 run-id isolated Playwright；本地证据不推定 AWS、SSH、设备或生产成功。`
 - `rollback_ref`: `最终应用代码使用 v0.14.0 的 git revert 或回退到 v0.13.0；验收文档与 .gitignore 可由 docs/code revert 回退。没有数据库/cloud 写入，本地生成浏览器截图和报告保留在磁盘。不得恢复已撤销 token/credential/security/cloud state。`
+
+### 2026-11-07T05:14:26+08:00 — xray-node-automation-20261106-01 restart success-based rotation
+
+- `event_id`: `xray-node-automation-20261106-01/020`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T05:14:26+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision / test-first`
+- `path_scope`: `backend/apps/identity/models.py; backend/apps/identity/migrations/0007_*; backend/apps/nodes/tasks.py; backend/apps/nodes/lifecycle.py; backend/tests/test_node_automation.py; backend/tests/test_node_lifecycle.py; tests/acceptance/matrix.json; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.0.md; docs/project-ledger.md`
+- `operation`: `修正每日重启轮转游标：只在生命周期确认重启 SUCCEEDED 后前移；失败时保留上次成功节点，下一计划日从其后继续选择。先增加聚焦回归测试并观察预期失败，再实施。`
+- `reason`: `只读检查发现 scheduler 提交操作即更新 daily_restart_last_node_id，导致 FAILED/CANCELLED/PARTIALLY_SUCCEEDED 日次序也前移，与“每天重启一台、按计划排序”目标不一致；unknown 与 reconciliation 必须维持 fail-closed，不得重放。`
+- `authorization`: `用户授权本次节点自动化实现、测试、同步发布；先行未提交内容已按用户要求提交推送并确认 main 与 origin/main 一致且工作区干净。测试仍限于专用 PostgreSQL/Redis 和 Fake providers；AWS 创建预算上限 USD 1000，但本次无云写入。`
+- `implementation_scope`: `新增 success cursor，自动重启最终状态 SUCCEEDED 时与操作完成原子记录成功节点；scheduler 从最后成功节点后依 (created_at, pk) 轮转；既有 local_date 仍用于限制每天最多一次尝试；FAILED 不推进游标，非终态/不确定结果继续阻塞。`
+- `exclusions`: `不对 FAILED/CANCELLED/PARTIALLY_SUCCEEDED/NEEDS_RECONCILIATION 做自动云重放；不改变非自动重启、配额缩容、现有节点或订阅逻辑；不读写云账号凭据、不调用 AWS/SSH、不创建/删除资源或发布真实订阅。`
+- `assumptions`: `明确确认 SUCCEEDED 的自动 daily_restart 操作，是当前代码中同时证明云 operation/readback、节点运行状态、健康探测和订阅刷新完成的唯一安全轮转事件；日期去重仍以设置中的 IANA timezone 和当地日期为准。`
+- `risks`: `新增 nullable success cursor 需要 additive migration；旧环境如已有 last scheduled node 但无 success cursor 将从最早当前 eligible 节点重新选取，当前 0.14.0 尚未发布，避免生产状态迁移歧义。AWS 应用凭据解密阻塞、Actions runner 未启动仍会限制实机/远端发布验收。`
+- `command_or_tool`: `只读读取 tasks.py/lifecycle.py/Operation statuses/current tests/migration chain；读取 TDD 与 verification skills；按 TDD 先编辑测试并运行专用数据库中的 focused pytest 观察 RED。`
+- `result`: `新增的失败日重试回归先按预期 RED，修复后成功游标、失败后轮转和每日调度聚焦测试通过；自动化与生命周期模块合计 62 passed，迁移漂移检查通过。完整 r6 本地门禁 19/19 exit 0，JUnit 447 total、445 passed、2 skipped、0 failures/errors；前端单测 84 passed，Playwright 8 passed。成功游标只在自动重启 operation 最终 SUCCEEDED 时与终态记录同一事务更新；失败后次日保持同一轮转位置，待对账结果阻塞后续重启且不重放。`
+- `exit_code`: `RED 回归=1（预期）；focused=0；自动化/生命周期=0；迁移漂移=0；r6 check-local=0（19/19）；acceptance/boundary/secrets/skill/diff-check=0。`
+- `status`: `本地实现与交付门禁 passed；真实 AWS/SSH/订阅/设备 blocked 或 not-run（应用不能解密绑定的 credential version 1；未创建资源，云费用 USD 0）；当前版本候选尚未推送，GitHub CI/Release 仍 not-run。`
+- `commit_or_tree`: `main@3294abad3c6d918c8ebe9cfb3502b33071955449, origin/main same before the scoped v0.14.0 candidate changes; final version commit pending.`
+- `time_logic`: `每日仍按配置 IANA timezone 的 local_date 边界限制最多一次排队尝试，wall-clock 为 Django aware UTC；只在同一 daily_restart operation 最终 SUCCEEDED 后更新成功轮转游标；FAILED 不推进并在下一计划日继续同一轮转位置；异常未知结果不自动重试并由 reconciliation 阻塞。`
+- `reuse`: `复用现有 NodeAutomationSetting、daily_restart Operation JSON、操作终态与 lifecycle._finish；Fake/Stub 测试仅证明本地流程。`
+- `rollback_ref`: `源码使用后续提交 git revert 或退回 v0.13.0；迁移保持 additive/null，不反向迁移；不恢复撤销 token、凭据、安全事件或云操作状态。`
+
+### 2026-11-07T06:09:59+08:00 — xray-node-automation-20261106-01 lease renewal timing and r9 final gates
+
+- `event_id`: `xray-node-automation-20261106-01/021`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T06:09:59+08:00`
+- `actor`: `Codex`
+- `event_type`: `test / write / validate / release-evidence`
+- `path_scope`: `backend/apps/operations/claims.py; backend/tests/test_operation_fencing.py; backend/tests/test_node_bootstrap.py; CHANGELOG.md; tests/acceptance/matrix.json; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.0.md; docs/project-ledger.md; artifacts/acceptance/0.14.0/final-gates-20261107-r{6,7,8,9}`
+- `operation`: `追查 r8 bootstrap lease heartbeat 的 DomainError；用持锁回归证明续租计时应在获取操作行锁及校验当前 fence 后开始；降低真实短线程测试对一秒租约和调度抖动的敏感度；重跑全部 19 项本地门禁并将最终材料指向 r9。`
+- `reason`: `r8 后端完整测试中仅 test_bootstrap_heartbeat_renews_lease_during_long_callback 失败，捕获到 DomainError 类型；单测在相同专用测试库中单独复跑通过。源代码显示 renew_claim 在等待 select_for_update 行锁之前取 now，锁等待会缩短实际新租约；短租约测试还把 _ClaimLease 周期压到约三分之一秒。`
+- `authorization`: `用户要求完成自动化、测试并同步发布新版本；先前所有初始未提交修改已按用户指示提交并推送，当前候选从 main/origin/main 同步的 3294abad3c6d918c8ebe9cfb3502b33071955449 开始。用户授权本任务测试服务器、配置自选、总成本不超过 USD 1000；云写入仍须由可解封的应用 CloudAccount 凭据与 Operation 授权。`
+- `implementation_scope`: `新增 PostgreSQL 持锁并发回归：旧实现等待 0.75 秒后只剩约 1.23 秒租约，按预期失败；将 renew_claim 的 now 移至行锁获取与 assert_current fence 校验之后；将 heartbeat 测试从 1 秒续租/4 次高频采样改为 3 秒续租/至少 2 次且覆盖初始到期点；最终以 r9 全量门禁更新验收证据。`
+- `exclusions`: `不减弱旧 lease 到期或 owner/fence 失效时的拒绝逻辑；不使用 ../.env 绕开测试配置；不执行真实 AWS/SWAS 写入、SSH、实例/静态 IP/订阅操作、生产发布或其他项目资源操作。`
+- `assumptions`: `r8 的实际 DomainError 码未写入日志。根据 renew_claim 到 assert_current 的唯一路径，最可能为 STALE_OPERATION_FENCE，但这属于源码推断而非运行时采集；r8 单次全量失败尚不能证明由锁等待单独造成。r9 实测验证新的锁等待契约并验证完整套件通过。`
+- `risks`: `加长一个心跳回归约数秒，减少时序敏感性但不能覆盖长时间系统暂停；真实云中 AWS restart 后 IP、运行状态、订阅和流量核对仍无实机证据，因为绑定 credential version 1 无法由当前应用密钥解封。`
+- `command_or_tool`: `XRAY_TEST_DATABASE_URL 与 XRAY_REDIS_URL 指向 scripts/check-local.sh 明确指定的专用 xray-test 服务；`uv run --project backend pytest -c backend/pyproject.toml backend/tests/test_operation_fencing.py backend/tests/test_node_bootstrap.py::test_bootstrap_heartbeat_renews_lease_during_long_callback -q`; `uvx --from ruff==0.13.1 ruff check`（最终全量 gate）；`XRAY_TEST_SERVICES_EXTERNAL=1 PATH=/tmp/xray-pnpm10-bin:$PATH XRAY_ACCEPTANCE_ARTIFACT_DIR=artifacts/acceptance/0.14.0/final-gates-20261107-r9 ./scripts/check-local.sh`; `git diff --check`; `python3 scripts/validate-acceptance.py`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; skill validator; summary/JUnit/status reads。`
+- `result`: `新的锁等待回归在旧代码上 RED（exit 1），显示 0.75 秒锁等待被从 2 秒租约中扣除；修复后 operation fencing 与 bootstrap heartbeat 聚焦组 6 passed。r9 全量 19/19 gates exit 0；JUnit 449 total、447 passed、2 skipped、0 failures/errors；frontend unit 84 passed、Playwright 8 passed；OpenAPI determinism、固定 Xray、多格式订阅解析、边界、秘密、skill 与验收矩阵均通过。r7 运行时用例曾发现 TCP/UDP 同号端口分配碰撞并已修复；r8 全量失败保留为历史证据；r6-r9 产物均保留，最终矩阵指向 r9。`
+- `exit_code`: `旧续租 RED=1（预期）；修复后 focused pytest=0（6 passed）；初次局部 Ruff 因 import 排序 exit=1，整理 import 后 r9 Ruff=0；r9 check-local=0（19/19）；r9 acceptance/boundary/secrets/skill/migration drift/OpenAPI/frontend gates=0；JUnit skipped=2，仅需一次性 Linux 与 systemd host。`
+- `status`: `本地实现和交付验收 passed；真实 AWS/SSH/重启 IP 回读/真实订阅签发撤回/设备/生产 blocked 或 not-run。AWS 应用凭据解封失败仍在，因此未创建测试资源，云成本 USD 0。候选 main/tag/Release/资产远端回读仍待正常推送后验证。`
+- `commit_or_tree`: `main@3294abad3c6d918c8ebe9cfb3502b33071955449 + 0.14.0 candidate worktree；代码、测试、r6-r9 门禁产物与发布材料待 scoped commit。`
+- `time_logic`: `操作租约采用 Django aware UTC wall clock 与 [start,end) 失效边界；renewal 在数据库行锁获取、assert_current fence 成功之后取当前时间，再设置 now + lease_seconds；耗时仍以 monotonic clock 衡量。heartbeat 测试的等待和循环边界显式记录，自动重启仍按设置 IANA timezone 的当地日期幂等。`
+- `reuse`: `复用专用健康 xray-test PostgreSQL/Redis、现有 Operation claim/fence 机制、run-id 隔离 Playwright 和 pinned Xray/订阅 parser fixtures；Fake/Stub 与容器测试不代表真实 AWS/SSH/客户端设备通过。`
+- `rollback_ref`: `应用源代码回退到 v0.13.0 或使用版本提交的 git revert；0007 migration 保持 nullable additive，不反向迁移；不恢复 Token tombstone、凭据、安全事件或云状态。当前事件无数据库写入和云写入。`

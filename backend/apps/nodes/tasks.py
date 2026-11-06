@@ -466,11 +466,30 @@ def schedule_daily_node_restart():
         if not nodes:
             return {"scheduled": 0, "no_usable_configuration": True}
 
+        rotation_node_id = setting.daily_restart_last_success_node_id
+        if rotation_node_id is None:
+            rotation_node_id = (
+                Operation.objects.filter(
+                    kind="node.reboot",
+                    target_type="node",
+                    status="SUCCEEDED",
+                    params__automation__kind="daily_restart",
+                )
+                .order_by("-updated_at", "-created_at")
+                .values_list("target_id", flat=True)
+                .first()
+            )
+            if rotation_node_id is not None:
+                setting.daily_restart_last_success_node_id = rotation_node_id
+                setting.save(
+                    update_fields=["daily_restart_last_success_node_id", "updated_at"]
+                )
+
         previous_index = next(
             (
                 index
                 for index, node in enumerate(nodes)
-                if node.pk == setting.daily_restart_last_node_id
+                if node.pk == rotation_node_id
             ),
             None,
         )

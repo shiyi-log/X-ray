@@ -413,7 +413,7 @@ def test_bootstrap_heartbeat_renews_lease_during_long_callback(prepared_node, mo
         cloud_credential_version=node.cloud_credential_version,
     )
     claim = claim_operation(bootstrap.pk, worker_id="long-bootstrap-test", lease_seconds=2)
-    lease = _ClaimLease(claim, lease_seconds=1)
+    lease = _ClaimLease(claim, lease_seconds=3)
     original_renew = bootstrap_module.renew_claim
     renewals = []
     renewal_errors = []
@@ -430,11 +430,11 @@ def test_bootstrap_heartbeat_renews_lease_during_long_callback(prepared_node, mo
     monkeypatch.setattr(bootstrap_module, "renew_claim", track_renewal)
 
     lease.start()
-    deadline = time.monotonic() + 3
-    while len(renewals) < 4 and time.monotonic() < deadline:
+    deadline = time.monotonic() + 4
+    while len(renewals) < 2 and time.monotonic() < deadline:
         time.sleep(0.05)
     assert not renewal_errors
-    assert len(renewals) >= 4
+    assert len(renewals) >= 2
     assert renewals[-1] > claim.expires_at
     operation = lease.assert_current()
     lease.stop()

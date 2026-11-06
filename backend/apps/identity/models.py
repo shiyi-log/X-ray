@@ -121,6 +121,7 @@ class NodeAutomationSetting(models.Model):
     daily_restart_timezone = models.CharField(max_length=64, default="Asia/Shanghai")
     daily_restart_last_local_date = models.DateField(null=True, blank=True)
     daily_restart_last_node_id = models.UUIDField(null=True, blank=True)
+    daily_restart_last_success_node_id = models.UUIDField(null=True, blank=True)
     daily_restart_last_scheduled_at = models.DateTimeField(null=True, blank=True)
     usage_sync_enabled = models.BooleanField(default=True)
     usage_sync_interval_minutes = models.PositiveSmallIntegerField(default=1)

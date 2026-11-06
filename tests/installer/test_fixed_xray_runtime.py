@@ -15,10 +15,55 @@ from urllib.parse import urlsplit
 import pytest
 
 
-def free_port():
-    with closing(socket.socket()) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
+def free_port(*, udp=False, excluded=()):
+    for _ in range(100):
+        with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as stream:
+            stream.bind(("127.0.0.1", 0))
+            port = stream.getsockname()[1]
+            if port in excluded:
+                continue
+            if udp:
+                try:
+                    with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as datagram:
+                        datagram.bind(("127.0.0.1", port))
+                except OSError:
+                    continue
+            return port
+    raise OSError("Could not allocate a free local port")
+
+
+def test_free_port_retries_when_udp_port_is_occupied(monkeypatch):
+    candidates = iter((64934, 64935, 64936))
+    udp_candidates = []
+
+    class FakeSocket:
+        def __init__(self, socket_type):
+            self.socket_type = socket_type
+            self.port = None
+
+        def bind(self, address):
+            if self.socket_type == socket.SOCK_STREAM:
+                self.port = next(candidates)
+            else:
+                self.port = address[1]
+                udp_candidates.append(self.port)
+                if self.port == 64934:
+                    raise OSError("port is occupied")
+
+        def getsockname(self):
+            return ("127.0.0.1", self.port)
+
+        def close(self):
+            return None
+
+    monkeypatch.setattr(
+        socket,
+        "socket",
+        lambda _family, socket_type: FakeSocket(socket_type),
+    )
+
+    assert free_port(udp=True, excluded={64935}) == 64936
+    assert udp_candidates == [64934, 64936]
 
 
 def wait_port(port, process, timeout=8):
@@ -129,8 +174,14 @@ def check_udp_proxy(proxy_port, target_port, *, authenticated):
 
 def test_fixed_xray_serves_five_protocols(tmp_path):
     binary = xray_binary()
-    server_ports = {name: free_port() for name in ("ss", "socks", "vmess", "vless", "trojan")}
-    target_port = free_port()
+    allocated_ports = set()
+    server_ports = {}
+    for name in ("ss", "socks", "vmess", "vless", "trojan"):
+        port = free_port(udp=True, excluded=allocated_ports)
+        allocated_ports.add(port)
+        server_ports[name] = port
+    target_port = free_port(excluded=allocated_ports)
+    allocated_ports.add(target_port)
     identity = "11111111-1111-4111-8111-111111111111"
     server = {
         "log": {"loglevel": "warning"},
@@ -321,7 +372,8 @@ def test_fixed_xray_serves_five_protocols(tmp_path):
                 cases[name]["settings"]["servers"] = [server]
         proxy_ports = {"socks": server_ports["socks"]}
         for name, outbound in cases.items():
-            proxy_port = free_port()
+            proxy_port = free_port(udp=True, excluded=allocated_ports)
+            allocated_ports.add(proxy_port)
             proxy_ports[name] = proxy_port
             config = {
                 "log": {"loglevel": "warning"},

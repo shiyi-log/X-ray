@@ -317,6 +317,23 @@ class NodeLifecycle:
                     "updated_at",
                 ]
             )
+            automation = operation.params.get("automation")
+            if (
+                status == "SUCCEEDED"
+                and operation.kind == "node.reboot"
+                and isinstance(automation, dict)
+                and automation.get("kind") == "daily_restart"
+            ):
+                from apps.identity.models import NodeAutomationSetting
+
+                setting = NodeAutomationSetting.objects.select_for_update().filter(
+                    singleton_key=1
+                ).first()
+                if setting is not None:
+                    setting.daily_restart_last_success_node_id = operation.target_id
+                    setting.save(
+                        update_fields=["daily_restart_last_success_node_id", "updated_at"]
+                    )
             return operation
 
     @staticmethod

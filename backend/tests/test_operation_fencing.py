@@ -1,7 +1,10 @@
+import threading
+import time
 from datetime import timedelta
 from uuid import uuid4
 
 import pytest
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from common.errors import DomainError
@@ -32,6 +35,85 @@ def test_old_worker_fence_is_rejected_after_reclaim(admin, cloud_account):
     assert caught.value.code == "STALE_OPERATION_FENCE"
     assert assert_current(second).pk == operation.pk
     assert second.fence > first.fence
+
+
+@pytest.mark.django_db(transaction=True)
+def test_claim_renewal_starts_after_waiting_for_operation_lock(
+    admin, cloud_account, monkeypatch
+):
+    from django.db import connections, transaction
+
+    import apps.operations.claims as claims
+    from apps.operations.models import Operation
+    from apps.operations.services import OperationService
+
+    operation = OperationService.submit(
+        kind="node.create",
+        target_id=uuid4(),
+        params={"region": "us-east-1"},
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=cloud_account.credential_versions.get(version=1),
+    )
+    claim = claims.claim_operation(operation.pk, worker_id="renewal-test", lease_seconds=60)
+    lock_acquired = threading.Event()
+    release_lock = threading.Event()
+    renewal_started = threading.Event()
+    renewed = []
+    errors = []
+    real_now = claims.timezone.now
+    original_get = QuerySet.get
+
+    def hold_operation_lock():
+        connections.close_all()
+        try:
+            with transaction.atomic():
+                Operation.objects.select_for_update().get(pk=operation.pk)
+                lock_acquired.set()
+                release_lock.wait(timeout=5)
+        except Exception as exc:
+            errors.append(type(exc).__name__)
+        finally:
+            connections.close_all()
+
+    def track_operation_read(queryset, *args, **kwargs):
+        if (
+            threading.current_thread().name == "claim-renewal-test"
+            and queryset.model is Operation
+            and kwargs.get("pk") == operation.pk
+        ):
+            renewal_started.set()
+        return original_get(queryset, *args, **kwargs)
+
+    def renew_after_lock_wait():
+        connections.close_all()
+        try:
+            renewed.append(claims.renew_claim(claim, lease_seconds=2))
+        except Exception as exc:
+            errors.append(type(exc).__name__)
+        finally:
+            connections.close_all()
+
+    monkeypatch.setattr(QuerySet, "get", track_operation_read)
+    lock_thread = threading.Thread(target=hold_operation_lock, name="claim-lock-holder")
+    renew_thread = threading.Thread(target=renew_after_lock_wait, name="claim-renewal-test")
+    lock_thread.start()
+    assert lock_acquired.wait(timeout=5)
+    renew_thread.start()
+    try:
+        assert renewal_started.wait(timeout=5)
+        time.sleep(0.75)
+    finally:
+        release_lock.set()
+        lock_thread.join(timeout=5)
+        renew_thread.join(timeout=5)
+
+    assert not lock_thread.is_alive()
+    assert not renew_thread.is_alive()
+    assert not errors
+    assert len(renewed) == 1
+    assert renewed[0].expires_at - real_now() > timedelta(seconds=1.7)
 
 
 @pytest.mark.django_db

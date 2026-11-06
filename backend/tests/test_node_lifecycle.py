@@ -323,6 +323,30 @@ def test_stale_daily_restart_is_rejected_after_configured_local_day_changes(
 
 
 @pytest.mark.django_db
+def test_successful_automated_reboot_advances_rotation_cursor(prepared_node, admin):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.operations.claims import claim_operation
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    setting = NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    operation = make_node_action(admin, node, "reboot")
+    operation.params["automation"] = {
+        "kind": "daily_restart",
+        "policy_version": setting.policy_version,
+        "local_date": "2026-11-07",
+    }
+    operation.save(update_fields=["params"])
+    claim = claim_operation(operation.pk, worker_id="test-success-cursor")
+    lifecycle, _holder = make_lifecycle(node)
+
+    lifecycle._finish(claim, status="SUCCEEDED")
+
+    setting.refresh_from_db()
+    assert getattr(setting, "daily_restart_last_success_node_id", None) == node.pk
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("state", ["unprovisioned", "deleted"])
 def test_start_worker_rejects_unavailable_instance_without_provider_write(
     prepared_node, admin, state
