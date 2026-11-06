@@ -1,6 +1,6 @@
 {
   "version": "0.13.0",
-  "generated_at": "2026-11-06T06:00:00+08:00",
+  "generated_at": "2026-11-06T16:01:26+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -12,48 +12,89 @@
     {
       "id": "local-delivery-gates",
       "environment": "local",
-      "status": "blocked",
+      "status": "failed",
       "evidence": [
         {
-          "kind": "focused_subscription_tests",
-          "command": "set -a; source .env; set +a; pytest --reuse-db backend/tests/subscriptions/test_management.py backend/tests/subscriptions/test_public_read.py backend/tests/subscriptions/test_tokens.py backend/tests/subscriptions/test_single_subscription_pool_migration.py -q",
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.13.0/final-gates-2/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.13.0/final-gates-2/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {"passed": 417, "skipped": 2, "failures": 0, "errors": 0},
+          "frontend_unit_tests": 82,
+          "browser_e2e": 8,
+          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+          "started_at": "2026-11-06T15:48:25+08:00",
+          "finished_at": "2026-11-06T15:50:24+08:00"
+        },
+        {
+          "kind": "delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.13.0/gates/summary.tsv",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "started_at": "2026-11-06T05:49:26+08:00",
+          "finished_at": "2026-11-06T05:51:57+08:00",
+          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d"
+        },
+        {
+          "kind": "backend_tests",
+          "log": "artifacts/acceptance/0.13.0/gates/backend-tests.log",
+          "passed": 402,
+          "skipped": 2,
           "exit_code": 0,
-          "tests": 36,
-          "timestamp": "2026-11-02T01:49:00+08:00"
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ]
         },
         {
-          "kind": "frontend_checks",
-          "commands": [
-            "corepack pnpm@10.33.0 --dir frontend typecheck",
-            "corepack pnpm@10.33.0 --dir frontend exec eslint <subscription files>",
-            "corepack pnpm@10.33.0 --dir frontend exec vitest run <subscription tests>"
-          ],
-          "exit_codes": [0, 0, 0],
-          "tests": 7
+          "kind": "frontend_unit_tests",
+          "log": "artifacts/acceptance/0.13.0/gates/frontend-unit.log",
+          "passed": 82,
+          "exit_code": 0
         },
         {
-          "kind": "runtime_probe",
-          "endpoints": ["http://127.0.0.1:9527/health/ready", "http://127.0.0.1:9528/login", "http://127.0.0.1:9527/api/v1/auth/local-login/status"],
-          "status_codes": [200, 200, 200],
+          "kind": "browser_e2e",
+          "log": "artifacts/acceptance/0.13.0/gates/frontend-e2e.log",
+          "passed": 8,
           "exit_code": 0,
-          "timestamp": "2026-11-02T01:53:34+08:00"
-        },
-        {
-          "kind": "full_suite_limit",
-          "status": "blocked",
-          "result": "shared test_xray_test database occupied/left residual state; --reuse-db run 67 passed, 17 failed due missing SecurityState and test database state",
-          "action": "do not delete or rebuild shared test database"
-        },
-        {
-          "kind": "static_gates",
-          "commands": ["./scripts/check-boundary.sh", "python3 scripts/validate-acceptance.py", "git diff --check"],
-          "exit_codes": [0, 0, 0]
+          "data_safety_status": "failed",
+          "incident": "globalSetup ran seed_e2e --reset against the existing xray_test database configured at port 55433; flush removed the pre-existing cloud account (1), node pool (1), and region allocation rows (19). The container is now exited 255 and its volume remains; no restart, mount, overwrite, or restore was performed. A read-only xray_test inventory at port 55432 found cloud account (1), node pool (1), region allocation (1), managed node (1), so it is not a matching copy. The scoped repository backup search found no identifiable SQL/dump; recovery was not claimed.",
+          "started_at": "2026-11-06T05:51:24+08:00",
+          "finished_at": "2026-11-06T05:51:48+08:00"
         }
       ],
-      "commit": null,
+      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
       "provider": null,
       "region": null,
       "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "local-e2e-isolated-rerun",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "package_level_playwright_wrapper",
+          "command": "PATH=/tmp/xray-pnpm10-bin:$PATH pnpm --dir frontend test:e2e --reporter=list",
+          "run_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+          "passed": 8,
+          "exit_code": 0,
+          "finished_at": "2026-11-06T13:38:22+08:00",
+          "cleanup": "globalTeardown removed the run-id-scoped disposable PostgreSQL/Redis containers; the pre-existing exited xray-current-run container was preserved"
+        },
+        {
+          "kind": "e2e_database_guard",
+          "tests": 6,
+          "exit_code": 0,
+          "scope": "run-id labels, loopback ports, tmpfs-only storage, reset marker and environment binding"
+        }
+      ],
+      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+      "provider": null,
+      "region": null,
+      "cost": 0,
       "residual_resources": []
     },
     {
@@ -62,17 +103,23 @@
       "status": "blocked",
       "evidence": [
         {
-          "kind": "github_actions",
+          "kind": "historical_github_actions",
           "run_id": "41112317512",
           "conclusion": "failure",
           "job_started": false,
           "runner_id": 0,
           "steps_started": 0,
-          "reason": "GitHub job completed before runner allocation; no workflow steps ran. Release was published manually from locally verified assets.",
+          "reason": "Historical run for an earlier commit; it does not establish CI status for the current candidate.",
           "timestamp": "2026-10-31T03:06:34+08:00"
+        },
+        {
+          "kind": "current_commit_actions",
+          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+          "status": "not-queried",
+          "reason": "Current GitHub Actions run has not been read back."
         }
       ],
-      "commit": "583df4f739184b8af85737deacec93d3f75f624a",
+      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
       "provider": null,
       "region": null,
       "cost": null,
@@ -81,10 +128,10 @@
     {
       "id": "github-release",
       "environment": "release",
-      "status": "passed",
+      "status": "blocked",
       "evidence": [
         {
-          "kind": "github_release",
+          "kind": "historical_github_release",
           "tag": "v0.11.0",
           "commit": "a0527d6de3e1485a95a158becfaa0e34a109e45e",
           "url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.11.0",
@@ -95,10 +142,17 @@
             "xray-installer-0.11.0-manifest.json": "sha256:f84284e6ef22e820b3ffaf91b3cdcc34f10fc12484c08ae9bced6621186fadf0",
             "xray-installer-0.11.0.tar.gz": "sha256:20a2e91662e7330514bbbd46a81ad46558580cbd6f6b4bf97b569232c293b6af"
           },
-          "checksum_verification": "remote SHA256SUMS validates the remote tar.gz and manifest"
+          "checksum_verification": "Remote SHA256SUMS validated the historical v0.11.0 assets only; this is not evidence for v0.13.0."
+        },
+        {
+          "kind": "current_candidate_release",
+          "tag": "v0.13.0",
+          "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
+          "status": "not-created",
+          "reason": "No v0.13.0 tag, release workflow, or remote asset checksum has been verified."
         }
       ],
-      "commit": "a0527d6de3e1485a95a158becfaa0e34a109e45e",
+      "commit": "4eaa45b4941f7d9a0a468ce01aead34c4600998d",
       "provider": "github",
       "region": null,
       "cost": null,

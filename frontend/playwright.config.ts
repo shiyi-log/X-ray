@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
@@ -8,27 +9,10 @@ const acceptanceRoot =
 const authState =
   process.env.XRAY_PLAYWRIGHT_AUTH_STATE ??
   path.join(import.meta.dirname, '.playwright', 'admin.json');
-function configuredPort(name: string, fallback: number): number {
-  const value = process.env[name];
-  if (!value) return fallback;
-
-  const port = Number(value);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error(`${name} must be an integer between 1 and 65535.`);
-  }
-  return port;
-}
-
-function requiredTestEndpoint(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} must explicitly target the dedicated E2E services.`);
-  }
-  return value;
-}
-
-const frontendPort = configuredPort('XRAY_FRONTEND_PORT', 9528);
-const backendPort = configuredPort('XRAY_BACKEND_PORT', 9527);
+const frontendPort = 9538;
+const backendPort = 9537;
+const e2eRunId = process.env.XRAY_E2E_RUN_ID || randomUUID();
+process.env.XRAY_E2E_RUN_ID = e2eRunId;
 const frontendOrigin = `http://127.0.0.1:${frontendPort}`;
 const testEnvironment = {
   ...process.env,
@@ -36,8 +20,9 @@ const testEnvironment = {
   XRAY_ENV: 'test',
   XRAY_FRONTEND_PORT: String(frontendPort),
   XRAY_BACKEND_PORT: String(backendPort),
-  XRAY_TEST_DATABASE_URL: requiredTestEndpoint('XRAY_TEST_DATABASE_URL'),
-  XRAY_REDIS_URL: requiredTestEndpoint('XRAY_REDIS_URL'),
+  XRAY_TEST_DATABASE_URL: 'postgresql://xray_e2e@127.0.0.1:55433/xray_test',
+  XRAY_REDIS_URL: 'redis://127.0.0.1:56380/0',
+  XRAY_E2E_RUN_ID: e2eRunId,
   XRAY_CSRF_TRUSTED_ORIGINS: frontendOrigin,
 };
 
@@ -46,6 +31,7 @@ export default defineConfig({
   outputDir: path.join(acceptanceRoot, 'test-results'),
   globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: false,
+  globalTeardown: './tests/e2e/global-teardown.ts',
   workers: 1,
   retries: 0,
   reporter: [['list'], ['json', { outputFile: path.join(acceptanceRoot, 'playwright-report.json') }]],
@@ -53,19 +39,19 @@ export default defineConfig({
     baseURL: frontendOrigin,
     channel: 'chrome',
     trace: 'off',
-    screenshot: 'only-on-failure',
+    screenshot: 'off',
     video: 'off',
   },
   webServer: [
     {
-      command: `../backend/.venv/bin/python ../backend/manage.py runserver 127.0.0.1:${backendPort} --noreload`,
+      command: 'node ./tests/e2e/start-backend.mjs',
       url: `http://127.0.0.1:${backendPort}/health/live`,
       reuseExistingServer: false,
       timeout: 120_000,
       env: testEnvironment,
     },
     {
-      command: 'pnpm dev',
+      command: 'corepack pnpm --filter @xray/web-antd run dev',
       url: `${frontendOrigin}/login`,
       reuseExistingServer: false,
       timeout: 120_000,

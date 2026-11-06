@@ -1,17 +1,78 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import socket
+from datetime import UTC, datetime
 
 from django.conf import settings
+from django.utils import timezone
 
-from apps.nodes.ssh import HostKeyService, ParamikoApplyTransport, sha256_fingerprint
+from apps.nodes.ssh import (
+    HostKeyService,
+    ParamikoApplyTransport,
+    sha256_fingerprint,
+    valid_sha256_fingerprint,
+)
 from common.errors import DomainError
 from providers.registry import build_read_provider
 
 
+def _access_key_timestamp(value):
+    if isinstance(value, datetime):
+        return value if timezone.is_aware(value) else None
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        try:
+            return datetime.fromtimestamp(value, tz=UTC)
+        except (OverflowError, OSError, ValueError):
+            return None
+    return None
+
+
+def _provider_attested_fingerprints(access_details, *, now=None):
+    now = now or timezone.now()
+    fingerprints = []
+    for key in access_details.get("hostKeys") or []:
+        algorithm = key.get("algorithm")
+        encoded_key = key.get("publicKey")
+        fingerprint = key.get("fingerprintSHA256")
+        witnessed_at = _access_key_timestamp(key.get("witnessedAt"))
+        if (
+            not isinstance(algorithm, str)
+            or not isinstance(encoded_key, str)
+            or not valid_sha256_fingerprint(fingerprint)
+            or witnessed_at is None
+            or witnessed_at > now
+        ):
+            continue
+        try:
+            key_blob = base64.b64decode(
+                encoded_key + "=" * (-len(encoded_key) % 4), validate=True
+            )
+        except (ValueError, base64.binascii.Error):
+            continue
+        if len(key_blob) < 4:
+            continue
+        algorithm_length = int.from_bytes(key_blob[:4], "big")
+        if algorithm_length < 1 or len(key_blob) < 4 + algorithm_length:
+            continue
+        try:
+            wire_algorithm = key_blob[4 : 4 + algorithm_length].decode("ascii")
+        except UnicodeDecodeError:
+            continue
+        if wire_algorithm != algorithm:
+            continue
+        actual = "SHA256:" + base64.b64encode(hashlib.sha256(key_blob).digest()).decode(
+            "ascii"
+        ).rstrip("=")
+        if actual == fingerprint:
+            fingerprints.append(fingerprint)
+    return tuple(sorted(set(fingerprints)))
+
+
 def aws_transport(node):
-    """Use in-memory AWS access details and an already approved host fingerprint."""
+    """Use in-memory AWS credentials and provider-attested SSH host keys."""
     if node.cloud_account.provider != "aws_lightsail":
         raise DomainError(
             "NODE_EXECUTOR_UNAVAILABLE", "该云平台尚未配置 SSH 适配器", status_code=503
@@ -35,6 +96,8 @@ def aws_transport(node):
         username=details["username"],
         private_key=private_key,
         certificate=certificate,
+        attested_fingerprints=_provider_attested_fingerprints(details),
+        host_key_attestation_source="aws-lightsail-access-details",
         remote_command="sudo -n /opt/xray-manager/apply-config.sh",
         timeout=30,
     )
@@ -63,7 +126,12 @@ def fetch_usage(node):
         connection.banner_timeout = 10
         connection.auth_timeout = 15
         connection.start_client(timeout=10)
-        HostKeyService().verify(node.pk, sha256_fingerprint(connection.get_remote_server_key()))
+        HostKeyService().verify_provider_attested(
+            node.pk,
+            sha256_fingerprint(connection.get_remote_server_key()),
+            attested_fingerprints=transport_info.attested_fingerprints,
+            source=transport_info.host_key_attestation_source,
+        )
         connection.auth_publickey(
             transport_info.username, transport_info._authentication_key(paramiko)
         )

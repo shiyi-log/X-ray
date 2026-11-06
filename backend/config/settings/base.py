@@ -141,9 +141,13 @@ LOGGING = {
 }
 
 # Explicit node transport configuration; raw keys never enter settings or logs.
-XRAY_NODE_TRANSPORT_FACTORY = os.getenv("XRAY_NODE_TRANSPORT_FACTORY", "")
+XRAY_NODE_TRANSPORT_FACTORY = os.getenv(
+    "XRAY_NODE_TRANSPORT_FACTORY", "apps.subscriptions.node_agent.aws_transport"
+)
 XRAY_NODE_HEALTH_PROBE = os.getenv("XRAY_NODE_HEALTH_PROBE", "")
-XRAY_USAGE_FETCHER = os.getenv("XRAY_USAGE_FETCHER", "")
+XRAY_USAGE_FETCHER = os.getenv(
+    "XRAY_USAGE_FETCHER", "apps.subscriptions.node_agent.fetch_usage"
+)
 XRAY_ALLOW_REGIONAL_DEFAULT_KEY = env_bool("XRAY_ALLOW_REGIONAL_DEFAULT_KEY", False)
 XRAY_PUBLIC_SUBSCRIPTION_BASE_URL = os.getenv("XRAY_PUBLIC_SUBSCRIPTION_BASE_URL", "")
 CELERY_BEAT_SCHEDULE = {
@@ -155,6 +159,9 @@ CELERY_BEAT_SCHEDULE = {
     },
     "node-pool-quota-scheduler": {
         "task": "apps.nodes.tasks.schedule_node_pool_sync", "schedule": 60.0,
+    },
+    "node-bootstrap-scheduler": {
+        "task": "apps.nodes.tasks.schedule_node_bootstrap", "schedule": 60.0,
     },
     "node-daily-restart-scheduler": {
         "task": "apps.nodes.tasks.schedule_daily_node_restart", "schedule": 60.0,

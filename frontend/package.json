@@ -14,7 +14,7 @@
     "lint": "eslint apps/web-antd/src packages/ui/src tests/e2e scripts --max-warnings=0 --no-error-on-unmatched-pattern",
     "test:unit": "vitest run --config apps/web-antd/vitest.config.ts",
     "build": "pnpm --filter @xray/web-antd build",
-    "test:e2e": "playwright test --config playwright.config.ts",
+    "test:e2e": "node scripts/run-e2e.mjs --config playwright.config.ts",
     "generate:api": "node scripts/generate-api.mjs",
     "postinstall": "pnpm -r --if-present run stub"
   },

@@ -4,6 +4,7 @@ import base64
 import hashlib
 import io
 import json
+import re
 
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
@@ -16,10 +17,21 @@ from common.errors import DomainError
 from .models import HostKeyRecord, ManagedNode
 
 
+def valid_sha256_fingerprint(fingerprint: str) -> bool:
+    if not isinstance(fingerprint, str) or not re.fullmatch(
+        r"SHA256:[A-Za-z0-9+/]{43}", fingerprint
+    ):
+        return False
+    try:
+        return len(base64.b64decode(fingerprint[7:] + "=", validate=True)) == 32
+    except (ValueError, base64.binascii.Error):
+        return False
+
+
 class HostKeyService:
     def observe(self, node_id, fingerprint: str, *, source: str) -> HostKeyRecord:
         fingerprint = fingerprint.strip()
-        if not fingerprint.startswith("SHA256:") or len(fingerprint) < 16:
+        if not valid_sha256_fingerprint(fingerprint):
             raise DomainError("SSH_FINGERPRINT_INVALID", "SSH 指纹格式无效", status_code=400)
         node = ManagedNode.objects.get(pk=node_id)
         approved = node.host_keys.filter(status="APPROVED").first()
@@ -71,6 +83,66 @@ class HostKeyService:
             raise DomainError("SSH_HOST_KEY_CHANGED", "SSH 主机指纹已变化", status_code=409)
         return approved
 
+    def verify_provider_attested(
+        self,
+        node_id,
+        fingerprint: str,
+        *,
+        attested_fingerprints,
+        source: str,
+    ) -> HostKeyRecord:
+        fingerprint = fingerprint.strip()
+        if not valid_sha256_fingerprint(fingerprint):
+            raise DomainError("SSH_FINGERPRINT_INVALID", "SSH 指纹格式无效", status_code=400)
+        attested = {
+            value
+            for value in (attested_fingerprints or ())
+            if valid_sha256_fingerprint(value)
+        }
+        failure_code = ""
+        record = None
+        with transaction.atomic():
+            ManagedNode.objects.select_for_update().only("pk").get(pk=node_id)
+            approved = (
+                HostKeyRecord.objects.select_for_update()
+                .filter(node_id=node_id, status="APPROVED")
+                .order_by("-approved_at", "-created_at")
+                .first()
+            )
+            if approved is not None and approved.fingerprint != fingerprint:
+                record, created = HostKeyRecord.objects.get_or_create(
+                    node_id=node_id,
+                    fingerprint=fingerprint,
+                    defaults={"source": source[:80], "status": "REJECTED"},
+                )
+                if not created and record.status != "REJECTED":
+                    record.status = "REJECTED"
+                    record.source = source[:80]
+                    record.save(update_fields=["status", "source"])
+                failure_code = "SSH_HOST_KEY_CHANGED"
+            elif approved is not None:
+                record = approved
+            else:
+                candidate = self.observe(node_id, fingerprint, source=source)
+                if fingerprint not in attested:
+                    failure_code = "SSH_HOST_KEY_NOT_APPROVED"
+                else:
+                    record = self.approve(
+                        candidate.pk,
+                        expected_fingerprint=fingerprint,
+                        source=source,
+                    )
+
+        if failure_code == "SSH_HOST_KEY_CHANGED":
+            raise DomainError("SSH_HOST_KEY_CHANGED", "SSH 主机指纹已变化", status_code=409)
+        if failure_code == "SSH_HOST_KEY_NOT_APPROVED":
+            raise DomainError(
+                "SSH_HOST_KEY_NOT_APPROVED", "SSH 主机指纹尚未批准", status_code=409
+            )
+        if record is None:
+            raise DomainError("SSH_HOST_KEY_NOT_APPROVED", "SSH 主机指纹尚未批准", status_code=409)
+        return record
+
 
 def sha256_fingerprint(server_key) -> str:
     digest = hashlib.sha256(server_key.asbytes()).digest()
@@ -92,6 +164,8 @@ class ParamikoApplyTransport:
         port: int = 22,
         timeout: int = 15,
         host_keys: HostKeyService | None = None,
+        attested_fingerprints: tuple[str, ...] = (),
+        host_key_attestation_source: str = "",
         remote_command: str = "/opt/xray-manager/apply-config.sh",
     ):
         self.node_id = node_id
@@ -102,6 +176,8 @@ class ParamikoApplyTransport:
         self.port = port
         self.timeout = timeout
         self.host_keys = host_keys or HostKeyService()
+        self.attested_fingerprints = attested_fingerprints
+        self.host_key_attestation_source = host_key_attestation_source
         self.remote_command = remote_command
 
     @staticmethod
@@ -175,7 +251,15 @@ class ParamikoApplyTransport:
         try:
             transport.start_client(timeout=self.timeout)
             fingerprint = sha256_fingerprint(transport.get_remote_server_key())
-            self.host_keys.verify(self.node_id, fingerprint)
+            if self.host_key_attestation_source:
+                self.host_keys.verify_provider_attested(
+                    self.node_id,
+                    fingerprint,
+                    attested_fingerprints=self.attested_fingerprints,
+                    source=self.host_key_attestation_source,
+                )
+            else:
+                self.host_keys.verify(self.node_id, fingerprint)
             key = self._authentication_key(paramiko)
             try:
                 transport.auth_publickey(self.username, key)

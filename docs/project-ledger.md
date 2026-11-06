@@ -4690,3 +4690,152 @@ Continuation authorized by user 继续. Scope read-only deployment diagnosis, te
 - `time_logic`: `本机 Asia/Shanghai aware ISO-8601；没有业务时间、TTL、调度或迁移规则变化。`
 - `reuse`: `可复用 ~/.local/bin/flock 与 installer/apply-config.sh 的 fd 9 锁调用；仅适用于当前本机工具环境，不代表其他主机或生产环境已安装。`
 - `rollback_ref`: `删除本轮创建的 /Users/shiyi/.local/bin/flock 与 /Users/shiyi/.local/share/man/man1/flock.1；保留 Ruff、其他用户工具、仓库并行修改和审计历史。`
+
+### 2026-11-06T11:58:23+08:00 — xray-node-automation-20261106-01 release evidence correction
+
+- `event_id`: `xray-node-automation-20261106-01/004`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T11:58:23+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / correction / decision`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; docs/version-record.md; docs/release-checklist.md; tests/acceptance/matrix.json; artifacts/acceptance/0.13.0/gates/summary.tsv; artifacts/acceptance/0.13.0/gates/backend-tests.log; artifacts/acceptance/0.13.0/gates/frontend-e2e.log; artifacts/acceptance/0.13.0/playwright-report.json`
+- `operation`: `按当前 0.13.0 验收工件纠正发布状态和版本索引，保留外部云/CI/Release 未验证状态，并显式记录 E2E 数据隔离事故。`
+- `reason`: `此前发布记录仍指向旧测试结果。当前门禁汇总为 19 项 exit 0，后端 402 passed/2 skipped、Playwright 8 passed；但 globalSetup 的 seed_e2e --reset 命中了既有 XRAY_TEST_DATABASE_URL 数据库，破坏性清库使交付验收不能判为通过。`
+- `authorization`: `用户授权完成功能、测试和发布；本次限定为纠正验收/发布资料，不创建标签、不提交、不发布，也不执行云写入。`
+- `implementation_scope`: `更新验收矩阵的本地 gate 证据、当前提交、实际时间和外部状态；追加 progress/version/checklist 记录；在本台账追加本范围事件。`
+- `exclusions`: `不覆盖或恢复任一数据库，不停止容器，不运行真实云/SSH/公网/生产操作，不改应用源码、版本号、Git 历史、标签或 GitHub Release。`
+- `risk`: `历史 E2E 命令已对 55433 端口的 xray_test 执行 flush；测试前存在云账号、节点池和 19 条地区配额分配。55432 独立库只读盘点得到 1 个云账号、1 个节点池、1 条地区分配，与原数据不一致；限定范围内未发现 SQL/pgdump 类备份，且不代表完成全盘备份搜索。`
+- `command_or_tool`: `只读读取指定门禁工件、Git HEAD/status 和发布文档；通过 apply_patch 追加/修改指定资料；python3 scripts/validate-acceptance.py; git diff --check; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh。`
+- `result`: `证据确认本地 19 gate exit 0，后端 402 passed/2 skipped，前端 82 passed，E2E 8 passed；E2E 数据隔离失败作为交付阻断明确记录。自动补池仍只到 PROVISIONED，不代表可用/健康节点。GitHub 当前 SHA 的 Actions/Release、真实 AWS/SWAS、SSH、设备和生产证据未验证，继续 blocked/not-run。`
+- `exit_code`: `工件/状态读取=0；资料校验、边界、秘密和 diff 门禁待执行。`
+- `evidence`: `artifacts/acceptance/0.13.0/gates/summary.tsv; backend-tests.log; frontend-e2e.log; playwright-report.json; 只读数据库聚合计数和 volume inventory。未读取或记录数据库凭据/URI。`
+- `status / commit_or_tree`: `本地功能断言 passed；整体交付验收 failed pending E2E disposable DB guard and rerun / main@4eaa45b4941f7d9a0a468ce01aead34c4600998d clean at task start.`
+- `time_logic`: `审计时间使用 Asia/Shanghai aware ISO-8601；业务调度逻辑未改变。`
+- `reuse`: `复用提交内已脱敏的 0.13.0 验收工件；对 55432 数据库仅查询计数，不修改。`
+- `rollback_ref`: `仅为追加/纠正审计和验收资料，可用 git revert 后续资料提交回退；不以回滚方式恢复数据库内容或撤销安全状态。`
+
+### 2026-11-06T12:00:00+08:00 — xray-node-automation-20261106-01 E2E database incident correction
+
+- `event_id`: `xray-node-automation-20261106-01/005`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T12:00:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / inventory`
+- `path_scope`: `55433 xray-current-run-20261106-postgres-1 container and retained Docker volume; read-only inventory of 55432 xray-test-postgres-1; scoped repository backup search`
+- `operation`: `补充 E2E 清库影响范围和恢复调查边界，校正 /004 的概括记录。`
+- `reason`: `上游核对提供了更完整的容器状态；必须明确现存 55433 容器退出且卷保留，以及没有执行任何挂载、启动或恢复操作。`
+- `authorization`: `用户已授权功能测试，但未授权清除或恢复现有用户数据库；任何数据恢复均未执行。`
+- `result`: `E2E 前 55433 xray_test 有 cloud account=1、node pool=1、region allocation=19。E2E `seed_e2e --reset` 经 `flush` 清空这些行。当前 55433 容器状态为 exited 255，Docker 数据卷仍保留；未重启容器、挂载卷、覆盖或恢复。另一个 55432 xray_test 只读计数为 cloud account=1、node pool=1、region allocation=1、managed node=1，明确不是相同数据的副本。候选仓库备份搜索未找到明确 SQL/dump 备份。`
+- `exit_code`: `本补充复用主代理刚提供的当前容器状态与原始前后计数；未执行数据库或容器命令。`
+- `evidence`: `只记录表行数、端口、容器退出码和卷保留状态；没有读取或保存数据库凭据、DSN、行内容或秘密。`
+- `status`: `failed / investigation-limited; data restore not performed`
+- `commit_or_tree`: `main@4eaa45b4941f7d9a0a468ce01aead34c4600998d; audit docs currently modified`
+- `time_logic`: `按本机 Asia/Shanghai aware ISO-8601 记录；无业务时间逻辑变化。`
+- `rollback_ref`: `保留 exited 容器和 Docker volume；不停止、重启、挂载、覆盖或执行恢复。若有经核验的备份，恢复只能在全新隔离目标中另行规划和记录。`
+
+### 2026-11-06T12:02:01+08:00 — xray-node-automation-20261106-01 audit timestamp correction
+
+- `event_id`: `xray-node-automation-20261106-01/006`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T12:02:01+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `docs/project-ledger.md event xray-node-automation-20261106-01/005`
+- `operation`: `纠正上一条事件误把时间取整为 12:00:00 的时间戳错误。`
+- `reason`: `精确台账时间应由本机执行时钟读取；/005 的叙述时间比实际提交时间早两分钟。`
+- `result`: `以实际 `date '+%Y-%m-%dT%H:%M:%S%z'` 读数 `2026-11-06T12:02:01+0800` 为准；/005 的事件正文与数据库事实结论不变。`
+- `exit_code`: `date=0`
+- `status`: `passed`
+- `commit_or_tree`: `main@4eaa45b4941f7d9a0a468ce01aead34c4600998d; audit docs currently modified`
+- `time_logic`: `本机 Asia/Shanghai aware ISO-8601；未改变业务时间逻辑。`
+- `rollback_ref`: `追加式时间校正；不改数据库或运行态。`
+
+### 2026-11-06T12:05:10+08:00 — xray-node-automation-20261106-01 release documentation verification
+
+- `event_id`: `xray-node-automation-20261106-01/007`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T12:05:10+08:00`
+- `actor`: `Codex`
+- `event_type`: `modify / validate`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; docs/version-record.md; docs/release-checklist.md; tests/acceptance/matrix.json`
+- `operation`: `按原始 acceptance artifacts 更新 0.13.0 版本/矩阵记录，并完成资料静态验证。`
+- `reason`: `发布资料先前残留旧门禁数据及过期 blocked/pending 描述；同一轮还发现 E2E `flush` 误清理了已有数据库，必须把测试断言结果与数据安全结果分开。`
+- `authorization`: `用户请求测试、同步版本与发布；本委派仅更新资料并运行只读/静态门禁，无创建标签、提交、发布或外部写入授权需要。`
+- `implementation_scope`: `追加事件、进度和验证记录；更新 0.13.0 version row/checklist/acceptance matrix；所有外部/生产状态维持 blocked/not-run。`
+- `exclusions`: `不修改应用源码，不提交、不创建 tag/release，不执行数据库恢复/启动/挂载，不操作云、SSH、公网或生产。并行 agent 在 backend access-sync 文件中进行的修改保留且不在本委派范围。`
+- `command_or_tool`: `复核 `summary.tsv`/backend/E2E logs/Playwright JSON；`date`；`python3 scripts/validate-acceptance.py`; `git diff --check`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`; JSON 结构化解析/更新。`
+- `result`: `矩阵 validator=0；diff-check=0；boundary=0；secret scan=0。记录 gate summary 19 项 exit 0、backend 402 passed/2 skipped、frontend 82 passed、E2E 8 passed，同时把整体本地交付标为 failed，因为 E2E reset 对 55433 已有 xray_test 执行 flush。容器 exited 255、数据卷保留；未重启/挂载/覆盖/恢复。55432 查询计数不构成匹配副本，限定仓库搜索未发现明确 SQL/dump 备份。自动补池仅到 PROVISIONED。当前候选 SHA 的 GitHub Actions/Release、真实云、SSH、设备、生产均未验证。`
+- `exit_code`: `acceptance=0; diff-check=0; boundary=0; secret-scan=0. E2E/data restore/current remote CI/current release/real cloud=not-run.`
+- `evidence`: `tests/acceptance/matrix.json; docs/version-record.md; docs/release-checklist.md; artifacts/acceptance/0.13.0/gates/summary.tsv and test logs; current Git status at inspection showed concurrent backend source/test diffs which were not modified by this doc task.`
+- `status`: `passed for doc validators; overall local release acceptance remains failed pending disposable DB guard and isolated rerun.`
+- `commit_or_tree`: `main@4eaa45b4941f7d9a0a468ce01aead34c4600998d plus shared uncommitted source/test/doc changes; no commit or push in this task.`
+- `time_logic`: `生成时间按本机 Asia/Shanghai aware ISO-8601；matrix.generated_at 为文件生成时读数；没有改业务时间逻辑。`
+- `reuse`: `使用已提交的当前门禁工件；对 DB 仅复用只读盘点，不读取行内容或凭据。`
+- `rollback_ref`: `文档和矩阵仅在后续资料提交后可通过 `git revert` 回退；任何数据库恢复需另行授权与全新隔离目标，不可复用本次资料回退。`
+
+### 2026-11-06T13:43:48+08:00 — xray-node-automation-20261106-01 isolated E2E rerun
+
+- `event_id`: `xray-node-automation-20261106-01/008`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T13:43:48+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate / modify`
+- `path_scope`: `frontend/scripts/{e2e-database.mjs,e2e-database.test.mjs,run-e2e.mjs}; frontend/tests/e2e/{prepare-e2e-database.mjs,start-backend.mjs,global-setup.ts,global-teardown.ts,cleanup-e2e-database.mjs}; tests/acceptance/matrix.json; docs/{progress.md,release-checklist.md,version-record.md,project-ledger.md}; artifacts/acceptance/0.13.0/`
+- `operation`: `在 run-id 标记的 disposable PostgreSQL/Redis 与当前前端/后端工作树上执行 package-level Playwright wrapper，验证浏览器流程、订阅签发/撤回、移动端布局和 teardown 清理；同步追加本地验收证据。`
+- `authorization`: `用户授权完成功能测试、订阅链接创建和撤回测试、版本同步与发布准备；只使用本地隔离容器和 Fake/Stub 证据，不执行真实 AWS、SSH、公网或生产写入。`
+- `implementation_scope`: `验证并记录 run-id、loopback 端口、tmpfs-only 存储、数据库 reset marker、Playwright wrapper 的单一 run-id 传播和 global teardown；保留历史 55433 清库事故作为独立审计事件。`
+- `exclusions`: `不启动、重启、挂载、覆盖或恢复 exited 的 xray-current-run 容器和其卷；不读取数据库凭据、Token 明文或原始订阅 URI；不创建真实云服务器，不删除云资源，不发布 GitHub Release。`
+- `risk`: `浏览器输出包含非致命 Vite StorageManager/ResizeObserver 警告；历史 55433 数据安全事故仍是失败事件，当前复跑不能证明旧数据已恢复。自动补池仍只到 PROVISIONED，未声称首次 bootstrap、健康确认或首发订阅已自动完成。`
+- `command_or_tool`: `PATH=/tmp/xray-pnpm10-bin:$PATH pnpm --dir frontend test:e2e --reporter=list; node --test frontend/scripts/e2e-database.test.mjs; docker ps -a run-id inventory; frontend quality gates (unit/typecheck/lint/build); apply_patch for acceptance/progress/release documents.`
+- `result`: `package-level Playwright wrapper exit 0，8 passed；E2E 数据库护栏 6 passed；前端 unit 82 passed、typecheck/lint/build exit 0；run-id disposable 容器已由 globalTeardown 清理，现存仅 exited xray-current-run 容器且未触碰。订阅创建、一次性交付、Token 撤回、partial revoke、操作页、网络失败和移动端流程均通过。`
+- `exit_code`: `Playwright=0; e2e-database-test=0; frontend-unit=0; frontend-typecheck=0; frontend-lint=0; frontend-build=0; container inventory=0.`
+- `evidence`: `tests/acceptance/matrix.json item local-e2e-isolated-rerun; docs/progress.md; docs/release-checklist.md; docs/version-record.md; transient run output; existing sanitized artifacts under artifacts/acceptance/0.13.0/.`
+- `status / commit_or_tree`: `isolated local browser and frontend gates passed; historical data-safety incident remains failed; external cloud/CI/Release/production not-run or blocked; shared worktree remains uncommitted on main.`
+- `time_logic`: `审计时间使用 Asia/Shanghai aware ISO-8601；E2E run-id 只用于隔离资源生命周期，未改变业务调度、TTL、订阅过期或每日重启日期逻辑。`
+- `reuse`: `后续 E2E 复跑复用 `frontend/scripts/e2e-database.mjs`、固定 pnpm 10.33.0 runtime、run-id 传播和 teardown；证据只适用于本地 disposable 容器，不代表真实 AWS 或生产。`
+- `rollback_ref`: `本次仅追加验收/审计资料；代码回退使用 `v0.12.2` 或本轮提交的 `git revert`；不以资料回退恢复数据库、Token tombstone、凭据或云状态。`
+
+### 2026-11-06T14:17:05+08:00 — xray-node-automation-20261106-01 bootstrap completion
+
+- `event_id`: `xray-node-automation-20261106-01/009`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T14:17:05+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision / modify`
+- `path_scope`: `backend/apps/nodes/{automation.py,lifecycle.py,tasks.py,bootstrap.py}; backend/apps/identity/gate_settings.py; backend/tests/`
+- `operation`: `补齐地址池自动建机后的幂等 bootstrap、协议/访问配置、健康确认、READY 和首次订阅发布；失败时保持非 READY 并保留配额。`
+- `reason`: `前一阶段只完成云实例创建到 PROVISIONED，自动补池无法产生可发布节点，且最早 PROVISIONED 节点会阻塞缩容。`
+- `authorization`: `用户已授权自行决定测试配置、测试服务器费用上限 USD 1000，并要求测试、同步发布新版本；本轮本地验证继续使用 Fake/Stub，真实云写入仍受项目边界约束。`
+- `implementation_scope`: `新增创建模板 bootstrap 参数的安全校验；创建成功后提交幂等 node.bootstrap，初始化协议、活动订阅凭据和访问配置，调用可信健康探针，成功才标记 READY/发布；重试不重复创建协议或活动凭据。`
+- `exclusions`: `不读取或持久化秘密；不读取 archive/Shop 运行时；不执行真实 AWS/SSH、公网探测、生产部署、删除或设备验收；不改写历史 E2E 数据事故记录。`
+- `risk`: `真实节点仍需预置或受验证的 X-ray apply transport、健康探针及入站策略；未配置这些依赖时 bootstrap 必须 fail-closed。`
+- `command_or_tool`: `apply_patch；pytest focused red/green；全量后端、前端、E2E、diff/boundary/secret/acceptance validators。`
+- `result`: `待实现和验证；任何 Fake/Stub 结果只记录为本地证据，不转换为真实云成功。`
+- `exit_code`: `not-run`
+- `evidence`: `新增 focused bootstrap tests and subsequent command logs`
+- `status`: `not-run`
+- `commit_or_tree`: `main@4eaa45b4941f7d9a0a468ce01aead34c4600998d plus existing dirty worktree`
+- `rollback_ref`: `代码提交后使用该提交的 git revert 或 v0.12.2；不反向迁移数据库、不恢复撤销凭据或云状态。`
+- `time_logic`: `业务时间继续使用 timezone-aware UTC；每日重启仍按配置 IANA timezone 的 local date，bootstrap 无新的时间窗口。`
+
+### 2026-11-06T16:04:48+08:00 — xray-node-automation-20261106-01 correction and final local gates
+
+- `event_id`: `xray-node-automation-20261106-01/010`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-06T16:04:48+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / validate`
+- `path_scope`: `backend/apps/nodes/bootstrap.py; backend/apps/nodes/tasks.py; docs/{project-ledger.md,progress.md,release-checklist.md,version-record.md}; tests/acceptance/matrix.json; artifacts/acceptance/0.13.0/final-gates-2/`
+- `operation`: `纠正 /009 对 bootstrap 已完成状态的过度表述，并追加最终本地门禁、每日重启语义和临时资源清理证据。`
+- `reason`: `/009 原计划描述为“补齐 bootstrap”，但当前实现按安全边界在缺少固定安装器、防火墙读写、可信 SSH、协议和健康探针闭环时 fail-closed；代码实际只排队 bootstrap 并保持 PROVISIONED/NEEDS_RECONCILIATION，不能声称已达到 READY 或完成首发订阅。`
+- `authorization`: `用户授权本地实现、测试、版本同步和发布准备；真实 AWS/SWAS、SSH、公网、生产和破坏性删除仍受仓库硬边界约束，未执行。`
+- `implementation_scope`: `更新发布资料到 final-gates-2 的 19/19 gate 与 417 passed/2 skipped；明确旧 55433 清库事故仍为独立 failed 事件；记录每日重启“每天最多排队一台、排队即记账、失败当天不自动重试”；保留真实云/CI/Release/生产 blocked/not-run。`
+- `exclusions`: `不恢复或覆盖历史测试数据库；不触碰预先存在的 xray-current-run 容器；不执行真实云创建、SSH 安装、公网探测、实例删除、静态 IP 释放、生产发布或 GitHub Release。`
+- `command_or_tool`: `XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test PATH=/tmp/xray-pnpm10-bin:$PATH XRAY_ACCEPTANCE_ARTIFACT_DIR=artifacts/acceptance/0.13.0/final-gates-2 ./scripts/check-local.sh; docker rm -f xray-gates-postgres-20261106 xray-gates-redis-20261106; python3 scripts/validate-acceptance.py; git diff --check; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; apply_patch。`
+- `result`: `最终 summary.tsv 的 19 个 gate 全部 exit 0；JUnit 419 tests、417 passed、2 skipped、0 failures、0 errors；前端 unit 82 passed，Playwright 8 passed；边界、秘密、skill、验收矩阵通过。仅本轮 gate 容器已删除；xray-current-run 与独立测试容器未触碰。`
+- `exit_code`: `check-local=0; docker rm=0; acceptance=0; diff-check=0; boundary=0; secrets=0。`
+- `status`: `passed（本地隔离验证）；bootstrap 首次安装/健康/订阅闭环、真实 AWS/SSH/公网/CI/Release/生产为 blocked 或 not-run。`
+- `commit_or_tree`: `main@working-tree；源码、测试、资料和最终门禁证据尚未提交。`
+- `time_logic`: `业务时间使用 Django aware UTC；每日重启使用配置 IANA timezone 的 local date，调度条件为达到配置时间后每本地日一次，排队即写入日期/节点；E2E run-id 只隔离资源生命周期。`
+- `reuse`: `后续本地 E2E 复用 run-id wrapper、数据库 marker、tmpfs/loopback 约束、global teardown 和 final-gates-2 证据格式；Fake/Stub/容器结果不转换为真实云或生产成功。`
+- `rollback_ref`: `应用回退使用最终提交的 git revert 或 v0.12.2；资料提交可单独 revert；不反向迁移、不恢复 Token tombstone、撤销凭据、安全事件、数据库旧状态或云状态。`

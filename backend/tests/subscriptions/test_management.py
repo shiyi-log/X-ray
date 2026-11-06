@@ -7,7 +7,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from apps.identity.models import SuperAdmin
-from apps.nodes.models import NodeConfigRevision, NodeProtocol
+from apps.nodes.models import NodeProtocol
 from apps.subscriptions.access import AccessService, build_node_config
 from apps.subscriptions.credentials import CredentialService
 from apps.subscriptions.models import AccessProfile
@@ -202,7 +202,7 @@ def test_usage_retries_resets_stale_samples_and_epoch(publishable_subscription):
 
 @pytest.mark.django_db
 def test_assignment_pending_until_apply_and_no_shared_or_foreign_protocols(
-    ready_node, authenticated
+    ready_node, authenticated, monkeypatch
 ):
     client, admin = authenticated
     profile = AccessProfile.objects.create(name="assigned")
@@ -227,24 +227,23 @@ def test_assignment_pending_until_apply_and_no_shared_or_foreign_protocols(
                 "service_restarted": True,
             }
 
+    monkeypatch.setattr(
+        "apps.nodes.probes.configured_health_probe",
+        lambda: lambda _node: {
+            "accepted": True,
+            "positive_control": True,
+            "fresh_connection": True,
+        },
+    )
     AccessService.sync(response.json()["operation_ids"][0], transport_factory=lambda _: Transport())
     assert captured[0]["config"]["inbounds"][0]["protocol"] == "vless"
     ready_node.refresh_from_db()
     assert profile.subscription.current_revision_id is None
-    ready_node.health_state = "HEALTHY"
+    assert ready_node.provisioning_state == "READY"
+    assert ready_node.health_state == "HEALTHY"
+    assert ready_node.desired_generation == ready_node.applied_generation
     ready_node.raw_cloud_state = "running"
-    ready_node.save(update_fields=["health_state", "raw_cloud_state", "updated_at"])
-    NodeConfigRevision.objects.filter(
-        node=ready_node, generation=ready_node.applied_generation
-    ).update(
-        probe_result={
-            "generation": ready_node.applied_generation,
-            "app_health_passed": True,
-            "accepted": True,
-            "positive_control": True,
-            "fresh_connection": True,
-        }
-    )
+    ready_node.save(update_fields=["raw_cloud_state", "updated_at"])
     from apps.subscriptions.publishing import node_publish_ready
 
     assert node_publish_ready(ready_node)
@@ -254,6 +253,46 @@ def test_assignment_pending_until_apply_and_no_shared_or_foreign_protocols(
     assert "encrypted_material" not in str(details)
     assert "token_digest" not in str(details)
     assert write(client, path, {"protocol_ids": [str(uuid4())]}).status_code == 409
+
+
+@pytest.mark.django_db
+def test_failed_health_probe_does_not_mark_access_sync_node_ready(
+    ready_node, authenticated, monkeypatch
+):
+    client, _admin = authenticated
+    profile = AccessProfile.objects.create(name="unhealthy-assignment")
+    issued = TokenService.issue(profile.pk)
+    protocol = NodeProtocol.objects.create(node=ready_node, protocol="vless", port=18444)
+    response = write(
+        client,
+        f"/api/v1/subscriptions/{issued.subscription_id}/assign/",
+        {"protocol_ids": [str(protocol.pk)]},
+    )
+    assert response.status_code == 202
+
+    monkeypatch.setattr(
+        "apps.nodes.probes.run_node_health_probe",
+        lambda node: (
+            "FAILED",
+            "UNHEALTHY",
+            {"accepted": False, "positive_control": True, "fresh_connection": True},
+            node.applied_generation,
+        ),
+    )
+
+    class Transport:
+        def apply(self, request):
+            return {
+                "applied_generation": request["generation"],
+                "config_test_passed": True,
+                "service_restarted": True,
+            }
+
+    AccessService.sync(response.json()["operation_ids"][0], transport_factory=lambda _: Transport())
+
+    ready_node.refresh_from_db()
+    assert ready_node.provisioning_state == "PROVISIONED"
+    assert ready_node.health_state == "UNHEALTHY"
 
 
 @pytest.mark.django_db

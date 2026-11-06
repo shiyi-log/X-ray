@@ -14,6 +14,7 @@ TEST_DATABASE = database_from_url(TEST_DATABASE_URL)
 if TEST_DATABASE["NAME"] != "xray_test":
     raise RuntimeError("XRAY_TEST_DATABASE_URL must target the xray_test database")
 DATABASES = {"default": TEST_DATABASE}
+XRAY_E2E_RUN_ID = os.getenv("XRAY_E2E_RUN_ID", "")
 DEBUG = False
 SECRET_KEY = "test-only-not-for-production"
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]

@@ -250,7 +250,7 @@ class AccessService:
             NodeCredential.objects.filter(
                 node=node, revoked_at__isnull=True, desired_generation=generation
             ).update(applied_generation=generation)
-            ManagedNode.objects.filter(pk=node.pk).update(provisioning_state="READY")
+            ManagedNode.objects.filter(pk=node.pk).update(provisioning_state="PROVISIONED")
             node.refresh_from_db()
             from apps.nodes.probes import record_node_health_probe, run_node_health_probe
 
@@ -280,6 +280,8 @@ class AccessService:
                 )
                 release_claim(claim, status="NEEDS_RECONCILIATION")
                 return
+
+            ManagedNode.objects.filter(pk=node.pk).update(provisioning_state="READY")
 
             try:
                 result_data["node_reconciliation"] = (

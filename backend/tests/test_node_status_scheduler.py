@@ -25,7 +25,9 @@ def test_scheduler_is_disabled_by_default(prepared_node):
 
 @pytest.mark.django_db
 def test_scheduler_waits_for_interval_then_submits_and_skips_inflight(prepared_node, admin):
-    node, _ = prepared_node
+    node, create_operation = prepared_node
+    create_operation.status = "SUCCEEDED"
+    create_operation.save(update_fields=["status", "updated_at"])
     node.external_id = node.deterministic_name
     node.provisioning_state = "PROVISIONED"
     node.save(update_fields=["external_id", "provisioning_state", "updated_at"])
@@ -83,3 +85,32 @@ def test_scheduler_waits_for_interval_then_submits_and_skips_inflight(prepared_n
 
     assert result["scheduled"] == 0
     assert result["skipped"] == 2
+
+
+@pytest.mark.django_db
+def test_scheduler_skips_node_with_inflight_lifecycle_operation(prepared_node, admin):
+    node, create_operation = prepared_node
+    create_operation.status = "SUCCEEDED"
+    create_operation.save(update_fields=["status", "updated_at"])
+    node.external_id = node.deterministic_name
+    node.save(update_fields=["external_id", "updated_at"])
+    NodeStatusSyncSetting.objects.create(
+        enabled=True,
+        interval_minutes=5,
+        last_scheduled_at=timezone.now() - timedelta(minutes=5),
+    )
+    OperationService.submit(
+        kind="node.reboot",
+        target_id=node.pk,
+        params={"region": node.region, "account_id": str(node.cloud_account_id)},
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=node.cloud_credential_version,
+    )
+
+    result = schedule_node_status_refreshes()
+
+    assert result["scheduled"] == 0
+    assert result["skipped"] == 1
+    assert not Operation.objects.filter(kind="node.refresh", target_id=node.pk).exists()

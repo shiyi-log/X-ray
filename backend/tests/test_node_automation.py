@@ -207,6 +207,60 @@ def _rebootable_node(node):
     )
 
 
+def _publish_subscription_on_nodes(profile_name, nodes):
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
+    from apps.subscriptions.credentials import CredentialService
+    from apps.subscriptions.models import AccessProfile
+    from apps.subscriptions.publishing import Publisher
+    from apps.subscriptions.tokens import TokenService
+
+    profile = AccessProfile.objects.create(name=profile_name)
+    issued = TokenService.issue(profile.pk)
+    for node in nodes:
+        node.addresses = [
+            {"value": "192.0.2.10", "family": 4, "kind": "dynamic"}
+        ]
+        node.save(update_fields=["addresses", "updated_at"])
+        protocol = NodeProtocol.objects.create(
+            node=node, protocol="vless", port=18443, credential_scope="profile"
+        )
+        credential = CredentialService.rotate(
+            node.pk, profile_ids=[profile.pk], protocol_ids=[protocol.pk]
+        )[0]
+        node.refresh_from_db()
+        node.applied_generation = node.desired_generation
+        node.health_state = "HEALTHY"
+        node.save(
+            update_fields=[
+                "applied_generation",
+                "health_state",
+                "updated_at",
+            ]
+        )
+        credential.applied_generation = node.applied_generation
+        credential.save(update_fields=["applied_generation"])
+        NodeConfigRevision.objects.update_or_create(
+            node=node,
+            generation=node.applied_generation,
+            defaults={
+                "config_hash": "a" * 64,
+                "xray_version": "26.3.27",
+                "installer_version": "1.0.0",
+                "bundle_hash": "test-bundle",
+                "usable": True,
+                "probe_result": {
+                    "generation": node.applied_generation,
+                    "app_health_passed": True,
+                    "accepted": True,
+                    "positive_control": True,
+                    "fresh_connection": True,
+                },
+            },
+        )
+    Publisher.publish(issued.subscription_id)
+    return profile.subscription
+
+
 @pytest.mark.django_db
 def test_pool_sync_submits_only_oldest_same_region_delete_and_skips_inflight(prepared_node):
     from apps.identity.models import NodeAutomationSetting
@@ -272,6 +326,77 @@ def test_pool_sync_submits_only_oldest_same_region_delete_and_skips_inflight(pre
     setting.save()
     assert schedule_node_pool_sync()["deleted"] == 0
     assert Operation.objects.filter(kind="node.delete").count() == 2
+
+
+@pytest.mark.django_db
+def test_pool_sync_blocks_deleting_the_only_publishable_subscription_node(prepared_node):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_node_pool_sync
+
+    node, _operation = prepared_node
+    _ready_node(node)
+    subscription = _publish_subscription_on_nodes("single-endpoint", [node])
+    set_allocations(node.pool_id, [{"region": node.region, "quota": 0}])
+    NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+
+    result = schedule_node_pool_sync()
+
+    assert result["deleted"] == 0
+    assert result["blocked"] == 1
+    assert not Operation.objects.filter(kind="node.delete").exists()
+    subscription.refresh_from_db()
+    assert subscription.current_revision.usable is True
+
+
+@pytest.mark.django_db
+def test_pool_sync_allows_oldest_delete_when_subscription_has_another_endpoint(
+    prepared_node,
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_node_pool_sync
+
+    oldest, _operation = prepared_node
+    _ready_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _publish_subscription_on_nodes("redundant-endpoints", [oldest, younger])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    set_allocations(oldest.pool_id, [{"region": oldest.region, "quota": 1}])
+    NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+
+    result = schedule_node_pool_sync()
+
+    assert result["deleted"] == 1
+    deletion = Operation.objects.get(kind="node.delete")
+    assert deletion.target_id == oldest.pk
+
+
+@pytest.mark.django_db
+def test_automated_delete_rechecks_subscription_fallback_before_cloud_write(prepared_node):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.automation import validate_automated_delete
+    from apps.nodes.tasks import schedule_node_pool_sync
+
+    oldest, _operation = prepared_node
+    _ready_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _publish_subscription_on_nodes("changing-fallback", [oldest, younger])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    set_allocations(oldest.pool_id, [{"region": oldest.region, "quota": 1}])
+    setting = NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+
+    assert schedule_node_pool_sync()["deleted"] == 1
+    deletion = Operation.objects.get(kind="node.delete")
+    younger.health_state = "UNHEALTHY"
+    younger.save(update_fields=["health_state", "updated_at"])
+
+    with pytest.raises(DomainError) as blocked:
+        validate_automated_delete(deletion, oldest, setting.policy_version)
+
+    assert blocked.value.code == "AUTOMATION_SUBSCRIPTION_FALLBACK_REQUIRED"
 
 
 @pytest.mark.django_db

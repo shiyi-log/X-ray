@@ -33,6 +33,18 @@ def assert_safe_test_database() -> None:
     name = str(connection.settings_dict.get("NAME") or "")
     if getattr(settings, "XRAY_ENV", "") != "test" or name != "xray_test":
         raise CommandError("seed_e2e only runs with XRAY_ENV=test on xray_test")
+    run_id = str(getattr(settings, "XRAY_E2E_RUN_ID", "") or "")
+    try:
+        if str(UUID(run_id)) != run_id:
+            raise ValueError
+    except ValueError as exc:
+        raise CommandError("seed_e2e requires an isolated E2E database marker") from exc
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT current_setting('xray.e2e_run_id', true)")
+        marker = cursor.fetchone()
+    if not marker or marker[0] != run_id:
+        raise CommandError("seed_e2e requires an isolated E2E database marker")
 
 
 class Command(BaseCommand):

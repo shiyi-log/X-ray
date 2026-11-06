@@ -42,6 +42,12 @@ def handle_operation(operation_id: str, *, revocation_service=None):
         AccessService.sync(operation.pk)
         operation.refresh_from_db()
         return {"operation_id": str(operation.pk), "status": operation.status}
+    if operation.kind == "node.bootstrap":
+        from apps.nodes.bootstrap import NodeBootstrapService
+
+        NodeBootstrapService.run(operation.pk)
+        operation.refresh_from_db()
+        return {"operation_id": str(operation.pk), "status": operation.status}
     if not operation.kind.startswith("node."):
         raise DomainError("OPERATION_KIND_UNSUPPORTED", "不支持的操作类型", status_code=400)
     action = operation.kind.removeprefix("node.")

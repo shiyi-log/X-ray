@@ -20,7 +20,6 @@ def schedule_node_status_refreshes():
     """Queue due read-only refreshes, leaving provider calls to the worker."""
     from apps.identity.models import NodeStatusSyncSetting, SuperAdmin
     from apps.nodes.models import ManagedNode
-    from apps.operations.models import Operation
     from apps.operations.services import OperationService
 
     scheduled = 0
@@ -51,11 +50,7 @@ def schedule_node_status_refreshes():
             .order_by("pk")
         )
         for node in nodes:
-            in_flight = Operation.objects.filter(
-                kind="node.refresh",
-                target_id=node.pk,
-            ).exclude(status__in=Operation.TERMINAL_STATUSES)
-            if in_flight.exists():
+            if _node_has_inflight_operation(node.pk):
                 skipped += 1
                 continue
 
@@ -193,7 +188,11 @@ def schedule_node_pool_sync():
                 .order_by("created_at", "pk")
                 .first()
             )
-            from .automation import has_confirmed_instance_resource, node_delete_snapshot
+            from .automation import (
+                has_confirmed_instance_resource,
+                has_subscription_endpoint_fallback,
+                node_delete_snapshot,
+            )
 
             if oldest is None:
                 blocked += excess
@@ -210,6 +209,9 @@ def schedule_node_pool_sync():
                 continue
             if _node_has_inflight_operation(oldest.pk):
                 skipped += 1
+                continue
+            if not has_subscription_endpoint_fallback(oldest):
+                blocked += 1
                 continue
             params = {
                 "region": oldest.region,
@@ -249,6 +251,77 @@ def schedule_node_pool_sync():
         "blocked": blocked,
         "at": now.isoformat(),
     }
+
+
+@shared_task
+def schedule_node_bootstrap():
+    """Create at most one bootstrap operation for each provisioned pool node."""
+    from apps.identity.models import SuperAdmin
+    from apps.nodes.models import ManagedNode
+
+    setting = NodeAutomationSetting.objects.filter(singleton_key=1).first()
+    if setting is None or not setting.pool_sync_enabled:
+        return {"scheduled": 0, "skipped": 0, "disabled": True}
+    admin = SuperAdmin.objects.filter(singleton_key=1, is_active=True).first()
+    if admin is None:
+        return {"scheduled": 0, "skipped": 0, "admin_unavailable": True}
+
+    scheduled = skipped = 0
+    with transaction.atomic():
+        candidates = (
+            ManagedNode.objects.select_for_update()
+            .filter(
+                consumes_quota=True,
+                desired_state="PRESENT",
+                provisioning_state__in=("PROVISIONED", "RECONCILIATION"),
+                external_id__gt="",
+                raw_cloud_state__iexact="running",
+            )
+            .order_by("created_at", "pk")
+        )
+        for node in candidates:
+            create_operation = (
+                Operation.objects.filter(
+                    kind="node.create",
+                    target_type="node",
+                    target_id=node.pk,
+                    status="SUCCEEDED",
+                )
+                .order_by("-created_at", "-pk")
+                .first()
+            )
+            if create_operation is None:
+                skipped += 1
+                continue
+            # A blocked bootstrap remains operator-retryable on the same
+            # operation. Never create replacement operations on each beat tick.
+            if Operation.objects.filter(
+                kind="node.bootstrap", target_type="node", target_id=node.pk
+            ).exists():
+                skipped += 1
+                continue
+            params = {
+                "region": node.region,
+                "account_id": str(node.cloud_account_id),
+                "automation": {
+                    "kind": "pool_bootstrap",
+                    "policy_version": setting.policy_version,
+                },
+            }
+            OperationService.submit(
+                kind="node.bootstrap",
+                target_id=node.pk,
+                params=params,
+                key=uuid5(
+                    NAMESPACE_URL,
+                    f"xray-node-bootstrap:{node.pk}:{create_operation.pk}",
+                ),
+                preview_id=None,
+                admin=admin,
+                cloud_credential_version=node.cloud_credential_version,
+            )
+            scheduled += 1
+    return {"scheduled": scheduled, "skipped": skipped}
 
 
 @shared_task

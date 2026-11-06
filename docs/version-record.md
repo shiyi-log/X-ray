@@ -6,7 +6,7 @@
 
 | 版本 | 阶段 | 提交 | 标签 | 日期 | 迁移 | 本地门禁 | 外部验收 | 回退点 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 0.13.0 | 地址池自动对齐、每日轮转重启、状态/IP/流量同步与订阅节点对账 | `pending` | `v0.13.0` | 2026-11-06 | identity `0006_nodeautomationsetting`；单例配置表为 additive migration，生产部署前由 migrator 应用 | 后端 `395 passed, 9 skipped`；前端 `82 passed`；Ruff、Django check、迁移漂移、typecheck/lint/build 初步通过；完整 delivery-gates、E2E、OpenAPI 确定性、安装器包和静态最终门禁待完成 | 真实 AWS 创建尚未运行；自动创建不包含 SSH 安装/配置/健康确认；AWS 测试还需关闭 Lightsail 默认公共入站规则；云验收/SSH/设备/生产仍 `blocked` 或 `not-run` | `v0.12.2` 或对本次提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、撤销凭据、安全事件或云状态 |
+| 0.13.0 | 地址池自动对齐、每日轮转重启、状态/IP/流量同步与订阅节点对账 | 当前工作树（最终提交待生成）；旧候选 `4eaa45b4941f7d9a0a468ce01aead34c4600998d` 仅对应早期资料 | `v0.13.0` 尚未创建 | 2026-11-06 | identity `0006_nodeautomationsetting`；单例配置表为 additive migration，生产部署前由 migrator 应用 | 最新 `artifacts/acceptance/0.13.0/final-gates-2/summary.tsv` 的 19/19 gate exit 0；JUnit 为 419 tests、417 passed、2 skipped、0 failures、0 errors；前端 82 passed；隔离 E2E 数据库护栏 6 passed、Playwright 8 passed。旧 55433 `xray_test` 清库事故仍作为独立数据安全失败事件保留；两个 Linux/systemd 集成项需要一次性主机。 | 自动补池仍 fail-closed 到 `PROVISIONED`/`NEEDS_RECONCILIATION`，没有自动固定安装、可信 SSH 首次批准、防火墙读写、协议初始化、健康确认和首次订阅发布。每日重启按本地日最多排队一台，排队即记账，失败当天不自动重试。当前提交 GitHub CI/Release 未回读；真实 AWS/SWAS、SSH、设备及生产仍 `blocked`/`not-run`；云成本 USD 0。 | `v0.12.2` 或对本次代码/资料提交执行 `git revert`；不反向迁移、不恢复 Token tombstone、撤销凭据、安全事件或云状态；数据库不覆盖、不盲目恢复 |
 | 0.0.0 | 基线 | `2da51e7` | `v0.0.0-baseline` | 2026-09-17 | 初始骨架 | `not-run` | `not-run` | `v0.0.0-baseline` |
 | 0.0.1 | P0 | `2885503` | `v0.0.1` | 2026-09-17 | 无业务迁移 | runtime/skill/backend tests passed | `blocked` | `v0.0.0-baseline` |
 | 0.1.0 | P1 | `fb0a2db` | `v0.1.0` | 2026-09-17 | identity 0001-0003 | 13 backend tests passed | `blocked` | `v0.0.1` |

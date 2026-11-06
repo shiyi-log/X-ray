@@ -40,6 +40,50 @@ def has_confirmed_instance_resource(node: ManagedNode) -> bool:
 
 
 @transaction.atomic
+def has_subscription_endpoint_fallback(node: ManagedNode) -> bool:
+    """Require affected active subscriptions to retain a publishable endpoint."""
+    from apps.subscriptions.models import Subscription
+    from apps.subscriptions.publishing import FORMATS, Publisher
+    from apps.subscriptions.renderers import NoCompatibleEndpoints, render_subscription
+
+    node_id = str(node.pk)
+    subscriptions = (
+        Subscription.objects.select_for_update(of=("self",))
+        .select_related("profile", "current_revision")
+        .filter(status="ACTIVE", profile__status="ACTIVE")
+        .order_by("pk")
+    )
+    for subscription in subscriptions:
+        revision = subscription.current_revision
+        node_versions = revision.node_versions if revision else {}
+        if not isinstance(node_versions, dict) or not any(
+            key == node_id
+            or (isinstance(value, dict) and value.get("node_id") == node_id)
+            for key, value in node_versions.items()
+        ):
+            continue
+        try:
+            endpoints = Publisher._endpoints(subscription, excluded_node_ids={node.pk})
+            if not endpoints:
+                return False
+            for subscription_format in FORMATS:
+                try:
+                    render_subscription(
+                        subscription_format,
+                        endpoints=endpoints,
+                        public_version="fallback-check",
+                    )
+                except NoCompatibleEndpoints:
+                    continue
+                break
+            else:
+                return False
+        except Exception:
+            return False
+    return True
+
+
+@transaction.atomic
 def validate_automated_delete(
     operation: Operation, node: ManagedNode, policy_version: int
 ) -> None:
@@ -113,6 +157,12 @@ def validate_automated_delete(
     if node.pk != oldest_id:
         raise DomainError(
             "AUTOMATION_OVERAGE_CHANGED", "目标不再是地区内最早的超额服务器", status_code=409
+        )
+    if not has_subscription_endpoint_fallback(node):
+        raise DomainError(
+            "AUTOMATION_SUBSCRIPTION_FALLBACK_REQUIRED",
+            "删除后活跃订阅将没有可发布节点",
+            status_code=409,
         )
 
     other_deletes = Operation.objects.filter(

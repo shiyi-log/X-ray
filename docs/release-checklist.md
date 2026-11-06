@@ -5,11 +5,14 @@
 ## v0.13.0 当前状态
 
 - [x] `VERSION`、后端/前端包、OpenAPI、验收矩阵和安装器标签更新为 `0.13.0`。
-- [x] 地区最早节点缩容、每日轮转重启、动态地址刷新、订阅撤回/重发、流量同步和节点数对账的后端回归测试通过。
-- [ ] 完整本地 delivery-gates、浏览器 E2E、安装器包、OpenAPI 确定性与版本索引最终复验待完成。
-- [ ] GitHub delivery-gates、`v0.13.0` Release 和远端资产摘要待推送标签后回读。
+- [x] 最新工作树的 19 项本地 delivery gate 均 exit 0；`artifacts/acceptance/0.13.0/final-gates-2/summary.tsv` 与 JUnit 记录后端 `417 passed, 2 skipped`（419 tests，0 failures，0 errors）、前端 `82 passed`、浏览器断言 `8 passed`。旧 `artifacts/acceptance/0.13.0/gates/` 的 `402 passed, 2 skipped` 仅保留为历史候选证据，不与本轮计数混用。
+- [x] OpenAPI 确定性、固定 Xray、四种订阅格式、安装器/交付测试、类型检查、Lint、构建、边界、秘密、skill 和验收矩阵门禁均记录为 exit 0；两个 Linux/systemd 专用集成测试因环境要求跳过。
+- [x] E2E 已在 run-id 隔离的 disposable PostgreSQL/Redis 栈复跑：数据库护栏 6 passed，package-level Playwright wrapper 8 passed，teardown 清理本轮容器；历史 55433 `xray_test` 清库事故仍保留在验收矩阵和台账中，未覆盖或恢复旧数据。
+- [x] 每日重启按配置的 IANA 时区轮转，每个本地日最多排队一台；调度时即记账，因此云重启或健康探针失败后当天不会自动重试，失败操作须人工重试或等待下一本地日。
+- [ ] GitHub 当前提交的 delivery-gates/Release 结果及 `v0.13.0` 远端资产摘要未回读；不得用历史版本 Release 代替。
 - [ ] 真实 AWS 端到端验收阻塞：创建链路没有安装与健康确认；AWS 测试前还需完成新实例入站规则的安全收敛。
-- [ ] SSH、生产部署、生产 TLS、设备验收和生产切换未运行；生产发布保持 `blocked`。
+- [ ] 自动补池尚未贯通 SSH 主机身份批准、安装、协议/入站规则初始化、健康确认和首次订阅发布，当前仅到 `PROVISIONED`。
+- [ ] SSH、公网探测、生产部署、生产 TLS、设备验收和生产切换未运行；生产发布保持 `blocked`。
 
 ## 发布与回退
 
