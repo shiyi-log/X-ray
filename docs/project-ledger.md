@@ -5122,3 +5122,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `本次只记录执行机器 Asia/Shanghai aware 时间；自动化和测试业务时间规则未改。r10 完整门禁时间戳为 UTC Z；daily restart 和租约语义由已测试源码保持。`
 - `reuse`: `复用专用 xray-test PostgreSQL/Redis、Fake/Stub providers、固定 Xray parser fixtures、r10 summary/JUnit；这些仅证明本地交付，不代表真实云或生产通过。`
 - `rollback_ref`: `发布前，资料和 evidence commit 可用后续 git revert 撤销；业务代码退回 v0.13.0 或对 c882ac0 执行 git revert；0007 保持 nullable additive，不反向迁移或恢复 Token tombstone、凭据、安全事件或云状态。`
+
+### 2026-11-07T06:43:06+08:00 — xray-node-automation-20261106-01 v0.14.0 tag and release publication
+
+- `event_id`: `xray-node-automation-20261106-01/023`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T06:43:06+08:00`
+- `actor`: `Codex`
+- `event_type`: `publish / read / validate / release-evidence`
+- `path_scope`: `main; refs/tags/v0.14.0; .github/workflows/{ci.yml,release.yml}; VERSION; CHANGELOG.md; scripts/package-installer-release.sh; docs/project-ledger.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.0.md; tests/acceptance/matrix.json; /tmp/codex-gh-2.103.3; /tmp/xray-release-v0.14.0; GitHub Actions runs 42305314710 and 42305314132; GitHub Release v0.14.0`
+- `operation`: `推送 main 与 v0.14.0 annotated tag；在 Actions 没有 job steps 且两次运行均失败后，使用官方 GitHub CLI 临时二进制和仓库发布脚本手动打包、创建 Release，并回读 tag、Release 与资产摘要。`
+- `reason`: `用户要求测试后同步发布新版本；tag push 已触发 delivery-gates 和 release workflow，但 run 42305314710、42305314132 及各自一次重跑都 failure，job step 列表为空；发布 API 在手动创建前对 tag 返回 404。`
+- `authorization`: `用户明确授权本任务提交、推送和同步发布新版本，并授权在 USD 1,000 上限内创建测试服务器。此次 GitHub Release 与代码 tag 属于该发布请求；没有 AWS 写入，云费用仍 USD 0。`
+- `implementation_scope`: `将 v0.14.0 annotated tag 指向发布证据提交 1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d（其父源码候选为 r10 已验证的 c882ac03a29091825d4597b39bd753c3e70f7d18）；推送 origin/main 与标签；官方 GitHub CLI v2.103.3 下载到 /tmp 并按 GitHub Release API digest 校验；运行 scripts/package-installer-release.sh 生成三个发布资产；使用现有系统 GitHub credential helper 在内存读取认证资料并仅通过 GH_TOKEN 进程环境调用 gh，未打印、写入参数、URL、日志或文件；创建非草稿 Release 并核对远端 asset digest；同步验收矩阵、进度和版本记录。`
+- `exclusions`: `未修改应用代码或依赖；未在系统路径安装 CLI；未改写/强推分支或标签；未创建云服务器、未 SSH、未操作真实订阅或生产资源；不删除 AWS/GitHub 状态、Release 资产或历史证据。`
+- `assumptions`: `Release workflow 在 runner/job 之前失败且没有 step 证据；记录为远端 CI blocked，不臆测具体平台根因。手动本地包来自 tag 对应提交，manifest commit 读回为 1c2a5ca。`
+- `risks`: `远端 delivery-gates 未执行，故仅本地 r10 结果可证明 CI/test gates；AWS credential version 1 AES-GCM 解密失败，真实重启 IP、运行状态、订阅更新/撤回和云删除尚无实机证据。`
+- `command_or_tool`: `git tag -a v0.14.0 1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d -m "X-ray Manager v0.14.0"; git push origin main refs/tags/v0.14.0; git ls-remote origin refs/heads/main refs/tags/v0.14.0 refs/tags/v0.14.0^{}; GitHub API get ref/tag/release/actions runs/jobs; rerun_failed_workflow_run_jobs for both failed workflows; /tmp/codex-gh-2.103.3/gh_2.103.3_macOS_arm64/bin/gh --version; `XRAY_RELEASE_TAG=v0.14.0 XRAY_RELEASE_DIST_DIR=/tmp/xray-release-v0.14.0 ./scripts/package-installer-release.sh`; `shasum -a 256 -c SHA256SUMS`; GitHub API official release metadata and asset digest readback.`
+- `result`: `origin/main 与本地 HEAD 均为 1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d；remote annotated tag object 8ad91ccf12fe3aa1889fbb7ac8f91c02998fce01 peeled 到同一提交。Release id 437133468，非草稿、非预发布，包含 SHA256SUMS、xray-installer-0.14.0-manifest.json、xray-installer-0.14.0.tar.gz。远端 digest 与本地一致：SHA256SUMS sha256:24f0e06dc712347676ae1137c1706c2b3d3c612eea2d9d20ecb6984131f8acd2；manifest sha256:8385076c5d4ef51f026ca483181fb7daa09a06b2dd1865952858e9118cba2554；tar.gz sha256:3477c1196f49a5541e9a38e7222e9c3d7d572b57b5af51bb9e5c82da1673f96b。包内 manifest 版本/tag/commit 正确，含 9 个文件；本地 SHA256SUMS 验证两项通过。delivery-gates run 42305314710 attempt 2 与 release run 42305314132 attempt 2 均 failure，jobs verify/release 的 steps=[]；GitHub Release API 手动创建前为 404、创建后返回 id 437133468。`
+- `exit_code`: `tag=0; push=0; local package=0; shasum -c=0; gh auth identity check=0; gh release create=0; remote ref/tag/release/digest reads=0; workflow retry API accepted=0 but workflow attempt conclusions=failure with zero steps。`
+- `status`: `main/tag 推送、GitHub Release 创建及三项资产 SHA-256 远端读回 passed；本地 r10 门禁 passed；远端 GitHub Actions CI blocked（两次运行、包括显式重跑均未启动任何 job step）；真实 AWS/SSH/订阅/设备/生产 blocked 或 not-run（绑定凭据无法解密；未创建云资源、成本 USD 0）。`
+- `commit_or_tree`: `main 与 v0.14.0 peeled commit 均为 1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d；其父源码候选 c882ac03a29091825d4597b39bd753c3e70f7d18 是 r10 完整本地门禁通过的提交。`
+- `time_logic`: `本次不改变业务或发布触发时间规则；台账按执行机器 Asia/Shanghai 时间记录，远端 GitHub run 时间为 UTC。`
+- `reuse`: `复用仓库 package-installer-release.sh、CHANGELOG 版本摘录、GitHub 官方资产 API digest、tag/ref API 和 r10 专用容器/fake 门禁证据；本地构建资产与远端 Release SHA 对齐。`
+- `rollback_ref`: `不删除或重写已发布 v0.14.0 tag/Release；应用回退到 v0.13.0 或对源码候选 c882ac03a29091825d4597b39bd753c3e70f7d18 执行 git revert；不反向迁移、不恢复 Token tombstone、凭据、安全事件或云状态。`

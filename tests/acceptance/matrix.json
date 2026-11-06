@@ -1,6 +1,6 @@
 {
   "version": "0.14.0",
-  "generated_at": "2026-11-07T06:26:18+08:00",
+  "generated_at": "2026-11-07T06:43:06+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -127,7 +127,7 @@
     {
       "id": "github-ci",
       "environment": "ci",
-      "status": "not-run",
+      "status": "blocked",
       "evidence": [
         {
           "kind": "historical_github_actions",
@@ -170,16 +170,18 @@
           "reason": "This run covered the pushed base commit before the success-cursor implementation and current release candidate."
         },
         {
-          "kind": "current_candidate_pre_push",
-          "commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
-          "status": "not-run",
-          "job_started": false,
-          "steps_started": 0,
-          "reason": "The local candidate passed r10 gates; push-triggered CI has not yet been observed."
+          "kind": "current_candidate_github_actions",
+          "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
+          "status": "blocked",
+          "runs": [
+            {"run_id": 42305314710, "workflow": "X-ray delivery gates", "attempt": 2, "conclusion": "failure", "job_steps": 0},
+            {"run_id": 42305314132, "workflow": "发布 X-ray 版本", "attempt": 2, "conclusion": "failure", "job_steps": 0}
+          ],
+          "reason": "Both push-triggered workflows and one explicit retry completed without any job steps; local r10 gates passed, but remote CI evidence is blocked."
         }
       ],
-      "commit": null,
-      "provider": null,
+      "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
+      "provider": "github",
       "region": null,
       "cost": null,
       "residual_resources": []
@@ -187,7 +189,7 @@
     {
       "id": "github-release",
       "environment": "release",
-      "status": "not-run",
+      "status": "passed",
       "evidence": [
         {
           "kind": "historical_github_release",
@@ -213,12 +215,23 @@
         {
           "kind": "current_candidate_release",
           "tag": "v0.14.0",
-          "commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
-          "status": "not-created",
-          "reason": "The local candidate commit passed r10 gates; the version tag and release have not yet been pushed."
+          "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
+          "annotated_tag_object": "8ad91ccf12fe3aa1889fbb7ac8f91c02998fce01",
+          "status": "created",
+          "draft": false,
+          "prerelease": false,
+          "workflow_run": {"run_id": 42305314132, "attempt": 2, "conclusion": "failure", "job_steps": 0},
+          "manual_fallback": true,
+          "url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.14.0",
+          "assets": {
+            "SHA256SUMS": "sha256:24f0e06dc712347676ae1137c1706c2b3d3c612eea2d9d20ecb6984131f8acd2",
+            "xray-installer-0.14.0-manifest.json": "sha256:8385076c5d4ef51f026ca483181fb7daa09a06b2dd1865952858e9118cba2554",
+            "xray-installer-0.14.0.tar.gz": "sha256:3477c1196f49a5541e9a38e7222e9c3d7d572b57b5af51bb9e5c82da1673f96b"
+          },
+          "checksum_verification": "GitHub asset digests match local SHA-256 for all three assets; local SHA256SUMS validates the archive and manifest."
         }
       ],
-      "commit": null,
+      "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
       "provider": "github",
       "region": null,
       "cost": null,

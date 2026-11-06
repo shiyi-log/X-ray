@@ -12,9 +12,10 @@
 
 ## 发布读回
 
-- [ ] `main`、注释标签 `v0.14.0`、Actions 和 GitHub Release 已推送后回读。
-- [ ] 若 Release 已创建，远端资产及 SHA-256 已核对；若未创建，记录工作流状态和阻断原因。
-- [ ] 最终版本提交、标签 peeled SHA、回退提交和远端状态已写入 `docs/version-record.md`、`docs/progress.md` 与 `tests/acceptance/matrix.json`。
+- [x] `main` 与注释标签 `v0.14.0` 已推送并回读：`main` 和 tag peeled commit 均为 `1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d`。
+- [x] GitHub Release `v0.14.0` 已创建为非草稿；安装器 tar.gz、manifest、`SHA256SUMS` 三项远端 SHA-256 与本地构建结果匹配。因 Release workflow 两次失败且没有 job steps，已按仓库脚本本地打包并手动创建 Release。
+- [x] 最终源码候选、版本/tag peeled SHA、回退提交、远端 Release 资产、CI 阻断及 AWS 限制已记录在 `docs/version-record.md`、`docs/progress.md` 与 `tests/acceptance/matrix.json`。
+- [ ] GitHub delivery-gates 远端成功：run `42305314710` 的第 2 次尝试失败且无 job steps；本地 r10 全量门禁通过。
 
 ## 外部验收边界
 
