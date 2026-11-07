@@ -1,6 +1,6 @@
 {
   "version": "0.14.2",
-  "generated_at": "2026-11-07T15:26:02+08:00",
+  "generated_at": "2026-11-07T15:59:16+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -39,9 +39,28 @@
     {
       "id": "local-delivery-gates",
       "environment": "local",
-      "status": "not-run",
-      "evidence": [],
-      "commit": null,
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.2/final-gates-20261107-r5/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.2/final-gates-20261107-r5/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {"total": 452, "passed": 450, "skipped": 2, "failures": 0, "errors": 0},
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 84,
+          "browser_e2e": 8,
+          "candidate_commit": "c48cddbba5bbef777590568029f49fa02c479dc9",
+          "candidate_worktree": false,
+          "started_at": "2026-11-07T07:39:28Z",
+          "finished_at": "2026-11-07T07:41:46Z"
+        }
+      ],
+      "commit": "c48cddbba5bbef777590568029f49fa02c479dc9",
       "provider": null,
       "region": null,
       "cost": 0,
@@ -214,9 +233,24 @@
             {"run_id": 42341132078, "workflow": "发布 X-ray 版本", "runner_id": 0, "job_steps": 0}
           ],
           "reason": "The two workflow jobs had runner_id=0 and no steps. The root cause is unknown; this is not remote CI pass evidence."
+        },
+        {
+          "kind": "v0.14.2_main_push_actions",
+          "commit": "2792ed95bff76cf3e5696d89c3c5e2d84a8c9dfb",
+          "status": "blocked",
+          "runs": [
+            {
+              "run_id": 42352685572,
+              "workflow": "X-ray delivery gates",
+              "conclusion": "failure",
+              "job_id": 128344001970,
+              "job_steps": 0
+            }
+          ],
+          "reason": "The push-triggered verify job failed before starting any steps. The root cause is unknown; r5 local gates passed, but remote CI is not verified."
         }
       ],
-      "commit": "33d36785e76ae00dc83652ee7f6ace0e56c18c96",
+      "commit": "2792ed95bff76cf3e5696d89c3c5e2d84a8c9dfb",
       "provider": "github",
       "region": null,
       "cost": null,

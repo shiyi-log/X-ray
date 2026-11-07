@@ -5505,3 +5505,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `使用 aware timezone.now() 设置严格有序的 created_at；每轮通过 pool_sync_interval_minutes 回拨 last_scheduled_at 到 due 窗口；不改变生产时间规则。`
 - `reuse`: `复用节点自动化 fixtures、订阅 fallback helper、created_at/PK 排序、在途 operation 防重，以及 test_node_lifecycle.py 的 exact-absence quota-release regression。`
 - `rollback_ref`: `revert 本次测试/台账提交；生产代码、数据库 schema、Token 与云状态均不变。`
+
+### 2026-11-07T15:52:10+08:00 — xray-node-automation-20261106-01/036 r5 local gate correction and v0.14.2 release index
+
+- `event_id`: `xray-node-automation-20261106-01/036`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T15:52:10+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / validate / modify`
+- `path_scope`: `artifacts/acceptance/0.14.2/final-gates-20261107-r5/{summary.tsv,backend-and-delivery.junit.xml}; tests/acceptance/matrix.json; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.2.md; docs/project-ledger.md`
+- `operation`: `追加纠正事件 033 的 r4 pending 状态：登记 r5 最终 clean-source 本地门禁，记录用户确认的逐周期最多删除一台缩容规则与回归证据，准备 v0.14.2 发布索引。仅跟踪验收摘要 TSV 和 JUnit 纳入 Git；其他忽略日志留在本地。`
+- `reason`: `r5 在源码测试提交上运行完成，需以真实 SHA、计数、skip 原因和外部阻塞更新版本验收记录；保留原事件 033，不覆盖历史。`
+- `authorization`: `用户要求实施节点定时同步/重启、IP/流量/订阅核对，测试并同步发布新版本；用户明确每个地区每次同步最多删除一台，并已要求先推送未提交内容。`
+- `implementation_scope`: `验收矩阵将本地 delivery gates 绑定到 c48cddbba5bbef777590568029f49fa02c479dc9；进度、版本记录、v0.14.2 发布清单及本台账记录 19 门禁、452 JUnit（450 passed/2 skipped）、前端 84、Playwright 8 和 GitHub Actions 阻塞。`
+- `exclusions`: `不更改业务代码、依赖、数据库、云资源、凭据、TOTP、订阅 Token 或正在运行的验收服务；不把本地 Fake/Stub 结果声明为 AWS/生产通过。`
+- `assumptions`: `r5 summary/JUnit 由 scripts/check-local.sh 在干净源码提交 c48cddb 生成；源码工作树在运行时 clean，随后仅新增 r5 evidence commit 2792ed95bff76cf3e5696d89c3c5e2d84a8c9dfb。`
+- `risks`: `两个后端安装器测试需要 Linux/systemd 主机而跳过；GitHub delivery-gates job 无步骤失败且根因未知；本地 AWS app 尚未完成 TOTP/CloudAccount 配置，因此实机实例和订阅验收仍 blocked。`
+- `command_or_tool`: `读取 r5 summary/JUnit/日志并以 XML 聚合确认 452 tests、450 passed、2 skipped；读取 GitHub run 42352685572 的 verify job 128344001970（conclusion=failure, steps=[]）；git push origin main 与远端 ref/status 读回；通过 apply_patch 更新矩阵/进度/版本记录/清单/台账。`
+- `result`: `r5 19/19 gates exit 0；后端 450 passed、2 skipped、0 failures/errors；前端 84 passed；Playwright 8 passed。远端 main=`2792ed95bff76cf3e5696d89c3c5e2d84a8c9dfb`，本地 push 前后工作树 clean；delivery-gates run failure with zero steps；AWS 尚未创建测试服务器，成本 USD 0。`
+- `exit_code`: `r5 check-local=0；secret scan=0；git add/commit/push/ref readback=0；run readback=0；本事件涉及的发布索引静态验证待运行。`
+- `status`: `passed`
+- `commit_or_tree`: `main/origin/main@2792ed95bff76cf3e5696d89c3c5e2d84a8c9dfb + 当前发布索引未提交。`
+- `time_logic`: `r5 样本开始 2026-11-07T07:39:28Z、结束 2026-11-07T07:41:46Z；matrix generated_at 与本事件使用执行机器 Asia/Shanghai 的 +08:00 时区；无业务调度时间行为变更。`
+- `reuse`: `复用 r5 证据、隔离验收服务和既有 pool/lifecycle/subscription/traffic 测试；不复用任何 AWS 写入或真实资源结果。`
+- `rollback_ref`: `发布索引提交可通过 git revert 回退；应用回退到 v0.14.1 或 revert d6d6550/c48cddb；保留验收卷、安全与云状态。`
