@@ -1,6 +1,6 @@
 {
   "version": "0.14.2",
-  "generated_at": "2026-11-07T16:03:47+08:00",
+  "generated_at": "2026-11-07T16:28:12+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -270,6 +270,18 @@
             }
           ],
           "reason": "Both tag-push workflows failed before executing steps. The root cause is unknown; the GitHub Release was created manually after local package validation."
+        },
+        {
+          "kind": "post_release_main_actions_readback",
+          "commit": "36f5680bbb02ae3cbbec8acc00e065695c91058a",
+          "reported_run_id": 42354183736,
+          "status": "blocked",
+          "evidence_access": {
+            "github_connector": "unavailable",
+            "anonymous_api_http_status": 404,
+            "local_actions_metadata": "unavailable"
+          },
+          "reason": "The run id came from the prior-session handoff as the post-release readback target. The authenticated connector was unavailable and anonymous GitHub API access returned 404 for this private repository; workflow, job, runner, steps, conclusion, and root cause remain unverified. No workflow retry was performed."
         }
       ],
       "commit": "990b3f858725966465f4ccf19ce9a9310445a755",

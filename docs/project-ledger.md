@@ -5553,3 +5553,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `GitHub asset created_at 为 2026-11-07T08:02:08Z（2026-11-07T16:02:08+08:00）；无业务时间逻辑变更。`
 - `reuse`: `复用 scripts/package-installer-release.sh、仓库 annotated-tag 工作流约定、本地 checksum 校验和 GitHub asset digest readback；不复用 AWS 或生产验证结果。`
 - `rollback_ref`: `保持已发布 tag/Release 作为不可变审计记录；应用可回退至 v0.14.1 或 revert d6d6550/c48cddb；不反向迁移、不恢复已撤销安全/订阅/云状态。`
+
+### 2026-11-07T16:28:12+08:00 — xray-node-automation-20261106-01/038 post-release Actions readback boundary
+
+- event_id: xray-node-automation-20261106-01/038
+- run_id: xray-node-automation-20261106-01
+- timestamp: 2026-11-07T16:28:12+08:00
+- actor: Codex
+- event_type: read / validate / documentation
+- path_scope: AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.2.md; tests/acceptance/matrix.json; artifacts/acceptance/0.14.2/final-gates-20261107-r5/summary.tsv; GitHub Actions readback target commit 36f5680bbb02ae3cbbec8acc00e065695c91058a
+- operation: 核对 v0.14.2 当前发布 refs、本地 r5 证据和 post-release Actions 读回边界；将无法独立验证的 run 标记为 blocked/unverified，并记录本轮静态、边界、秘密、远端 refs 与本地 readiness 检查。
+- reason: 用户要求测试并同步发布；需明确报告远端工作流状态，并保留不可核验状态而不从匿名 404 推断运行结果。
+- authorization: 用户要求本任务完成测试和版本发布；本轮只读查询和验收文档更新属于交付收尾。未获授权以绕过项目 MFA/Operation 路径执行 AWS 写入；用户已要求自行配置测试服务器且费用不高于 USD 1,000。
+- implementation_scope: 只更新 tests/acceptance/matrix.json 与 docs/progress.md 的 Actions readback 状态，并追加本事件；不更改应用代码、版本、标签、Release 或测试证据。
+- exclusions: 不读取或输出运行时秘密；不重跑、编辑或重试 GitHub workflows；不执行 AWS/SWAS API、SSH、实例创建/删除、静态 IP 释放或真实订阅写入；不修改隔离数据库、TOTP 或 CloudAccount。
+- assumptions: run id 42354183736 来自本任务前序 handoff 的 post-release readback 目标；本轮无法独立确认它与 workflow/job 的关联，因此矩阵保留 reported_run_id 并将执行细节标为未验证。
+- risks: 该仓库匿名 GitHub API 返回 404，不能区别资源不存在与私有仓库访问遮蔽；GitHub MCP 连接返回传输错误/工具不可用；因此不能断言此 run 的结论或根因。
+- command_or_tool: 读取项目约定、技能、台账、进度、发布清单、验收矩阵和 r5 summary；gh run view 42354183736 exit 127（gh 未安装）；GitHub connector fetch run/jobs failed with transport error and later unavailable；匿名 GET /repos/shiyi-log/X-ray/actions/runs/42354183736 returned HTTP 404; agent read-only verification found no local Actions metadata; git cat-file -t 36f5680; git ls-remote origin refs; git diff --check; python3 scripts/validate-acceptance.py; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; frontend/backend readiness curl.
+- result: 当前工作区原先 clean；origin/main=36f5680bbb02ae3cbbec8acc00e065695c91058a；v0.14.2 tag object cdc2c18a1ea6e3392fb307690c1fed0aaf8f4275 peeled 到 990b3f858725966465f4ccf19ce9a9310445a755。diff-check、matrix validation、boundary、secret scan 均 exit 0；frontend/backend readiness HTTP 200；r5 summary 文件仍记录 19/19 gates exit 0（本轮未重跑全量测试）。Actions run workflow/job/runner/steps/conclusion 和 root cause 未验证；AWS 实机仍等待用户在隔离应用完成 TOTP 与 CloudAccount 表单配置；本轮 AWS 请求 0、费用 USD 0。
+- exit_code: local diff=0; acceptance=0; boundary=0; secret=0; remote refs=0; readiness HTTP=200/200; gh=127; anonymous API HTTP=404; authenticated connector unavailable.
+- status: blocked
+- commit_or_tree: main/origin/main@36f5680bbb02ae3cbbec8acc00e065695c91058a before the documentation update; no application/tag/release change.
+- time_logic: 台账时间为执行机 Asia/Shanghai +08:00；无业务时间规则变更。
+- reuse: 复用 r5 本地门禁证据、现有验收矩阵、Git remote refs 和隔离服务 readiness endpoint；本轮未复用 AWS 或生产结果。
+- rollback_ref: 本次仅验收文档更新，可由后续 docs-only git revert 回退；保留 v0.14.2 tag/Release 和全部应用、数据库、Token、凭据、安全及云状态。
