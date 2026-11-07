@@ -84,7 +84,7 @@ jobs:
         run: |
           uv sync --project backend --frozen --group test
           pnpm --dir frontend install --frozen-lockfile
-          pnpm --dir frontend exec playwright install --with-deps chrome
+          pnpm --dir frontend exec playwright install chrome
       - name: Validate acceptance claims before execution
         run: python3 scripts/validate-acceptance.py
       - name: Run complete local delivery gates
@@ -95,7 +95,7 @@ jobs:
         with:
           name: xray-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ env.XRAY_ACCEPTANCE_ARTIFACT_DIR }}/
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
       - name: Remove run-specific images and browser authentication state
         id: cleanup-run

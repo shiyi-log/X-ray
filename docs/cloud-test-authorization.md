@@ -87,7 +87,7 @@ runner 使用专用低权限用户运行，Docker 权限限于这台专用 VM；
 | network | 专用 security group，零入站规则；公有子网只用于出站访问 GitHub、依赖源和 SSM；不创建 key pair，不开 SSH |
 | administration | 专用 EC2 instance role/profile，只附加 AWS 托管 `AmazonSSMManagedInstanceCore`；用 Session Manager 建立管理会话，注册 runner 时不把 token 写入 user-data、命令日志或本地文件 |
 | budget / review | AWS Price List 当前 `t3.medium` Linux Singapore 价 USD0.0528/小时，按 730 小时约 USD38.54/月；EBS、IPv4 和网络另计。连同仍运行的 Lightsail runner 计划费约 USD24/月，目标成本约 USD70/月，远低于 USD1,000 上限。计划于 `2026-12-08T04:00:00+08:00` 复核资源；标签不自动停机或删除，实际账单须另行读回 |
-| allowed_actions | 创建并标记此专用实例、security group、IAM role/profile；安装 SSM Session Manager 本机插件到用户级目录；通过 SSM 安装/配置专用 runner 用户、Docker 与本仓库单 runner；只让受信任 main CI 和从 main 手动触发的发布使用该 runner |
+| allowed_actions | 创建并标记此专用实例、security group、IAM role/profile；安装 SSM Session Manager 本机插件到用户级目录；通过 SSM 安装/配置专用 runner 用户、Docker、Playwright 浏览器系统依赖与本仓库单 runner；只让受信任 main CI 和从 main 手动触发的发布使用该 runner |
 | exclusions | 不 SSH、不创建 SSH key、不配置公网入站；不触碰已有 EC2/runner/IAM profile；不注册 PR workflow；不将 runner token、PAT、AWS credentials 或私钥写入仓库、user-data、SSM 命令参数、日志或本地文件；不删除 Lightsail 或 EC2 实例，不释放 IP |
 
 实际资源创建前置：当前 EC2 API 只读确认 `t3.medium` 为 2 vCPU / 4 GiB；Ubuntu 24.04 Singapore AMI 已读回；默认 VPC 有可用公有子网；SSM 可见另一台已有 Ubuntu managed node。当前 AWS Price List 读回为 USD0.0528/小时。以上不是本次 EC2 创建成功证据；任何尚未创建或未读回项目继续标为 `not-run`。
@@ -97,3 +97,5 @@ runner 使用专用低权限用户运行，Docker 权限限于这台专用 VM；
 更正工作流信任范围：Release tag push trigger 已移除；发布只能由 main 上的 `workflow_dispatch` 启动。工作流先从 main 校验输入标签格式、annotated 类型、标签内版本和目标提交可达 `origin/main`，通过后才检出发布提交。此 workflow/test 修正已经本地通过 focused tests，但尚未提交或推送，因此远端 CI/Release 仍是 `not-run`。新增 EC2 与旧 Lightsail 目标都仍运行；预算估算合计约 USD70/月（不含实际账单读回），`ExpiresAt` 标签不自动关停/删除。未触碰 X-ray 应用节点或订阅，真实应用侧生命周期验收仍未运行；后续仅使用专用本地数据库与 Fake/Stub 完成本地门禁，真实 CloudAccount 前置未达成前不执行应用侧 AWS 写入。
 
 Release 工具补齐（2026-11-08）：SSM 只读预检确认 runner 原先未安装 `gh`，Ubuntu `noble-updates/universe` 提供 `2.45.0-1ubuntu0.3`。通过 AWS CLI SSM RunCommand `d8c8e005-af41-42a5-bacb-addad4a0c285` 安装 Ubuntu 仓库的 `gh 2.45.0`；命令退出码 0，`gh release create --help` 可用。没有写 GitHub token、修改 Actions secrets 或打开主机入站；安装仅作用于 EC2 `i-092e2bb13b7821d13`。`gh` 已具备不代表 Release 已执行；仍需推送受信任 main 后回读 CI，再手动 dispatch 并验证 tag/Release/资产。
+
+首轮远端 CI 纠正（2026-11-08）：Actions run `42414036396` 的 job `128528139687` 确认运行在 runner `xray-actions-ec2-2x4-20261108-01`，setup steps 成功，但锁定依赖步骤因 `playwright install --with-deps chrome` 需要 sudo 而失败；专用 `actions` 用户没有 sudo，artifact 缺失又造成次级错误。基于锁定 Playwright 1.55.1 的 Ubuntu 24.04 `nativeDeps.js` 清单，通过 SSM 在 EC2 安装浏览器运行库/字体。首条安装命令包安装成功，但尾部核验因 shell 参数转义错误返回 2；后续 `dpkg-query` 读回命令 `3fbee0eb-71d2-43c0-bbbd-ca3f91113bf5` 返回 0，确认依赖包齐全。CI workflow 已改为只下载 Chrome，不在 Actions 作业内安装系统包；artifact 缺失改成 warning，减少前置失败时的次级噪声。修正版仍需推送和远端重跑验证。

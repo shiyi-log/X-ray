@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-08T05:01:14+08:00",
+  "generated_at": "2026-11-08T05:13:19+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -868,7 +868,7 @@
           "focused_tests_passed": 25,
           "ruff_exit_code": 0,
           "workflow_yaml_parse_exit_code": 0,
-          "remote_ci_status": "not-run",
+          "remote_ci_status": "failure",
           "actionlint_status": "not-installed"
         },
         {
@@ -888,6 +888,24 @@
           "temporary_auth_state_removed": true,
           "remote_ci_status": "not-run",
           "application_real_cloud_acceptance": "not-run"
+        },
+        {
+          "kind": "runner_remote_ci_attempt",
+          "checked_at": "2026-11-08T05:13:19+08:00",
+          "run_id": 42414036396,
+          "job_id": 128528139687,
+          "head_commit": "6b2f80b7acd5cb0652a67e907c447f574cfa5a27",
+          "runner_name": "xray-actions-ec2-2x4-20261108-01",
+          "conclusion": "failure",
+          "failed_step": "Install locked dependencies",
+          "setup_steps_completed": 8,
+          "cause": "Playwright --with-deps invoked sudo, unavailable to the dedicated Actions user; the empty artifact upload was a secondary failure.",
+          "ssm_package_install_run_command_id": "47659912-80ab-4f32-9ec2-87f419f244a9",
+          "ssm_package_install_command_exit_code": 2,
+          "ssm_package_readback_run_command_id": "3fbee0eb-71d2-43c0-bbbd-ca3f91113bf5",
+          "ssm_package_readback_exit_code": 0,
+          "system_dependencies_installed": true,
+          "workflow_fix_pushed": false
         },
         {
           "kind": "runner_release_cli_preflight",

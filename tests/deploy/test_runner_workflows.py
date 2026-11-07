@@ -124,6 +124,24 @@ def test_ci_images_and_uploaded_evidence_are_unique_to_each_run_attempt():
     assert upload["with"]["name"].endswith("-${{ github.run_attempt }}")
 
 
+def test_ci_browser_install_does_not_require_sudo_and_missing_artifacts_are_secondary():
+    steps = _job("ci.yml", "verify")["steps"]
+    install = next(
+        step
+        for step in steps
+        if "playwright install" in step.get("run", "")
+    )
+    upload = next(
+        step
+        for step in steps
+        if step.get("uses", "").startswith("actions/upload-artifact@")
+    )
+
+    assert "pnpm --dir frontend exec playwright install chrome" in install["run"]
+    assert "--with-deps" not in install["run"]
+    assert upload["with"]["if-no-files-found"] == "warn"
+
+
 def test_ci_cleanup_removes_only_its_images_and_temporary_auth_state(tmp_path):
     steps = _job("ci.yml", "verify")["steps"]
     prepare = next(
