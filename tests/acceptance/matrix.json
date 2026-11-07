@@ -51,6 +51,24 @@
       "status": "blocked",
       "evidence": [
         {
+          "kind": "self_hosted_runner_provisioning_preflight",
+          "checked_at": "2026-11-07T21:26:31+08:00",
+          "current_commit": "c35c012974bf07c44e64a18e4cb65f0eed4ffe53",
+          "target_spec_assumption": "2h4g interpreted provisionally as 2 vCPU and 4 GiB Linux; repository has no matching spec",
+          "workflow_runner_labels": {
+            "ci": "ubuntu-24.04",
+            "release": "ubuntu-24.04"
+          },
+          "dedicated_linux_host_provided": false,
+          "github_cli_installed": false,
+          "connector_runner_registration_operation_available": false,
+          "runner_registration_token_created": false,
+          "runner_registered": false,
+          "aws_write_requests": 0,
+          "cost_usd": 0,
+          "reason": "A persistent runner on the developer host would execute repository PR code and is not an acceptable isolation boundary. No disposable Linux runner host or registration-token path was available; cloud host creation remains behind the project's normal TOTP and CloudAccount prerequisites. No workflow or external system was changed."
+        },
+        {
           "kind": "authenticated_github_actions_readback",
           "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
           "run_id": 42370364174,

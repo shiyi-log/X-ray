@@ -5921,3 +5921,67 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间逻辑变化；远端 refs 与 API 读回于 2026-11-07T20:28:28+08:00。`
 - `reuse`: `复用 r6 本地证据和本版本机包三项 SHA256；远端 tag 仍引用不可变 release index，不随 post-release 文档更新移动。`
 - `rollback_ref`: `post-release 文档提交可单独 git revert；保留 v0.14.3 tag/Release；应用可回到 v0.14.2，不恢复 Token tombstone、凭据、安全事件或云操作状态。`
+
+### 2026-11-07T21:26:31+0800 — xray-self-hosted-runner-20261107-01/001 self-hosted runner task definition
+
+- `event_id`: `xray-self-hosted-runner-20261107-01/001`
+- `run_id`: `xray-self-hosted-runner-20261107-01`
+- `event_type`: `task definition / runner provisioning preflight`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; tests/acceptance/matrix.json; .github/workflows/ci.yml; .github/workflows/release.yml; current Git refs and listener metadata`
+- `operation`: `按用户请求为 X-ray GitHub Actions 准备自托管 runner；“2h4g”仓库无映射，暂推断为 2 vCPU/4 GiB Linux 主机规格。先核验工作流调度、执行宿主和注册能力；此事件定义的可交付范围为准确记录 provisioning blocker，不切换 workflow 或安装常驻 runner。`
+- `authorization`: `用户明确要求创建自托管 runner；先前对 X-ray 测试服务器的 AWS 预算授权上限为 USD 1,000。该授权不绕过项目正常 TOTP/CloudAccount 前置条件，也不授权在开发机上运行不可信 PR workflow。`
+- `read`: `读取仓库硬边界、规范、技能、最新项目台账与进度、v0.14.3 acceptance matrix、CI/release workflow；核对 main/origin refs、git status、相关 loopback listener、GitHub/Actions 工具能力与本机 gh CLI 可用性。读取均仅限当前 X-ray 仓库及脱敏运行元数据，不进入 archive/，不读取 .env、密钥或凭据。`
+- `result`: `main 与 origin/main 在 c35c012974bf07c44e64a18e4cb65f0eed4ffe53 且工作区初始 clean。CI 和 Release 均固定 runs-on ubuntu-24.04；CI 执行完整 PR 仓库代码，Release job 持 contents:write。没有提供专用可销毁 Linux runner 主机；当前 gh CLI 不存在，GitHub 连接工具目录没有 runner registration-token 操作。历史验收仍显示首次 TOTP 未完成、X-ray CloudAccount 数量为 0。未创建 GitHub registration token/runner/AWS 主机，AWS write=0，费用 USD 0。注册在开发机的常驻 runner 会暴露本机给 PR 代码，故不执行。`
+- `implementation_scope`: `仅追加 docs/project-ledger.md、docs/progress.md 和现有 github-ci-v0.14.3 acceptance item 的本次阻塞证据；不改应用、GitHub workflow、runner labels、数据库、服务、认证或云资源。`
+- `exclusions`: `不注册 runner、不执行 GitHub/AWS 写入、不获取/持久化注册 token、不绑定或读取 TOTP/recovery codes、不绕过 MFA/CloudAccount、不修改账单，不停止/重启 9537/9538 或专用 PostgreSQL/Redis。`
+- `assumptions`: `“2h4g”仅作为 2 vCPU/4 GiB Linux 的暂定解释，不是仓库中验证过的机器规格。自托管 runner 需隔离且可销毁，因为 workflow 执行仓库提供的代码；Release runner 另需最小发布权限。`
+- `risks`: `把 Actions runner 常驻在开发机可能让 PR 代码访问开发环境；Release workflow 使用 contents:write。云主机创建仍受账号正常 MFA 与经过验证 CloudAccount 流程约束；GitHub runner 注册也需要 repo admin 生成的短时 token。`
+- `time_logic`: `无业务时间逻辑；记录时间使用本机 Asia/Shanghai 带偏移时间；runner 注册、实例启动时间规则本轮未实施。`
+- `reuse`: `复用现有 v0.14.3 CI blocked 与 release workflow 调度配置；已有 v0.14.3 Release/tag 保持不变。本次不复用任何 credential、runner token 或云资源。`
+- `rollback_ref`: `本轮只有追加式文档记录，可通过单独 git revert 文档提交回退；不移动/删除 v0.14.3 tag/Release，不触碰应用、数据库、Token tombstone、认证或云状态。`
+
+### 2026-11-07T21:29:55+0800 — xray-self-hosted-runner-20261107-01/002 preflight verification result
+
+- `event_id`: `xray-self-hosted-runner-20261107-01/002`
+- `run_id`: `xray-self-hosted-runner-20261107-01`
+- `event_type`: `final verification / blocked runner provisioning`
+- `path_scope`: `docs/project-ledger.md; docs/progress.md; tests/acceptance/matrix.json`
+- `operation`: `记录自托管 runner provisioning preflight 的门禁结果，并将验收矩阵保持为 blocked；不把文档验证或已有 hosted runner 失败写成 runner 创建成功。`
+- `command_or_tool`: `追加最终事件前，git diff --check=0；python3 scripts/validate-acceptance.py=0；./scripts/check-boundary.sh=0；./scripts/check-secrets.sh（输出抑制）=0；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0；jq -e . tests/acceptance/matrix.json=0。差异审阅仅见 progress、ledger、matrix 三个预期路径。`
+- `result`: `matrix valid，boundary passed，secret scan exit 0，skill validator passed，diff check exit 0。runner 仍 blocked：无专用 Linux host、GitHub registration-token API/tool 或已完成 CloudAccount/TOTP；没有创建 token/runner/云主机，AWS 写入 0，费用 USD 0。最终追加后另行执行 git diff --check 与 git status 核对。`
+- `implementation_scope`: `仅追加验收/进度/台账记录；CI/release YAML、应用代码、版本、tag 和 GitHub Release 均未更改。`
+- `time_logic`: `无业务时间变化；文档事件使用本机 Asia/Shanghai 带偏移时间。`
+- `reuse`: `保留现有 v0.14.3 local gate、GitHub Actions blocked 和 AWS real-cloud blocked 证据；本地静态验证不代表 runner、云端 CI 或 AWS 实机验收。`
+- `rollback_ref`: `本轮文档变更可由单独 git revert 回退；保持 v0.14.3 Release/tag、数据库与云安全状态不变。`
+
+### 2026-11-07T21:39:25+0800 — xray-self-hosted-runner-20261107-01/003 runner feasibility recheck
+
+- `event_id`: `xray-self-hosted-runner-20261107-01/003`
+- `run_id`: `xray-self-hosted-runner-20261107-01`
+- `event_type`: `read / final verification`
+- `path_scope`: `.github/workflows/ci.yml; .github/workflows/release.yml; docs/project-ledger.md; docs/progress.md; tests/acceptance/matrix.json; GitHub connector capability inventory; current host metadata`
+- `operation`: `按用户继续要求创建自托管 runner，复核前置条件并保持已有 runner 验收项的 blocked 结论；不把未部署资源记为完成。`
+- `authorization`: `用户明确要求创建自托管 runner；此前 USD 1,000 测试服务器预算保留，但不能替代本项目真实云写入所需的账号 MFA/CloudAccount 前置。`
+- `command_or_tool`: `只读读取两份 workflow 和现有 runner preflight；枚举 GitHub connector 工具名；`command -v gh` 无结果，`docker info --format '{{.ServerVersion}}'` 返回 29.8.2，`uname -m` 返回 arm64，`sw_vers` 确认为 macOS；runner feasibility 子代理只读复核。未请求 runner registration token，未调用 GitHub/AWS 写 API。`
+- `result`: `CI 的 pull_request job 执行仓库代码并要求 Docker/Playwright；Release job 有 contents:write。当前 Apple Silicon macOS 开发主机不满足现有 Ubuntu runner 环境且不构成 PR 隔离边界；GitHub connector 没有 runner 查询/注册 token 操作，未发现专用可销毁 Linux 主机。CloudAccount/TOTP 前置仍未完成。runner 创建 blocked；没有注册 token、runner、AWS 主机或费用。`
+- `implementation_scope`: `仅本台账追加复核证据；不修改 workflow、runner 标签、应用代码、云资源或 GitHub 设置。`
+- `exclusions`: `不将开发机注册为 runner；不获取或持久化注册 token；不绕过 TOTP/CloudAccount；不更改 Actions billing；不触碰现有服务、数据库和浏览器会话。`
+- `assumptions`: `“2h4g”仅为先前记录的暂定规格解释，当前没有可用主机证明该规格；需要专用 Linux 隔离主机和 repo-admin 注册权限后才能继续。`
+- `risks`: `CI 执行 PR 控制的代码，Release 持写权限；共享开发机或共用不受限凭据的 runner 会扩大仓库代码的主机与发布权限暴露面。`
+- `time_logic`: `无业务时间逻辑；事件时间为执行机器 Asia/Shanghai 时钟并带 +08:00 偏移。`
+- `reuse`: `复用现有 CI/release workflow 与 v0.14.3 本地验收证据；不复用凭据、token、开发机或未经确认的云资源。`
+- `rollback_ref`: `仅追加台账，可通过单独 git revert 回退；保留 v0.14.3 tag/Release、应用、数据库及云安全状态。`
+
+### 2026-11-07T21:39:25+0800 — xray-self-hosted-runner-20261107-01/004 documentation gate results
+
+- `event_id`: `xray-self-hosted-runner-20261107-01/004`
+- `run_id`: `xray-self-hosted-runner-20261107-01`
+- `event_type`: `validate / pre-commit verification`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; tests/acceptance/matrix.json`
+- `operation`: `验证 runner preflight 记录格式、验收状态和仓库边界，供按用户先前指令提交推送。`
+- `command_or_tool`: ``python3 scripts/validate-acceptance.py` exit 0；`./scripts/check-boundary.sh` exit 0；`./scripts/check-secrets.sh` exit 0（输出重定向到 `/dev/null`）；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager` exit 0；`jq -e . tests/acceptance/matrix.json` exit 0；`git diff --check` exit 0。`
+- `result`: `验收矩阵有效，boundary check passed，秘密扫描未发现泄露，skill validator passed，差异无空白错误。status 显示仅 progress、ledger、matrix 三个预期文件有修改；没有执行应用测试，因为本轮没有应用代码修改。runner provisioning 仍 blocked。`
+- `implementation_scope`: `文档/验收记录；无版本、应用、workflow、数据库、认证或云资源变更。`
+- `time_logic`: `无业务时间变化；验证在 2026-11-07T21:39+08:00 执行。`
+- `reuse`: `可复用现有 scripts/validate-acceptance.py、check-boundary.sh、check-secrets.sh 与 xray-manager skill validator；仅验证本地文档与仓库边界，不构成云端 runner/CI 通过证据。`
+- `rollback_ref`: `文档提交可用 git revert 回退；不移动 v0.14.3 tag/Release，不影响应用、数据库、Token tombstone、凭据或云状态。`
