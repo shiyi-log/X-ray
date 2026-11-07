@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-07T20:28:28+08:00",
+  "generated_at": "2026-11-07T22:33:10+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -67,6 +67,21 @@
           "aws_write_requests": 0,
           "cost_usd": 0,
           "reason": "A persistent runner on the developer host would execute repository PR code and is not an acceptable isolation boundary. No disposable Linux runner host or registration-token path was available; cloud host creation remains behind the project's normal TOTP and CloudAccount prerequisites. No workflow or external system was changed."
+        },
+        {
+          "kind": "self_hosted_runner_provisioning_permissions_recheck",
+          "checked_at": "2026-11-07T22:33:10+08:00",
+          "current_commit": "159617560e74c88db1f5895a7190977b803783db",
+          "target_spec_assumption": "2h4g interpreted provisionally as 2 vCPU and 4 GiB Linux",
+          "aws_lightsail_get_bundles_exit_code": 254,
+          "aws_lightsail_get_bundles_authorized": false,
+          "dedicated_linux_host_available": false,
+          "github_connector_runner_registration_operation_available": false,
+          "runner_registration_token_created": false,
+          "runner_registered": false,
+          "aws_write_requests": 0,
+          "cost_usd": 0,
+          "reason": "The current AWS principal was denied lightsail:GetBundles, so no host can be selected through the available AWS access. No dedicated Linux host or GitHub runner-registration operation is available. No token, runner, cloud resource, or workflow setting was created."
         },
         {
           "kind": "authenticated_github_actions_readback",

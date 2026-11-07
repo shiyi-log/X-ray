@@ -5985,3 +5985,35 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间变化；验证在 2026-11-07T21:39+08:00 执行。`
 - `reuse`: `可复用现有 scripts/validate-acceptance.py、check-boundary.sh、check-secrets.sh 与 xray-manager skill validator；仅验证本地文档与仓库边界，不构成云端 runner/CI 通过证据。`
 - `rollback_ref`: `文档提交可用 git revert 回退；不移动 v0.14.3 tag/Release，不影响应用、数据库、Token tombstone、凭据或云状态。`
+
+### 2026-11-07T22:33:10+0800 — xray-self-hosted-runner-20261107-01/005 provisioning permission recheck
+
+- `event_id`: `xray-self-hosted-runner-20261107-01/005`
+- `run_id`: `xray-self-hosted-runner-20261107-01`
+- `event_type`: `read / cloud provisioning preflight`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; tests/acceptance/matrix.json; GitHub tool capability inventory; AWS Lightsail read permission`
+- `operation`: `响应用户再次要求创建自托管 runner；确认当前已授权访问路径是否能选择 2 vCPU / 4 GiB Linux 主机，以及 GitHub 是否有 runner 注册端点。`
+- `authorization`: `用户明确要求创建自托管 runner；此前测试资源预算上限 USD 1,000 可覆盖预算约束，但不授予当前 AWS 主体缺失的 IAM 权限。`
+- `command_or_tool`: `检查仓库与 GitHub 工具目录；`aws lightsail get-bundles --region ap-southeast-1 ...` 返回 exit 254 / AccessDeniedException（仅记录缺少 lightsail:GetBundles，省略账号和主体标识）。没有调用 AWS 写 API、GitHub 写 API，也没有创建 runner 注册 token。`
+- `result`: `Lightsail 套餐读取权限被拒；没有可用的专用 Linux 主机。GitHub connector 仅支持批准的 GET 资源读取，没有 runner registration-token 写入操作；gh CLI 不存在。不能安全选择或配置 2h4g 主机。未创建主机、令牌或 runner；AWS 写入 0，费用 USD 0。`
+- `implementation_scope`: `仅追加 docs/progress.md、tests/acceptance/matrix.json 与本台账；不修改 CI/release workflow、代码、AWS、GitHub 设置、服务或数据库。`
+- `exclusions`: `不把 macOS 开发机注册为 runner；不绕过 AWS IAM、CloudAccount/TOTP；不获取或持久化注册令牌；不改 Actions 付款/额度；不停止或复用其他进程。`
+- `assumptions`: `“2h4g”沿用已有暂定解释 2 vCPU / 4 GiB Linux；AWS 区域沿用此前 runner preflight 查询的 ap-southeast-1。`
+- `risks`: `CI 会执行 PR 提交代码，Release job 具有 contents:write；在共享开发机部署常驻 runner 会扩大仓库代码对主机及发布权限的访问面。`
+- `time_logic`: `无业务时间逻辑；命令与审计时间取执行机器 Asia/Shanghai aware wall clock（+08:00）；runner lease/token TTL 本轮未创建或测量。`
+- `reuse`: `复用现有 v0.14.3 CI blocked 证据与本地验收；没有复用凭据、token、runner 或云资源。`
+- `rollback_ref`: `本轮仅追加文档，可单独 git revert；没有 AWS/GitHub 外部状态、版本、tag 或 Release 需要回退。`
+
+### 2026-11-07T22:37:37+0800 — xray-self-hosted-runner-20261107-01/006 documentation verification
+
+- `event_id`: `xray-self-hosted-runner-20261107-01/006`
+- `run_id`: `xray-self-hosted-runner-20261107-01`
+- `event_type`: `validate / final documentation gate`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; tests/acceptance/matrix.json`
+- `operation`: `验证 runner provisioning 阻塞证据、验收矩阵格式、仓库边界和秘密处理；检查最终差异范围。`
+- `command_or_tool`: `python3 scripts/validate-acceptance.py=0；./scripts/check-boundary.sh=0；./scripts/check-secrets.sh >/dev/null 2>&1=0；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0；jq -e . tests/acceptance/matrix.json=0；git diff --check=0；git status --short --branch=0。`
+- `result`: `验收矩阵、boundary、secret scan、skill validation、JSON parse 与差异检查均通过。status 仅有预期的 docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json 未提交修改；runner provisioning 仍 blocked，未创建令牌、主机或 runner，AWS 写入 0，费用 USD 0。`
+- `implementation_scope`: `仅审计文档；无应用代码、workflow、版本、tag、数据库、服务、GitHub 设置或云资源变更。`
+- `time_logic`: `无业务时间变化；本次文档审计在 2026-11-07 Asia/Shanghai 执行。`
+- `reuse`: `可复用 scripts/validate-acceptance.py、check-boundary.sh、check-secrets.sh 和 xray-manager skill validator；仅代表本地文档验证，不代表 GitHub Actions 或云端 runner 验收通过。`
+- `rollback_ref`: `仅文档追加，可单独 git revert；没有需要恢复的外部或运行态资源。`
