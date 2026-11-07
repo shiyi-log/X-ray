@@ -5601,3 +5601,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `matrix.generated_at 与本事件时间为执行机 Asia/Shanghai +08:00；无业务调度或云资源时间规则变化。`
 - `reuse`: `复用事件 037 中 v0.14.2 Release ref、Release API 读回和本地/远端 SHA-256 证据；复用本地验收矩阵与边界/秘密校验命令。`
 - `rollback_ref`: `仅本次文档修正提交可用 git revert 回退；保留既有 v0.14.2 tag/Release、应用、数据库及安全/云状态。`
+
+### 2026-11-07T16:45:59+08:00 — xray-node-automation-20261106-01/040 Release matrix correction push readback
+
+- `event_id`: `xray-node-automation-20261106-01/040`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T16:45:59+08:00`
+- `actor`: `Codex`
+- `event_type`: `commit / push / readback / final verification`
+- `path_scope`: `main commit 09a4dd38be6575f1fb9aceab891ecf6d4c9f3783; refs/heads/main; refs/tags/v0.14.2; tests/acceptance/matrix.json; docs/progress.md; docs/project-ledger.md`
+- `operation`: `提交并推送事件 039 的验收文档修正；回读远端 main 与 v0.14.2 tag peeled ref，确认本地状态。`
+- `reason`: `确保修正后的 Release 验收状态已同步到远端，并保留发布 tag 不变。`
+- `authorization`: `用户先前要求先提交推送既有未提交修改，并要求测试后同步发布；当前文档修正属于已授权发布收尾。`
+- `implementation_scope`: `仅提交三项验收文档修改；不创建新版本/tag/Release，不触碰应用或运行资源。`
+- `exclusions`: `不修改 GitHub Actions、不声明 Actions 通过、不调用 AWS/SWAS/SSH、不创建或删除云资源、不更改 MFA/CloudAccount/数据库/Token。`
+- `assumptions`: `GitHub Release 资产摘要及正式状态继续沿用事件 037 的远端读回证据；本次仅验证 Git refs，不验证新文档 commit 的 Actions run。`
+- `risks`: `main push 触发的 Actions 结果本轮未核验；github-ci 仍按既有证据保持 blocked。真实 AWS 服务器验收仍需本地管理员完成 MFA 与 CloudAccount 配置。`
+- `command_or_tool`: `git commit -m "docs: correct v0.14.2 release acceptance status"; git push origin main; git ls-remote origin refs/heads/main refs/tags/v0.14.2 'refs/tags/v0.14.2^{}'; git status --short --branch; python3 scripts/validate-acceptance.py; git diff --check。`
+- `result`: `提交/push 成功，origin/main 与本地 HEAD 为 09a4dd38be6575f1fb9aceab891ecf6d4c9f3783；工作区 clean；v0.14.2 annotated tag object cdc2c18a1ea6e3392fb307690c1fed0aaf8f4275 仍 peel 到 990b3f858725966465f4ccf19ce9a9310445a755。验收矩阵 github-release=passed、github-ci=blocked、aws-real-cloud=blocked。`
+- `exit_code`: `commit=0; push=0; remote refs=0; status=0; acceptance matrix=0; diff-check=0; prior boundary=0; prior secret scan=0。`
+- `status`: `passed`
+- `commit_or_tree`: `main/origin/main@09a4dd38be6575f1fb9aceab891ecf6d4c9f3783，push/readback 后工作区 clean。`
+- `time_logic`: `提交/回读时间均为执行机 Asia/Shanghai +08:00；无业务时间规则变化。`
+- `reuse`: `复用事件 037 的 tag/Release/资产 digest evidence 和事件 039 的矩阵状态纠正；使用 git ls-remote 做远端引用核验。`
+- `rollback_ref`: `若要回退该发布索引修正，使用 git revert 09a4dd38be6575f1fb9aceab891ecf6d4c9f3783；保留 v0.14.2 Release、应用、数据库及安全/云状态。`
