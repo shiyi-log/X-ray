@@ -6,7 +6,7 @@
 - [x] 后端与交付测试共 450 项：448 passed、2 skipped、0 failures/errors。跳过项需要一次性 Linux 主机和 systemd 主机。
 - [x] 前端 typecheck、lint、84 项单测、生产构建与 run-id 隔离 Playwright 8 项通过。
 - [x] 生命周期与自动化回归覆盖地区配额对齐、每日一台轮转重启、重启状态/IP/健康回读、状态/IP 与流量同步、节点数核对，以及节点创建/启动/停止/重启/删除和订阅签发/撤回。
-- [x] 每个地区的缩容选择 `created_at` 最早且符合安全条件的服务器；每次同步每地区至多提交一台，遇到不安全目标会阻塞，不跳过它删除更新的服务器。
+- [x] 人工将某地区配额从 4 调为 3 时，在该地区选择 `created_at` 最早且符合安全条件的一台服务器；每次同步每地区至多删除一台，遇到不安全目标会阻塞，不跳过它删除更新的服务器。
 - [x] 新增 IP 更新后订阅发布部分失败回归：保存新地址后操作进入 `NEEDS_RECONCILIATION`；重试即使地址不再变化也会重新发布订阅，只有全部成功后操作才结束。
 - [x] `git diff --check`、OpenAPI 确定性、固定 Xray 多格式解析、边界、秘密、skill 和验收矩阵均通过。
 
@@ -14,8 +14,9 @@
 
 ## 发布状态
 
-- [ ] `main`、annotated `v0.14.1`、GitHub Release 与安装包资产尚待推送和远端 SHA-256 回读。
-- [ ] GitHub delivery-gates / release workflow 尚无本版本运行证据；推送后按实际 run/job/step 状态记录，不猜测未分配 runner 的原因。
+- [x] `main` 已推送到 `33d36785e76ae00dc83652ee7f6ace0e56c18c96`；annotated `v0.14.1` tag object `f20546a4a55c61753a9ae3562941765fd9335ad3` peeled 到同一提交。
+- [x] GitHub Release `v0.14.1`（Release id `437350564`）为非草稿、非预发布；已读回并核对 `SHA256SUMS`、manifest、tar.gz 三项资产的 SHA-256 均与本地构建匹配。
+- [x] 已核对 delivery-gates run `42341132257` 和 Release run `42341132078`；两个 job 均 `runner_id=0`、`steps=[]`。根因未知，远端 CI 状态保持 blocked，不记为通过。
 
 ## 外部验收边界
 

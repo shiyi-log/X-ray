@@ -1,6 +1,6 @@
 {
   "version": "0.14.1",
-  "generated_at": "2026-11-07T12:57:06+08:00",
+  "generated_at": "2026-11-07T13:14:25+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -127,7 +127,7 @@
     {
       "id": "github-ci",
       "environment": "ci",
-      "status": "not-run",
+      "status": "blocked",
       "evidence": [
         {
           "kind": "historical_github_actions",
@@ -192,10 +192,20 @@
           "kind": "v0.14.1_pre_push_candidate",
           "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
           "status": "not-run",
-          "reason": "The candidate passed local gates and has not yet been pushed; no workflow run exists for this version."
+          "reason": "Historical pre-push state before v0.14.1 was published."
+        },
+        {
+          "kind": "v0.14.1_actions_readback",
+          "commit": "33d36785e76ae00dc83652ee7f6ace0e56c18c96",
+          "status": "blocked",
+          "runs": [
+            {"run_id": 42341132257, "workflow": "X-ray delivery gates", "runner_id": 0, "job_steps": 0},
+            {"run_id": 42341132078, "workflow": "发布 X-ray 版本", "runner_id": 0, "job_steps": 0}
+          ],
+          "reason": "The two workflow jobs had runner_id=0 and no steps. The root cause is unknown; this is not remote CI pass evidence."
         }
       ],
-      "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
+      "commit": "33d36785e76ae00dc83652ee7f6ace0e56c18c96",
       "provider": "github",
       "region": null,
       "cost": null,
@@ -204,7 +214,7 @@
     {
       "id": "github-release",
       "environment": "release",
-      "status": "not-run",
+      "status": "passed",
       "evidence": [
         {
           "kind": "historical_github_release",
@@ -248,12 +258,21 @@
         {
           "kind": "current_candidate_release",
           "tag": "v0.14.1",
-          "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
-          "status": "not-created",
-          "reason": "The candidate passed local gates; final evidence commit, push, tag, and release publication are pending."
+          "commit": "33d36785e76ae00dc83652ee7f6ace0e56c18c96",
+          "annotated_tag_object": "f20546a4a55c61753a9ae3562941765fd9335ad3",
+          "release_id": 437350564,
+          "status": "created",
+          "draft": false,
+          "prerelease": false,
+          "assets": {
+            "SHA256SUMS": "remote digest matched local SHA-256",
+            "xray-installer-0.14.1-manifest.json": "remote digest matched local SHA-256",
+            "xray-installer-0.14.1.tar.gz": "remote digest matched local SHA-256"
+          },
+          "checksum_verification": "The completed publication readback confirmed all three remote asset digests match local SHA-256. Full digest strings were not retained in the current checkout."
         }
       ],
-      "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
+      "commit": "33d36785e76ae00dc83652ee7f6ace0e56c18c96",
       "provider": "github",
       "region": null,
       "cost": null,
@@ -331,12 +350,23 @@
           "real_cloud_execution": "not-run",
           "writes_attempted": false,
           "source": "apps.nodes.bootstrap_runtime"
+        },
+        {
+          "kind": "v0.14.1_real_cloud_acceptance_blocker",
+          "credential_version": 1,
+          "decryption_status": "failed",
+          "mfa_bound": false,
+          "xray_service_running": false,
+          "writes_attempted": false,
+          "test_servers_created": 0,
+          "cost_usd": 0,
+          "reason": "Application credential decryption and normal MFA/Operation access are unavailable; no AWS write or SSH bypass was attempted."
         }
       ],
       "commit": null,
       "provider": "aws-lightsail",
       "region": null,
-      "cost": null,
+      "cost": 0,
       "residual_resources": []
     },
     {

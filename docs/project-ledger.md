@@ -5194,3 +5194,51 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `业务调度/租约时间逻辑无变更。r2 门禁用 UTC aware 时间 2026-11-07T04:52:06Z 至 2026-11-07T04:54:19Z；记录机器本地 Asia/Shanghai offset +08:00。日常轮转与同步时间规则沿用已验证 0.14.0 行为。`
 - `reuse`: `复用 0.14.0 的地区配额、每日轮转、状态/IP/流量同步、节点计数、订阅 create/revoke 和手动生命周期测试；使用项目专用 xray-test PostgreSQL/Redis、Fake/Stub provider、固定 Xray 及 run-id 隔离 E2E。上述均为本地证据，不代替 AWS 实机证据。`
 - `rollback_ref`: `应用代码回退到 v0.14.0 或对 `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 执行 `git revert`；无数据库迁移，不反向迁移，不恢复撤销 Token、凭据、安全事件或云操作结果。`
+
+### 2026-11-07T13:14:25+08:00 — xray-v0.14.1-release-readback-20261107-01 documentation sync definition
+
+- `event_id`: `xray-v0.14.1-release-readback-20261107-01/001`
+- `run_id`: `xray-v0.14.1-release-readback-20261107-01`
+- `timestamp`: `2026-11-07T13:14:25+08:00`
+- `actor`: `Codex`
+- `event_type`: `task definition / read / release-evidence`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json; artifacts/acceptance/0.14.1/final-gates-20261107-r2/{summary.tsv,backend-and-delivery.junit.xml}; main/tag v0.14.1`
+- `operation`: `将已完成的 v0.14.1 push/tag/Release 读回状态同步至进度、版本索引、验收清单和验收矩阵；追加本轮范围定义。`
+- `reason`: `当前工作区已干净且 main 与 origin/main 同步；版本索引已记录候选本地门禁，但矩阵/清单仍显示发布前 pending，与已完成发布读回不一致。用户还明确确认地区配额从 4 降至 3 时，删除对应地区最早创建的服务器。`
+- `authorization`: `用户已要求提交并推送变更、同步发布新版本，授权测试服务器预算最高 USD 1,000；对 main 的本地文档提交与 push 属于已授权发布流程。AWS 实机写入仍必须走 X-ray 正常认证和 Operation；不能因预算授权绕过 credential 解封或 MFA。`
+- `implementation_scope`: `仅更新 docs/progress.md、docs/version-record.md、docs/release-checklist-v0.14.1.md、tests/acceptance/matrix.json 和本 ledger；注明远端 Actions 两个 run 为零 steps/runner_id 0 且根因未知，记录 v0.14.1 的 tag/Release/资产读回，并保留 AWS 实机阻塞。`
+- `exclusions`: `不修改应用代码、VERSION、CHANGELOG、标签、Release 资产、数据库、凭据、进程或云资源；不创建/删除 AWS 服务器，不 SSH，不轮换 credential，不使用 CLI 绕过应用鉴权。`
+- `assumptions`: `前序发布读回结果为 main 与 v0.14.1 peeled commit 均为 33d36785e76ae00dc83652ee7f6ace0e56c18c96，annotated tag object 为 f20546a4a55c61753a9ae3562941765fd9335ad3，GitHub Release id 为 437350564，三项资产远端摘要与本地构建摘要匹配；两个 Actions run 分别为 42341132257 与 42341132078，job runner_id=0 且 steps=[]。本轮独立复核确认本地 main、tag 标记及 origin refs 一致，但 CLI 不存在、GitHub MCP transport failure、匿名 REST 返回 404，无法重新读取私有 Release/Actions 详情。`
+- `risks`: `Actions job 无步骤不能据此推断根因；只能记为 blocked。AWS credential version 1 无法由当前控制密钥通过 AES-GCM 认证解封，且测试数据库未绑定 MFA；无法安全创建真实测试服务器。当前无 X-ray 服务可经应用正常流程恢复；费用 USD 0。`
+- `command_or_tool`: `读取 AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、进度/版本/清单/矩阵/台账、r2 summary/JUnit 与 git status/diff；`git ls-remote origin refs/heads/main refs/tags/v0.14.1 refs/tags/v0.14.1^{}`（0）；`gh run/release view`（127，gh 不存在）；GitHub MCP `fetch`（transport error）；匿名 GitHub REST release/actions 请求（HTTP 404，curl exit 56）。`
+- `result`: `范围与回退已定义；当前工作树干净，main@33d36785 与 origin/main、v0.14.1 peeled ref 相同，tag object 为 f20546a4；版本/发布读回状态仍需同步文档。此前完成的发布读回结果仅按给定任务摘要转录，不冒称本轮重新获取了 Release API/Actions API 内容。`
+- `exit_code`: `git status=0; git ls-remote=0; gh=127; MCP fetch transport failure; anonymous REST=404/curl 56。`
+- `status`: `文档同步 in-progress；源码本地门禁已 passed；GitHub Release/tag/资产依据前序读回 passed；远端 CI blocked（两次零步骤）；真实 AWS/SSH/订阅/设备/生产 blocked 或 not-run；本轮 AWS 成本 USD 0。`
+- `commit_or_tree`: `main@33d36785e76ae00dc83652ee7f6ace0e56c18c96 = origin/main；v0.14.1 peel 到相同 commit；当前工作树 clean。`
+- `time_logic`: `无业务时间规则修改；记录机器本地 Asia/Shanghai +08:00 时间；保留同步每次每地区最多删除一台最早且符合安全条件的服务器，以及每日轮转一台的既有约定。`
+- `reuse`: `复用 r2 完整门禁 summary/JUnit、已完成的 GitHub 发布读回摘要、远端 Git refs；本地 Fake/Stub/容器/浏览器证据不替代 AWS 实机验收。`
+- `rollback_ref`: `本次仅文档，可对新提交执行 git revert；不改 tag 或删除 Release。应用代码回退到 v0.14.0 或对源码提交 78bbcf31b0230f6f8d9a09396ae5f8cd64229e19 执行 git revert；不反向迁移，不恢复撤销 Token、凭据、安全事件或云状态。`
+
+### 2026-11-07T13:20:21+08:00 — xray-v0.14.1-release-readback-20261107-01 documentation verification
+
+- `event_id`: `xray-v0.14.1-release-readback-20261107-01/002`
+- `run_id`: `xray-v0.14.1-release-readback-20261107-01`
+- `timestamp`: `2026-11-07T13:20:21+08:00`
+- `actor`: `Codex`
+- `event_type`: `validate / review / release-evidence`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; docs/version-record.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json; main@33d36785e76ae00dc83652ee7f6ace0e56c18c96`
+- `operation`: `完成发布读回资料同步的只读复核和静态验证；独立代理核对矩阵顶层状态与当前 v0.14.1 证据对象。`
+- `reason`: `先前 ledger event 025 记录的是发布前状态；本轮追加当前发布读回状态，避免把历史 pending 误作当前状态。`
+- `authorization`: `用户要求完成发布同步；本次只修改已授权仓库中的审核/验收文档。`
+- `implementation_scope`: `文档记录 main/tag/Release、已完成资产摘要核对、Actions 两个零步骤 job、AWS credential/MFA 阻塞和 USD 0；将人工配额从 4 降至 3 时同地区选择最早服务器写入清单。`
+- `exclusions`: `不改代码、版本、tag、Release 或云/数据库状态；未创建服务器、未 SSH、未轮换凭据。`
+- `assumptions`: `Release `437350564` 与三项资产 SHA-256 匹配、Actions runs `42341132257`/`42341132078` 无执行步骤，来自已完成的发布读回摘要。当前会话只读确认 origin/main 与 v0.14.1 peeled ref 均为 `33d36785e76ae00dc83652ee7f6ace0e56c18c96`、annotated tag object `f20546a4a55c61753a9ae3562941765fd9335ad3`；本轮 GitHub API 重读未能完成，且 checkout 未保留完整资产摘要。`
+- `risks`: `远端 Actions 根因未知；不能把零步骤失败描述为远端门禁通过。资产摘要匹配是前序已完成读回证据，不是本轮独立重验。真实 AWS/SSH/真实订阅/设备/生产仍 blocked 或 not-run。`
+- `command_or_tool`: `python3 scripts/validate-acceptance.py`（0）；`./scripts/check-boundary.sh`（0）；`./scripts/check-secrets.sh`（0，89 commits / ~7.13 MB scanned / no leaks）；`uv run --project backend python scripts/vendor/skill-quick-validate.py skills/xray-manager`（0）；`git diff --check`（0）；matrix `jq` parse/state review（0）；`git status --short --branch`（0）。独立只读代理复核未发现矩阵状态错误或 v0.14.1 evidence object 缺失；GitHub CLI/API 当前会话重读受 gh 缺失、connector transport error 与匿名 REST 404 阻塞。`
+- `result`: `验收矩阵有效；边界/秘密/技能/差异检查均通过。矩阵顶层 github-ci=blocked、github-release=passed、aws-real-cloud=blocked，状态均符合 validator。五个目标文档为唯一脏文件；源码 r2 19/19 gates 与 450 tests（448 passed、2 skipped）沿用此前干净源码提交证据，没有在此文档同步中重跑。文档变更已完成本地复核，待提交并推送。`
+- `exit_code`: `acceptance=0; boundary=0; secrets=0; skill=0; diff-check=0; jq=0; status=0; gh=127; anonymous REST=404/curl 56; GitHub MCP transport failure。`
+- `status`: `文档静态验收 passed；v0.14.1 Release/tag/资产状态基于前序读回 passed；远端 Actions blocked（runner_id=0, steps=0）；AWS 实机 blocked（credential v1 AES-GCM 解密失败、MFA 未绑定），成本 USD 0。`
+- `commit_or_tree`: `验证时 main/origin/main@33d36785e76ae00dc83652ee7f6ace0e56c18c96，工作树仅包含本事件路径中的五个文档变更；待提交/推送。`
+- `time_logic`: `无业务时间变化；沿用既有按当地日期最多重启一台，配额同步每地区最多删除一台最早且安全条件合格的服务器。`
+- `reuse`: `复用 `artifacts/acceptance/0.14.1/final-gates-20261107-r2/summary.tsv` 与 JUnit；仅用本地专用 PostgreSQL/Redis、Fake/Stub 和浏览器的历史测试证据，不作为 AWS 实机通过证明。`
+- `rollback_ref`: `文档提交可用 git revert 回退；保留 v0.14.1 tag/Release。应用代码回退到 v0.14.0 或对 `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 执行 git revert；不反向迁移或恢复撤销安全/云状态。`
