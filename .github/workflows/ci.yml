@@ -84,7 +84,7 @@ jobs:
         run: |
           uv sync --project backend --frozen --group test
           pnpm --dir frontend install --frozen-lockfile
-          pnpm --dir frontend exec playwright install chrome
+          pnpm --dir frontend exec playwright install chromium
       - name: Validate acceptance claims before execution
         run: python3 scripts/validate-acceptance.py
       - name: Run complete local delivery gates

@@ -137,9 +137,13 @@ def test_ci_browser_install_does_not_require_sudo_and_missing_artifacts_are_seco
         if step.get("uses", "").startswith("actions/upload-artifact@")
     )
 
-    assert "pnpm --dir frontend exec playwright install chrome" in install["run"]
+    assert "pnpm --dir frontend exec playwright install chromium" in install["run"]
+    assert "playwright install chrome" not in install["run"]
     assert "--with-deps" not in install["run"]
     assert upload["with"]["if-no-files-found"] == "warn"
+
+    playwright_config = (ROOT / "frontend/playwright.config.ts").read_text()
+    assert not re.search(r"\bchannel\s*:", playwright_config)
 
 
 def test_ci_cleanup_removes_only_its_images_and_temporary_auth_state(tmp_path):

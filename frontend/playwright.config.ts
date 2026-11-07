@@ -39,7 +39,6 @@ export default defineConfig({
   reporter: [['list'], ['json', { outputFile: path.join(acceptanceRoot, 'playwright-report.json') }]],
   use: {
     baseURL: frontendOrigin,
-    channel: 'chrome',
     trace: 'off',
     screenshot: 'off',
     video: 'off',

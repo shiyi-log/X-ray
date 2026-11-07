@@ -922,6 +922,26 @@
           "github_token_written": false,
           "inbound_rules_added": false,
           "remote_release_status": "not-run"
+        },
+        {
+          "kind": "runner_playwright_chromium_install_correction",
+          "checked_at": "2026-11-08T05:40:11+08:00",
+          "failed_run_id": 42415064430,
+          "failed_job_id": 128531250854,
+          "failed_head_commit": "9187c55fda18e0a8b50ade3f66c9919116a21863",
+          "runner_name": "xray-actions-ec2-2x4-20261108-01",
+          "failed_step": "Install locked dependencies",
+          "failure_cause": "Locked Playwright 1.55.1 branded Chrome installer invokes system package installation with root elevation; preinstalled browser libraries and removal of --with-deps do not avoid it.",
+          "fix_candidate": "Install Playwright-managed chromium and remove channel: chrome from the main E2E config.",
+          "tdd_red_exit_code": 1,
+          "focused_workflow_tests_passed": 15,
+          "yaml_parse_exit_code": 0,
+          "local_chromium_install_exit_code": 0,
+          "browser_e2e_tests_passed": 8,
+          "browser_e2e_ports": [9537, 9538, 9541, 9542],
+          "temporary_auth_and_screenshot_artifacts_removed": true,
+          "remote_fix_ci_status": "not-run-pending-push",
+          "application_real_cloud_acceptance": "not-run"
         }
       ],
       "commit": "2bb35e08873d4f89f82a9f4721d02bc862656673",
