@@ -5170,3 +5170,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `没有业务时间逻辑变化；执行机时间 Asia/Shanghai，GitHub workflow timestamp 为 UTC。`
 - `reuse`: `复用 r10 summary/JUnit、官方 GitHub Release asset digest、refs API、GitHub actions run/job API 与本地发布包 SHA256SUMS。`
 - `rollback_ref`: `不改写 tag 或删除 Release；应用代码回退到 v0.13.0 或 `git revert c882ac03a29091825d4597b39bd753c3e70f7d18`；不反向迁移、不恢复 Token、凭据、安全事件或云状态。`
+
+### 2026-11-07T12:57:06+08:00 — xray-node-automation-20261106-01 v0.14.1 subscription refresh retry
+
+- `event_id`: `xray-node-automation-20261106-01/025`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T12:57:06+08:00`
+- `actor`: `Codex`
+- `event_type`: `read / write / test / validate / release-evidence`
+- `path_scope`: `docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/release.md; CHANGELOG.md; README.md; VERSION; backend/apps/nodes/{lifecycle.py,bootstrap_runtime.py}; backend/config/settings/base.py; backend/openapi/schema.yaml; backend/pyproject.toml; backend/uv.lock; backend/tests/test_node_lifecycle.py; frontend/package.json; frontend/apps/web-antd/package.json; frontend/apps/web-antd/src/views/system/system.test.ts; frontend/packages/ui/package.json; frontend/playwright.config.ts; installer/{one-click.sh,README.md}; tests/{acceptance/matrix.json,installer/test_one_click.py,installer/test_release_package.py}; docs/{progress.md,version-record.md,release-checklist-v0.14.1.md}; artifacts/acceptance/0.14.1/final-gates-20261107-r{1,2}; main@78bbcf31b0230f6f8d9a09396ae5f8cd64229e19`
+- `operation`: `修复 node.refresh 在 IP 已变化但部分订阅地址发布失败时仍成功结束的问题；保存订阅失败计数并转入 NEEDS_RECONCILIATION，重试时即使 IP 不再变化也重新发布；同步版本、锁文件、安装器版本断言和验收材料。`
+- `reason`: `订阅部分发布失败后重试只重新读取云端，而不会重新发布；由于 IP 已持久化，第二次 refresh 看不到地址变化，操作错误地报告 SUCCEEDED，未解决的订阅地址持续过期。`
+- `authorization`: `用户授权完成自动化、单独测试生命周期、测试后推送并发布新版本，并授权使用不超过 USD 1,000 创建测试服务器；随后明确确认配额从 4 调整为 3 时应在对应地区优先删除最早创建的服务器。用户已授权对 main 提交、推送和同步发布；AWS 写入仍只经 X-ray 应用认证与 Operation 执行。`
+- `implementation_scope`: `将订阅 refresh 的部分失败计数写入 operation step/result，失败以 SUBSCRIPTION_ADDRESS_REFRESH_PARTIAL 和 NEEDS_RECONCILIATION 结束；retry 根据先前失败数触发订阅重发；增加回归证明新 IP 已保存后部分失败，再重试且 IP 不再变化仍会成功发布。统一 0.14.1 版本号，包括 uv.lock、OpenAPI、前端测试夹具、安装器默认标签和发布包测试。`
+- `exclusions`: `不改变地区配额策略（每地区每次同步最多删除一台最早创建且符合安全条件的服务器）；不改日常重启/时间规则、权限、数据库迁移或订阅 token 语义；不重置/覆盖共享测试库，不轮换凭据，不使用 AWS CLI 绕过应用，不执行 AWS/SWAS 写入、SSH、生产部署或资源删除。`
+- `assumptions`: `当前控制密钥对现存版本 1 的 wrapped DEK 在 AES-GCM 认证阶段失败；证据无法区分密钥漂移与密文/AAD 损坏。测试数据库没有 TOTP envelope，也没有活动会话；首次 TOTP 设置需要管理员当前密码，且会写入认证/安全状态。真实节点创建和 AWS 写操作因此保持阻塞。`
+- `risks`: `本地 Fake/Stub、专用 xray-test PostgreSQL/Redis 和浏览器验收不能证明 AWS 实机重启后的新 IP、健康状态、真实订阅更新/撤回或云端删除。两个需要一次性 Linux/systemd 主机的安装运行测试跳过。GitHub CI/Release 需推送后读取；此前多个 workflow 在 runner/job step 前失败，但根因未知。`
+- `command_or_tool`: `读取 AGENTS.md 提供的仓库边界、docs/project-conventions.md、当前 ledger/progress/version/release docs 和差异；代理只读审查生命周期、Actions 与凭据/MFA 路由。`uv run --project backend pytest ... tests/installer/test_one_click.py` 因 PyPI 连接超时未收集（exit 2）；直接 pytest 首次因缺 XRAY_TEST_DATABASE_URL 未收集（exit 1）；提供 .env.example 的本地测试设置后现存安装器版本断言按预期 RED（exit 1，1 failed/1 passed/1 skipped）。`uv lock --offline --project backend`（0）；聚焦 GREEN（4 passed/1 skipped，0）；`uv lock --check --offline --project backend`（0）；r1 `XRAY_TEST_SERVICES_EXTERNAL=1 PATH=/tmp/xray-pnpm10-bin:$PATH XRAY_ACCEPTANCE_ARTIFACT_DIR=artifacts/acceptance/0.14.1/final-gates-20261107-r1 ./scripts/check-local.sh`（0）；提交 `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 后以 r2 目录复跑同命令（0）；`git diff --check`; `git ls-remote origin refs/heads/main refs/tags/v0.14.1 refs/tags/v0.14.1^{}`。`
+- `result`: `r1 与干净提交 r2 均 19/19 gate exit 0；r2 JUnit 450 total、448 passed、2 skipped、0 failures/errors，前端 84 passed，Playwright 8 passed；本地验收矩阵、边界、秘密扫描和 skill 校验通过。`uv.lock` 仅更新虚拟项目版本。`main` 当前源码提交 78bbcf31；origin/main 在推送前仍为 1a05af0，远端尚无 v0.14.1 标签。当前工作正在将 r2 与版本/发布资料写入证据提交。AWS 成本 USD 0，没有创建云资源。`
+- `exit_code`: `RED expected=1; stale uv install attempt=2 (network timeout); focused GREEN=0; uv lock/check=0; r1 check-local=0; r2 clean-commit check-local=0 (19/19); JUnit 448 passed+2 skipped; frontend unit=84; browser E2E=8; git ls-remote=0; no AWS writes attempted。`
+- `status`: `本地源码交付门禁 passed；AWS/SSH/真实订阅/实例删除 blocked（现存 credential v1 无法由当前应用 key 解封，管理员 MFA 尚未绑定）；SWAS/设备/生产 not-run 或 blocked；GitHub CI/Release/tag/资产等待提交资料后推送并读回；云成本 USD 0。`
+- `commit_or_tree`: `main@78bbcf31b0230f6f8d9a09396ae5f8cd64229e19; parent/origin/main@1a05af0de89697a6249f0ac2b094cad5294fa2a4; r2 在干净源码提交执行，发布资料证据提交和远端发布 pending。`
+- `time_logic`: `业务调度/租约时间逻辑无变更。r2 门禁用 UTC aware 时间 2026-11-07T04:52:06Z 至 2026-11-07T04:54:19Z；记录机器本地 Asia/Shanghai offset +08:00。日常轮转与同步时间规则沿用已验证 0.14.0 行为。`
+- `reuse`: `复用 0.14.0 的地区配额、每日轮转、状态/IP/流量同步、节点计数、订阅 create/revoke 和手动生命周期测试；使用项目专用 xray-test PostgreSQL/Redis、Fake/Stub provider、固定 Xray 及 run-id 隔离 E2E。上述均为本地证据，不代替 AWS 实机证据。`
+- `rollback_ref`: `应用代码回退到 v0.14.0 或对 `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 执行 `git revert`；无数据库迁移，不反向迁移，不恢复撤销 Token、凭据、安全事件或云操作结果。`

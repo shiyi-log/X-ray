@@ -1,6 +1,6 @@
 {
   "version": "0.14.1",
-  "generated_at": "2026-11-07T06:48:19+08:00",
+  "generated_at": "2026-11-07T12:57:06+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -12,9 +12,25 @@
     {
       "id": "local-delivery-gates",
       "environment": "local",
-      "status": "not-run",
-      "evidence": [],
-      "commit": null,
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.1/final-gates-20261107-r2/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.1/final-gates-20261107-r2/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {"total": 450, "passed": 448, "skipped": 2, "failures": 0, "errors": 0},
+          "frontend_unit_tests": 84,
+          "browser_e2e": 8,
+          "candidate_base_commit": "1a05af0de89697a6249f0ac2b094cad5294fa2a4",
+          "candidate_commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
+          "candidate_worktree": false,
+          "started_at": "2026-11-07T04:52:06Z",
+          "finished_at": "2026-11-07T04:54:19Z"
+        }
+      ],
+      "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
       "provider": null,
       "region": null,
       "cost": 0,
@@ -111,7 +127,7 @@
     {
       "id": "github-ci",
       "environment": "ci",
-      "status": "blocked",
+      "status": "not-run",
       "evidence": [
         {
           "kind": "historical_github_actions",
@@ -171,9 +187,15 @@
             {"run_id": 42307090391, "workflow": "X-ray delivery gates", "attempt": 1, "conclusion": "failure", "job_steps": 0}
           ],
           "reason": "This follow-up commit only recorded release readback; its push-triggered workflow also failed with no job steps."
+        },
+        {
+          "kind": "v0.14.1_pre_push_candidate",
+          "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
+          "status": "not-run",
+          "reason": "The candidate passed local gates and has not yet been pushed; no workflow run exists for this version."
         }
       ],
-      "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
+      "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
       "provider": "github",
       "region": null,
       "cost": null,
@@ -182,7 +204,7 @@
     {
       "id": "github-release",
       "environment": "release",
-      "status": "passed",
+      "status": "not-run",
       "evidence": [
         {
           "kind": "historical_github_release",
@@ -222,9 +244,16 @@
             "xray-installer-0.14.0.tar.gz": "sha256:3477c1196f49a5541e9a38e7222e9c3d7d572b57b5af51bb9e5c82da1673f96b"
           },
           "checksum_verification": "GitHub asset digests match local SHA-256 for all three assets; local SHA256SUMS validates the archive and manifest."
+        },
+        {
+          "kind": "current_candidate_release",
+          "tag": "v0.14.1",
+          "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
+          "status": "not-created",
+          "reason": "The candidate passed local gates; final evidence commit, push, tag, and release publication are pending."
         }
       ],
-      "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
+      "commit": "78bbcf31b0230f6f8d9a09396ae5f8cd64229e19",
       "provider": "github",
       "region": null,
       "cost": null,
