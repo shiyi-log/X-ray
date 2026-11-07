@@ -1,6 +1,6 @@
 {
   "version": "0.14.2",
-  "generated_at": "2026-11-07T16:28:12+08:00",
+  "generated_at": "2026-11-07T16:43:28+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -293,7 +293,7 @@
     {
       "id": "github-release",
       "environment": "release",
-      "status": "not-run",
+      "status": "passed",
       "evidence": [
         {
           "kind": "historical_github_release",

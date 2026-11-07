@@ -5577,3 +5577,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - time_logic: 台账时间为执行机 Asia/Shanghai +08:00；无业务时间规则变更。
 - reuse: 复用 r5 本地门禁证据、现有验收矩阵、Git remote refs 和隔离服务 readiness endpoint；本轮未复用 AWS 或生产结果。
 - rollback_ref: 本次仅验收文档更新，可由后续 docs-only git revert 回退；保留 v0.14.2 tag/Release 和全部应用、数据库、Token、凭据、安全及云状态。
+
+### 2026-11-07T16:43:28+08:00 — xray-node-automation-20261106-01/039 v0.14.2 Release matrix status correction
+
+- `event_id`: `xray-node-automation-20261106-01/039`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T16:43:28+08:00`
+- `actor`: `Codex`
+- `event_type`: `correction / documentation / validation`
+- `path_scope`: `tests/acceptance/matrix.json; docs/progress.md; docs/project-ledger.md; prior v0.14.2 publication evidence in docs/project-ledger.md/037`
+- `operation`: `将验收矩阵 github-release 顶层状态从 not-run 改为 passed，并更新 generated_at 与进度记录；github-ci 继续 blocked，aws-real-cloud 继续 blocked。`
+- `reason`: `只读审计发现 v0.14.2 子项已记录 GitHub Release id 437428455、正式发布状态和三项远端资产 SHA-256 读回，但同一矩阵条目的顶层状态仍为 not-run，和已执行证据不一致。`
+- `authorization`: `用户要求完成测试并同步发布新版本；本次为对应发布证据的索引纠正，不执行新的外部发布动作。`
+- `implementation_scope`: `仅更新 tests/acceptance/matrix.json 的 github-release.status/generated_at，并在 docs/progress.md 与本 ledger 追加状态纠正证据。`
+- `exclusions`: `不更改应用代码、版本号、tag、GitHub Release 资产、GitHub Actions、AWS/SWAS、SSH、MFA、CloudAccount、数据库、Token 或运行进程。`
+- `assumptions`: `复用事件 037 中已有 Release id、正式发布属性、本地 SHA256SUMS 校验与三项远端 asset digest 读回；本次状态只表示 GitHub Release 发布/资产验收，不代表 Actions 或真实云验收通过。`
+- `risks`: `验收验证器只检查通过状态是否有结构化证据和完整 commit，不检查 github-release 与嵌套 Release 证据的语义一致性；本次通过事实回读对照修正。GitHub Actions 仍有无步骤失败记录及后续不可读回记录，AWS 实机仍因隔离应用 TOTP/CloudAccount 未就绪而阻塞。`
+- `command_or_tool`: `读取 AGENTS.md、project conventions、skill、progress、matrix 与 ledger；git status/log/diff 与 origin ref 只读复核；jq 检查 github-release 状态与 v0.14.2 子项；python3 scripts/validate-acceptance.py; git diff --check; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh >/dev/null 2>&1; jq -e 发布证据断言。`
+- `result`: `github-release=passed；github-ci=blocked；aws-real-cloud=blocked。Release id 437428455 的 created/non-draft/non-prerelease 记录与三项远端资产摘要匹配证据保留；测试服务器数 0、AWS 请求 0、费用 USD 0。`
+- `exit_code`: `acceptance matrix=0; diff-check=0; boundary=0; secret scan=0; release evidence assertion=0。`
+- `status`: `passed`
+- `commit_or_tree`: `main/origin/main@3ece93a0b1cd40149b37217563adbce493030a71，修改前工作区 clean；当前仅本次三项验收文档修改。`
+- `time_logic`: `matrix.generated_at 与本事件时间为执行机 Asia/Shanghai +08:00；无业务调度或云资源时间规则变化。`
+- `reuse`: `复用事件 037 中 v0.14.2 Release ref、Release API 读回和本地/远端 SHA-256 证据；复用本地验收矩阵与边界/秘密校验命令。`
+- `rollback_ref`: `仅本次文档修正提交可用 git revert 回退；保留既有 v0.14.2 tag/Release、应用、数据库及安全/云状态。`
