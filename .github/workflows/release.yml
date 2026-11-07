@@ -1,9 +1,6 @@
 name: 发布 X-ray 版本
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       tag:
@@ -20,24 +17,33 @@ concurrency:
 
 jobs:
   release:
-    runs-on: ubuntu-24.04
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    runs-on: [self-hosted, Linux, X64, xray-trusted-2x4]
     timeout-minutes: 15
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
-      - name: 检出发布标签
+      - name: 检出受信任的 main
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ inputs.tag || github.ref_name }}
+          persist-credentials: false
 
-      - name: 校验版本与标签
+      - name: 校验发布标签
         shell: bash
         run: |
           set -euo pipefail
-          version=$(<VERSION)
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$(git cat-file -t "$RELEASE_TAG")" = tag
+          version="$(git show "$RELEASE_TAG:VERSION")"
           test "$RELEASE_TAG" = "v${version}"
-          test "$(git describe --tags --exact-match HEAD)" = "$RELEASE_TAG"
+          release_commit="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          git merge-base --is-ancestor "$release_commit" refs/remotes/origin/main
+          printf 'RELEASE_COMMIT=%s\n' "$release_commit" >> "$GITHUB_ENV"
+
+      - name: 检出已验证的发布提交
+        shell: bash
+        run: git checkout --detach "$RELEASE_COMMIT"
 
       - name: 打包一键安装器
         shell: bash

@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    runs-on: >-
+      ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+          fromJSON('["self-hosted","Linux","X64","xray-trusted-2x4"]') || 'ubuntu-24.04' }}
     timeout-minutes: 60
     env:
       XRAY_ENV: test
@@ -23,9 +25,10 @@ jobs:
       XRAY_REDIS_URL: redis://127.0.0.1:56379/0
       XRAY_TEST_SERVICES_EXTERNAL: "1"
       XRAY_CSRF_TRUSTED_ORIGINS: http://127.0.0.1:9528
-      XRAY_BACKEND_TEST_IMAGE: xray-manager-backend:ci
-      XRAY_FRONTEND_TEST_IMAGE: xray-manager-frontend:ci
-      XRAY_BACKUP_TEST_IMAGE: xray-manager-backup-tools:ci
+      XRAY_BACKEND_TEST_IMAGE: xray-manager-backend:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      XRAY_FRONTEND_TEST_IMAGE: xray-manager-frontend:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      XRAY_BACKUP_TEST_IMAGE: xray-manager-backup-tools:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      XRAY_ACCEPTANCE_ARTIFACT_DIR: ${{ github.workspace }}/artifacts/acceptance/ci-${{ github.run_id }}-${{ github.run_attempt }}
       XRAY_SKILL_VALIDATOR: scripts/vendor/skill-quick-validate.py
     services:
       postgres:
@@ -54,6 +57,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare isolated acceptance paths
+        id: acceptance-paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth_directory=$(mktemp -d "$RUNNER_TEMP/xray-auth.XXXXXX")
+          printf 'XRAY_PLAYWRIGHT_AUTH_STATE=%s/admin.json\n' "$auth_directory" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
@@ -82,7 +93,29 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: xray-acceptance-${{ github.run_id }}
-          path: artifacts/acceptance/
+          name: xray-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.XRAY_ACCEPTANCE_ARTIFACT_DIR }}/
           if-no-files-found: error
           retention-days: 14
+      - name: Remove run-specific images and browser authentication state
+        id: cleanup-run
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker image rm --force \
+            "$XRAY_BACKEND_TEST_IMAGE" \
+            "$XRAY_FRONTEND_TEST_IMAGE" \
+            "$XRAY_BACKUP_TEST_IMAGE" || true
+          if [[ -n ${XRAY_PLAYWRIGHT_AUTH_STATE:-} ]]; then
+            case "$XRAY_PLAYWRIGHT_AUTH_STATE" in
+              "$RUNNER_TEMP"/xray-auth.*/admin.json)
+                rm -f -- "$XRAY_PLAYWRIGHT_AUTH_STATE"
+                rmdir -- "$(dirname -- "$XRAY_PLAYWRIGHT_AUTH_STATE")"
+                ;;
+              *)
+                echo 'Auth state is outside the run-owned temporary directory' >&2
+                exit 1
+                ;;
+            esac
+          fi

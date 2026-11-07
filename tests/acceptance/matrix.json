@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-07T22:33:10+08:00",
+  "generated_at": "2026-11-08T05:01:14+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -784,6 +784,137 @@
       "region": null,
       "cost": null,
       "residual_resources": []
+    },
+    {
+      "id": "self-hosted-runner-2026-11-08",
+      "environment": "ci_infrastructure",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "lightsail_runner_access_blocker",
+          "checked_at": "2026-11-08T04:33:10+08:00",
+          "run_id": "xray-self-hosted-runner-20261108-01",
+          "instance_name": "xray-actions-2x4-20261108-01",
+          "create_operation_id": "db13da3f-5936-4d7c-a138-a410990f8ebd",
+          "account_fingerprint": "4a0ef08458dd",
+          "bundle": "medium_3_0",
+          "blueprint": "ubuntu_24_04",
+          "state": "running",
+          "estimated_monthly_price_usd": 24,
+          "metadata_options": {
+            "state": "applied",
+            "http_tokens": "required",
+            "http_endpoint": "disabled"
+          },
+          "temporary_ssh_ingress_open_operation_id": "013319a1-cbf1-480a-8899-fa2469627da1",
+          "temporary_ssh_ingress_close_operation_id": "61f93aba-a126-4339-a7bf-14c67e0ed745",
+          "current_open_ports": [],
+          "aws_host_key_count": 0,
+          "ssh_connected": false,
+          "runner_registered": false,
+          "result": "blocked; retained because deletion was not authorized"
+        },
+        {
+          "kind": "ec2_ssm_runner_provisioning",
+          "checked_at": "2026-11-08T04:33:10+08:00",
+          "instance_id": "i-092e2bb13b7821d13",
+          "instance_name": "xray-actions-ec2-2x4-20261108-01",
+          "instance_type": "t3.medium",
+          "blueprint": "ubuntu_24_04",
+          "ami": "ami-0403d346e3210afd6",
+          "state": "running",
+          "system_status": "ok",
+          "instance_status": "ok",
+          "ssm_ping": "Online",
+          "ssm_agent": "3.3.4793.0",
+          "iam_role": "XrayActionsRunnerSsm20261108",
+          "iam_policy": "AmazonSSMManagedInstanceCore",
+          "security_group": "sg-05b46b434a9bbbabc",
+          "ingress_rules": [],
+          "metadata_options": {
+            "state": "applied",
+            "http_tokens": "required",
+            "http_endpoint": "enabled",
+            "http_put_response_hop_limit": 1
+          },
+          "root_volume": {
+            "type": "gp3",
+            "size_gib": 50,
+            "encrypted": true
+          },
+          "session_manager_plugin_version": "1.2.896.0",
+          "runner_service": "active",
+          "runner_version": "2.338.2",
+          "runner_sha256": "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40",
+          "runner_credential_file_modes": ["600", "600"],
+          "registration_token_created_and_used": true,
+          "registration_token_persisted": false,
+          "github_runner_list_http_status": 200,
+          "github_runner_total_count": 1,
+          "github_runner_status": "online",
+          "github_runner_name": "xray-actions-ec2-2x4-20261108-01",
+          "github_runner_labels": ["self-hosted", "Linux", "X64", "xray-trusted-2x4"],
+          "active_ssm_sessions": 0,
+          "actual_cost_readback": false,
+          "expires_at_tag": "2026-12-08T04:00:00+08:00",
+          "tag_automatically_cleans_up": false
+        },
+        {
+          "kind": "runner_workflow_local_verification",
+          "checked_at": "2026-11-08T04:33:10+08:00",
+          "red_run_exit_code": 1,
+          "red_run_expected_failures": 7,
+          "red_run_passed": 7,
+          "focused_tests_passed": 25,
+          "ruff_exit_code": 0,
+          "workflow_yaml_parse_exit_code": 0,
+          "remote_ci_status": "not-run",
+          "actionlint_status": "not-installed"
+        },
+        {
+          "kind": "runner_full_local_delivery_gates",
+          "checked_at": "2026-11-08T04:56:06+08:00",
+          "command": "./scripts/check-local.sh",
+          "exit_code": 0,
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {"total": 483, "passed": 481, "skipped": 2, "failures": 0, "errors": 0},
+          "frontend_unit_tests": 84,
+          "browser_e2e": 8,
+          "first_attempt_exit_code": 1,
+          "first_attempt_blocker": "Default E2E port 55433 was already occupied by the separate xray-cloud-acceptance stack; that stack was left running.",
+          "isolated_e2e_port_retry": {"backend": 19537, "frontend": 19538, "postgres": 55435, "redis": 56382},
+          "evidence_summary": "/tmp/xray-runner-local-check-20261108/summary.tsv",
+          "temporary_auth_state_removed": true,
+          "remote_ci_status": "not-run",
+          "application_real_cloud_acceptance": "not-run"
+        },
+        {
+          "kind": "runner_release_cli_preflight",
+          "checked_at": "2026-11-08T05:01:14+08:00",
+          "instance_id": "i-092e2bb13b7821d13",
+          "package_source": "Ubuntu noble-updates/universe",
+          "apt_candidate": "2.45.0-1ubuntu0.3",
+          "gh_missing_before_install": true,
+          "preflight_run_command_id": "6b4b399f-d46a-4550-9f8e-ea829e62fa74",
+          "install_run_command_id": "d8c8e005-af41-42a5-bacb-addad4a0c285",
+          "install_exit_code": 0,
+          "installed_version": "2.45.0 (2025-07-18 Ubuntu 2.45.0-1ubuntu0.3)",
+          "release_create_help_available": true,
+          "github_token_written": false,
+          "inbound_rules_added": false,
+          "remote_release_status": "not-run"
+        }
+      ],
+      "commit": "2bb35e08873d4f89f82a9f4721d02bc862656673",
+      "provider": "aws-ec2",
+      "region": "ap-southeast-1",
+      "cost": null,
+      "residual_resources": [
+        "Lightsail xray-actions-2x4-20261108-01 remains running at approximately USD24/month; hostKeys=[] blocks SSH, no ingress is open, actual accrued charge unread, and deletion was not authorized.",
+        "EC2 i-092e2bb13b7821d13 remains running at t3.medium pricing USD0.0528/hour plus 50 GiB encrypted gp3, public IPv4 and network; actual accrued charge unread, no ingress is open, and ExpiresAt does not stop or delete it.",
+        "Remote CI and Release have not run; X-ray application-node AWS lifecycle, IP, subscription and traffic acceptance remain not-run."
+      ]
     }
   ]
 }
