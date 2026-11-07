@@ -5242,3 +5242,26 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间变化；沿用既有按当地日期最多重启一台，配额同步每地区最多删除一台最早且安全条件合格的服务器。`
 - `reuse`: `复用 `artifacts/acceptance/0.14.1/final-gates-20261107-r2/summary.tsv` 与 JUnit；仅用本地专用 PostgreSQL/Redis、Fake/Stub 和浏览器的历史测试证据，不作为 AWS 实机通过证明。`
 - `rollback_ref`: `文档提交可用 git revert 回退；保留 v0.14.1 tag/Release。应用代码回退到 v0.14.0 或对 `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 执行 git revert；不反向迁移或恢复撤销安全/云状态。`
+
+### 2026-11-07T13:23:17+08:00 — xray-v0.14.1-release-readback-20261107-01 documentation commit push
+
+- `event_id`: `xray-v0.14.1-release-readback-20261107-01/003`
+- `run_id`: `xray-v0.14.1-release-readback-20261107-01`
+- `timestamp`: `2026-11-07T13:23:17+08:00`
+- `actor`: `Codex`
+- `event_type`: `commit / push / read / release-evidence`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; docs/version-record.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json; commit 8703cd97895492ce693ce06e7c1aea03864b3a78`
+- `operation`: `提交五个发布读回/验收文档并推送 main；回读远端 main 和 v0.14.1 refs。`
+- `reason`: `发布资料与矩阵已通过验收矩阵、边界、秘密、skill 和差异验证，且独立审查确认三项状态一致。`
+- `authorization`: `用户要求先清洁提交、再修改，并授权提交推送本任务变更与发布资料；本提交仅涉及五个文档文件。`
+- `implementation_scope`: `文档 commit `8703cd97895492ce693ce06e7c1aea03864b3a78` 包含 v0.14.1 发布、tag、资产摘要和阻塞状态的进度/索引/矩阵/台账记录，以及用户确认的同地区 4→3 配额缩容说明。`
+- `exclusions`: `未修改应用代码、VERSION、CHANGELOG、tag 或 Release 资产；未执行 AWS/SWAS 写入、SSH、资源创建/删除、数据库或凭据修改。`
+- `assumptions`: `Git push exit 0；远端 refs 是只读确认；push 返回的 Dependabot 105 条告警为默认分支既存状态，本任务不处理。新文档提交触发的 GitHub Actions 状态未取得，不推断通过或失败。`
+- `command_or_tool`: `git push origin main (0); git ls-remote origin refs/heads/main refs/tags/v0.14.1 'refs/tags/v0.14.1^{}' (0); git status --short --branch (0); git diff --check (0).`
+- `result`: `远端 `main=8703cd97895492ce693ce06e7c1aea03864b3a78` 与本地 HEAD 一致；annotated tag `v0.14.1` 仍为 object `f20546a4a55c61753a9ae3562941765fd9335ad3`，peel 到 `33d36785e76ae00dc83652ee7f6ace0e56c18c96`。push 与 refs readback 通过。push 提示默认分支有 105 Dependabot alerts（1 critical、40 high、49 moderate、15 low），未触及。该 push 的 Actions 状态未运行/未核实；当前会话 GitHub CLI 不存在，MCP transport error，匿名 REST 404。`
+- `exit_code`: `push=0; refs=0; status=0; diff-check=0; gh=127; anonymous REST=404/curl 56; GitHub MCP transport failure。`
+- `status`: `文档同步已提交推送；远端 Git refs passed；源码 Release 与资产状态沿用前序完成读回；远端 Actions 仍 blocked/未核实；AWS 实机验收 blocked，cost USD 0。`
+- `commit_or_tree`: `commit `8703cd97895492ce693ce06e7c1aea03864b3a78` pushed to origin/main; v0.14.1 tag object/peel unchanged; this event is written after that push and will be included in a follow-up documentation commit. Final main SHA follows that audit append.`
+- `time_logic`: `无业务时间修改；日期使用执行机本地 Asia/Shanghai +08:00。`
+- `reuse`: `复用已验证的五文件文档提交和验收/安全静态门禁；未重跑源码门禁，因为源码提交与应用文件未变。`
+- `rollback_ref`: `仅文档提交可用 `git revert 8703cd97895492ce693ce06e7c1aea03864b3a78`；不移动 tag、不删除 Release；应用版本仍可回退到 v0.14.0 或对源码 commit `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 执行 git revert，不恢复撤销安全/云状态。`
