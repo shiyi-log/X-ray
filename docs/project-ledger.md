@@ -5481,3 +5481,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `没有新增时间边界；调度仍由现有计划周期触发，每个周期的删除上限为一台。`
 - `reuse`: `复用现有地区排序、最早节点选择、fresh target preview、operation fence 与删除/订阅安全检查。`
 - `rollback_ref`: `代码以 v0.14.1 或新源码提交的 git revert 回退；无云写入或不可逆状态。`
+
+### 2026-11-07T15:36:07+08:00 — xray-node-automation-20261106-01/035 quota cadence regression
+
+- `event_id`: `xray-node-automation-20261106-01/035`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T15:36:07+08:00`
+- `actor`: `Codex`
+- `event_type`: `test / validation`
+- `path_scope`: `backend/tests/test_node_automation.py; docs/project-ledger.md`
+- `operation`: `新增多轮 4→2 缩容回归：每次到期最多为地区最早节点提交一项删除；首项未完成时下一周期报告 skipped 且不切换到更晚节点；模拟生命周期已确认配额释放后，后续周期再选择次早节点，最终剩余两台。`
+- `reason`: `覆盖用户明确确认的每周期最多删除一台规则及逐台收敛过程。`
+- `authorization`: `用户于 2026-11-07 明确确认多台超额时“每次同步删一台”；本地测试使用专用 PostgreSQL/Redis 与 Fake fixtures，不产生云操作。`
+- `implementation_scope`: `仅增加 backend/tests/test_node_automation.py 回归测试；生产代码没有变更。测试直接设置生命周期完成后的终态作为调度器输入，真实删除、精确云端缺失读回和 quota release 由独立 lifecycle regression 覆盖。`
+- `exclusions`: `不执行 AWS/SWAS API、SSH、资源创建/删除、静态 IP 释放或真实订阅写入；不更改正在运行的服务或共享数据库。`
+- `assumptions`: `prepared_node 与 _sibling fixture 提供可删除的同地区节点；_publish_subscription_on_nodes 保持删除后订阅 endpoint fallback。`
+- `risks`: `本测试把生命周期成功读回作为已完成状态输入给调度器，不单独证明真实云删除；真实云验收仍受 MFA/CloudAccount 阻塞。`
+- `command_or_tool`: `XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<redacted dedicated local test DSN on 127.0.0.1:55433> XRAY_REDIS_URL=redis://127.0.0.1:56380/0 uv run --project backend pytest -c backend/pyproject.toml backend/tests/test_node_automation.py::test_pool_sync_deletes_one_oldest_per_due_cycle_until_quota_two -q`
+- `result`: `1 passed in 0.69s；测试数据库和 Redis 属于保留的 xray-cloud-acceptance 专用栈。`
+- `exit_code`: `0`
+- `status`: `passed`
+- `commit_or_tree`: `main@d6d6550ed76c9a5a560d7ddac04b592188450770 + 当前仅测试/台账修改。`
+- `time_logic`: `使用 aware timezone.now() 设置严格有序的 created_at；每轮通过 pool_sync_interval_minutes 回拨 last_scheduled_at 到 due 窗口；不改变生产时间规则。`
+- `reuse`: `复用节点自动化 fixtures、订阅 fallback helper、created_at/PK 排序、在途 operation 防重，以及 test_node_lifecycle.py 的 exact-absence quota-release regression。`
+- `rollback_ref`: `revert 本次测试/台账提交；生产代码、数据库 schema、Token 与云状态均不变。`

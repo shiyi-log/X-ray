@@ -329,6 +329,81 @@ def test_pool_sync_submits_only_oldest_same_region_delete_and_skips_inflight(pre
 
 
 @pytest.mark.django_db
+def test_pool_sync_deletes_one_oldest_per_due_cycle_until_quota_two(prepared_node):
+    from apps.nodes.tasks import schedule_node_pool_sync
+
+    oldest, _create_operation = prepared_node
+    _ready_node(oldest)
+    nodes = [
+        oldest,
+        _sibling(oldest, "second"),
+        _sibling(oldest, "third"),
+        _sibling(oldest, "fourth"),
+    ]
+    created_at = timezone.now() - timedelta(days=4)
+    for position, node in enumerate(nodes):
+        ManagedNode.objects.filter(pk=node.pk).update(
+            created_at=created_at + timedelta(days=position)
+        )
+    _publish_subscription_on_nodes("quota-two-cycle", nodes)
+    set_allocations(oldest.pool_id, [{"region": oldest.region, "quota": 2}])
+    setting = NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+    consumers = ManagedNode.objects.filter(
+        pool=oldest.pool,
+        region=oldest.region,
+        consumes_quota=True,
+    )
+    assert consumers.count() == 4
+
+    first_cycle = schedule_node_pool_sync()
+
+    assert first_cycle["deleted"] == 1
+    first_delete = Operation.objects.get(kind="node.delete")
+    assert first_delete.target_id == nodes[0].pk
+
+    setting.pool_sync_last_scheduled_at = timezone.now() - timedelta(
+        minutes=setting.pool_sync_interval_minutes
+    )
+    setting.save(update_fields=["pool_sync_last_scheduled_at", "updated_at"])
+    pending_cycle = schedule_node_pool_sync()
+
+    assert pending_cycle["deleted"] == 0
+    assert pending_cycle["skipped"] == 1
+    assert Operation.objects.filter(kind="node.delete").count() == 1
+
+    # The lifecycle read-back path is covered separately; model its confirmed result here.
+    ManagedNode.objects.filter(pk=nodes[0].pk).update(
+        consumes_quota=False,
+        desired_state="DELETED",
+        provisioning_state="DELETED",
+    )
+    Operation.objects.filter(pk=first_delete.pk).update(status="SUCCEEDED")
+    assert consumers.count() == 3
+    setting.pool_sync_last_scheduled_at = timezone.now() - timedelta(
+        minutes=setting.pool_sync_interval_minutes
+    )
+    setting.save(update_fields=["pool_sync_last_scheduled_at", "updated_at"])
+    next_cycle = schedule_node_pool_sync()
+
+    assert next_cycle["deleted"] == 1
+    deletes = list(Operation.objects.filter(kind="node.delete").order_by("created_at"))
+    assert [item.target_id for item in deletes] == [nodes[0].pk, nodes[1].pk]
+
+    ManagedNode.objects.filter(pk=nodes[1].pk).update(
+        consumes_quota=False,
+        desired_state="DELETED",
+        provisioning_state="DELETED",
+    )
+    Operation.objects.filter(pk=deletes[1].pk).update(status="SUCCEEDED")
+    remaining = ManagedNode.objects.filter(
+        pool=oldest.pool,
+        region=oldest.region,
+        consumes_quota=True,
+    ).count()
+    assert remaining == 2
+
+
+@pytest.mark.django_db
 def test_pool_sync_blocks_deleting_the_only_publishable_subscription_node(prepared_node):
     from apps.identity.models import NodeAutomationSetting
     from apps.nodes.tasks import schedule_node_pool_sync
