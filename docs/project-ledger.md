@@ -5529,3 +5529,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `r5 样本开始 2026-11-07T07:39:28Z、结束 2026-11-07T07:41:46Z；matrix generated_at 与本事件使用执行机器 Asia/Shanghai 的 +08:00 时区；无业务调度时间行为变更。`
 - `reuse`: `复用 r5 证据、隔离验收服务和既有 pool/lifecycle/subscription/traffic 测试；不复用任何 AWS 写入或真实资源结果。`
 - `rollback_ref`: `发布索引提交可通过 git revert 回退；应用回退到 v0.14.1 或 revert d6d6550/c48cddb；保留验收卷、安全与云状态。`
+
+### 2026-11-07T16:03:47+08:00 — xray-node-automation-20261106-01/037 v0.14.2 tag, GitHub Release and asset readback
+
+- `event_id`: `xray-node-automation-20261106-01/037`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T16:03:47+08:00`
+- `actor`: `Codex`
+- `event_type`: `release / validate / command`
+- `path_scope`: `main; refs/tags/v0.14.2; /tmp/xray-release-v0.14.2.u9tMrM/{xray-installer-0.14.2.tar.gz,xray-installer-0.14.2-manifest.json,SHA256SUMS}; GitHub Release v0.14.2; tests/acceptance/matrix.json; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.2.md; docs/project-ledger.md`
+- `operation`: `创建 annotated v0.14.2 tag 并推送 main/tag；运行仓库打包脚本；本地校验 SHA256SUMS；由于 tag-triggered GitHub Release job 失败且无步骤，手动创建 Release；回读 main/tag、Release 元信息及三项远端 asset digest。`
+- `reason`: `用户要求测试后同步发布新版本；仓库 tag workflow 未执行任何 step，需按已有手动发布流程完成可审计发布。`
+- `authorization`: `用户明确要求同步发布新版本；此前已推送代码和 r5 evidence，当前请求授权将 v0.14.2 推送为正式 Release。`
+- `implementation_scope`: `发布索引提交 990b3f858725966465f4ccf19ce9a9310445a755，tag v0.14.2；发布 archive、manifest 与 SHA256SUMS 并核对远端 SHA-256。`
+- `exclusions`: `不执行生产部署、AWS/SWAS 写入、SSH、测试服务器创建或删除、订阅真实用户操作；不重写既有 tag/Release，不处理默认分支既有 Dependabot 告警。`
+- `assumptions`: `Release 资产由当前仓库 tag 指向的源码与 installer 构建；GitHub Releases API 的 digest 与本地 SHA256SUMS 内容校验可用于验证上传字节一致。`
+- `risks`: `main delivery-gates run 42352685572、tag delivery-gates run 42353586340、release workflow run 42353586370 都 failure 且对应 job steps=[]，根因未知；CI 不记通过。真实 AWS 仍因本地管理员 MFA/CloudAccount 流程未完成而 blocked。`
+- `command_or_tool`: `git tag -a v0.14.2 -m "X-ray 0.14.2" 990b3f858725966465f4ccf19ce9a9310445a755; git push origin main refs/tags/v0.14.2; XRAY_RELEASE_TAG=v0.14.2 XRAY_RELEASE_DIST_DIR=/tmp/xray-release-v0.14.2.u9tMrM ./scripts/package-installer-release.sh 0.14.2; cd /tmp/xray-release-v0.14.2.u9tMrM && shasum -a 256 -c SHA256SUMS; authenticated gh release create/view; git ls-remote origin refs. Credential values were not read or printed.`
+- `result`: `origin/main 与 v0.14.2 peeled ref 均为 990b3f858725966465f4ccf19ce9a9310445a755；annotated tag object 为 cdc2c18a1ea6e3392fb307690c1fed0aaf8f4275。GitHub Release id 437428455 为非草稿/非预发布。远端 digest 与本地匹配：tar.gz sha256:495aca7d78d28dacb10e290ea756a67e637b6edafc5b77359f9d484b92e9e371；manifest sha256:36914698febfe38690a5907ba33507c941997e411f75079e794b7a9c49af12df；SHA256SUMS sha256:ec64ee66c7a4af10fe232b17138ea02289df442b705532f5b313c814856f8589。未创建测试服务器，AWS 成本 USD 0。`
+- `exit_code`: `tag/push/package/local checksum/Release create/ref+release readback 均 exit 0；delivery-gates 与 release workflow 各自 failure，job steps=0。`
+- `status`: `passed`
+- `commit_or_tree`: `main/origin/main@990b3f858725966465f4ccf19ce9a9310445a755；v0.14.2 tag peeled 同一提交；当前只剩本次发布读回资料待提交。`
+- `time_logic`: `GitHub asset created_at 为 2026-11-07T08:02:08Z（2026-11-07T16:02:08+08:00）；无业务时间逻辑变更。`
+- `reuse`: `复用 scripts/package-installer-release.sh、仓库 annotated-tag 工作流约定、本地 checksum 校验和 GitHub asset digest readback；不复用 AWS 或生产验证结果。`
+- `rollback_ref`: `保持已发布 tag/Release 作为不可变审计记录；应用可回退至 v0.14.1 或 revert d6d6550/c48cddb；不反向迁移、不恢复已撤销安全/订阅/云状态。`

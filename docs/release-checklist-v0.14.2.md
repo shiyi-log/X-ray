@@ -15,9 +15,11 @@
 
 ## 发布状态
 
-- [x] 源码、缩容回归和 r5 摘要/JUnit 已推送至 `main`；当前远端主线为 `2792ed95bff76cf3e5696d89c3c5e2d84a8c9dfb`。
-- [ ] `v0.14.2` annotated tag 与 GitHub Release 尚待创建和读回。
+- [x] 源码、缩容回归、r5 摘要/JUnit 与发布索引已推送至 `main`；远端主线为 `990b3f858725966465f4ccf19ce9a9310445a755`。
+- [x] `v0.14.2` annotated tag object `cdc2c18a1ea6e3392fb307690c1fed0aaf8f4275` 已推送并 peeled 到 `990b3f858725966465f4ccf19ce9a9310445a755`；GitHub Release id `437428455` 已发布，为非草稿、非预发布。
+- [x] `SHA256SUMS`、manifest、tar.gz 三项远端 asset digest 与本地构建匹配：`ec64ee66c7a4af10fe232b17138ea02289df442b705532f5b313c814856f8589`、`36914698febfe38690a5907ba33507c941997e411f75079e794b7a9c49af12df`、`495aca7d78d28dacb10e290ea756a67e637b6edafc5b77359f9d484b92e9e371`。
 - [x] main push 的 delivery-gates run `42352685572` 失败；verify job `128344001970` 没有执行步骤。根因未知，远端 CI 保持 blocked，不记作通过。
+- [x] tag push 的 delivery-gates `42353586340` 与 release workflow `42353586370` 均在 0 steps 后失败；因此按本地已校验包手动创建 Release，远端 CI 仍 blocked。
 
 ## 外部验收边界
 
