@@ -37,19 +37,24 @@ def configured_factory():
     return import_string(path)
 
 
-def build_node_config(node):
+def active_node_credentials(node, *, excluded_credential_refs=()):
     latest = {}
     for c in (
         NodeCredential.objects.filter(
             node=node, revoked_at__isnull=True, protocol__enabled=True, profile__status="ACTIVE"
         )
+        .exclude(pk__in=excluded_credential_refs)
         .select_related("protocol", "profile")
         .order_by("version")
     ):
         if quota_state(c.profile) == "ACTIVE":
             latest[(c.profile_id, c.protocol_id)] = c
+    return list(latest.values())
+
+
+def build_node_config(node, *, excluded_credential_refs=()):
     grouped = defaultdict(list)
-    for c in latest.values():
+    for c in active_node_credentials(node, excluded_credential_refs=excluded_credential_refs):
         grouped[c.protocol_id].append(c)
     inbounds = []
     for credentials in grouped.values():

@@ -1,6 +1,6 @@
 {
-  "version": "0.14.2",
-  "generated_at": "2026-11-07T16:43:28+08:00",
+  "version": "0.14.3",
+  "generated_at": "2026-11-07T19:07:33+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -9,6 +9,17 @@
     "risky_not_executed"
   ],
   "items": [
+    {
+      "id": "local-delivery-gates-0.14.3",
+      "environment": "local",
+      "status": "not-run",
+      "evidence": [],
+      "commit": null,
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": []
+    },
     {
       "id": "historical-0.14.1-local-delivery-gates",
       "environment": "local",
@@ -282,6 +293,21 @@
             "local_actions_metadata": "unavailable"
           },
           "reason": "The run id came from the prior-session handoff as the post-release readback target. The authenticated connector was unavailable and anonymous GitHub API access returned 404 for this private repository; workflow, job, runner, steps, conclusion, and root cause remain unverified. No workflow retry was performed."
+        },
+        {
+          "kind": "authenticated_actions_billing_annotation_readback",
+          "timestamp": "2026-11-07T17:23:10+08:00",
+          "status": "blocked",
+          "runs": [
+            {"commit": "6e263291bd1ab148351f89026955d274e07a6587", "run_id": 42356950660, "job_id": 128357005184, "conclusion": "failure", "runner_id": 0, "job_steps": 0, "annotations_http_status": 200},
+            {"commit": "990b3f858725966465f4ccf19ce9a9310445a755", "run_id": 42353586340, "job_id": 128346739818, "conclusion": "failure", "runner_id": 0, "job_steps": 0, "annotations_http_status": 200},
+            {"commit": "990b3f858725966465f4ccf19ce9a9310445a755", "run_id": 42353586370, "job_id": 128346739890, "conclusion": "failure", "runner_id": 0, "job_steps": 0, "annotations_http_status": 200}
+          ],
+          "annotation_count_per_job": 1,
+          "root_cause": "GitHub reports that each job did not start because recent account payments failed or the spending limit needs to be increased; the annotation does not distinguish those causes.",
+          "billing_settings_changed": false,
+          "workflow_retried": false,
+          "reason": "Authenticated run/job/check metadata and the official REST check-run annotations endpoint were read successfully. No checkout, dependency install, or test step executed. This supplies the previously unavailable root-cause evidence without claiming remote CI success."
         }
       ],
       "commit": "990b3f858725966465f4ccf19ce9a9310445a755",
@@ -523,6 +549,37 @@
           "aws_requests": false,
           "cost_usd": 0,
           "required_action": "administrator completes MFA and enters a validated AWS test credential through the local Cloud Accounts form"
+        },
+        {
+          "kind": "isolated_standard_password_login_preflight",
+          "timestamp": "2026-11-07T17:23:10+08:00",
+          "login_http_status": 200,
+          "password_accepted": true,
+          "totp_setup_required": true,
+          "session_authenticated": false,
+          "totp_setup_attempted": false,
+          "totp_bypass_enabled": false,
+          "cloud_accounts": 0,
+          "test_servers_created": 0,
+          "aws_requests": false,
+          "cost_usd": 0,
+          "reason": "The configured administrator credential passed the standard CSRF/password flow. Initial TOTP enrollment still requires the operator to retain the authenticator and recovery codes; no authentication bypass or cloud write was attempted."
+        },
+        {
+          "kind": "isolated_aws_readonly_catalog_preflight",
+          "timestamp": "2026-11-07T17:28:02+08:00",
+          "profile": "root",
+          "account_ref": "sha256:4a0ef08458dd",
+          "root_principal": true,
+          "region": "ap-southeast-1",
+          "bundle": {"id": "nano_3_0", "active": true, "monthly_price_usd": 5, "ram_gb": 0.5, "cpu_count": 2},
+          "blueprint": {"id": "ubuntu_24_04", "active": true, "version": "24.04 LTS"},
+          "request_ids": ["a9ff6634-ebf4-4c9b-95df-95e6ad7bf18a", "01d1af93-4f96-4f33-ad1e-13c16992f954", "782fd93c-cc25-495e-af5f-b56c19685db6"],
+          "aws_read_requests": 3,
+          "aws_write_requests": 0,
+          "test_servers_created": 0,
+          "resource_cost_usd": 0,
+          "reason": "Explicit-profile STS identity and current Lightsail bundle/blueprint queries succeeded without listing or modifying instances. Bundle monthly price is catalog metadata, not an actual bill. Normal application MFA and CloudAccount setup are still pending."
         }
       ],
       "commit": null,

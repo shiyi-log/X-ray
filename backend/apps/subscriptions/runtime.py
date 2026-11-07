@@ -20,12 +20,17 @@ def subscription_runtime():
         except Exception:
             # Import exceptions can contain configuration or credentials.
             checks[name] = "invalid"
-    checks["revocation_executor"] = "unconfigured"
+    from .revocation_runtime import SUPPORTED_REVOCATION
+
+    checks["revocation_executor"] = (
+        "configured_subset" if checks["access_transport"] == "configured" else "unconfigured"
+    )
     checks["worker"] = "unverified"
     checks["scheduler"] = "unverified"
     return {
         "status": "incomplete",
         "checks": checks,
+        "revocation_support": dict(SUPPORTED_REVOCATION),
         "node_connections_attempted": False,
         "operations_dispatched": False,
     }

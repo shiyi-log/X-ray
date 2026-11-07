@@ -15,6 +15,7 @@ class ApplyResult:
     config_test_passed: bool
     service_restarted: bool
     rollback_performed: bool
+    config_hash: str = ""
 
 
 @dataclass(frozen=True, slots=True)

@@ -43,6 +43,7 @@ def test_failed_precise_revocation_records_isolation_without_claiming_success(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
     invalidated = []
     service = RevocationService(

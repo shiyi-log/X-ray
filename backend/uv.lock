@@ -1150,7 +1150,7 @@ wheels = [
 
 [[package]]
 name = "xray-manager-backend"
-version = "0.14.2"
+version = "0.14.3"
 source = { virtual = "." }
 dependencies = [
     { name = "alibabacloud-sts20150401" },

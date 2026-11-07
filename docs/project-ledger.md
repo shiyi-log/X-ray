@@ -5625,3 +5625,153 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `提交/回读时间均为执行机 Asia/Shanghai +08:00；无业务时间规则变化。`
 - `reuse`: `复用事件 037 的 tag/Release/资产 digest evidence 和事件 039 的矩阵状态纠正；使用 git ls-remote 做远端引用核验。`
 - `rollback_ref`: `若要回退该发布索引修正，使用 git revert 09a4dd38be6575f1fb9aceab891ecf6d4c9f3783；保留 v0.14.2 Release、应用、数据库及安全/云状态。`
+
+### 2026-11-07T17:06:14+08:00 — xray-node-automation-20261106-01/041 Standard login attempt scope
+
+- `event_id`: `xray-node-automation-20261106-01/041`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `read / authentication scope`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; skills/xray-manager/references/acceptance.md; docs/cloud-test-authorization.md; docs/project-ledger.md/038-040; backend/apps/identity/views.py,services.py,urls.py; frontend/apps/web-antd/src/api/auth.ts,request.ts; src/stores/session.ts; src/views/auth/login.vue; X-ray-owned listeners 9537/9538`
+- `operation`: `响应用户“你自己想办法登录”，使用后端已配置的现有管理员凭据在内存中发起一次标准密码登录，保留 CSRF、MFA、会话和速率限制。只输出脱敏状态，不输出任何凭据、挑战 ID 或 Cookie。`
+- `authorization`: `用户明确要求代理自行登录，并已授权本次 AWS 测试服务器配置和 USD 1000 预算；该授权不要求或允许绕过应用验证。`
+- `implementation_scope`: `只追加审计文档、执行正常认证请求和只读环境核对；未绑定的 MFA 因子不由代理独占创建或确认。`
+- `exclusions`: `不重置密码、不启用 local-login/disable-TOTP、不注入管理员 session、不读取其他项目或 archive 的秘密、不创建/删除云资源、不释放静态 IP。`
+- `assumptions`: `9537/9538 是已核验属于本仓库的隔离应用；使用既有配置凭据，不猜测密码；一次失败后不盲目重试。`
+- `risks`: `标准登录会产生受期限限制的挑战或计入失败限流；管理员尚未绑定 TOTP，后续绑定须由用户保有验证器和恢复能力。CloudAccount=0，正常登录后仍需配置并验证 X-ray 云账号。`
+- `command_or_tool`: `git status/log; lsof scoped listeners; rg/sed/cat scoped source and instructions; browser tab inventory; agent read-only process/config/CloudAccount metadata audit。`
+- `result`: `main@6e263291bd1ab148351f89026955d274e07a6587 开始时 clean；9537/9538 属于本仓库；CloudAccount/CloudCredentialVersion=0；登录尝试结果另记。`
+- `time_logic`: `复用 aware 机器时钟 Asia/Shanghai +08:00；挑战遵循现存 MFA_CHALLENGE_SECONDS 与 expires_at <= now 失效规则，不延长 TTL 或篡改时钟。`
+- `reuse`: `复用现存隔离应用、标准 auth/csrf/login/session endpoint 和项目台账；本轮不改源码、版本或 tag。`
+- `rollback_ref`: `审计文档可追加纠正；正常临时挑战由原过期规则失效；不回滚安全事件或凭据状态。`
+
+### 2026-11-07T17:16:00+08:00 — xray-node-automation-20261106-01/042 Login result and revocation runtime scope
+
+- `event_id`: `xray-node-automation-20261106-01/042`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `authentication result / read / implementation scope`
+- `path_scope`: `backend/apps/subscriptions/runtime.py,revocation.py,node_agent.py,verification.py; backend/apps/operations/handlers.py; backend/tests/subscriptions/test_revocation.py,test_runtime.py; existing node execution/SSH/config/probe components; scoped future subscription runtime tests`
+- `operation`: `标准 auth/csrf GET、auth/login POST、auth/session GET 经过 9538 的既有前端代理执行；现有进程凭据仅在内存使用。接口 HTTP 200，password_accepted=true、totp_setup_required=true、authenticated=false，session 读回仍为未认证；没有调用 TOTP setup/confirm。随后只读源码追踪发现 subscription.revoke 默认使用 _missing_executor，runtime 固定 revocation_executor=unconfigured。`
+- `authorization`: `用户要求自行登录，以及重点完成订阅创建/撤回测试并补齐缺失环境；仅在用户已授权功能范围内补齐实际运行时。新增 MFA 凭据由用户亲自绑定和保留，不绕过验证。`
+- `implementation_scope`: `先补 focused RED 回归，再最小接入现有 NodeExecutor、transport、配置应用和真实 probe 能力；允许新 subscription runtime executor 及必要的 settings/handler 接线、focused tests；主代理统一维护 docs、matrix 和版本索引。`
+- `exclusions`: `不调用真实 AWS/SSH/公网 probe，不伪造旧凭据拒绝或已有连接关闭证据；不改密码/MFA/session，不启用测试直登；不改其他项目、现有 tag/Release、数据库历史或撤销记录。`
+- `assumptions`: `现有 revoke 业务状态机、Token 永久 410、共享协议轮换和 fail-closed 隔离应复用；若缺少可信探测组件，则明确保留未确认风险，不将配置应用成功等同撤回证明。`
+- `risks`: `撤回必须同时证明新连接拒绝、positive control 和已有连接关闭；target/fence/lease 与多 profile 共存不能因新增默认执行器弱化。普通重启并不保证 AWS IPv4 变化，真实 stop/start 验收仍独立。`
+- `command_or_tool`: `Python stdlib CookieJar/urllib standard auth flow（只输出白名单布尔状态，exit 0）；读取上述源文件；读取 test-driven-development、writing-good-tests（交给实现代理）、systematic-debugging 与 verification-before-completion 技能；静态检查 diff/acceptance/boundary/secret。`
+- `result`: `密码验证 passed；完整登录 pending 用户首次 TOTP 绑定。静态检查 diff=0、acceptance=0、boundary=0、secret=0。AWS 请求/测试实例/费用仍为 0。新默认撤回运行时尚未实现或验证。`
+- `time_logic`: `正常挑战由现存 TTL 到期，不延长有效期；节点 probe/操作 fencing 的时间规则沿用原有明确边界并加回归。`
+- `reuse`: `复用现有 RevocationService、NodeExecutor、transport 与 probe 机制；本地 focused/regression 仅 Fake/Stub，不替代真实云验收。`
+- `rollback_ref`: `本轮应用代码可用新提交 git revert；未新增 schema 时无迁移；任何回退不恢复 Token、凭据、安全事件或云状态。`
+
+### 2026-11-07T17:28:02+08:00 — xray-node-automation-20261106-01/043 Actions root cause, port boundary, and AWS read-only scope
+
+- `event_id`: `xray-node-automation-20261106-01/043`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `read / root-cause verification / test boundary / external read scope`
+- `path_scope`: `tests/acceptance/matrix.json; docs/progress.md; current repository Git credential helper; official GitHub Actions/check-run APIs; local port registry filtered to X-ray records; scripts/check-local.sh; frontend/scripts/e2e-database.mjs,e2e-ports.mjs; frontend/tests/e2e/prepare-e2e-database.mjs,start-backend.mjs; backend/config/settings/test.py; backend/tests/conftest.py; runtime/xray/v26.3.27/xray`
+- `operation`: `认证读取 GitHub run/job/check metadata 与三个 check-run annotations；矩阵追加可验证阻断原因。核对当前登记与监听，为后续 focused/完整门禁选择已有授权端口与独立测试数据库。准备 AWS 只读 STS/Lightsail 套餐镜像可用性核验。`
+- `authorization`: `用户授权本次功能测试、补齐环境、自主选择 AWS 测试配置和 USD 1000 总预算；仅正常仓库认证读回及 AWS 元数据只读，不调整支付/额度。`
+- `implementation_scope`: `GitHub 三个 job 读回；已有 AWS profile root 的 STS identity 与 ap-southeast-1 bundle/blueprint 查询，候选 nano_3_0/ubuntu_24_04；只记录账号哈希和套餐元数据。单元测试使用当前仓库登记的 55433/56380 及唯一 test_xray_revocation_runtime_20261107 数据库。后续 E2E 使用已登记的 9541/9542/9543/9544，不占用现有9537/9538或55433/56380服务。`
+- `exclusions`: `不修改 GitHub 付款/额度、不重跑 workflows；不输出或持久化 credential helper/boto 凭据；不枚举或修改既有云实例、不创建/停启/删除实例、不释放静态IP；不触碰其他项目容器/端口/数据库。`
+- `result`: `main run42356950660/job128357005184、tag delivery run42353586340/job128346739818、tag release run42353586370/job128346739890 均 failure、runner_id=0、steps=[]。三个 annotations GET 均 HTTP200，每个唯一failure注解都明确 job因近期账号付款失败或消费额度需要提高而未启动，不能区分二者。connector annotations端点不支持，使用当前仓库Git helper凭据仅在内存调用官方REST成功；最新job日志BlobNotFound。Chrome被扩展UI阻断，未关闭用户页面或使用旁路。`
+- `port_correction`: `55432/56379 虽有 xray-test 容器，但registry登记给 x-ray-trash-recovered-20261106，不能按名称复用。当前仓库ID dcd1571c890e4144a825b9f403ddcaaf登记9537/9538/9541-9544/55433/56380。已通知实现代理改用55433/56380。focused RED已在独立test库运行：3个预期断言失败，exit1；生产实现尚在进行。`
+- `command_or_tool`: `authenticated GitHub connector GET；Python subprocess credential helper with captured stdout then urllib Authorization only in memory；git ls-remote（exit0）；lsof scoped listeners/docker names+ports；只读filtered registry；fixed binary version；读取 local-port-management 技能；focused pytest由实现代理隔离执行。`
+- `exit_code`: `GitHub REST=0/HTTP200；refs=0；port/runtime metadata=0；initial RED=1 expected；此前 diff/acceptance/boundary/secret=0。AWS元数据结果及最终门禁另记。`
+- `time_logic`: `GitHub源时间为UTC，读回时间Asia/Shanghai +08:00；测试租约边界遵循 aware now >= expires_at 失效；不延长管理员MFA挑战或改变机器时钟。`
+- `reuse`: `复用现存credential helper、AWS profile root、已登记隔离栈和固定Xray二进制；复用真实JSON-lines探针设计但本轮实现测试只走本地Fake/Stub。`
+- `rollback_ref`: `元数据只读无外部回退；矩阵/进度可追加纠正；保留当前tag/Release，代码回退用新提交git revert，不恢复撤销状态。`
+
+### 2026-11-07T18:46:48+08:00 — xray-node-automation-20261106-01/044 revocation request preflight scope
+
+- `event_id`: `xray-node-automation-20261106-01/044`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `implementation scope / regression test`
+- `path_scope`: `backend/apps/subscriptions/revocation.py; backend/apps/subscriptions/revocation_runtime.py; backend/tests/subscriptions/test_revocation_runtime.py; docs/project-ledger.md; docs/progress.md; tests/acceptance/matrix.json`
+- `operation`: `将默认撤回执行器不支持的协议检查前移到 Operation submit、token 永久撤销、profile 冻结及节点 REVOKING 之前；为失败请求不产生副作用补充回归测试。`
+- `authorization`: `用户授权补齐订阅创建/撤回路径、测试并发布；本地 Fake/Stub 与固定 Xray 二进制测试已授权。`
+- `implementation_scope`: `仅接受当前实测执行器可证明的 profile-scope Shadowsocks/TCP/AES-128-GCM；以已解封 credential metadata 判断能力，不记录 credential 内容。拒绝时保留 profile、token、节点和操作不变。`
+- `exclusions`: `不扩大协议覆盖，不访问真实 AWS/SSH/公网，不绕过 MFA，不创建或撤销生产订阅，不触碰 9537/9538 用户服务及其他项目容器。真实 AWS 预算授权仍不替代 MFA 与 CloudAccount 前置条件。`
+- `assumptions`: `明确不支持的已知协议必须在不可逆状态变更前拒绝；运行时对网络/部署不确定性的 fail-closed 隔离仍保留。回归测试使用本地专用数据库、Fake/Stub transport 和固定 Xray binary。`
+- `risks`: `错误扩大支持范围可能导致订阅 token 已撤销但节点协议未被可靠撤除；预检不得返回或记录解密后的密钥。`
+- `command_or_tool`: `源码与独立审查只读核验；先写请求不产生副作用的测试，再运行 RED 后实现。忽略的 .env 仅在测试进程内加载，不回显或写入任何值。`
+- `time_logic`: `预检在原有 aware transaction/行锁范围内执行，不新增 TTL 或时钟语义；现有配置 generation 和 claim lease 规则不变。`
+- `reuse`: `复用 RevocationExecutor 的协议/credential 能力判定、现有 DomainError 与 token digest 撤销服务；只重用专用 55433/56380 隔离测试栈和固定 Xray v26.3.27。`
+- `rollback_ref`: `代码通过后续源码提交的 git revert 回退；不反向恢复 token tombstone、凭据、审计或云操作状态。`
+
+### 2026-11-07T18:54:55+08:00 — xray-node-automation-20261106-01/045 revocation request capability preflight
+
+- `event_id`: `xray-node-automation-20261106-01/045`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `implementation / focused verification`
+- `path_scope`: `backend/apps/subscriptions/revocation.py; backend/apps/subscriptions/revocation_runtime.py; backend/tests/subscriptions/test_revocation.py; backend/tests/subscriptions/test_revocation_runtime.py; backend/tests/subscriptions/test_isolation_failure.py; docs/project-ledger.md`
+- `operation`: `在请求撤回前核验实际执行器支持的 credential metadata；测试环境 Fake/Stub 用显式测试旁路，非 XRAY_ENV=test 时该旁路拒绝。拒绝不支持协议先于 Operation/outbox、Token tombstone、profile freeze 和 node REVOKING。`
+- `write`: `复用 revocation runtime 的 profile-scope Shadowsocks/TCP/AES-128-GCM 判定，新增事务内 select_for_update 能力预检；修改不支持协议测试，核对 token 可继续解析、profile ACTIVE、node OPEN、无撤回 Operation/RevocationNodeState。测试 Fake/Stub 调用显式设置测试旁路。未新增 schema/migration。`
+- `command_or_tool`: `忽略的 .env 仅 source 到测试进程，不回显或持久化。RED：单个不支持协议测试在实现前失败，结果为未抛出预期 DomainError，exit 1；首次 GREEN 尝试发现测试断言把 Subscription 当作带 subscription_id 属性的发行结果，exit 1，修正为比对主键后单测通过。`uv run --project backend pytest -c backend/pyproject.toml backend/tests/subscriptions/test_revocation_runtime.py::test_unsupported_protocol_is_rejected_before_revocation_side_effects -q --tb=no`；撤回聚焦四文件组；`backend/tests/subscriptions` 全套；固定 `XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray`。`
+- `result`: `能力预检回归 1 passed；撤回服务、运行时、隔离失败和 runtime 四文件组 31 passed；完整 subscriptions 目录 118 passed，0 failed/error。均使用登记的专用本地 PostgreSQL/Redis、Fake/Stub transport 和本机固定 Xray binary；未执行 SSH/AWS/公网/生产请求。`
+- `exit_code`: `实现前预期 RED=1；修正测试断言前一次尝试=1；最终新回归=0；撤回聚焦组=0；subscriptions 全套=0。`git diff --check` 首次发现 ledger 行尾空格并已移除，最终差异检查待完整门禁。`
+- `time_logic`: `预检在请求的 Django atomic 事务和 profile/credential 锁内同步执行；不新增 TTL/时间比较，lease 与 generation fencing 不变。`
+- `reuse`: `复用统一 RevocationExecutor 能力判定、现有 TokenService/OperationService 和固定 Xray 测试 binary；运行时源码探针仍只通过 Fake/Stub SSH transport 验收。`
+- `authorization`: `用户授权本任务的订阅撤回补齐、测试与发布；没有调用真实云或读取/输出 AWS 凭据。`
+- `rollback_ref`: `后续提交可 git revert；无 schema 迁移；不得恢复已撤销 Token、凭据、安全事件或云操作状态。`
+
+### 2026-11-07T19:00:33+08:00 — xray-node-automation-20261106-01/046 survivor preflight scope
+
+- `event_id`: `xray-node-automation-20261106-01/046`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `implementation scope / regression test`
+- `path_scope`: `backend/apps/subscriptions/revocation_runtime.py; backend/tests/subscriptions/test_revocation_runtime.py; docs/project-ledger.md; docs/progress.md`
+- `operation`: `补齐请求入口的 positive-control survivor 预检；若撤回目标节点不存在同协议、活动且已应用的其他 profile credential，则在 Operation/outbox、Token 撤销、profile 冻结及节点状态变化前拒绝。`
+- `authorization`: `用户授权补齐订阅撤回路径、测试并发布；本地专用数据库及 Fake/Stub 测试已授权。`
+- `implementation_scope`: `预检与运行时使用同一 active-node credential 查询和 applied-generation 条件；新增不满足时无副作用回归。`
+- `exclusions`: `不扩大协议支持；不执行真实 AWS/SSH/公网/生产操作，不处理 TOTP 或 CloudAccount 凭据；不触碰现有 9537/9538 服务、其他工作树及 55432/56379 数据库。`
+- `assumptions`: `请求事务开始时缺少已应用正控就应失败关闭；运行时仍保留二次检查以处理请求后状态竞态。`
+- `risks`: `查询标准与运行时漂移会导致误拒或 token 已撤销后的运行失败；复用同一筛选条件并保留运行时二次验证。`
+- `command_or_tool`: `先新增 focused regression test 并运行安全脱敏的 RED 命令，再实现最小预检并复跑；忽略的测试环境文件只 source 到进程，不回显或持久化。`
+- `time_logic`: `同步请求事务内读取节点代次与 credential 状态；不新增 TTL 或时钟规则。`
+- `reuse`: `复用 access.active_node_credentials、现有 DomainError 和固定 Shadowsocks 探针能力；仅使用登记的 55433/56380 专用栈与 Fake/Stub transport。`
+- `rollback_ref`: `源码提交可 git revert；无 schema 迁移；不恢复已撤销 Token、凭据、安全事件或云操作状态。`
+
+### 2026-11-07T19:03:08+08:00 — xray-node-automation-20261106-01/047 survivor preflight design correction
+
+- `event_id`: `xray-node-automation-20261106-01/047`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `design correction / regression coverage`
+- `path_scope`: `backend/tests/subscriptions/test_revocation_runtime.py; docs/project-ledger.md`
+- `operation`: `纠正事件 /046：撤回请求不能因缺少 survivor 而硬拒绝，否则 token 继续可用并违背立即撤销语义。保留 worker 在打开 SSH 前要求同协议且已应用的正控；该门槛失败时节点撤回状态进入显式部分失败/隔离。`
+- `reason`: `独立代码复核对照订阅 410、节点不确定时报告风险的项目安全约定；该 request-time survivor 预检仅为拟议方案，未运行对应测试、未实现生产代码。`
+- `write`: `删除尚未运行且与安全约定相冲突的 request-time 硬拒绝测试；增强现有无 survivor 运行时回归，在确认不打开 SSH、credential 不被误标已撤销、operation 部分失败之外，同时断言目标 token 永久返回 TokenGone。`
+- `authorization`: `用户授权补齐撤回路径测试；不改变立即 tombstone 和运行时 fail-closed 行为。`
+- `command_or_tool`: `只读独立复核后使用 apply_patch 修正测试意图；本事件写入时测试尚未运行。`
+- `time_logic`: `无时间逻辑变化。`
+- `reuse`: `复用运行时已有 positive-control/已应用代次检查、TokenService.resolve 与现有 no-survivor 回归；保留后续请求后竞态的 worker 二次检查。`
+- `rollback_ref`: `测试追加可 git revert；无生产行为、数据库、云或 token 状态变更。`
+
+### 2026-11-07T19:07:33+08:00 — xray-node-automation-20261106-01/048 v0.14.3 release candidate scope
+
+- `event_id`: `xray-node-automation-20261106-01/048`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `release candidate scope`
+- `path_scope`: `VERSION; CHANGELOG.md; README.md; backend/pyproject.toml; backend/uv.lock; backend/config/settings/base.py; backend/openapi/schema.yaml; backend/apps/nodes/bootstrap_runtime.py; frontend/package.json; frontend/apps/web-antd/package.json; frontend/packages/ui/package.json; frontend/playwright.config.ts; frontend/apps/web-antd/src/views/system/system.test.ts; installer/one-click.sh; installer/README.md; docs/release.md; tests/installer/test_release_package.py; tests/installer/test_one_click.py; docs/version-record.md; docs/progress.md; tests/acceptance/matrix.json; docs/release-checklist-v0.14.3.md`
+- `operation`: `为已授权的本地撤回 runtime 与自动节点运维范围建立 v0.14.3 发布候选；同步运行时、包、OpenAPI、安装器和验收资料版本，随后提交干净源码候选并运行完整 19 项门禁。`
+- `authorization`: `用户明确要求完成测试并同步发布新版本；main 推送和新 annotated tag/Release 已授权。`
+- `implementation_scope`: `基于 v0.14.2 新增运行时订阅撤回验证和版本化发布证据；保留已发布 v0.14.2 tag/Release，不改写历史标签。`
+- `exclusions`: `无生产部署；真实 AWS/SSH/测试服务器写入仅在隔离应用 MFA 与 CloudAccount 完成后执行；不改账单设置、不绕过 MFA、不释放静态 IP、不触碰 9537/9538 服务、55432/56379 数据库卷或 archive/。`
+- `assumptions`: `完整本地门禁在包含代码和版本元数据的干净提交上运行；Ruff、matrix、boundary、secret、skill 与 E2E 结果以本轮命令为准。`
+- `risks`: `发布可证明本地 Fake/Stub 的行为和源码交付，但不能证明真实 AWS bootstrap、SSH、动态 IP、节点健康或用户订阅成功；Actions 可能仍因账号付款/支出限制而无法启动。`
+- `command_or_tool`: `仅修改版本/发布索引和必要测试断言；先完成 focused subscription tests，再提交代码候选、运行 scripts/check-local.sh、打包校验并回读远端 refs/Release/assets。忽略的 .env 只载入测试进程，AWS 环境变量清除，不回显或持久化。`
+- `time_logic`: `无业务时间逻辑修改；发布与证据时间均记录带 +08:00 偏移的本机时间和 UTC 门禁时间。`
+- `reuse`: `复用 v0.14.2 release packaging/asset digest 流程、固定工具链、登记的独立测试栈、Fake/Stub providers 与固定 Xray v26.3.27。`
+- `rollback_ref`: `应用可回退 v0.14.2 或 git revert 新源码提交；无本版迁移；不反向恢复撤销 Token、凭据、安全事件或云状态。`
+
+### 2026-11-07T19:13:14+08:00 — xray-node-automation-20261106-01/049 v0.14.3 candidate metadata and focused gates
+
+- `event_id`: `xray-node-automation-20261106-01/049`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `version metadata / focused verification`
+- `path_scope`: `VERSION; CHANGELOG.md; README.md; backend/pyproject.toml; backend/uv.lock; backend/config/settings/base.py; backend/openapi/schema.yaml; backend/apps/nodes/bootstrap_runtime.py; frontend/package.json; frontend/apps/web-antd/package.json; frontend/packages/ui/package.json; frontend/playwright.config.ts; frontend/apps/web-antd/src/views/system/system.test.ts; installer/one-click.sh; installer/README.md; docs/release.md; tests/installer/test_release_package.py; tests/installer/test_one_click.py; tests/acceptance/matrix.json; backend/tests/subscriptions/test_revocation_runtime.py; docs/project-ledger.md`
+- `write`: `将运行时、前后端包、OpenAPI、安装器默认 ref/说明、安装包测试夹具及 Playwright 证据目录同步至 0.14.3；更新 CHANGELOG/README；验收矩阵顶层版本改为 0.14.3，并以 local-delivery-gates-0.14.3=not-run 标记尚未执行的完整门禁；按事件 /047 加强无 survivor 用例，验证 SSH 未启动、credential 未标为已撤销、operation 部分失败且目标 token 返回 TokenGone。未新增 schema/migration。`
+- `command_or_tool`: `apply_patch 首次多文件 patch 因 README 上下文不匹配退出失败，未写入；拆分后 patch 成功。`uv lock --project backend --offline`；专用 55433/56380 环境下 `XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray uv run --project backend pytest -c backend/pyproject.toml backend/tests/subscriptions/test_revocation_runtime.py::test_no_surviving_profile_fails_closed_before_opening_probe_transport -q --tb=no`；完整 `backend/tests/subscriptions`；安装发布包/一键安装 focused tests；`python3 scripts/validate-acceptance.py`; `git diff --check`。安装包首次 pytest 未载入 .env，Django test settings 在初始化时拒绝且未收集用例（exit 1）；随即在受控专用测试环境重跑。忽略的 .env 只 source 到 pytest 进程，AWS credential env 被 unset，未回显。`
+- `result`: `uv lock exit 0，后端元数据从 v0.14.2 更新到 v0.14.3；targeted no-survivor test 1 passed；完整 subscriptions 118 passed；installer tests 3 passed、1 skipped（Linux disposable host 专用集成测试）；matrix validator 与 diff-check exit 0。metadata broad search 在交付代码/配置文件中不再发现旧版本引用；保留 changelog 历史、既有版本证据和第三方依赖版本。完整 19 项门禁仍 not-run。`
+- `exit_code`: `initial installer pytest without test env=1（初始化前阻断，0 tests collected）；targeted=0；subscriptions=0；installer focused=0；uv lock=0；matrix=0；diff-check=0。`
+- `time_logic`: `无业务时间逻辑变化。`
+- `reuse`: `复用 v0.14.2 安装包构建脚本、隔离 PostgreSQL/Redis、Fake/Stub 与固定 Xray v26.3.27；E2E 端口将显式指定为 9541–9544。`
+- `rollback_ref`: `提交前可在工作树修订；后续应用回退到 v0.14.2 或对新源码提交 git revert；无 schema 迁移，不恢复 Token tombstone、凭据、安全事件或云状态。`

@@ -100,6 +100,7 @@ class NodeExecutor:
             config_test_passed=bool(response.get("config_test_passed")),
             service_restarted=bool(response.get("service_restarted")),
             rollback_performed=bool(response.get("rollback_performed")),
+            config_hash=str(response.get("config_hash") or ""),
         )
         if result.rollback_performed and not allow_security_rollback:
             ManagedNode.objects.filter(pk=node.pk).update(

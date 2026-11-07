@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-11-07：当前交付候选版本为 `0.14.2`。本版补齐 SOCKS5 认证流量的节点/身份计量，并兼容已有凭据用户名；重复快照按现有 epoch/sequence 检查避免重复累计。v0.14.1 修复的 IP 同步后订阅部分发布重试、地址池配额对齐、每日轮转重启、状态/IP/流量同步、订阅节点核对和 lifecycle 工作流继续保留。真实 AWS bootstrap 尚未验收；自动创建仍可能停在 `PROVISIONED`/`NEEDS_RECONCILIATION`，实际云、SSH、生产和设备验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
+2026-11-07：当前交付候选版本为 `0.14.3`。本版补齐固定 Shadowsocks/TCP/AES-128-GCM profile 凭据撤回运行时校验、旧连接关闭与配置 generation/hash 读回，并以 lease fencing 阻止过期 worker 写入成功状态。v0.14.0 起的地区地址池定时对齐、每日单台轮转重启、重启后 IP/健康/订阅对账、状态/IP/流量同步和节点数量核对，以及后续订阅部分发布重试、SOCKS5 流量计量继续保留。真实 AWS bootstrap 尚未验收；自动创建仍可能停在 `PROVISIONED`/`NEEDS_RECONCILIATION`，实际云、SSH、动态 IP、设备订阅和生产验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 

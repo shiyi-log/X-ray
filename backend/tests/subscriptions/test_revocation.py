@@ -42,6 +42,47 @@ def test_verified_revocation_requires_new_handshake_and_old_session_close():
         assert verified_revoked(ProbeResult(**candidate)) is False
 
 
+def test_unknown_handshake_needs_complete_config_and_restart_proof():
+    from apps.subscriptions.verification import verified_revoked
+
+    proof = {
+        "credential_excluded": True,
+        "expected_config_applied": True,
+        "service_restarted": True,
+        "process_identity_changed": True,
+        "credential_config_hash_matches": True,
+        "preapply_credentials_accepted": True,
+        "postapply_control_accepted": True,
+    }
+    base = ProbeResult(
+        accepted=None,
+        positive_control=True,
+        fresh_connection=True,
+        existing_session_closed=True,
+        evidence=proof,
+    )
+    assert verified_revoked(base) is True
+    for key in proof:
+        candidate = ProbeResult(
+            accepted=None,
+            positive_control=True,
+            fresh_connection=True,
+            existing_session_closed=True,
+            evidence={**proof, key: False},
+        )
+        assert verified_revoked(candidate) is False, key
+
+    assert verified_revoked(
+        ProbeResult(
+            accepted=None,
+            positive_control=True,
+            fresh_connection=True,
+            existing_session_closed=None,
+            evidence=proof,
+        )
+    ) is False
+
+
 class SuccessfulExecutor:
     def __init__(self):
         self.captured = []
@@ -59,8 +100,14 @@ class SuccessfulExecutor:
         config,
         operation_id,
         allow_security_rollback=False,
+        claim=None,
     ):
+        from apps.nodes.models import ManagedNode
+
         self.applied.append((node_id, generation, config, allow_security_rollback))
+        ManagedNode.objects.filter(pk=node_id).update(
+            desired_generation=generation, applied_generation=generation
+        )
         return ApplyResult(generation, True, True, False)
 
     def probe(self, node_id, *, credential_ref, expect_accept, operation_id):
@@ -136,6 +183,7 @@ def test_request_atomically_revokes_link_and_creates_uncancellable_operation(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
 
     profile.refresh_from_db()
@@ -165,6 +213,7 @@ def test_run_marks_profile_revoked_only_after_every_node_is_verified(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
     executor = SuccessfulExecutor()
     service = RevocationService(
@@ -206,6 +255,7 @@ def test_real_node_executor_accepts_only_a_related_revocation_operation(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
     executor = NodeExecutor(
         transport_factory=lambda _node: ApplyingTransport(),
@@ -248,6 +298,7 @@ def test_operation_handler_routes_subscription_revocation(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
     executor = SuccessfulExecutor()
     service = RevocationService(
@@ -302,6 +353,7 @@ def test_shared_secret_revocation_rotates_survivors_and_removes_every_old_copy(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
     executor = SuccessfulExecutor()
     RevocationService(
@@ -388,6 +440,7 @@ def test_partial_two_node_revocation_retries_only_the_unverified_node(
         preview_id=preview.pk,
         confirmation="REVOKE PROFILE",
         admin=admin,
+        test_only_skip_runtime_preflight=True,
     )
     first_executor = SuccessfulExecutor()
     second_failing = FailingCaptureExecutor()
@@ -466,6 +519,7 @@ def test_token_rotation_racing_force_revocation_never_reactivates_access(
                 preview_id=preview.pk,
                 confirmation="REVOKE PROFILE",
                 admin=thread_admin,
+                test_only_skip_runtime_preflight=True,
             ).pk
         finally:
             connections.close_all()

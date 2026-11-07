@@ -37,7 +37,14 @@ def test_importable_adapters_do_not_claim_live_readiness():
     assert result["checks"]["access_transport"] == "configured"
     assert result["checks"]["node_health_probe"] == "configured"
     assert result["checks"]["usage_collector"] == "configured"
-    assert result["checks"]["revocation_executor"] == "unconfigured"
+    assert result["checks"]["revocation_executor"] == "configured_subset"
+    assert result["revocation_support"] == {
+        "protocol": "shadowsocks",
+        "transport": "tcp",
+        "method": "aes-128-gcm",
+        "credential_scope": "profile",
+        "requires_surviving_profile": True,
+    }
     assert result["status"] == "incomplete"
 
 

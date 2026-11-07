@@ -41,6 +41,7 @@ def test_executor_applies_generation_and_persists_revision(prepared_node):
     node.refresh_from_db()
     assert result.applied_generation == 1
     assert result.config_test_passed is True
+    assert result.config_hash == "remote-hash"
     assert node.applied_generation == 1
     assert node.desired_generation == 1
     assert NodeConfigRevision.objects.filter(node=node, generation=1, usable=True).exists()
