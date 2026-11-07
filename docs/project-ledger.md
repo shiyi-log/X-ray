@@ -5361,3 +5361,27 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无应用业务时间逻辑改动；记录时间使用执行机 Asia/Shanghai +08:00。`
 - `reuse`: `复用干净源码提交 78bbcf31 的完整门禁、subscription IP retry 回归、automation/lifecycle 测试与只读审查；未将本轮文档/本地服务复查包装为新的源码或 AWS 验收。`
 - `rollback_ref`: `本轮仅文档，回退目标为稍后记录的文档提交 SHA，并用 `git revert <SHA>`；保留 v0.14.1 tag/Release、本地专用数据库卷及所有安全/云审计状态。`
+
+### 2026-11-07T14:11:03+08:00 — xray-node-automation-20261106-01/030 push and remote refs readback
+
+- event_id: xray-node-automation-20261106-01/030
+- run_id: xray-node-automation-20261106-01
+- timestamp: 2026-11-07T14:11:03+08:00
+- actor: Codex
+- event_type: commit / push / remote-readback
+- path_scope: docs/progress.md; docs/project-ledger.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json; origin/main; refs/tags/v0.14.1
+- operation: 提交并推送本轮四个验收文档文件，回读远端 main 与 v0.14.1 annotated tag。
+- reason: 用户要求先提交推送已有修改并保持工作区干净；本轮基于干净 main 只新增本地验收和云凭据阻塞证据。用户明确确认地区配额缩容选择最早创建服务器。
+- authorization: 用户明确要求提交、推送，且授权本任务的测试环境补齐、测试、发布同步及 USD 1,000 内测试资源预算。只推送文档；未执行需要 AWS 凭据的云写入。
+- implementation_scope: 提交 03c06f86b78a90f17f9dcf56955fb0be0e15bd0b，只含 docs/progress.md、docs/project-ledger.md、docs/release-checklist-v0.14.1.md、tests/acceptance/matrix.json；无源码版本、tag 或 Release 变更。
+- exclusions: 不改源码、.env、数据库、MFA/凭据、云资源或 GitHub Release；未查看或声称本次文档提交的 Actions 通过。
+- assumptions: origin/main 推送前仍为 60435860；push 后以 ls-remote 读回为准。
+- risks: AWS 实机验收仍等待管理员绑定 MFA 并通过本地 Cloud Accounts UI 验证测试凭据；旧测试库 credential v1 的 AES-GCM/AAD 认证失败原因未知。push 响应提示仓库默认分支有 105 条 Dependabot alerts，本轮不处理。
+- command_or_tool: 本地最终静态检查（diff-check、验收矩阵、边界、秘密、skill、JSON）均 0；git add 四个文件；git diff --cached --check (0); git commit -m "docs: record isolated AWS acceptance blocker" (0); git push origin main (0); git rev-parse/log/status (0); git ls-remote 对 main/tag refs 读回 (0)。
+- result: 远端 main 与本地提交一致：03c06f86b78a90f17f9dcf56955fb0be0e15bd0b。v0.14.1 annotated tag object 仍为 f20546a4a55c61753a9ae3562941765fd9335ad3，peel 仍为 33d36785e76ae00dc83652ee7f6ace0e56c18c96。提交后工作树干净。本次 docs commit 的 Actions 状态未核实。
+- exit_code: static validation=0; staged diff check=0; commit=0; push=0; local status=0; remote ref readback=0。
+- status: 文档推送和 ref readback passed；源码门禁复用 78bbcf31 的既有 19/19 证据；本地 harness passed；AWS/SSH/真实订阅实机验收 blocked；无 AWS 写入/服务器，cost USD 0。
+- commit_or_tree: 03c06f86b78a90f17f9dcf56955fb0be0e15bd0 pushed to origin/main; tag v0.14.1 unchanged. 此事件及进度行追加在该推送后，包含于后续文档收尾提交。
+- time_logic: 无业务时间规则变化；本地台账时间为 Asia/Shanghai +08:00。
+- reuse: 复用本地最终静态门禁和已发布源码提交的 19/19 check-local 结果；未将文档 push 视为新版本发布、生产或 AWS 验收。
+- rollback_ref: 仅文档可用 git revert 03c06f86b78a90f17f9dcf56955fb0be0e15bd0b；不移动 v0.14.1 tag、不删除 Release、不恢复撤销的安全或云状态。
