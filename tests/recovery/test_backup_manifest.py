@@ -65,3 +65,7 @@ def test_backup_tools_are_version_and_digest_pinned():
     assert "7df45a6cc87d4da11cc03a539a7470c15b1041ab2b396af088fe9990f7c79d50" in dockerfile
     assert "57fd79a7ece5fe501f351b9dd51a82fbee1ea8db65a8839db17f5c080245e99f" in dockerfile
     assert "postgres@sha256:" in dockerfile
+    assert 'target_arch="${TARGETARCH:-$(uname -m)}"' in dockerfile
+    assert "amd64|x86_64)" in dockerfile
+    assert "arm64|aarch64)" in dockerfile
+    assert "${target_arch}" in dockerfile

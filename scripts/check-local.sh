@@ -69,8 +69,8 @@ mkdir -p "$artifact_dir"
 summary_file="$artifact_dir/summary.tsv"
 printf 'gate\texit_code\tstarted_at\tfinished_at\tlog\n' >"$summary_file"
 
-export XRAY_TEST_DATABASE_URL=${XRAY_TEST_DATABASE_URL:-postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/xray_test}
-export XRAY_REDIS_URL=${XRAY_REDIS_URL:-redis://127.0.0.1:56379/0}
+export XRAY_TEST_DATABASE_URL=${XRAY_TEST_DATABASE_URL:-postgresql://xray_test:xray_test_only_password@127.0.0.1:${XRAY_TEST_POSTGRES_PORT:-55432}/xray_test}
+export XRAY_REDIS_URL=${XRAY_REDIS_URL:-redis://127.0.0.1:${XRAY_TEST_REDIS_PORT:-56379}/0}
 export XRAY_REQUIRE_FIXED_BINARY=1
 export XRAY_ENV=test
 export DJANGO_SETTINGS_MODULE=config.settings.test
@@ -84,15 +84,32 @@ run_gate() {
   shift
   local log_file="$artifact_dir/$gate.log"
   local summary_log_path=$log_file
-  local started_at finished_at exit_code
+  local started_at finished_at exit_code gate_pid tee_pid tee_exit_code output_dir output_pipe
   if [[ $summary_log_path == "$root_dir/"* ]]; then
     summary_log_path=${summary_log_path#"$root_dir"/}
   fi
   started_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   printf '\n[%s] %s\n' "$gate" "$started_at"
   set +e
-  "$@" 2>&1 | tee "$log_file"
-  exit_code=${PIPESTATUS[0]}
+  output_dir=$(mktemp -d "${TMPDIR:-/tmp}/xray-gate.XXXXXX")
+  output_pipe="$output_dir/output"
+  mkfifo "$output_pipe"
+  tee "$log_file" <"$output_pipe" &
+  tee_pid=$!
+  (
+    set -euo pipefail
+    "$@"
+  ) >"$output_pipe" 2>&1 &
+  gate_pid=$!
+  wait "$gate_pid"
+  exit_code=$?
+  wait "$tee_pid"
+  tee_exit_code=$?
+  if [[ $tee_exit_code -ne 0 ]]; then
+    exit_code=$tee_exit_code
+  fi
+  unlink "$output_pipe"
+  rmdir "$output_dir"
   set -e
   finished_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   printf '%s\t%s\t%s\t%s\t%s\n' \

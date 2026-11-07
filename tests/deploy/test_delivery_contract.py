@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import stat
 import subprocess
 from pathlib import Path
@@ -145,6 +146,119 @@ def test_local_gate_summary_uses_the_selected_artifact_directory():
     assert "local summary_log_path=$log_file" in script
     assert '"$summary_log_path" >>"$summary_file"' in script
     assert '"artifacts/acceptance/$version/gates/$gate.log"' not in script
+
+
+def test_local_gate_stops_after_a_failed_command_inside_a_gate(tmp_path):
+    script = (ROOT / "scripts/check-local.sh").read_text(encoding="utf-8")
+    match = re.search(
+        r"(?ms)^run_gate\(\) \{\n.*?^\}\n(?=\nensure_image\(\))", script
+    )
+    assert match is not None
+    shell = f"""
+set -uo pipefail
+root_dir={str(ROOT)!r}
+artifact_dir=$TEST_ARTIFACT_DIR
+summary_file=$TEST_SUMMARY_FILE
+printf 'gate\\texit_code\\tstarted_at\\tfinished_at\\tlog\\n' >"$summary_file"
+{match.group(0)}
+failing_gate() {{
+  printf 'gate-before-failure\\n'
+  false
+  printf 'gate-after-failure\\n'
+}}
+run_gate failing_gate failing_gate
+"""
+    environment = {
+        **os.environ,
+        "TEST_ARTIFACT_DIR": str(tmp_path),
+        "TEST_SUMMARY_FILE": str(tmp_path / "summary.tsv"),
+    }
+    result = subprocess.run(
+        ["bash", "-c", shell],
+        cwd=ROOT,
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1, result.stderr
+    assert "gate failed: failing_gate (exit 1)" in result.stderr
+    log = (tmp_path / "failing_gate.log").read_text(encoding="utf-8")
+    assert "gate-before-failure" in log
+    assert "gate-after-failure" not in log
+    assert (tmp_path / "summary.tsv").read_text(encoding="utf-8").splitlines()[1].split(
+        "\t"
+    )[1] == "1"
+
+
+def test_test_stack_honors_project_registered_database_ports():
+    environment = {
+        **os.environ,
+        "XRAY_TEST_POSTGRES_PORT": "55435",
+        "XRAY_TEST_REDIS_PORT": "56382",
+        "XRAY_TEST_POSTGRES_VOLUME": "xray-gate-test-postgres",
+        "XRAY_TEST_REDIS_VOLUME": "xray-gate-test-redis",
+    }
+    result = subprocess.run(
+        [
+            "docker",
+            "compose",
+            "--project-name",
+            "xray-port-config-test",
+            "--file",
+            str(ROOT / "deploy/compose/test.yml"),
+            "config",
+            "--format",
+            "json",
+        ],
+        cwd=ROOT,
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    services = yaml.safe_load(result.stdout)["services"]
+    assert services["postgres"]["ports"][0]["published"] == "55435"
+    assert services["redis"]["ports"][0]["published"] == "56382"
+    volumes = yaml.safe_load(result.stdout)["volumes"]
+    assert volumes["xray-test-postgres"]["name"] == "xray-gate-test-postgres"
+    assert volumes["xray-test-redis"]["name"] == "xray-gate-test-redis"
+
+
+def test_local_gate_resolves_service_urls_from_registered_port_overrides():
+    script = (ROOT / "scripts/check-local.sh").read_text(encoding="utf-8")
+    assignments = re.findall(
+        r"(?m)^export XRAY_(?:TEST_DATABASE_URL|REDIS_URL)=.*$", script
+    )
+    assert len(assignments) == 2
+    shell = "\n".join(
+        [
+            "set -euo pipefail",
+            *assignments,
+            '[[ "$XRAY_TEST_DATABASE_URL" == *@127.0.0.1:55435/xray_test ]]',
+            '[[ "$XRAY_REDIS_URL" == redis://127.0.0.1:56382/0 ]]',
+        ]
+    )
+    environment = {
+        **os.environ,
+        "XRAY_TEST_POSTGRES_PORT": "55435",
+        "XRAY_TEST_REDIS_PORT": "56382",
+    }
+    environment.pop("XRAY_TEST_DATABASE_URL", None)
+    environment.pop("XRAY_REDIS_URL", None)
+    result = subprocess.run(
+        ["bash", "-c", shell],
+        cwd=ROOT,
+        env=environment,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
 
 
 def test_ci_uses_dedicated_services_and_the_same_local_gate():

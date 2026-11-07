@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: xray_test
       POSTGRES_PASSWORD: xray_test_only_password
     ports:
-      - "127.0.0.1:55432:5432"
+      - "127.0.0.1:${XRAY_TEST_POSTGRES_PORT:-55432}:5432"
     volumes:
       - xray-test-postgres:/var/lib/postgresql/data
     healthcheck:
@@ -26,7 +26,7 @@ services:
     image: redis:7.4-alpine
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
-      - "127.0.0.1:56379:6379"
+      - "127.0.0.1:${XRAY_TEST_REDIS_PORT:-56379}:6379"
     volumes:
       - xray-test-redis:/data
     healthcheck:
@@ -38,6 +38,6 @@ services:
 
 volumes:
   xray-test-postgres:
-    name: xray-test-postgres
+    name: ${XRAY_TEST_POSTGRES_VOLUME:-xray-test-postgres}
   xray-test-redis:
-    name: xray-test-redis
+    name: ${XRAY_TEST_REDIS_VOLUME:-xray-test-redis}
