@@ -13,8 +13,9 @@
 
 ## 发布状态
 
-- [ ] annotated tag、安装包与 GitHub Release 待完成；发布前的认证读回确认当时不存在 `v0.14.3` Release。
-- [ ] `f2eac62` 的 GitHub Actions run `42370364174` / job `128397050459` 在 runner 启动前失败，0 steps；GitHub 注解指出近期账户付款失败或消费限额需要提高。未更改账单设置。
+- [x] 发布索引 `72705321685b4294d9128f626fff83f5ce572132` 已推送；annotated tag object `3aedbe34fc2725e5d4c7645883f918fca298b7a2` 已推送并 peeled 到发布索引。
+- [x] GitHub Release `437560023` 已发布，非草稿/非预发布。三个远端 asset digest 与本地匹配：tar.gz `0a6108cfd5e98e8a924741ff61b1db2d2929f405b92d76704a81e245df3c4629`、manifest `4f4faf73f519c9c47a4accae33c713f8d4ed096886ff265a0863b6f7cf51f34a`、`SHA256SUMS` `40ecc63308d5975d3d861a3bf0e01660ef573d494ddb4499da39d0978567789e`。
+- [x] main push Actions run `42370364174` 与 tag push runs `42371981253`/`42372069677` 均在 runner 启动前失败，0 steps；注解指向近期账户付款失败或消费限额需要提高。未更改账单设置，远端 CI 保持 blocked。
 
 ## 外部验收边界
 

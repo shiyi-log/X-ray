@@ -5888,3 +5888,20 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `本次无业务时间变化；r6 原始时间为 UTC 2026-11-07T11:59:57Z 至 12:02:40Z，文档时间采用机器本地 +08:00。`
 - `reuse`: `复用 0.14.2 发布清单结构、安装包脚本、r6 summary/JUnit 与 v0.14.2 回退点；本地 Fake/Stub 证据只供源码交付判断。`
 - `rollback_ref`: `发布索引文档可用后续 commit git revert；应用回退 v0.14.2 或 revert 4cd7988844040a74c75157e5d03af66598aa094e 与 f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd；不反向迁移或恢复 Token tombstone、凭据、安全事件或云状态。`
+
+### 2026-11-07T20:23:14+08:00 — xray-node-automation-20261106-01/057 v0.14.3 tag and GitHub Release readback
+
+- `event_id`: `xray-node-automation-20261106-01/057`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `annotated tag / manual Release publication / remote readback`
+- `path_scope`: `main; refs/tags/v0.14.3; /tmp/xray-v0.14.3-release.pKQUfa; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.3.md; tests/acceptance/matrix.json; docs/project-ledger.md`
+- `operation`: `将已授权的 v0.14.3 发布索引推送至 main，创建 annotated tag，按仓库 release workflow 打包安装器；push-triggered GitHub jobs 由于账号付款/消费限制未启动，因此通过本机已验证包创建正式 GitHub Release 并读回资产摘要。`
+- `authorization`: `用户明确授权 main push、同步发布新版本与 AWS 测试服务器预算 USD 1,000；发布内容限此版本的安装器、manifest 与校验文件。`
+- `write`: `main 从 f2eac62 推送到发布索引提交 72705321685b4294d9128f626fff83f5ce572132；创建并推送 annotated v0.14.3，tag object 3aedbe34fc2725e5d4c7645883f918fca298b7a2 peeled 至 72705321685b4294d9128f626fff83f5ce572132。创建 GitHub Release id 437560023（draft=false, prerelease=false），上传 tar.gz、manifest 与 SHA256SUMS。`
+- `command_or_tool`: `发布前 authenticated REST preflight 确认 tag ref 不存在且同名 Release HTTP 404；`./scripts/package-installer-release.sh 0.14.3` exit 0；`shasum -a 256 -c SHA256SUMS` exit 0；manifest 核验版本 0.14.3、tag v0.14.3、commit 72705321685b4294d9128f626fff83f5ce572132。Release create HTTP 201、readback HTTP 200，三个远端 digest 与本地逐一匹配。main run 42370364174/job 128397050459；tag delivery run 42371981253/job 128401811103；tag release run 42372069677/job 128402058678，三个 job 均 runner_id=0、steps=[]；注解为近期账号付款失败或 spending limit 需要提高。未更改 GitHub 账单/消费设置。`
+- `result`: `v0.14.3 tag、Release 和三项资产校验 passed；远端 CI blocked（未运行任何 workflow step），本地 r6 门禁仍为通过且两个 Linux/systemd skip 已记录。AWS/SSH/动态 IP/健康/真实订阅撤回/流量验收仍 blocked：账号持有人尚未完成首次 TOTP 并配置 CloudAccount，未创建 AWS 测试实例，AWS 写入 0，费用 USD 0。`
+- `implementation_scope`: `应用代码未变；post-release 更新只补充远端 tag/Release/asset/Actions 读回信息。`
+- `exclusions`: `未持有/输出 TOTP secret 或 recovery code；未绕过 MFA；未修改 GitHub billing；未执行 AWS 写入、SSH、实例删除或静态 IP 释放。`
+- `time_logic`: `无业务时间逻辑变化；Release 与 tag 读回于 2026-11-07 +08:00。`
+- `reuse`: `复用 `scripts/package-installer-release.sh`、CHANGELOG 版本段、r6 本地验收摘要和 v0.14.2 回退路径；本机包 SHA-256 与 GitHub 资产摘要一致。`
+- `rollback_ref`: `保留不可变 tag/Release 审计记录；应用可回到 v0.14.2 或 git revert 源码提交 4cd7988844040a74c75157e5d03af66598aa094e 与 f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd；禁止恢复已撤销 Token、凭据、安全事件或云操作状态。`

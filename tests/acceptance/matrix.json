@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-07T20:12:40+08:00",
+  "generated_at": "2026-11-07T20:23:14+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -62,7 +62,28 @@
           "steps_started": 0,
           "annotation": "The job was not started because recent account payments have failed or the spending limit needs to be increased.",
           "readback_http_status": 200,
-          "billing_settings_changed": false
+          "billing_settings_changed": false,
+          "tag_push_runs": [
+            {
+              "run_id": 42371981253,
+              "workflow": "X-ray delivery gates",
+              "job_id": 128401811103,
+              "job": "verify",
+              "conclusion": "failure",
+              "runner_id": 0,
+              "steps_started": 0
+            },
+            {
+              "run_id": 42372069677,
+              "workflow": "发布 X-ray 版本",
+              "job_id": 128402058678,
+              "job": "release",
+              "conclusion": "failure",
+              "runner_id": 0,
+              "steps_started": 0
+            }
+          ],
+          "tag_push_annotation": "The job was not started because recent account payments have failed or the spending limit needs to be increased."
         }
       ],
       "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
@@ -74,7 +95,7 @@
     {
       "id": "github-release-v0.14.3",
       "environment": "release",
-      "status": "not-run",
+      "status": "passed",
       "evidence": [
         {
           "kind": "authenticated_release_preflight",
@@ -82,9 +103,27 @@
           "release_http_status": 404,
           "tag_ref_present": false,
           "checked_at": "2026-11-07T20:09:12+08:00"
+        },
+        {
+          "kind": "published_github_release_readback",
+          "tag": "v0.14.3",
+          "annotated_tag_object": "3aedbe34fc2725e5d4c7645883f918fca298b7a2",
+          "peeled_commit": "72705321685b4294d9128f626fff83f5ce572132",
+          "release_id": 437560023,
+          "draft": false,
+          "prerelease": false,
+          "url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.14.3",
+          "assets": {
+            "SHA256SUMS": "sha256:40ecc63308d5975d3d861a3bf0e01660ef573d494ddb4499da39d0978567789e",
+            "xray-installer-0.14.3-manifest.json": "sha256:4f4faf73f519c9c47a4accae33c713f8d4ed096886ff265a0863b6f7cf51f34a",
+            "xray-installer-0.14.3.tar.gz": "sha256:0a6108cfd5e98e8a924741ff61b1db2d2929f405b92d76704a81e245df3c4629"
+          },
+          "local_sha256_match": true,
+          "manual_fallback": true,
+          "actions_workflow_runs": [42371981253, 42372069677]
         }
       ],
-      "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
+      "commit": "72705321685b4294d9128f626fff83f5ce572132",
       "provider": "github",
       "region": null,
       "cost": 0,
