@@ -686,8 +686,20 @@ class NodeLifecycle:
             )
             return
 
+        previous_publication_failures = operation.result.get(
+            "subscription_publication_failures", 0
+        )
+        retry_subscription_publication = (
+            isinstance(previous_publication_failures, int)
+            and previous_publication_failures > 0
+        )
         try:
-            observed = self._record_instance_observation(node, resource, instance)
+            observed = self._record_instance_observation(
+                node,
+                resource,
+                instance,
+                refresh_subscriptions=retry_subscription_publication,
+            )
         except DomainError as exc:
             self._mark_observation_error(node, exc.code)
             self._record_step(
@@ -698,19 +710,29 @@ class NodeLifecycle:
             )
             self._finish(claim, status="FAILED", error_code=exc.code)
             return
+        publication_failed = observed["publication_failures"] > 0
         self._record_step(
             operation,
             name="cloud.refresh",
-            status="OBSERVED",
-            result={"addresses_changed": observed["addresses_changed"]},
+            status="PUBLICATION_PARTIAL" if publication_failed else "OBSERVED",
+            result={
+                "addresses_changed": observed["addresses_changed"],
+                "subscriptions_published": observed["published"],
+                "subscription_publication_failures": observed["publication_failures"],
+            },
         )
         self._finish(
             claim,
-            status="SUCCEEDED",
+            status="NEEDS_RECONCILIATION" if publication_failed else "SUCCEEDED",
             result={
                 "cloud_status": "PRESENT",
                 "addresses_changed": observed["addresses_changed"],
+                "subscriptions_published": observed["published"],
+                "subscription_publication_failures": observed["publication_failures"],
             },
+            error_code=(
+                "SUBSCRIPTION_ADDRESS_REFRESH_PARTIAL" if publication_failed else ""
+            ),
         )
 
     @staticmethod

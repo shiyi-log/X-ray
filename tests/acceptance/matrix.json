@@ -1,5 +1,5 @@
 {
-  "version": "0.14.0",
+  "version": "0.14.1",
   "generated_at": "2026-11-07T06:48:19+08:00",
   "allowed_statuses": [
     "passed",
@@ -12,25 +12,9 @@
     {
       "id": "local-delivery-gates",
       "environment": "local",
-      "status": "passed",
-      "evidence": [
-        {
-          "kind": "final_delivery_gate_summary",
-          "summary_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r10/summary.tsv",
-          "junit_file": "artifacts/acceptance/0.14.0/final-gates-20261107-r10/backend-and-delivery.junit.xml",
-          "gates": 19,
-          "nonzero_exit_codes": 0,
-          "backend_tests": {"total": 449, "passed": 447, "skipped": 2, "failures": 0, "errors": 0},
-          "frontend_unit_tests": 84,
-          "browser_e2e": 8,
-          "candidate_base_commit": "3294abad3c6d918c8ebe9cfb3502b33071955449",
-          "candidate_commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
-          "candidate_worktree": false,
-          "started_at": "2026-11-06T22:17:19Z",
-          "finished_at": "2026-11-06T22:20:24Z"
-        }
-      ],
-      "commit": "c882ac03a29091825d4597b39bd753c3e70f7d18",
+      "status": "not-run",
+      "evidence": [],
+      "commit": null,
       "provider": null,
       "region": null,
       "cost": 0,

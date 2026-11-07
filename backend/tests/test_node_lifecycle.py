@@ -1604,6 +1604,64 @@ def test_refresh_records_current_cloud_state_without_cloud_mutation(prepared_nod
 
 
 @pytest.mark.django_db
+def test_refresh_retries_subscription_publication_after_address_change_failure(
+    prepared_node, admin, monkeypatch
+):
+    from apps.operations.services import OperationService
+    from providers.base import Address
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    operation = make_node_action(admin, node, "refresh")
+    lifecycle, _holder = make_lifecycle(node)
+    provider = lifecycle.reader_factory(node)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+        addresses=(Address("198.51.100.37", 4, "dynamic", node.external_id),),
+    )
+    publication_results = [
+        {"published": 0, "failed": 1},
+        {"published": 1, "failed": 0},
+    ]
+    refresh_calls = []
+
+    def refresh_subscription(node_id):
+        refresh_calls.append(node_id)
+        return publication_results.pop(0)
+
+    monkeypatch.setattr(
+        "apps.subscriptions.publishing.Publisher.refresh_node_address",
+        refresh_subscription,
+    )
+
+    lifecycle.dispatch("refresh", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert node.addresses[0]["value"] == "198.51.100.37"
+    assert operation.status == "NEEDS_RECONCILIATION"
+    assert operation.error_code == "SUBSCRIPTION_ADDRESS_REFRESH_PARTIAL"
+    assert operation.result["subscription_publication_failures"] == 1
+    assert refresh_calls == [node.pk]
+
+    OperationService.retry(operation.pk, admin=admin)
+    lifecycle.dispatch("refresh", node.pk, operation_id=operation.pk)
+
+    operation.refresh_from_db()
+    assert operation.status == "SUCCEEDED"
+    assert operation.error_code == ""
+    assert operation.result["subscription_publication_failures"] == 0
+    assert refresh_calls == [node.pk, node.pk]
+    assert operation.steps.filter(name="cloud.refresh").count() == 2
+
+
+@pytest.mark.django_db
 def test_refresh_marks_confirmed_absence_without_deleting_or_releasing_quota(prepared_node, admin):
     node, _create_operation = prepared_node
     provision_node_for_action(node)
