@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-08T07:13:34+08:00",
+  "generated_at": "2026-11-08T07:33:01+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -980,6 +980,36 @@
           "aws_cli_root_matches_runner_authorization": true,
           "aws_cli_runner_instance_state": "running",
           "aws_write_attempted_for_ci_fix": false,
+          "remote_fix_ci_status": "not-run-pending-push",
+          "application_real_cloud_acceptance": "not-run"
+        },
+        {
+          "kind": "runner_installer_integration_host_dependency_diagnosis",
+          "checked_at": "2026-11-08T07:33:01+08:00",
+          "remote_run_id": 42424601588,
+          "remote_job_id": 128560072989,
+          "remote_head_commit": "d306bac1cc75d2099157eac9ee6e3a36fba8367d",
+          "runner_name": "xray-actions-ec2-2x4-20261108-01",
+          "remote_conclusion": "failure",
+          "remote_failed_tests": [
+            {
+              "test": "tests/installer/test_install.py::test_repeat_installation_preserves_generation_and_configuration",
+              "cause": "Production installer correctly reported TOOL_MISSING because unzip is not installed in the runner environment."
+            },
+            {
+              "test": "tests/installer/test_one_click.py::test_one_click_install_then_update_preserves_config_and_generation",
+              "cause": "The Linux integration test reached apt-get dependency installation on the persistent non-root runner and could not open the apt lock."
+            }
+          ],
+          "backend_test_summary": {"total": 490, "passed": 487, "failed": 2, "skipped": 1},
+          "remote_artifact_id": 13594848433,
+          "remote_artifact_digest": "sha256:aeae9f5f4bface994f7f22b641ce47dbc340a5c1762af865e819ea9f8d95fbc4",
+          "artifact_upload_and_runner_cleanup_passed": true,
+          "production_installer_dependency_contract_unchanged": true,
+          "local_installer_tests": {"total": 17, "passed": 14, "skipped": 3, "failures": 0},
+          "local_targeted_tests": {"passed": 1, "skipped": 1, "reason": "macOS host skips Linux-only one-click runtime integration"},
+          "local_ruff_exit_code": 0,
+          "test_harness_candidate_pending_remote_validation": true,
           "remote_fix_ci_status": "not-run-pending-push",
           "application_real_cloud_acceptance": "not-run"
         }

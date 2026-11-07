@@ -53,7 +53,9 @@ def _write_archive(path: Path, marker: str) -> None:
         bundle.writestr("geosite.dat", b"fixture")
 
 
-def test_one_click_install_then_update_preserves_config_and_generation(tmp_path: Path):
+def test_one_click_install_then_update_preserves_config_and_generation(
+    tmp_path: Path, isolated_installer_tools
+):
     if os.uname().sysname != "Linux":
         pytest.skip("one-click runtime integration requires a disposable Linux host")
     archive = tmp_path / "fixture-xray.zip"
@@ -117,3 +119,5 @@ def test_one_click_install_then_update_preserves_config_and_generation(tmp_path:
         [str(install_root / "bin/xray"), "version"], capture_output=True, text=True, check=True
     )
     assert "updated" in version.stdout
+    assert isolated_installer_tools["unzip_called"].exists()
+    assert not isolated_installer_tools["apt_get_called"].exists()

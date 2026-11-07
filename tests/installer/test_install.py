@@ -8,7 +8,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_repeat_installation_preserves_generation_and_configuration(tmp_path):
+def test_repeat_installation_preserves_generation_and_configuration(
+    tmp_path, isolated_installer_tools
+):
     archive = tmp_path / "test-bundle.zip"
     with zipfile.ZipFile(archive, "w") as bundle:
         executable = zipfile.ZipInfo("xray")
@@ -44,3 +46,5 @@ def test_repeat_installation_preserves_generation_and_configuration(tmp_path):
     assert result.returncode == 0
     assert generation.read_text() == "7\n"
     assert current.read_text() == '{"inbounds":[]}'
+    assert isolated_installer_tools["unzip_called"].exists()
+    assert not isolated_installer_tools["apt_get_called"].exists()
