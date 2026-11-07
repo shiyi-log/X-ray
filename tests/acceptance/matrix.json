@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-07T20:23:14+08:00",
+  "generated_at": "2026-11-07T20:28:28+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -83,7 +83,18 @@
               "steps_started": 0
             }
           ],
-          "tag_push_annotation": "The job was not started because recent account payments have failed or the spending limit needs to be increased."
+          "tag_push_annotation": "The job was not started because recent account payments have failed or the spending limit needs to be increased.",
+          "post_release_docs_sync_run": {
+            "commit": "9652b666c6936c00d5c5c244bcceb7506a68e2cf",
+            "run_id": 42372512485,
+            "job_id": 128403365724,
+            "workflow": "X-ray delivery gates",
+            "job": "verify",
+            "conclusion": "failure",
+            "runner_id": 0,
+            "steps_started": 0,
+            "annotation": "The job was not started because recent account payments have failed or the spending limit needs to be increased."
+          }
         }
       ],
       "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",

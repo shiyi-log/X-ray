@@ -5905,3 +5905,19 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间逻辑变化；Release 与 tag 读回于 2026-11-07 +08:00。`
 - `reuse`: `复用 `scripts/package-installer-release.sh`、CHANGELOG 版本段、r6 本地验收摘要和 v0.14.2 回退路径；本机包 SHA-256 与 GitHub 资产摘要一致。`
 - `rollback_ref`: `保留不可变 tag/Release 审计记录；应用可回到 v0.14.2 或 git revert 源码提交 4cd7988844040a74c75157e5d03af66598aa094e 与 f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd；禁止恢复已撤销 Token、凭据、安全事件或云操作状态。`
+
+### 2026-11-07T20:28:28+08:00 — xray-node-automation-20261106-01/058 final refs, Release, and worktree verification
+
+- `event_id`: `xray-node-automation-20261106-01/058`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `final verification / publication readback`
+- `path_scope`: `main; refs/tags/v0.14.3; GitHub Release v0.14.3; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.3.md; tests/acceptance/matrix.json; docs/project-ledger.md`
+- `operation`: `收尾前重新核对远端主线、annotated tag peel、GitHub Release 与资产 digest，并读取最后一次 post-release 文档同步的 Actions job；准备记录 final verification。`
+- `authorization`: `用户授权 main push、tag 和 v0.14.3 发布；真实 AWS 验收仍按项目 MFA/CloudAccount 前置执行。`
+- `command_or_tool`: ``git diff --check` exit 0，读取时工作树 clean；远端 `main=9652b666c6936c00d5c5c244bcceb7506a68e2cf`；tag object `3aedbe34fc2725e5d4c7645883f918fca298b7a2` peeled 至 release index `72705321685b4294d9128f626fff83f5ce572132`。认证 GitHub REST release lookup HTTP 200，Release id 437560023 为非草稿/非预发布，3 个 asset digest 与本地匹配。post-release docs run `42372512485` / job `128403365724` completed failure、runner_id=0、0 steps；付款/消费额度 annotation 与前两次 workflow 一致。`
+- `result`: `v0.14.3 tag、GitHub Release、资产 digest 和 ref 读回 passed；Actions blocked；AWS 实机仍因账号持有人首次 TOTP 与 CloudAccount 前置未完成而 blocked。最终 ledger append 和提交后还要再运行 diff/matrix/boundary/secret/skill/status 检查。`
+- `implementation_scope`: `仅 release/acceptance 文档，没有应用、schema、认证、数据库或云资源行为变更。`
+- `exclusions`: `不操作 TOTP secret/recovery code，不绕过 MFA，不修改 GitHub billing，不创建 AWS 资源。`
+- `time_logic`: `无业务时间逻辑变化；远端 refs 与 API 读回于 2026-11-07T20:28:28+08:00。`
+- `reuse`: `复用 r6 本地证据和本版本机包三项 SHA256；远端 tag 仍引用不可变 release index，不随 post-release 文档更新移动。`
+- `rollback_ref`: `post-release 文档提交可单独 git revert；保留 v0.14.3 tag/Release；应用可回到 v0.14.2，不恢复 Token tombstone、凭据、安全事件或云操作状态。`
