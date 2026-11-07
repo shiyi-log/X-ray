@@ -21,7 +21,8 @@
 ## 外部验收边界
 
 - [ ] AWS 测试服务器生命周期、每日重启后的新 IP/健康状态、订阅更新/撤回、节点数与精确资源回收尚未实机验证。
-- [ ] AWS 写入受阻：本地当前控制密钥无法通过认证解封测试库 CloudAccount 绑定的 credential version 1；现有证据无法区分主密钥漂移与密文/AAD 损坏。测试库没有已绑定 MFA，当前机器没有运行中的 X-ray 服务。未绕过应用鉴权使用 AWS CLI，未调用 AWS/SWAS 写入，未启动 SSH，费用 USD 0；本任务授权预算上限为 USD 1,000。
+- [x] 独立本地验收环境已在已登记 loopback 端口启动：前端 `http://127.0.0.1:9538/`、后端 `9537`、PostgreSQL `55433`、Redis `56380`，均使用独立 Compose 项目/卷；本地健康检查 HTTP 200，一键登录关闭，TOTP 旁路关闭。
+- [ ] AWS 写入仍受阻：原 `xray-test` 库的 CloudAccount credential version 1 在只读复核中仍无法通过当前控制密钥的 AES-GCM/AAD 认证；无法区分主密钥漂移与密文/AAD 损坏。新隔离库管理员已初始化，但尚未绑定 MFA，且没有 CloudAccount/节点。需管理员在上述本地页面完成 MFA，并在 Cloud Accounts 表单录入/验证 AWS 测试凭据；不要在聊天中发送云凭据。未调用 AWS/SWAS 写入、未启动 SSH，费用 USD 0；本任务授权预算上限 USD 1,000。
 - [ ] SWAS、设备导入、公网探测与生产验收未运行。
 
 ## 回退

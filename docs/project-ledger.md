@@ -5265,3 +5265,99 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间修改；日期使用执行机本地 Asia/Shanghai +08:00。`
 - `reuse`: `复用已验证的五文件文档提交和验收/安全静态门禁；未重跑源码门禁，因为源码提交与应用文件未变。`
 - `rollback_ref`: `仅文档提交可用 `git revert 8703cd97895492ce693ce06e7c1aea03864b3a78`；不移动 tag、不删除 Release；应用版本仍可回退到 v0.14.0 或对源码 commit `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 执行 git revert，不恢复撤销安全/云状态。`
+
+### 2026-11-07T13:46:15+08:00 — xray-node-automation-20261106-01/026 isolated local acceptance environment definition
+
+- `event_id`: `xray-node-automation-20261106-01/026`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T13:46:15+08:00`
+- `actor`: `Codex`
+- `event_type`: `task definition / read / local-runtime`
+- `path_scope`: `main@60435860b5b8b916f57f016a7ffec72535344a7e; AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md and references; docs/development.md; main.py; deploy/compose/test.yml; backend/config/settings/{base.py,test.py}; backend/common/crypto.py; backend/apps/{cloud_accounts,identity}/; ignored .env metadata/config loaded silently; LocalPortManager registry (X-ray project entry only); 127.0.0.1 ports 9537/9538/55433/56380; /tmp/xray-cloud-acceptance.override.yml; Docker project xray-cloud-acceptance and uniquely named volumes; docs/progress.md; docs/project-ledger.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json`
+- `operation`: `在不触碰现有 xray-test 服务/卷/数据的条件下，准备独立本地 AWS 验收环境；启用正常 TOTP 与 Operation 路径，供管理员在本地界面完成 MFA 并重新录入经身份校验的 AWS 测试凭据。`
+- `reason`: `只读调查发现忽略的本地 .env 指向已停止的 55433 数据库，而 55432 上的仓库 xray-test 数据库凭据 v1 在使用当前控制密钥与目标绑定 AAD 时仍发生 AES-GCM 认证失败；此前证据无法区分主密钥漂移与密文/AAD 损坏。当前项目登记端口 9537/9538/55433/56380 均空闲，可用独立容器卷恢复本地验收 UI。`
+- `authorization`: `用户授权补齐测试环境、通过测试同步发布、创建不超过 USD 1,000 的测试服务器，并要求先提交推送现有修改；基线 main@6043586 与 origin/main 相同且工作树干净。真实 AWS 操作只经 X-ray 管理界面的正常 MFA、身份验证、目标预览和 Operation；禁止通过 AWS CLI 绕过。`
+- `implementation_scope`: `仅新增临时 Compose override（回环绑定 55433/56380、唯一卷名）和本地隔离运行时；后续只更新发布/验收台账、进度、清单、矩阵以记录证据。管理员密码仅由已忽略 .env 在进程内提供给本地测试初始化，绝不打印或写入命令参数/文档；启动应用时强制 XRAY_DISABLE_TOTP=0 与 XRAY_LOCAL_ONE_CLICK_LOGIN=0。`
+- `exclusions`: `不修改/打印/覆盖 .env；不连接或迁移共享 55432 xray-test 数据库及 xray-test-postgres/redis 卷；不停止任何非本任务进程、容器或端口占用者；本阶段不改密钥、不轮换或重写既有 credential envelope，不执行 AWS/SWAS 写入、SSH、公网探测、实例删除或静态 IP 释放。`
+- `assumptions`: `LocalPortManager API 与 portctl.py 未发现；只读登记表把所选端口绑定到当前仓库路径。端口无监听；专用 Docker 项目和唯一卷名此前不存在。当前项目版本及 v0.14.1 发布/资产已完成，本轮环境准备不改变应用版本/tag/Release。`
+- `risks`: `数据库迁移与管理员初始化只会写新 xray-cloud-acceptance 卷；AWS 凭据需管理员通过本地表单提交并通过云身份校验后才可用。真实测试实例的费用/残留必须由 X-ray 操作回读，费用累计不得超过 USD 1,000；无 MFA/凭据时云测试继续 blocked。`
+- `command_or_tool`: `只读读取上述代码/约定；本地 .env 仅在 Python 进程内载入且不回显；端口注册表只输出匹配当前仓库的条目；端口 bind probe；Docker 项目/卷名前缀只读盘点；已运行 55432 数据库只读事务读取 CloudCredentialVersion 元数据并尝试 AES-GCM/AAD 验证。`
+- `result`: `定义完成，环境创建和应用启动尚待执行。现有源码门禁沿用已发布干净源码提交 78bbcf3 的 r2 证据；本轮不会把 Fake/Stub 证据写作 AWS 实机通过。`
+- `exit_code`: `端口/Compose/registry 只读盘点=0；.env 原始目标 55433 连接失败（只读诊断，未返回异常原文）；修正到仓库 xray-test 55432 的只读数据库/AES 检查=0（credential_versions=1，envelope key version=1，authentication_failed）。`
+- `status`: `本地隔离环境 provisioning=in-progress；AWS 真实验收仍 blocked；无 AWS API 写入、无 SSH、无新服务器，费用 USD 0。`
+- `commit_or_tree`: `基线 main@60435860b5b8b916f57f016a7ffec72535344a7e = origin/main；当前审计/验收文档将在环境验证后与本事件追加提交。`
+- `time_logic`: `无应用业务时间规则变化；ledger 使用机器本地 Asia/Shanghai +08:00。`
+- `reuse`: `复用 v0.14.1 r2 的 19/19 本地门禁、450 项后端/交付测试（448 passed、2 skipped）、前端 84 项、Playwright 8 项，以及 v0.14.1 Release；这些不替代真实 AWS 证据。`
+- `rollback_ref`: `停止只允许针对本次创建的 Django/Vite 进程组和 Docker Compose 项目 xray-cloud-acceptance；默认保留专用数据卷以便审计，不运行 down -v。任何后续测试实例只通过其自身已授权 X-ray Operation 删除并读回，不释放静态 IP 或触碰其他资源。`
+
+### 2026-11-07T13:58:33+08:00 — xray-node-automation-20261106-01/027 isolated acceptance environment and credential recheck
+
+- `event_id`: `xray-node-automation-20261106-01/027`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T13:58:33+08:00`
+- `actor`: `Codex`
+- `event_type`: `write / local-runtime / read / validate`
+- `path_scope`: `/tmp/xray-cloud-acceptance.override.yml; Docker project xray-cloud-acceptance; volumes xray-cloud-acceptance-postgres/xray-cloud-acceptance-redis; 127.0.0.1:9537/9538/55433/56380; ignored .env loaded only in process; existing xray-test DB 55432 read-only; docs/progress.md; docs/project-ledger.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json; tested app code 78bbcf31b0230f6f8d9a09396ae5f8cd64229e19`
+- `operation`: `创建隔离本地 Cloud acceptance PostgreSQL/Redis 卷，迁移并初始化唯一测试管理员，启动后端/前端，验证健康状态、登录旁路状态和旧凭据解封结果。`
+- `reason`: `任务授权补齐测试环境；当前项目注册端口 9537/9538/55433/56380 均空闲，旧共享 xray-test 服务 55432/56379 必须保持原样。`
+- `authorization`: `用户要求先将既有未提交改动提交推送并清洁工作区，基线已确认 main 与 origin/main 同为 6043586 且干净；用户授权自行补齐环境并在 USD 1,000 预算内做测试服务器验收。仅启动本地 loopback 服务和新测试卷；真实 AWS 写入仍必须经已启用 MFA 的 X-ray 正常 Operation。`
+- `implementation_scope`: `临时 Compose override 使用 `!override` 明确替换基础 Compose 的 ports list，并将数据库/Redis 映射到 55433/56380；创建专属卷，不复用 55432/56379；执行新库迁移和 `sync_env_superadmin`；后端和 Vite 分别绑定已登记 9537/9538；只读检查 55432 中既存 credential v1；更新进度/验收文档。`
+- `exclusions`: `未修改 .env、应用源码、旧 xray-test 数据/容器/卷、现存 credential envelope 或云账号；未使用 main.py，未提交/记录管理员密码，未截图或记录云凭据；没有 AWS/SWAS 请求、SSH、公网探测、服务器创建/删除或静态 IP 操作。`
+- `assumptions`: `LocalPortManager registry 显示端口绑定当前 X-ray 路径；其 API 与 portctl.py 不可用，因此直接使用已登记空闲端口。根 .env 已有本地管理员设置并指向 55433/56380；配置只在进程内载入，不回显。`
+- `risks`: `第一次 Compose up 因 Compose 默认合并端口列表而尝试绑定已占用 56379，退出 1；只创建本项目的卷和未启动容器，没有影响既有监听，改用 Compose `!override` 后第二次启动成功。测试界面只回环可达；本地管理员密码仍由 .env 控制，TOTP 必须由管理员在页面完成。`
+- `command_or_tool`: `端口登记/可用性及 Docker 项目/卷盘点（read-only）；`docker compose ... config --quiet`；首次 `docker compose ... up -d --wait`（1）；修订 override 后 `docker compose ... config --format json | jq`（0）确认仅 55433/56380 和新卷；第二次 `up -d --wait`（0）；`backend/.venv/bin/python` 执行 `migrate --noinput` 与 `sync_env_superadmin`（0，输出抑制）；Django `runserver` session 38424 与 Vite session 88285；后端 `/health/ready`=200、前端 `/`=200、session endpoint=200、`/api/v1/auth/local-login/status`=`false`；隔离新库 read-only 统计 admin exists/TOTP false/cloud accounts 0/managed nodes 0；existing 55432 credential v1 AES-GCM/AAD read-only recheck=`authentication_failed`；`python3 scripts/validate-acceptance.py`、boundary、secret、skill、matrix JSON 和 `git diff --check` 初验均 0。`
+- `result`: `独立服务健康且用户可访问 `http://127.0.0.1:9538/`；当前后台强制 TOTP，密码免 MFA 与一键登录均关闭。新库尚无 CloudAccount/节点，管理员未绑定 TOTP；需要管理员在本地页面完成 MFA 并经 Cloud Accounts 表单录入/验证测试 AWS 凭据。旧 55432 credential version 1 的 AES-GCM 认证失败仍无法区分主密钥漂移与密文/AAD 损坏。真实云验收未完成，不创建资源，成本 USD 0。`
+- `exit_code`: `first compose config=0; first up=1（56379 冲突）; corrected config=0; second up=0; migrate/admin init=0; backend/frontend/session HTTP=200; local-login status=false; old credential read-only recheck=authentication_failed; acceptance/boundary/secrets/skill/JSON/diff checks=0。`
+- `status`: `本地 cloud-acceptance harness passed；AWS/SSH/真实订阅验收 blocked，等待管理员 MFA 与有效 AWS 测试凭据；SWAS/设备/生产 not-run；AWS 成本 USD 0。`
+- `commit_or_tree`: `应用代码仍测试于 main@78bbcf31b0230f6f8d9a09396ae5f8cd64229e19；台账/进度/验收材料修改基于 main@60435860b5b8b916f57f016a7ffec72535344a7e，待最终验证和文档提交/推送。`
+- `time_logic`: `没有业务时间规则改动；验证使用本地机器 Asia/Shanghai 时间。`
+- `reuse`: `复用 v0.14.1 r2 的完整 19/19 门禁和生命周期/订阅回归；本轮只验证隔离运行时，不把 Fake/Stub/本地 HTTP 结果算作真实云通过。`
+- `rollback_ref`: `只停止本轮创建的后端/前端进程和 Docker Compose 项目 xray-cloud-acceptance；可用 `docker compose -p xray-cloud-acceptance -f deploy/compose/test.yml down` 移除本轮容器/网络但保留专用卷；不得带 `-v`，不停止旧 xray-test 容器或触碰云资源。`
+
+### 2026-11-07T14:06:01+08:00 — xray-node-automation-20261106-01/028 user-confirmed scale-in ordering and process ownership
+
+- `event_id`: `xray-node-automation-20261106-01/028`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T14:06:01+08:00`
+- `actor`: `Codex`
+- `event_type`: `user clarification / read / validate`
+- `path_scope`: `backend/apps/nodes/tasks.py; backend/apps/nodes/automation.py; backend/apps/nodes/lifecycle.py; docs/release-checklist-v0.14.1.md; docs/project-ledger.md; docs/progress.md; tests/acceptance/matrix.json; local processes 89928/91486; Docker project xray-cloud-acceptance; origin/main and v0.14.1 refs`
+- `operation`: `确认自动缩容的目标选择规则，并补记独立本地验收服务的 PID、端口与工作目录；复核当前文档和代码审查证据。`
+- `reason`: `用户明确举例：人工将新加坡配额从 4 调为 3 时，应在新加坡删除创建时间最早的一台服务器。项目本地运行约定要求记录进程的 PID、端口和工作目录；event 027 未写入 PID 与工作目录。`
+- `authorization`: `用户授权完成节点自动化、测试、同步发布，并直接澄清了缩容排序；本地进程由本任务启动，记录其归属不触发进程变更。`
+- `implementation_scope`: `仅追加审计信息并更新时间矩阵文档；只读复核现有实现按 `(created_at, pk)` 选择同地区最早节点，每地区每轮最多删除一台，若最早目标不满足安全条件则阻塞而不跳过。用户规则已写入 v0.14.1 发布清单。`
+- `exclusions`: `无应用源码、版本、tag、Release 或配置改动；不登录管理员、不改 TOTP/凭据、不执行 AWS/SWAS 请求、SSH、公网探测、资源创建/删除或静态 IP 释放。`
+- `assumptions`: `继续使用 `xray-cloud-acceptance` 独立 Compose 项目与专用卷；本地验收 UI 仍等待管理员正常完成 MFA 并录入经身份验证的 AWS 测试凭据。`
+- `risks`: `真实 AWS 生命周期、重启后 IP/健康状态、订阅更新/撤回、节点数及精确清理仍无实机证据；不能将本地 Fake/Stub、源码审查或容器健康描述为云端通过。`
+- `command_or_tool`: `只读复核 automation review 指向的 `tasks.py` 缩容选择、`automation.py` 二次预检与 `lifecycle.py` 云端删除确认/订阅修订撤销；`lsof -a -p 89928 -d cwd -Fn` 与 `lsof -a -p 91486 -d cwd -Fn`；`docker compose -p xray-cloud-acceptance -f deploy/compose/test.yml -f /tmp/xray-cloud-acceptance.override.yml ps`；`python3 scripts/validate-acceptance.py`; `./scripts/check-boundary.sh`; `./scripts/check-secrets.sh`（扫描输出不回显）；`git ls-remote origin refs/heads/main refs/tags/v0.14.1 'refs/tags/v0.14.1^{}'`。`
+- `result`: `用户规则与现有实现/清单一致。后端 PID 89928 在 `127.0.0.1:9537`、工作目录 `/Users/shiyi/Documents/ChatGPT/x-ray`；前端 PID 91486 在 `127.0.0.1:9538`、工作目录 `/Users/shiyi/Documents/ChatGPT/x-ray/frontend/apps/web-antd`。本地 PostgreSQL/Redis 容器 healthy；AWS 实机验收继续 blocked。`
+- `exit_code`: `process cwd probes=0; acceptance matrix=0; boundary=0; secret scan=0; origin ref readback=0。`
+- `status`: `缩容规则澄清=passed（与已发布实现及回归证据一致）；本地验收环境=passed；AWS/SSH/真实订阅实机验收=blocked，等待管理员在本地 UI 完成 MFA 并提交有效测试凭据；费用 USD 0。`
+- `commit_or_tree`: `检查基线 main@60435860b5b8b916f57f016a7ffec72535344a7e = origin/main；本轮文档差异待最终静态门禁、提交和推送。`
+- `time_logic`: `无应用时间逻辑变更；矩阵和台账时间使用执行机 Asia/Shanghai +08:00。`
+- `reuse`: `复用 v0.14.1 干净源码提交 78bbcf31 的完整本地门禁、订阅 IP 更新重试回归、节点自动化/生命周期代码审查和用户确认的同地区创建时间排序。`
+- `rollback_ref`: `只文档的本轮提交通过 `git revert <document-commit>` 回退；不移动 v0.14.1 tag/Release，不停止当前本地验收服务，不影响保留的专用卷，不反向恢复撤销安全/云状态。`
+
+### 2026-11-07T14:07:00+08:00 — xray-node-automation-20261106-01/029 final local documentation and runtime validation
+
+- `event_id`: `xray-node-automation-20261106-01/029`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T14:07:00+08:00`
+- `actor`: `Codex`
+- `event_type`: `final validate / local-runtime / git-status`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; docs/release-checklist-v0.14.1.md; tests/acceptance/matrix.json; scripts/validate-acceptance.py; scripts/check-boundary.sh; scripts/check-secrets.sh; scripts/vendor/skill-quick-validate.py; skills/xray-manager/SKILL.md; xray-cloud-acceptance Compose project and loopback services`
+- `operation`: `在提交验收文档前完成静态验证、状态核对和本地服务健康复查。`
+- `reason`: `完成发布/验收文档收尾，并按用户要求将当前任务产生的相干文档改动提交推送；无源码变更时复用已发布干净源码提交的完整门禁。`
+- `authorization`: `用户要求先提交并推送已有修改、保持工作区干净后再实施；同时授权本任务文档提交推送、测试环境补齐及不超过 USD 1,000 的测试服务器预算。`
+- `implementation_scope`: `仅提交四个受审文档文件；不创建新应用版本、tag 或 Release。复用 v0.14.1 源码提交 `78bbcf31b0230f6f8d9a09396ae5f8cd64229e19` 的 19/19 本地门禁。`
+- `exclusions`: `不改源代码、`.env`、数据库数据、凭据、管理员 MFA、远端 Release/tag 或 CI；不发起 AWS/SWAS 请求、SSH、服务器创建/删除或静态 IP 释放。`
+- `assumptions`: `专用本地验收服务继续运行以便管理员使用；后端端口 9537、前端 9538、PostgreSQL 55433、Redis 56380 均为本任务登记的 loopback 端口。`
+- `risks`: `AWS 实机验收仍需管理员完成本地 MFA 并经 Cloud Accounts UI 验证测试凭据；旧 credential v1 AES-GCM/AAD 认证失败，原因未确定。故 AWS IP 变更、重启后运行状态、订阅发布/撤回、节点数、精确资源清理没有实机结果。`
+- `command_or_tool`: `git diff --check; python3 scripts/validate-acceptance.py; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh（输出抑制）; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager; python3 -m json.tool tests/acceptance/matrix.json; curl loopback backend `/health/ready`, frontend `/`, session endpoint; docker compose -p xray-cloud-acceptance -f deploy/compose/test.yml -f /tmp/xray-cloud-acceptance.override.yml ps; git status --short --branch; git diff --stat。`
+- `result`: `差异/矩阵/边界/秘密/技能校验及 JSON 解析均通过；后端 readiness、前端及 session HTTP 均为 200；专用 PostgreSQL/Redis healthy。工作树在基线 `60435860b5b8b916f57f016a7ffec72535344a7e` 上仅四个预期文档文件有修改。`
+- `exit_code`: `diff-check=0; acceptance=0; boundary=0; secrets=0; skill=0; matrix-json=0; local HTTP probes=0 (200/200/200); Compose ps=0; status/stat=0。`
+- `status`: `文档与本地 harness 验证 passed；真实 AWS/SSH/订阅实机验证 blocked；无 AWS 写入或服务器，费用 USD 0。`
+- `commit_or_tree`: `main@60435860b5b8b916f57f016a7ffec72535344a7e + 四个待提交的文档修改；推送完成后的提交和远端 ref 将在后续追加记录。`
+- `time_logic`: `无应用业务时间逻辑改动；记录时间使用执行机 Asia/Shanghai +08:00。`
+- `reuse`: `复用干净源码提交 78bbcf31 的完整门禁、subscription IP retry 回归、automation/lifecycle 测试与只读审查；未将本轮文档/本地服务复查包装为新的源码或 AWS 验收。`
+- `rollback_ref`: `本轮仅文档，回退目标为稍后记录的文档提交 SHA，并用 `git revert <SHA>`；保留 v0.14.1 tag/Release、本地专用数据库卷及所有安全/云审计状态。`
