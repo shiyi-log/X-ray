@@ -234,7 +234,7 @@ export const resourcesApi = {
     ),
   nodeAction: (
     id: string,
-    action: 'start' | 'reboot' | 'delete',
+    action: 'start' | 'stop' | 'reboot' | 'delete',
     payload: { preview_id?: string; confirmation?: string } = {},
     idempotencyKey: string = crypto.randomUUID(),
   ) =>

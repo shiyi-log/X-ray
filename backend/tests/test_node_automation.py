@@ -329,6 +329,44 @@ def test_pool_sync_submits_only_oldest_same_region_delete_and_skips_inflight(pre
 
 
 @pytest.mark.django_db
+def test_pool_sync_submits_only_one_global_oldest_delete_across_over_quota_regions(
+    prepared_node,
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_node_pool_sync
+
+    east_oldest, _operation = prepared_node
+    _ready_node(east_oldest)
+    nodes = [
+        east_oldest,
+        _sibling(east_oldest, "east-younger"),
+        _sibling(east_oldest, "ap-oldest", "ap-southeast-1"),
+        _sibling(east_oldest, "ap-younger", "ap-southeast-1"),
+    ]
+    created_at = timezone.now() - timedelta(days=4)
+    for position, node in enumerate(nodes):
+        ManagedNode.objects.filter(pk=node.pk).update(
+            created_at=created_at + timedelta(days=position)
+        )
+    _publish_subscription_on_nodes("multi-region-pool-sync", nodes)
+    set_allocations(
+        east_oldest.pool_id,
+        [
+            {"region": "ap-southeast-1", "quota": 1},
+            {"region": "us-east-1", "quota": 1},
+        ],
+    )
+    NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+
+    result = schedule_node_pool_sync()
+
+    deletes = list(Operation.objects.filter(kind="node.delete"))
+    assert result["deleted"] == 1
+    assert len(deletes) == 1
+    assert deletes[0].target_id == east_oldest.pk
+
+
+@pytest.mark.django_db
 def test_pool_sync_deletes_one_oldest_per_due_cycle_until_quota_two(prepared_node):
     from apps.nodes.tasks import schedule_node_pool_sync
 

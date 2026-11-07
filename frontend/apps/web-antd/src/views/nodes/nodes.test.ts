@@ -86,7 +86,7 @@ describe('server management', () => {
       expect(text).toContain('运行中');
       expect(text).toContain('3.00 GiB');
       expect(text).toContain('上行 1.00 GiB · 下行 2.00 GiB');
-      for (const action of ['启动', '重启', '详情', '删除']) {
+      for (const action of ['启动', '停止', '重启', '详情', '删除']) {
         expect(wrapper.findAll('button').some((button) => button.text().includes(action))).toBe(true);
       }
       expect(text).not.toContain('暂停创建');
@@ -261,6 +261,7 @@ describe('server management', () => {
       await flushPromises();
       const button = (label: string) => wrapper.findAll('button').find((item) => item.text().includes(label))!;
       expect(button('启动').element.hasAttribute('disabled')).toBe(true);
+      expect(button('停止').element.hasAttribute('disabled')).toBe(true);
       expect(button('重启').element.hasAttribute('disabled')).toBe(true);
       expect(button('删除').element.hasAttribute('disabled')).toBe(true);
       expect(button('详情').element.hasAttribute('disabled')).toBe(false);
@@ -277,6 +278,7 @@ describe('server management', () => {
       await flushPromises();
       const button = (label: string) => wrapper.findAll('button').find((item) => item.text().includes(label))!;
       expect(button('启动').element.hasAttribute('disabled')).toBe(true);
+      expect(button('停止').element.hasAttribute('disabled')).toBe(true);
       expect(button('重启').element.hasAttribute('disabled')).toBe(true);
       expect(button('删除').element.hasAttribute('disabled')).toBe(true);
       expect(button('详情').element.hasAttribute('disabled')).toBe(false);
@@ -408,7 +410,7 @@ describe('server management', () => {
     }
   });
 
-  it('submits start and restart through the existing node-action route', async () => {
+  it('submits start, stop, and restart through the existing node-action route', async () => {
     mockNodes();
     const nodeAction = vi.spyOn(resourcesApi, 'nodeAction').mockResolvedValue({
       operation_id: 'node-operation', status: 'PENDING', target_type: 'node', target_id: 'node-1',
@@ -420,9 +422,12 @@ describe('server management', () => {
       await wrapper.findAll('button').find((button) => button.text().includes('启动'))!.trigger('click');
       await flushPromises();
       expect(nodeAction).toHaveBeenNthCalledWith(1, 'node-1', 'start');
+      await wrapper.findAll('button').find((button) => button.text().includes('停止'))!.trigger('click');
+      await flushPromises();
+      expect(nodeAction).toHaveBeenNthCalledWith(2, 'node-1', 'stop');
       await wrapper.findAll('button').find((button) => button.text().includes('重启'))!.trigger('click');
       await flushPromises();
-      expect(nodeAction).toHaveBeenNthCalledWith(2, 'node-1', 'reboot');
+      expect(nodeAction).toHaveBeenNthCalledWith(3, 'node-1', 'reboot');
     } finally {
       wrapper.unmount();
     }

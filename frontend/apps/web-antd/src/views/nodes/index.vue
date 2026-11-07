@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Eye, MapPin, Play, Plus, RefreshCw, RotateCw, Trash2 } from 'lucide-vue-next';
+import { Eye, MapPin, Play, Plus, RefreshCw, RotateCw, Square, Trash2 } from 'lucide-vue-next';
 
 import { Page } from '@vben/common-ui';
 
@@ -325,7 +325,7 @@ async function createNode() {
   }
 }
 
-async function submitNodeAction(node: ManagedNode, action: 'start' | 'reboot') {
+async function submitNodeAction(node: ManagedNode, action: 'start' | 'stop' | 'reboot') {
   if (busyAction.value) return;
   actionError.value = '';
   busyAction.value = `${action}:${node.id}`;
@@ -475,6 +475,10 @@ function closeDelete() {
               <Button type="link" :disabled="Boolean(busyAction) || !canManageInstance(record as ManagedNode)" :title="canManageInstance(record as ManagedNode) ? '启动服务器' : '服务器尚无可操作的云实例'" :loading="busyAction === `start:${record.id}`" @click="submitNodeAction(record as ManagedNode, 'start')">
                 <template #icon><Play :size="14" /></template>
                 启动
+              </Button>
+              <Button type="link" :disabled="Boolean(busyAction) || !canManageInstance(record as ManagedNode)" :title="canManageInstance(record as ManagedNode) ? '停止服务器' : '服务器尚无可操作的云实例'" :loading="busyAction === `stop:${record.id}`" @click="submitNodeAction(record as ManagedNode, 'stop')">
+                <template #icon><Square :size="14" /></template>
+                停止
               </Button>
               <Button type="link" :disabled="Boolean(busyAction) || !canManageInstance(record as ManagedNode)" :title="canManageInstance(record as ManagedNode) ? '重启服务器' : '服务器尚无可操作的云实例'" :loading="busyAction === `reboot:${record.id}`" @click="submitNodeAction(record as ManagedNode, 'reboot')">
                 <template #icon><RotateCw :size="14" /></template>

@@ -130,6 +130,7 @@ def schedule_node_pool_sync():
             normalize_region(item["region"]): item
             for item in setting.pool_sync_creation_templates
         }
+        oldest_overages = []
         for allocation in sorted(allocations, key=lambda item: (item.region, str(item.pk))):
             allocation = type(allocation).objects.select_for_update().get(pk=allocation.pk)
             consuming = ManagedNode.objects.filter(
@@ -188,15 +189,21 @@ def schedule_node_pool_sync():
                 .order_by("created_at", "pk")
                 .first()
             )
+            if oldest is None:
+                blocked += excess
+                continue
+            oldest_overages.append((oldest, excess))
+
+        for oldest, excess in sorted(
+            oldest_overages,
+            key=lambda item: (item[0].created_at, str(item[0].pk)),
+        ):
             from .automation import (
                 has_confirmed_instance_resource,
                 has_subscription_endpoint_fallback,
                 node_delete_snapshot,
             )
 
-            if oldest is None:
-                blocked += excess
-                continue
             if (
                 not oldest.external_id
                 or oldest.desired_state != "PRESENT"
@@ -240,6 +247,7 @@ def schedule_node_pool_sync():
                 cloud_credential_version=oldest.cloud_credential_version,
             )
             deleted += 1
+            break
 
         setting.pool_sync_last_scheduled_at = now
         setting.save(update_fields=["pool_sync_last_scheduled_at", "updated_at"])
