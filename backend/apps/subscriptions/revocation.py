@@ -395,7 +395,9 @@ class RevocationService:
                         operation, node=node, name="security.verify_revocation", status="SUCCEEDED",
                         evidence={
                             "generation": generation, "rejected_old_credentials": len(probes),
-                            "positive_controls": sum(1 for probe in probes if probe.positive_control),
+                            "positive_controls": sum(
+                                1 for probe in probes if probe.positive_control
+                            ),
                         },
                     )
                     now = timezone.now()
@@ -433,7 +435,9 @@ class RevocationService:
                         "generation": generation,
                         "verified_credentials": [str(value.pk) for value in removed_credentials],
                     }
-                    state.save(update_fields=["status", "last_error_code", "evidence", "updated_at"])
+                    state.save(
+                        update_fields=["status", "last_error_code", "evidence", "updated_at"]
+                    )
             except Exception as exc:
                 # This also catches a fence lost during a failing external call.
                 # Such a worker cannot launch quarantine or finalize node state.

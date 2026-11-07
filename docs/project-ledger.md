@@ -5775,3 +5775,96 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间逻辑变化。`
 - `reuse`: `复用 v0.14.2 安装包构建脚本、隔离 PostgreSQL/Redis、Fake/Stub 与固定 Xray v26.3.27；E2E 端口将显式指定为 9541–9544。`
 - `rollback_ref`: `提交前可在工作树修订；后续应用回退到 v0.14.2 或对新源码提交 git revert；无 schema 迁移，不恢复 Token tombstone、凭据、安全事件或云状态。`
+
+### 2026-11-07T19:30:11+08:00 — xray-node-automation-20261106-01/050 first full-gate Ruff correction scope
+
+- `event_id`: `xray-node-automation-20261106-01/050`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `verification failure / formatting correction scope`
+- `path_scope`: `backend/apps/subscriptions/revocation.py; docs/project-ledger.md; artifacts/acceptance/0.14.3/final-gates-20261107-r1/`
+- `operation`: `记录首次完整本地门禁在 Ruff 失败后的最小格式修正范围；仅对撤回证据字典中两条超过 100 字符的行换行，不改变运行时条件、状态转换或外部调用。`
+- `authorization`: `用户授权完成撤回路径修复、测试和发布；用户明确授权 main 推送。`
+- `root_cause`: `scripts/check-local.sh 在 runtime、compose-config、django-check、migration-drift 退出码均为 0 后，Ruff 0.13.1 对 revocation.py:398 和 :436 报 E501（分别为 102 与 101 字符）；根因为新加入的正向控制计数证据表达式及状态保存调用未遵守 100 字符行宽。`
+- `command_or_tool`: `scripts/check-local.sh（artifact_dir=artifacts/acceptance/0.14.3/final-gates-20261107-r1）退出 1；读取完整 Ruff 输出、源代码上下文、systematic-debugging 与 verification-before-completion 技能；git push origin main 推送源码提交 4cd7988844040a74c75157e5d03af66598aa094e，退出 0。`
+- `result`: `4cd7988 已成为 origin/main；本地候选仍有唯一未跟踪项 artifacts/acceptance/0.14.3/。完整门禁本次未完成，backend/frontend/E2E、secret、boundary 等后续门禁尚未运行。`
+- `implementation_scope`: `仅换行 formatter 报错的两条 Python 表达式；随后运行聚焦 revocation runtime 测试、Ruff 与全套 scripts/check-local.sh，并保留 r1 失败证据，另用 r2 保存最终验证。`
+- `time_logic`: `无业务时间逻辑变化。`
+- `reuse`: `复用现有 focused revocation runtime 测试、固定测试服务及 check-local 门禁脚本；本地 Fake/Stub 证据不替代真实 AWS/MFA 验收。`
+- `rollback_ref`: `格式调整可用后续修复提交 git revert；已推送源码版本通过新提交回退或 v0.14.2；不重写远端历史、不反向恢复撤销 Token、凭据或安全事件。`
+
+### 2026-11-07T19:32:18+08:00 — xray-node-automation-20261106-01/051 pnpm runtime gate environment correction
+
+- `event_id`: `xray-node-automation-20261106-01/051`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `verification environment correction`
+- `path_scope`: `scripts/check-local.sh; /tmp/xray-pnpm10-bin; artifacts/acceptance/0.14.3/final-gates-20261107-r2/; docs/project-ledger.md`
+- `operation`: `保留第二次全门禁尝试 r2；确认 runtime gate 失败由命令 PATH 选错 pnpm 造成，固定版本入口已存在，准备以新证据目录重跑。`
+- `root_cause`: `第二次运行未在 PATH 前置固定 shim，运行时因此找到系统回退路径 `/Users/shiyi/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback/pnpm` 的 11.25.0；脚本要求 10.33.x。`
+- `command_or_tool`: `脚本先载入忽略的项目 .env（静默且不回显），清除 AWS credential/profile 环境变量后执行 check-local.sh；r2 runtime exit 1（pnpm 版本不匹配，未运行测试）；只读核验 `PATH=/tmp/xray-pnpm10-bin:$PATH pnpm --version` 输出 10.33.0。`
+- `result`: `固定 pnpm 10.33.0 shim 可用；r2 失败证据保留，未覆盖；业务代码状态未改变，后续测试未运行。`
+- `implementation_scope`: `无代码变更；下一次全量门禁在独立 r3 目录运行并显式前置固定 pnpm shim。`
+- `time_logic`: `无业务时间逻辑变化。`
+- `reuse`: `复用此前 v0.14.0-r5 全门禁成功使用的 `/tmp/xray-pnpm10-bin`；测试仍限定专用 X-ray PostgreSQL/Redis 和 Fake/Stub。`
+- `rollback_ref`: `环境核验只读、无回退需要；保留 r1/r2 记录及日志。`
+
+### 2026-11-07T19:37:01+08:00 — xray-node-automation-20261106-01/052 backend gate diagnosis and secure test environment
+
+- `event_id`: `xray-node-automation-20261106-01/052`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `full-gate failure diagnosis / test environment correction`
+- `path_scope`: `backend/config/settings/test.py; backend/apps/identity/services.py; backend/tests/test_auth_api.py; backend/installer/test_fixed_xray_runtime.py; scripts/check-local.sh; artifacts/acceptance/0.14.3/final-gates-20261107-r3/; docs/project-ledger.md`
+- `operation`: `按 r3 全量后端门禁失败逐项追踪认证和固定 Xray runtime 测试；修正后续测试进程的本地测试设置，不修改应用或测试代码。`
+- `root_cause`: `用户忽略的根目录 .env 在静默载入后提供 XRAY_DISABLE_TOTP=1；settings.test 仅在 XRAY_ENV=test 时启用该本地测试旁路，password_login 因此直接建立完整 session。r3 的五个认证用例观察到 authenticated=True 或缺少 challenge_id 是旁路设置导致，当前源码差异没有改动认证实现。固定 Xray 的五协议用例仅在全量套件中出现一次 UDP relay timeout；单独复跑第一次未载入 XRAY_TEST_DATABASE_URL，在 Django pytest setup 阶段失败、未收集测试，因此尚无隔离复现结论。`
+- `command_or_tool`: `检查完整 r3 JUnit/pytest 输出、settings/test.py、password_login 源码与测试用例；安全布尔检查仅输出 XRAY_DISABLE_TOTP=enabled/disabled（不输出任何实际环境变量值）；固定 Xray 首次 isolated pytest 未加载 .env，exit 1 且在 settings 初始化阶段被 XRAY_TEST_DATABASE_URL required 阻断。独立只读代理交叉确认源码差异只有 revocation.py 行格式和台账，依据为源码测试路径，不读取 .env。`
+- `result`: `r3 backend-tests exit 1：467 total、459 passed、6 failed、2 skipped；5 项失败是测试 MFA bypass 被启用，1 项固定 Xray UDP timeout。后续本地 pytest 显式在载入 .env 后设置 XRAY_DISABLE_TOTP=0，继续使用专用 xray_test PostgreSQL/Redis；清除 AWS credential/profile 链并禁用 metadata。`
+- `implementation_scope`: `无生产代码/测试代码修改；先用安全测试环境分别运行 auth API 用例与固定 Xray 五协议用例；若隔离 Xray 通过，再运行全套门禁 r4。`
+- `exit_code`: `check-local r3=1；环境 flag 元数据检查=0；无 XRAY_TEST_DATABASE_URL 的固定 Xray 复跑=1（pytest setup 阻断、用例未收集）。`
+- `time_logic`: `无业务时间逻辑变化；MFA 逻辑使用测试 challenge 既定 TTL，不调整时间或验证设置。`
+- `reuse`: `复用隔离 xray_test 数据库/Redis、固定 Xray v26.3.27 和 repository-authored Fake/Stub tests；本地结果不代表真实 AWS/MFA 实机验收。`
+- `rollback_ref`: `本事件仅追加证据；无应用、数据库、会话、凭据或云资源状态变化；保留 r1–r3 测试目录。`
+
+### 2026-11-07T19:39:39+08:00 — xray-node-automation-20261106-01/053 focused gate recovery evidence
+
+- `event_id`: `xray-node-automation-20261106-01/053`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `focused verification / environment correction`
+- `path_scope`: `backend/tests/test_auth_api.py; tests/installer/test_fixed_xray_runtime.py; artifacts/acceptance/0.14.3/final-gates-20261107-r3/; docs/project-ledger.md`
+- `operation`: `在保持专用数据库、Fake/Stub 和固定 Xray 配置下，分别验证认证与固定 Xray 聚焦测试；为后续完整门禁确定一致的测试开关。`
+- `command_or_tool`: `静默 source .env 后命令级设置 XRAY_ENV=test、DJANGO_SETTINGS_MODULE=config.settings.test、XRAY_DISABLE_TOTP=0，清除 AWS credential/profile/role 环境并禁用 EC2 metadata；运行 backend/tests/test_auth_api.py，14 passed（exit 0）；运行 tests/installer/test_fixed_xray_runtime.py::test_fixed_xray_serves_five_protocols，1 passed in 0.98s（exit 0）。两项测试串行使用独立 Django pytest invocation。`
+- `result`: `r3 认证五项失败被测试级 TOTP bypass 设置解释；关闭该设置后认证模块全绿。r3 唯一固定 Xray UDP timeout 在隔离运行中未复现；将完整门禁 r4 显式设置 XRAY_DISABLE_TOTP=0 并前置 pnpm 10.33.0。`
+- `failed_attempts`: `第一次固定 Xray 隔离命令未加载 XRAY_TEST_DATABASE_URL，在 settings 初始化阶段退出 1；下一次文件路径误写为 backend/installer/...，pytest exit 4 且没有收集测试。随后使用正确路径和已载入测试环境命令成功。`
+- `implementation_scope`: `无源代码/测试用例修改；r4 使用新证据目录，保留 r1（Ruff）、r2（pnpm mismatch）和 r3（env bypass/UDP timeout）原始结果。`
+- `time_logic`: `无业务时间逻辑变化；认证 challenge TTL 不变，测试环境不生成新的 MFA challenge。`
+- `reuse`: `复用固定 Xray v26.3.27、隔离 xray_test PostgreSQL/Redis、当前 auth API 测试和固定运行时回归；不触碰管理员会话或浏览器登录状态。`
+- `rollback_ref`: `聚焦验证仅创建可重建测试数据并由 Django 测试清理；无应用、凭据、会话或云资源状态修改。`
+
+### 2026-11-07T19:46:39+08:00 — xray-node-automation-20261106-01/054 E2E port conflict and isolated port selection
+
+- `event_id`: `xray-node-automation-20261106-01/054`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `verification environment correction / port boundary`
+- `path_scope`: `frontend/playwright.config.ts; frontend/scripts/e2e-ports.mjs; frontend/tests/e2e/global-setup.ts; frontend/tests/e2e/global-teardown.ts; shared LocalPortManager registry filtered to project dcd1571c890e4144a825b9f403ddcaaf; artifacts/acceptance/0.14.3/final-gates-20261107-r4/; docs/project-ledger.md`
+- `operation`: `诊断 r4 E2E 启动失败，确认默认 Playwright backendPort=9537 与 frontendPort=9538，改用已登记给当前 X-ray 仓库的 9541–9544 环境覆盖，保持既有 9537/9538 服务不变。`
+- `root_cause`: `r4 的 frontend-e2e gate 检测到 http://127.0.0.1:9537/health/live 已被监听并拒绝 reuseExistingServer；9537、9538 为当前工作树原有服务。E2E 在 webServer 启动前停止；检查未发现 9541–9544 有监听，也未发现带 io.xray.e2e.run-id 标签的残留容器。`
+- `port_evidence`: `共享 registry 的 x-ray 项目 dcd1571c890e4144a825b9f403ddcaaf 绑定本仓库路径，并登记 9537、9538、9541、9542、9543、9544、55433、56380；本次 read-only 查得 9541–9544 当时空闲。当前会话未暴露 portctl API 工具，也未找到 portctl.py 命令/文件；依据 local-port-management skill 读取共享 registry，下一轮使用已登记的 9541–9544。`
+- `command_or_tool`: `r4 check-local exit 1，前 13 项门禁 exit 0，frontend-e2e=1；读取 playwright/e2e-ports/globalSetup/globalTeardown；过滤读取 registry 的当前 X-ray project record；lsof 检查 9537–9544、docker ps 过滤 E2E run-id 标签；保留现有 9537/9538 PID 89928/91486。`
+- `result`: `r4 backend/installer JUnit 467 total、465 passed、2 skipped、0 failures/errors；frontend unit 84 passed；typecheck/lint/build/OpenAPI/fixed-Xray/subscription formats 均 exit 0。E2E 及其后 shellcheck、boundary、secrets、skill、acceptance-matrix gates 未运行。`
+- `implementation_scope`: `无源代码修改；下一次完整门禁 r5 在命令环境中设置 XRAY_E2E_BACKEND_PORT=9541、XRAY_E2E_FRONTEND_PORT=9542、XRAY_E2E_POSTGRES_PORT=9543、XRAY_E2E_REDIS_PORT=9544；数据库仍使用 Playwright run-id disposable 栈。`
+- `time_logic`: `无业务时间逻辑变化。`
+- `reuse`: `复用 Playwright 已有端口解析、E2E 数据库隔离与 run-id cleanup；未启动服务、未停止服务或改共享登记。`
+- `rollback_ref`: `仅使用命令级端口覆盖，结束后进程由 Playwright teardown 清理；保留 r4 失败日志，不改端口注册表或持久配置。`
+
+### 2026-11-07T19:54:14+08:00 — xray-node-automation-20261106-01/055 final local gates and Playwright state cleanup
+
+- `event_id`: `xray-node-automation-20261106-01/055`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `final local verification / generated state cleanup`
+- `path_scope`: `artifacts/acceptance/0.14.3/final-gates-20261107-r5/; frontend/.playwright/admin.json; docs/project-ledger.md`
+- `operation`: `在清除测试环境 TOTP bypass、使用已登记 9541–9544 并保留现有 9537/9538 的情况下完成全套本地门禁；识别并清理 r5 Playwright 写入/覆盖的测试 auth storageState 文件。`
+- `result`: `scripts/check-local.sh exit 0，19/19 gates exit 0；backend-and-delivery JUnit 467 tests、465 passed、2 skipped、0 failures/errors；前端 unit 84 passed；Playwright 8 passed；boundary、Gitleaks secret scan、skill validator、acceptance matrix validator 均通过。跳过项分别需要一次性 Linux 主机和 Linux systemd 主机。`
+- `command_or_tool`: `r5 artifact summary：runtime、compose-config、django-check、migration-drift、ruff、backend-tests、openapi-determinism、fixed-xray、subscription-formats、frontend-typecheck、frontend-lint、frontend-unit、frontend-build、frontend-e2e、shellcheck、boundary、secrets、skill、acceptance-matrix 全部 exit 0；执行后只读检查 JUnit XML 与路径元数据，未输出报告内容中的秘密值。`
+- `generated_sensitive_state`: `Playwright auth.setup.ts 将本轮测试 cookie 写入/覆盖 frontend/.playwright/admin.json；仅检查路径元数据，修改时间 2026-11-07T19:50:45+08:00、大小 4693 bytes、权限 0644，并确认 .gitignore 忽略该目录；未读取文件内容。将删除当前测试生成的 storageState，不影响管理员真实浏览器 session；后续最终候选门禁用临时 XRAY_PLAYWRIGHT_AUTH_STATE 并在 shell trap 中清理。`
+- `authorization`: `用户授权运行并验收完整本地门禁；该 storageState 由本轮受控 Fake/Stub E2E 测试生成，清理范围精确到单个 ignored 测试文件。`
+- `time_logic`: `无业务时间逻辑变化；E2E challenge 使用测试专用 TOTP、机器真实时间；不触碰管理员 MFA challenge 或会话。`
+- `reuse`: `r5 日志、JUnit、Playwright report 与摘要可供版本矩阵复用；本轮仅证明本地 Fake/Stub 和固定 Xray runtime，不替代真实 AWS/SSH/云端订阅验收。`
+- `rollback_ref`: `删除的文件为 E2E 可重建的测试 storageState，重新运行 setup 即可再生成；不修改仓库源码、数据库卷、真实浏览器会话、AWS 资源或 MFA。`
