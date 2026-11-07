@@ -1,0 +1,7 @@
+gate	exit_code	started_at	finished_at	log
+runtime	0	2026-11-07T11:32:49Z	2026-11-07T11:32:50Z	artifacts/acceptance/0.14.3/final-gates-20261107-r3/runtime.log
+compose-config	0	2026-11-07T11:32:50Z	2026-11-07T11:32:51Z	artifacts/acceptance/0.14.3/final-gates-20261107-r3/compose-config.log
+django-check	0	2026-11-07T11:32:51Z	2026-11-07T11:32:51Z	artifacts/acceptance/0.14.3/final-gates-20261107-r3/django-check.log
+migration-drift	0	2026-11-07T11:32:51Z	2026-11-07T11:32:51Z	artifacts/acceptance/0.14.3/final-gates-20261107-r3/migration-drift.log
+ruff	0	2026-11-07T11:32:51Z	2026-11-07T11:32:51Z	artifacts/acceptance/0.14.3/final-gates-20261107-r3/ruff.log
+backend-tests	1	2026-11-07T11:32:51Z	2026-11-07T11:34:26Z	artifacts/acceptance/0.14.3/final-gates-20261107-r3/backend-tests.log

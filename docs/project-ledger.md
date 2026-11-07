@@ -5868,3 +5868,23 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - `time_logic`: `无业务时间逻辑变化；E2E challenge 使用测试专用 TOTP、机器真实时间；不触碰管理员 MFA challenge 或会话。`
 - `reuse`: `r5 日志、JUnit、Playwright report 与摘要可供版本矩阵复用；本轮仅证明本地 Fake/Stub 和固定 Xray runtime，不替代真实 AWS/SSH/云端订阅验收。`
 - `rollback_ref`: `删除的文件为 E2E 可重建的测试 storageState，重新运行 setup 即可再生成；不修改仓库源码、数据库卷、真实浏览器会话、AWS 资源或 MFA。`
+
+### 2026-11-07T20:12:40+08:00 — xray-node-automation-20261106-01/056 v0.14.3 release index and r6 evidence
+
+- `event_id`: `xray-node-automation-20261106-01/056`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `release index / acceptance evidence`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/project-ledger.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.3.md; tests/acceptance/matrix.json; .github/workflows/release.yml; scripts/package-installer-release.sh; artifacts/acceptance/0.14.3/final-gates-20261107-r6/summary.tsv; artifacts/acceptance/0.14.3/final-gates-20261107-r6/backend-and-delivery.junit.xml`
+- `operation`: `复用源码候选 f2eac62 的最终 r6 本地门禁证据，更新 v0.14.3 发布清单、进度、版本索引与验收矩阵；记录私有 GitHub Actions 失败和未完成的真实云验收。`
+- `authorization`: `用户要求先提交推送既有修改、完成测试并同步发布新版本，明确授权 main push、annotated tag/Release，以及 AWS 测试资源最高 USD 1,000；该授权不绕过首次 MFA、CloudAccount 或项目任务执行前置条件。`
+- `read`: `复核仓库约定、xray-manager skill、项目台账与进度、matrix、v0.14.2 清单、release workflow/package script、当前 git refs 和 r6 summary/JUnit；独立只读复核确认 r6 证据统计及两个 Linux/systemd skip。`
+- `write`: `将 local-delivery-gates-0.14.3 绑定到 f2eac62 并记为 passed；新增 v0.14.3 CI blocked 与 Release pending 读回证据；新增发布 checklist，并在进度/版本索引记录候选源码和阻塞边界。暂存验收摘要/JUnit，不纳入被 .gitignore 忽略的详细日志；为使失败的 r3 JUnit 可通过仓库 whitespace gate，对该生成 XML 仅移除行尾空白，保留完整失败测试/traceback 内容。`
+- `command_or_tool`: `git status/refs 只读；解析 r6 summary.tsv 与 JUnit XML：19/19 gates exit 0，JUnit 467 total / 465 passed / 2 skipped / 0 failed / 0 errors，frontend 84 passed，Playwright 8 passed。解析规范化后的 r3 JUnit 仍为 467 total / 6 failed / 2 skipped / 0 errors。`python3 scripts/validate-acceptance.py`、`./scripts/check-boundary.sh`、`./scripts/check-secrets.sh`、`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager` 与 staged `git diff --cached --check` 均 exit 0。认证 Git Credential helper 的 GitHub REST 读回只在进程内使用凭据：Release tag 查询 HTTP 404；Actions run 42370364174/job 128397050459 HTTP 200，runner_id=0、steps=[]、结论 failure；check-run annotation 表示近期账号付款失败或需要提高 spending limit。没有改账单设置。`
+- `result`: `本地交付门禁可记 passed；远端 CI 仍 blocked，不宣称测试步骤执行；首次 TOTP/CloudAccount 前置未满足，AWS 生命周期、SSH、动态 IP/健康、真实订阅/撤回和流量未运行，测试服务器 0 台，AWS 写入 0，成本 USD 0。`
+- `implementation_scope`: `本事件仅发布/验收文档与矩阵，应用代码、设置、数据库、认证、云账户及 MFA 状态不变；Release/tag 创建与资产校验随后按已授权发布流程执行。`
+- `exclusions`: `不操作或读取 MFA secret/recovery code，不以 bypass 登录，不修改 GitHub payment/spending settings，不访问真实 AWS 写入/SSH，不触碰现有 9537/9538 服务或历史数据库卷。`
+- `assumptions`: `r6 summary/JUnit 来自干净候选 f2eac62；专用本地 PostgreSQL/Redis、Fake/Stub、固定 Xray 与 E2E 通过结果不代表真实云验收。`
+- `risks`: `远端 workflow 因账户付款/支出限制无法启动；若通过本地已验证资产手动发布，Actions 应独立保持 blocked。真实 AWS 流程需账号持有人先完成 TOTP，并在 Cloud Accounts 正常流程中录入验证专用凭据。`
+- `time_logic`: `本次无业务时间变化；r6 原始时间为 UTC 2026-11-07T11:59:57Z 至 12:02:40Z，文档时间采用机器本地 +08:00。`
+- `reuse`: `复用 0.14.2 发布清单结构、安装包脚本、r6 summary/JUnit 与 v0.14.2 回退点；本地 Fake/Stub 证据只供源码交付判断。`
+- `rollback_ref`: `发布索引文档可用后续 commit git revert；应用回退 v0.14.2 或 revert 4cd7988844040a74c75157e5d03af66598aa094e 与 f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd；不反向迁移或恢复 Token tombstone、凭据、安全事件或云状态。`

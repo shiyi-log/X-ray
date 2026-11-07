@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-07T19:07:33+08:00",
+  "generated_at": "2026-11-07T20:12:40+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -12,10 +12,80 @@
     {
       "id": "local-delivery-gates-0.14.3",
       "environment": "local",
-      "status": "not-run",
-      "evidence": [],
-      "commit": null,
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.3/final-gates-20261107-r6/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.3/final-gates-20261107-r6/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 467,
+            "passed": 465,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 84,
+          "browser_e2e": 8,
+          "candidate_commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
+          "candidate_worktree": false,
+          "started_at": "2026-11-07T11:59:57Z",
+          "finished_at": "2026-11-07T12:02:40Z"
+        }
+      ],
+      "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
       "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": []
+    },
+    {
+      "id": "github-ci-v0.14.3",
+      "environment": "ci",
+      "status": "blocked",
+      "evidence": [
+        {
+          "kind": "authenticated_github_actions_readback",
+          "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
+          "run_id": 42370364174,
+          "workflow": "X-ray delivery gates",
+          "job_id": 128397050459,
+          "job": "verify",
+          "conclusion": "failure",
+          "runner_id": 0,
+          "steps_started": 0,
+          "annotation": "The job was not started because recent account payments have failed or the spending limit needs to be increased.",
+          "readback_http_status": 200,
+          "billing_settings_changed": false
+        }
+      ],
+      "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
+      "provider": "github",
+      "region": null,
+      "cost": 0,
+      "residual_resources": []
+    },
+    {
+      "id": "github-release-v0.14.3",
+      "environment": "release",
+      "status": "not-run",
+      "evidence": [
+        {
+          "kind": "authenticated_release_preflight",
+          "tag": "v0.14.3",
+          "release_http_status": 404,
+          "tag_ref_present": false,
+          "checked_at": "2026-11-07T20:09:12+08:00"
+        }
+      ],
+      "commit": "f2eac62d4d731c1f1ae4aba95191eb322bf8ecbd",
+      "provider": "github",
       "region": null,
       "cost": 0,
       "residual_resources": []
