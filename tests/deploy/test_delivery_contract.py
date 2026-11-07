@@ -4,6 +4,8 @@ import os
 import re
 import stat
 import subprocess
+import sys
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -226,6 +228,64 @@ def test_test_stack_honors_project_registered_database_ports():
     volumes = yaml.safe_load(result.stdout)["volumes"]
     assert volumes["xray-test-postgres"]["name"] == "xray-gate-test-postgres"
     assert volumes["xray-test-redis"]["name"] == "xray-gate-test-redis"
+
+
+def test_xray_asset_extractor_extracts_only_the_fixed_binary_member(tmp_path):
+    archive = tmp_path / "xray.zip"
+    output_dir = tmp_path / "runtime"
+    output_dir.mkdir()
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("xray", b"fixed xray test binary")
+        bundle.writestr("unrelated.txt", b"must not be extracted")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/extract-xray-test-asset.py"),
+            str(archive),
+            str(output_dir),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (output_dir / "xray").read_bytes() == b"fixed xray test binary"
+    assert not (output_dir / "unrelated.txt").exists()
+
+
+def test_xray_asset_extractor_rejects_archives_without_the_fixed_binary(tmp_path):
+    archive = tmp_path / "xray.zip"
+    output_dir = tmp_path / "runtime"
+    output_dir.mkdir()
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("other", b"not the runtime")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/extract-xray-test-asset.py"),
+            str(archive),
+            str(output_dir),
+        ],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode != 0
+    assert "missing fixed xray binary member" in result.stderr
+
+
+def test_xray_asset_fetch_does_not_require_system_unzip():
+    script = (ROOT / "scripts/fetch-xray-test-asset.sh").read_text(encoding="utf-8")
+
+    assert "command -v unzip" not in script
+    assert "unzip -" not in script
+    assert 'python3 "$root_dir/scripts/extract-xray-test-asset.py"' in script
 
 
 def test_local_gate_resolves_service_urls_from_registered_port_overrides():

@@ -8,7 +8,7 @@ runtime_dir="$root_dir/runtime/xray/v26.3.27"
 
 command -v jq >/dev/null 2>&1 || { echo 'jq is required' >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo 'curl is required' >&2; exit 1; }
-command -v unzip >/dev/null 2>&1 || { echo 'unzip is required' >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo 'python3 is required' >&2; exit 1; }
 
 os_name=$(uname -s | tr '[:upper:]' '[:lower:]')
 case "$(uname -m)" in
@@ -38,7 +38,7 @@ else
 fi
 [[ "$actual" == "$expected" ]] || { echo 'pinned Xray test asset hash mismatch' >&2; exit 1; }
 
-unzip -oq "$archive" xray -d "$runtime_dir"
+python3 "$root_dir/scripts/extract-xray-test-asset.py" "$archive" "$runtime_dir"
 chmod 755 "$runtime_dir/xray"
 "$runtime_dir/xray" version | head -n 1
 printf '%s\n' "$runtime_dir/xray"
