@@ -13,6 +13,19 @@ def profile_representation(profile) -> dict:
         .distinct()
         .count()
     )
+    from .metering import ambiguous_socks_profile_ids
+
+    socks_node_ids = profile.node_credentials.filter(
+        revoked_at__isnull=True,
+        protocol__enabled=True,
+        protocol__protocol="socks5",
+        profile__status="ACTIVE",
+    ).values_list("node_id", flat=True)
+    metering_coverage = (
+        "PARTIAL"
+        if str(profile.pk) in ambiguous_socks_profile_ids(socks_node_ids)
+        else "SUPPORTED"
+    )
     return {
         "id": str(profile.pk),
         "name": profile.name,
@@ -27,11 +40,7 @@ def profile_representation(profile) -> dict:
         if profile.usage_updated_at
         else None,
         "entitlement_state": quota_state(profile),
-        "metering_coverage": "PARTIAL"
-        if profile.node_credentials.filter(
-            revoked_at__isnull=True, protocol__protocol="socks5"
-        ).exists()
-        else "SUPPORTED",
+        "metering_coverage": metering_coverage,
         "access_sync_pending": profile.node_credentials.filter(revoked_at__isnull=True)
         .exclude(desired_generation=F("applied_generation"))
         .exists(),

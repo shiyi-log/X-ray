@@ -432,7 +432,7 @@ def test_one_time_delivery_requires_idempotency_never_replays_secret(authenticat
 
 
 @pytest.mark.django_db
-def test_real_stats_from_generated_vless_config(ready_node, tmp_path):
+def test_real_stats_from_generated_vless_and_socks5_config(ready_node, tmp_path):
     import json
     import os
     import socket
@@ -470,6 +470,13 @@ def test_real_stats_from_generated_vless_config(ready_node, tmp_path):
     credential = CredentialService.rotate(
         ready_node.pk, profile_ids=[profile.pk], protocol_ids=[protocol.pk]
     )[0]
+    socks_protocol = NodeProtocol.objects.create(
+        node=ready_node, protocol="socks5", listen_address="127.0.0.1", port=port()
+    )
+    socks_credential = CredentialService.rotate(
+        ready_node.pk, profile_ids=[profile.pk], protocol_ids=[socks_protocol.pk]
+    )[0]
+    socks_material = decrypt_material(socks_credential)
     api_port, client_port = port(), port()
     server = build_node_config(ready_node)
     server["inbounds"][-1]["port"] = api_port
@@ -543,6 +550,20 @@ def test_real_stats_from_generated_vless_config(ready_node, tmp_path):
             env=env,
         )
         assert r.returncode == 0 and r.stdout == b"actual-metering" * 100
+        socks_config = (
+            f'socks5-hostname = "127.0.0.1:{socks_protocol.port}"\n'
+            "socks5-basic\n"
+            f'proxy-user = "{socks_material["username"]}:{socks_material["password"]}"\n'
+            f'url = "http://127.0.0.1:{http.server_port}/"\n'
+            "max-time = 5\n"
+        )
+        socks = subprocess.run(
+            ["curl", "--disable", "--silent", "--fail", "--config", "-"],
+            input=socks_config.encode(),
+            capture_output=True,
+            env=env,
+        )
+        assert socks.returncode == 0 and socks.stdout == b"actual-metering" * 100
         stats = subprocess.run(
             [
                 str(binary),
@@ -565,7 +586,18 @@ def test_real_stats_from_generated_vless_config(ready_node, tmp_path):
         )
         assert ingest_snapshot(ready_node, snapshot) == 1
         profile.refresh_from_db()
-        assert profile.upload_bytes > 0 and profile.download_bytes >= 1400
+        first_totals = (profile.upload_bytes, profile.download_bytes)
+        assert ingest_snapshot(ready_node, snapshot) == 1
+        profile.refresh_from_db()
+        assert profile.upload_bytes > 0 and profile.download_bytes >= 2800
+        assert (profile.upload_bytes, profile.download_bytes) == first_totals
+        from apps.nodes.serializers import node_representation
+        from apps.subscriptions.serializers import profile_representation
+
+        node_stats = node_representation(ready_node)
+        assert node_stats["traffic_total_bytes"] == profile.upload_bytes + profile.download_bytes
+        assert node_stats["metering_coverage"] == "SUPPORTED"
+        assert profile_representation(profile)["metering_coverage"] == "SUPPORTED"
     finally:
         for process in processes:
             process.terminate()

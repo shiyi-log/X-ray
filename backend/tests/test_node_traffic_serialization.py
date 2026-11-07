@@ -1,11 +1,15 @@
 from datetime import timedelta
+from uuid import UUID
 
 import pytest
 from django.utils import timezone
 
 from apps.nodes.models import NodeProtocol
 from apps.nodes.serializers import node_representation, with_node_traffic
-from apps.subscriptions.models import AccessProfile, NodeCredential, UsageCheckpoint
+from apps.subscriptions.credentials import CredentialService, decrypt_material
+from apps.subscriptions.metering import ingest_snapshot
+from apps.subscriptions.models import AccessProfile, UsageCheckpoint
+from apps.subscriptions.serializers import profile_representation
 
 
 @pytest.mark.django_db
@@ -70,23 +74,83 @@ def test_node_representation_normalizes_legacy_lightsail_state_object(prepared_n
 
 
 @pytest.mark.django_db
-def test_active_socks5_credentials_mark_server_traffic_coverage_partial(prepared_node):
+def test_socks5_stats_are_mapped_to_profile_and_added_once(prepared_node):
     node, _operation = prepared_node
-    profile = AccessProfile.objects.create(name="socks5 profile")
-    protocol = NodeProtocol.objects.create(
-        node=node,
-        protocol="socks5",
-        port=1080,
-    )
-    NodeCredential.objects.create(
-        profile=profile,
-        node=node,
-        protocol=protocol,
-        version=1,
-        encrypted_material={},
-        desired_generation=0,
-    )
+    profile = AccessProfile.objects.create(name="socks5 metering profile")
+    socks = NodeProtocol.objects.create(node=node, protocol="socks5", port=1080)
+    credential = CredentialService.rotate(
+        node.pk,
+        profile_ids=[profile.pk],
+        protocol_ids=[socks.pk],
+    )[0]
+    username = decrypt_material(credential)["username"]
+    snapshot = {
+        "generation": node.applied_generation,
+        "boot_id": "boot-socks",
+        "process_id": "xray-1",
+        "sequence": 1,
+        "sampled_at": timezone.now().isoformat(),
+        "stat": [
+            {
+                "name": f"user>>>profile-{profile.pk}>>>traffic>>>uplink",
+                "value": "20",
+            },
+            {
+                "name": f"user>>>profile-{profile.pk}>>>traffic>>>downlink",
+                "value": "30",
+            },
+            {"name": f"user>>>{username}>>>traffic>>>uplink", "value": "10"},
+            {"name": f"user>>>{username}>>>traffic>>>downlink", "value": "40"},
+        ],
+    }
 
+    assert ingest_snapshot(node, snapshot) == 1
+    assert ingest_snapshot(node, {**snapshot, "sequence": 2}) == 1
+
+    profile.refresh_from_db()
     result = node_representation(node)
 
-    assert result["metering_coverage"] == "PARTIAL"
+    assert profile.upload_bytes == 30
+    assert profile.download_bytes == 70
+    assert result["traffic_upload_bytes"] == 30
+    assert result["traffic_download_bytes"] == 70
+    assert result["traffic_total_bytes"] == 100
+    assert result["metering_coverage"] == "SUPPORTED"
+    assert profile_representation(profile)["metering_coverage"] == "SUPPORTED"
+
+
+@pytest.mark.django_db
+def test_colliding_legacy_socks_usernames_are_not_attributed(prepared_node):
+    node, _operation = prepared_node
+    profiles = [
+        AccessProfile.objects.create(
+            id=UUID("aaaaaaaa-aaaa-4000-8000-000000000001"), name="first collision profile"
+        ),
+        AccessProfile.objects.create(
+            id=UUID("aaaaaaaa-aaaa-4000-8000-000000000002"), name="second collision profile"
+        ),
+    ]
+    protocol = NodeProtocol.objects.create(node=node, protocol="socks5", port=1081)
+    credentials = CredentialService.rotate(
+        node.pk,
+        profile_ids=[profile.pk for profile in profiles],
+        protocol_ids=[protocol.pk],
+    )
+    usernames = {decrypt_material(credential)["username"] for credential in credentials}
+    assert len(usernames) == 1
+    username = usernames.pop()
+    snapshot = {
+        "generation": node.applied_generation,
+        "boot_id": "boot-collision",
+        "process_id": "xray-1",
+        "sequence": 1,
+        "sampled_at": timezone.now().isoformat(),
+        "stat": [{"name": f"user>>>{username}>>>traffic>>>uplink", "value": 100}],
+    }
+
+    assert ingest_snapshot(node, snapshot) == 0
+    assert node_representation(node)["metering_coverage"] == "PARTIAL"
+    for profile in profiles:
+        profile.refresh_from_db()
+        assert profile.upload_bytes == 0
+        assert profile_representation(profile)["metering_coverage"] == "PARTIAL"

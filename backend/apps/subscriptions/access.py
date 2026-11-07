@@ -75,7 +75,7 @@ def build_node_config(node):
                 "udp": True,
                 "accounts": [{"user": m["username"], "pass": m["password"]} for c, m in materials],
             }
-            # SOCKS accounts have no per-user email stats; never invent user usage.
+            # Xray uses the authenticated SOCKS username as its user stats identity.
         else:
             config = {
                 "network": "tcp,udp",

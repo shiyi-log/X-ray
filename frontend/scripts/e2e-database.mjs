@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { resolveE2ePorts } from './e2e-ports.mjs';
 
 function onlyLoopbackPort(bindings, port) {
   return (
@@ -9,8 +10,6 @@ function onlyLoopbackPort(bindings, port) {
   );
 }
 
-const POSTGRES_PORT = 55433;
-const REDIS_PORT = 56380;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function runCapturedCommand(command, args) {
@@ -21,13 +20,19 @@ export function runCapturedCommand(command, args) {
 }
 
 export function assertE2eDatabaseEnvironment(environment, runId) {
+  let ports;
+  try {
+    ports = resolveE2ePorts(environment);
+  } catch {
+    throw new Error('backend is not using the isolated E2E database');
+  }
   const valid =
     typeof runId === 'string' &&
     UUID_PATTERN.test(runId) &&
     environment?.XRAY_E2E_RUN_ID === runId &&
     environment?.XRAY_TEST_DATABASE_URL ===
-      `postgresql://xray_e2e@127.0.0.1:${POSTGRES_PORT}/xray_test` &&
-    environment?.XRAY_REDIS_URL === `redis://127.0.0.1:${REDIS_PORT}/0`;
+      `postgresql://xray_e2e@127.0.0.1:${ports.postgresPort}/xray_test` &&
+    environment?.XRAY_REDIS_URL === `redis://127.0.0.1:${ports.redisPort}/0`;
   if (!valid) {
     throw new Error('backend is not using the isolated E2E database');
   }

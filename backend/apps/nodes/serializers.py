@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ast
 
-from django.db.models import Count, Exists, Max, OuterRef, Sum
+from django.db.models import Count, Max, Sum
 
 from .models import ManagedNode, NodePool, NodePoolRegionAllocation
 
@@ -48,20 +48,11 @@ def node_pool_representation(pool: NodePool) -> dict:
 
 
 def with_node_traffic(nodes):
-    from apps.subscriptions.models import NodeCredential
-
-    active_socks5 = NodeCredential.objects.filter(
-        node_id=OuterRef("pk"),
-        revoked_at__isnull=True,
-        protocol__enabled=True,
-        protocol__protocol="socks5",
-    )
     return nodes.annotate(
         traffic_sample_count=Count("usagecheckpoint"),
         traffic_upload_bytes=Sum("usagecheckpoint__upload_bytes"),
         traffic_download_bytes=Sum("usagecheckpoint__download_bytes"),
         traffic_sampled_at=Max("usagecheckpoint__sampled_at"),
-        has_unmetered_socks5=Exists(active_socks5),
     )
 
 
@@ -81,14 +72,15 @@ def _raw_cloud_state(node: ManagedNode) -> str:
 
 
 def node_representation(node: ManagedNode) -> dict:
+    from apps.subscriptions.metering import ambiguous_socks_profile_ids
+
     if hasattr(node, "traffic_sample_count"):
         sample_count = node.traffic_sample_count
         upload_bytes = node.traffic_upload_bytes or 0
         download_bytes = node.traffic_download_bytes or 0
         sampled_at = node.traffic_sampled_at
-        has_unmetered_socks5 = node.has_unmetered_socks5
     else:
-        from apps.subscriptions.models import NodeCredential, UsageCheckpoint
+        from apps.subscriptions.models import UsageCheckpoint
 
         traffic = UsageCheckpoint.objects.filter(node_id=node.pk).aggregate(
             samples=Count("pk"),
@@ -100,12 +92,6 @@ def node_representation(node: ManagedNode) -> dict:
         upload_bytes = traffic["upload_bytes"] or 0
         download_bytes = traffic["download_bytes"] or 0
         sampled_at = traffic["sampled_at"]
-        has_unmetered_socks5 = NodeCredential.objects.filter(
-            node_id=node.pk,
-            revoked_at__isnull=True,
-            protocol__enabled=True,
-            protocol__protocol="socks5",
-        ).exists()
     return {
         "id": str(node.pk),
         "name": node.deterministic_name,
@@ -122,7 +108,9 @@ def node_representation(node: ManagedNode) -> dict:
         "traffic_total_bytes": upload_bytes + download_bytes,
         "traffic_sampled_at": sampled_at.isoformat() if sampled_at else None,
         "traffic_state": "COLLECTED" if sample_count else "NO_DATA",
-        "metering_coverage": "PARTIAL" if has_unmetered_socks5 else "SUPPORTED",
+        "metering_coverage": "PARTIAL"
+        if ambiguous_socks_profile_ids([node.pk])
+        else "SUPPORTED",
         "raw_cloud_state": _raw_cloud_state(node),
         "desired_state": node.desired_state,
         "provisioning_state": node.provisioning_state,

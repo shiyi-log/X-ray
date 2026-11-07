@@ -76,6 +76,20 @@ test('requires backend subprocesses to share the isolated database marker and en
   );
 });
 
+test('validates isolated E2E database and Redis endpoints on selected ports', () => {
+  const environment = {
+    XRAY_E2E_RUN_ID: expected.runId,
+    XRAY_E2E_POSTGRES_PORT: '9543',
+    XRAY_E2E_REDIS_PORT: '9544',
+    XRAY_TEST_DATABASE_URL: 'postgresql://xray_e2e@127.0.0.1:9543/xray_test',
+    XRAY_REDIS_URL: 'redis://127.0.0.1:9544/0',
+  };
+
+  assert.doesNotThrow(() =>
+    e2eDatabase.assertE2eDatabaseEnvironment(environment, expected.runId),
+  );
+});
+
 test('accepts only the expected disposable container on its loopback port', () => {
   assert.doesNotThrow(() => assertDisposableContainer(inspect(), expected));
 });

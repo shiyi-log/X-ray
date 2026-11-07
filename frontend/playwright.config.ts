@@ -1,16 +1,16 @@
 import { defineConfig, devices } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { resolveE2ePorts } from './scripts/e2e-ports.mjs';
 
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const acceptanceRoot =
   process.env.XRAY_ACCEPTANCE_ARTIFACT_DIR ??
-  path.join(repositoryRoot, 'artifacts', 'acceptance', '0.14.1');
+  path.join(repositoryRoot, 'artifacts', 'acceptance', '0.14.2');
 const authState =
   process.env.XRAY_PLAYWRIGHT_AUTH_STATE ??
   path.join(import.meta.dirname, '.playwright', 'admin.json');
-const frontendPort = 9538;
-const backendPort = 9537;
+const { frontendPort, backendPort, postgresPort, redisPort } = resolveE2ePorts();
 const e2eRunId = process.env.XRAY_E2E_RUN_ID || randomUUID();
 process.env.XRAY_E2E_RUN_ID = e2eRunId;
 const frontendOrigin = `http://127.0.0.1:${frontendPort}`;
@@ -20,8 +20,10 @@ const testEnvironment = {
   XRAY_ENV: 'test',
   XRAY_FRONTEND_PORT: String(frontendPort),
   XRAY_BACKEND_PORT: String(backendPort),
-  XRAY_TEST_DATABASE_URL: 'postgresql://xray_e2e@127.0.0.1:55433/xray_test',
-  XRAY_REDIS_URL: 'redis://127.0.0.1:56380/0',
+  XRAY_E2E_POSTGRES_PORT: String(postgresPort),
+  XRAY_E2E_REDIS_PORT: String(redisPort),
+  XRAY_TEST_DATABASE_URL: `postgresql://xray_e2e@127.0.0.1:${postgresPort}/xray_test`,
+  XRAY_REDIS_URL: `redis://127.0.0.1:${redisPort}/0`,
   XRAY_E2E_RUN_ID: e2eRunId,
   XRAY_CSRF_TRUSTED_ORIGINS: frontendOrigin,
 };

@@ -2,9 +2,9 @@ import {
   assertDisposableContainer,
   runCapturedCommand,
 } from '../../scripts/e2e-database.mjs';
+import { resolveE2ePorts } from '../../scripts/e2e-ports.mjs';
 
-const POSTGRES_PORT = 55433;
-const REDIS_PORT = 56380;
+const { postgresPort: POSTGRES_PORT, redisPort: REDIS_PORT } = resolveE2ePorts();
 const runId = process.env.XRAY_E2E_RUN_ID;
 
 function docker(args) {

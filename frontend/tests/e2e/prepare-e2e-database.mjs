@@ -7,11 +7,11 @@ import {
   assertE2eDatabaseEnvironment,
   runCapturedCommand,
 } from '../../scripts/e2e-database.mjs';
+import { resolveE2ePorts } from '../../scripts/e2e-ports.mjs';
 
 const POSTGRES_IMAGE = 'postgres:17.6-alpine';
 const REDIS_IMAGE = 'redis:7.4-alpine';
-const POSTGRES_PORT = 55433;
-const REDIS_PORT = 56380;
+const { postgresPort: POSTGRES_PORT, redisPort: REDIS_PORT } = resolveE2ePorts();
 const CONTAINER_LABEL_RUN = 'io.xray.e2e.run-id';
 const CONTAINER_LABEL_SERVICE = 'io.xray.e2e.service';
 const repositoryDirectory = path.resolve(import.meta.dirname, '../..', '..');

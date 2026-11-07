@@ -6,7 +6,7 @@
 
 ## 当前状态
 
-2026-11-07：当前交付候选版本为 `0.14.1`。本版修复周期 IP 同步后的订阅部分发布失败状态：操作进入 `NEEDS_RECONCILIATION`，重试时重新发布订阅；并继承 v0.14.0 的地址池配额对齐、每日轮转重启、定时状态/IP 与流量同步、订阅节点数核对、bootstrap lease/fence 和首次发布流程。真实 AWS bootstrap 尚未验收；自动创建仍可能停在 `PROVISIONED`/`NEEDS_RECONCILIATION`，实际云、SSH、生产和设备验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
+2026-11-07：当前交付候选版本为 `0.14.2`。本版补齐 SOCKS5 认证流量的节点/身份计量，并兼容已有凭据用户名；重复快照按现有 epoch/sequence 检查避免重复累计。v0.14.1 修复的 IP 同步后订阅部分发布重试、地址池配额对齐、每日轮转重启、状态/IP/流量同步、订阅节点核对和 lifecycle 工作流继续保留。真实 AWS bootstrap 尚未验收；自动创建仍可能停在 `PROVISIONED`/`NEEDS_RECONCILIATION`，实际云、SSH、生产和设备验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
 
 真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
 

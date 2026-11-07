@@ -5385,3 +5385,99 @@ event `xray-node-automation-20261106-01/014` incorrectly recorded a clean initia
 - time_logic: 无业务时间规则变化；本地台账时间为 Asia/Shanghai +08:00。
 - reuse: 复用本地最终静态门禁和已发布源码提交的 19/19 check-local 结果；未将文档 push 视为新版本发布、生产或 AWS 验收。
 - rollback_ref: 仅文档可用 git revert 03c06f86b78a90f17f9dcf56955fb0be0e15bd0b；不移动 v0.14.1 tag、不删除 Release、不恢复撤销的安全或云状态。
+
+### 2026-11-07T14:26:22+08:00 — xray-node-automation-20261106-01/031 SOCKS5 node traffic metering scope
+
+- `event_id`: `xray-node-automation-20261106-01/031`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T14:26:22+08:00`
+- `actor`: `Codex`
+- `event_type`: `task definition / read / plan`
+- `path_scope`: `backend/apps/subscriptions/access.py; backend/apps/subscriptions/node_agent.py; backend/apps/subscriptions/metering.py; backend/apps/subscriptions/policy.py; backend/apps/subscriptions/models.py and migration; backend/apps/nodes/serializers.py; backend/tests/subscriptions/test_management.py; backend/tests/test_node_traffic_serialization.py; VERSION; backend/pyproject.toml; CHANGELOG.md; docs/progress.md; docs/version-record.md; tests/acceptance/matrix.json; docs/project-ledger.md`
+- `operation`: `定义并实现 SOCKS5 server inbound 流量计入节点管理汇总的缺口；保持现有订阅身份用户计数不变，对 SOCKS5 inbound tag 另存节点级累计计数；在发布前先以真实固定 Xray 二进制集成测试确认红灯，再完成迁移、实现、全量本地门禁、版本发布与远端 Git ref 读回。`
+- `reason`: `审计发现有有效 SOCKS5 凭据时节点流量覆盖为 PARTIAL。现有“真实统计”集成测试的 SOCKS5 是客户端代理，服务端协议为 VLESS，不能证明 SOCKS5 入站计量。用户要求服务器管理的流量统计补齐并在测试后同步发布。`
+- `authorization`: `用户授权实现、测试、同步发布新版本，并授权创建测试服务器最高 USD 1,000；当前需先完成本地代码与发布证据。真实 AWS 生命周期、SSH、订阅/云写入只有在专用应用完成 MFA 并验证测试凭据后进行；授权不允许绕过 MFA、解封失败的旧 credential 或使用 AWS CLI。`
+- `implementation_scope`: `采用 Xray StatsService inbound per-tag cumulative counters，仅消费 node 的 enabled SOCKS5 protocol tags；用户 counters 仍仅更新 AccessProfile，用独立节点 checkpoint 存储 SOCKS5 inbound 计数，节点管理汇总将其与用户统计相加，避免同一协议流量双算。预期发布 v0.14.2；先追加测试并观察旧实现失败，再实现。`
+- `exclusions`: `不使用真实云凭据、AWS/SWAS API、SSH、公网探测、实例创建/删除、静态 IP 释放、旧共享数据库写入或管理员/MFA 绕过；不读取/复制/打印 .env、密钥、credential、subscription token、URI 或原始流量载荷；不停止/重启/占用本轮之外的进程、端口、数据库、浏览器或容器。`
+- `assumptions`: `本地 Xray 固定二进制若存在，可使用 loopback 随机端口和临时权限为 0600 的配置文件；专用 PostgreSQL/Redis Compose 项目保持独立。现有基线 main/origin/main@a51169e clean。用户确认配额 4→3 时删除同地区创建最早的一台，既有每地区每周期至多一台缩容策略维持不变。`
+- `risks`: `数据库新增节点级 checkpoint 表，需要新增兼容迁移；真实节点只有收到下一代应用配置并启用 StatsService inbound 计数后才开始采集；固定 Xray 二进制可能缺失而造成集成用例 skip；AWS 实机验收仍因隔离库未绑定 TOTP、无有效已验证 CloudAccount 而 blocked。`
+- `command_or_tool`: `读取 AGENTS.md、规范、skill、台账、进度、发布清单、Xray config/采集/序列化代码、固定二进制集成用例及测试 fixture；检查 git status/log/diff 与已登记监听 PID/端口；查阅 Xray 官方文档/源码的 StatsService inbound stats 支持。`
+- `result`: `定义完成，尚未创建测试或修改应用实现。观察到固定 Xray 真实统计用例仅验证 VLESS 服务端 user counters；现有节点 traffic 汇总仅加总 UsageCheckpoint；预计需新表按 node+inbound_tag+epoch 存 checkpoint。当前没有 AWS 请求，费用 USD 0。`
+- `exit_code`: `只读 git/status/listener 与文件检查=0；首次包通配符检索因 zsh 选项而 exit 1，后续 `rg` 针对文件检索成功；web 官方来源检索已执行。`
+- `status`: `实现未开始；AWS/SSH/真实订阅验收 blocked（管理员 MFA/有效专用测试 CloudAccount 未就绪）；本地真实 Xray 集成测试及发布门禁 not-run。`
+- `commit_or_tree`: `基线 main/origin/main@a51169e862b1923343e292c433a0005ff981d7d2，开始时工作树 clean；仅本事件现追加于台账，待按计划添加测试/实现及发布文件。`
+- `time_logic`: `业务采用 Xray 进程 epoch (`boot_id:generation:process_id`) 绑定累计计数；sequence 必须递增、sampled_at 使用带时区 UTC 时间且不得倒退，节点/协议/epoch 的重复或回退计数拒绝或忽略；该生命周期避免进程重启清零与重复快照重复累计。`
+- `reuse`: `复用已发布 v0.14.1 的 node traffic API、UsageCheckpoint 用户累计计数、固定 Xray 二进制和现有 VLESS StatsService 集成 harness；不把 Fake/Stub 或此前 AWS blocked 证据写作实机通过。`
+- `rollback_ref`: `应用回退到 v0.14.1 或对 v0.14.2 应用提交执行 git revert；迁移为兼容性新增节点统计 checkpoint 表，不反向迁移删除采集历史。保留历史标签、Release、Token tombstone、安全/云审计状态。`
+
+### 2026-11-07T14:27:10+08:00 — xray-node-automation-20261106-01/032 SOCKS5 metering design correction
+
+- `event_id`: `xray-node-automation-20261106-01/032`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T14:27:10+08:00`
+- `actor`: `Codex`
+- `event_type`: `design correction / read / review`
+- `path_scope`: `backend/apps/subscriptions/credentials.py; backend/apps/subscriptions/access.py; backend/apps/subscriptions/metering.py; backend/apps/subscriptions/policy.py; backend/apps/subscriptions/models.py; backend/tests/subscriptions/test_management.py; backend/tests/test_node_traffic_serialization.py; docs/project-ledger.md; official Xray-core v26.3.27 SOCKS source and Stats docs`
+- `operation`: `在实现前修正 031 中提出的 inbound 计量/新表方案：根据固定版 Xray-core 官方 SOCKS source，SOCKS 用户认证名会成为用户 StatsService email；按 node 上仍有效的 socks5 NodeCredential 解密出用户名到 AccessProfile ID 的内存映射，再与原有 UUID email counters 一起聚合并调用现有 UsageService。`
+- `reason`: `固定版 Xray SOCKS 协议实现已将 authenticated username 放入 request.User.Email，因此现有 `statsUserUplink/Downlink` 和 `user>>>` API 可用于 SOCKS 用户计数；通过 alias mapping 兼容已签发的 `p-<12 hex>` 用户名，无需修改协议配置、凭据、订阅 token 或 schema。`
+- `authorization`: `用户授权实施、测试及同步发布；本次仅作本地代码设计和测试，符合既有 AWS/MFA 边界。`
+- `implementation_scope`: `删除 031 假设的独立 inbound aggregate/checkpoint；测试真实 SOCKS authenticated server 流量、alias 解析、跨协议同一 profile 计数求和及重复 sequence 幂等；将节点/订阅身份 metering coverage 改为 SUPPORTED。只更新真实有必要的源码/测试和 v0.14.2 发布索引。`
+- `exclusions`: `不新增节点统计表/迁移，不改已有或新凭据格式，不轮换凭据或撤销/重发 token，不更改 `build_node_config` 的入站策略，不创建或操作 AWS 资源。`
+- `assumptions`: `活动凭据查询过滤 revoked_at IS NULL、protocol enabled 且 profile ACTIVE，与 `build_node_config` 的活动 SOCKS 资格一致；若多个活动 profile 出现相同 SOCKS 用户名，采集必须 fail closed，不能把混合值任意归属给一个 profile。`
+- `risks`: `采集器在进程内短暂解密活动 SOCKS 凭据以构建别名表；不得记录用户名/密码或 stats payload。固定 Xray 测试二进制当前预期路径尚待确认是否存在，集成用例若跳过需要补齐可复现固定版本运行环境或如实标记未运行。`
+- `command_or_tool`: `复核 credentials.py 确认用户名格式 `p-<profile UUID 前 12 个字符>`；复核 node_agent 已查询 `user>>>`；独立只读代理按官方 Xray-core v26.3.27 `proxy/socks/protocol.go` 与 `proxy/socks/server.go` 及官方 Stats docs 核对 username=email 行为；无文件改动前已验证当前基线干净。`
+- `result`: `设计修正完成，尚未写生产代码。031 对新 checkpoint 表与 inbound counters 的建议作废，仅保留任务目标、边界、AWS 阻塞和版本发布意图。`
+- `exit_code`: `源码/路径检查=0；官方 source review 成功；工作区在追加台账前为 clean。`
+- `status`: `测试/实现未开始；无 AWS 调用/SSH/费用；AWS 实机验收仍 blocked。`
+- `commit_or_tree`: `当前基线仍为 main/origin/main@a51169e862b1923343e292c433a0005ff981d7d2；031 与本 correction 仅在台账追加。`
+- `time_logic`: `继续使用已有 Xray epoch 和递增 sequence，沿用 `UsageService.record` 的幂等检查；无新时间语义。`
+- `reuse`: `复用 StatsService user traffic counters、密码密文的进程内解密接口和用户 profile 累计快照/serializer 汇总；不需数据库迁移。`
+- `rollback_ref`: `源代码回退到 `v0.14.1` 或 revert 新应用提交；无迁移、token 撤销、凭据轮换或云状态要回退。`
+
+### 2026-11-07T15:26:02+08:00 — xray-node-automation-20261106-01/033 SOCKS5 traffic metering and isolated E2E ports
+
+- `event_id`: `xray-node-automation-20261106-01/033`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T15:26:02+08:00`
+- `actor`: `Codex`
+- `event_type`: `implementation / test / release preparation`
+- `path_scope`: `backend/apps/subscriptions/{access.py,metering.py,serializers.py}; backend/apps/nodes/serializers.py; backend/config/settings/base.py; backend/openapi/schema.yaml; backend/tests/subscriptions/test_management.py; backend/tests/test_node_traffic_serialization.py; frontend/playwright.config.ts; frontend/scripts/e2e-ports.mjs; frontend/scripts/e2e-ports.test.mjs; frontend/scripts/e2e-database.mjs; frontend/scripts/e2e-database.test.mjs; frontend/tests/e2e/{prepare-e2e-database.mjs,cleanup-e2e-database.mjs}; VERSION; CHANGELOG.md; README.md; docs/release.md; installer; frontend/backend package metadata; backend/uv.lock; tests/acceptance/matrix.json; artifacts/acceptance/0.14.2`
+- `operation`: `SOCKS5 服务端累计流量通过活动 credential username 映射回订阅身份，并复用现有 epoch/sequence 去重；跨协议同一 profile 的累计量合并，用户名冲突 fail closed 且覆盖标记为 PARTIAL。E2E 前后端、PostgreSQL、Redis 端口通过统一环境变量配置，数据库准备、安全校验和清理共用同一配置。版本元数据更新到 0.14.2；当前候选矩阵将 0.14.1 gate 留作历史并将 v0.14.2 本地/Release 状态标记待验证。`
+- `reason`: `补齐 SOCKS5 服务端流量统计，并避免 E2E 默认端口与仍运行的专用验收服务冲突；准备对最终源码提交重新绑定完整本地门禁证据。`
+- `authorization`: `用户要求完成节点流量统计、测试并同步发布新版本；用户授权测试 AWS 资源最高 USD 1,000，但真实云操作必须经过项目 MFA、CloudAccount 和 Operation 流程。未绕过该流程，未调用 AWS、SSH 或真实订阅写入。`
+- `implementation_scope`: `不增加 schema 或数据库迁移；不改变现存 subscription token、凭据格式或撤销状态。E2E 端口仅 loopback 且可覆盖；默认端口维持独立验收栈约定。`
+- `exclusions`: `不复用或清理其他服务、端口、数据库、卷、浏览器会话；不读取或输出 .env、密码、credential、Token、URI 或秘密异常；不创建/删除云资源。`
+- `assumptions`: `有效 SOCKS 凭据集合与节点配置生成规则一致；同一活动用户名若不能唯一映射 profile，相关计量不归属给任一身份。`
+- `risks`: `已有 SOCKS 用户短用户名可映射但部署有效新配置前不保证新节点已开始上报；固定 Xray 真实二进制测试仍是本地验收，不代表真实 AWS 节点。r4 的 19/19 本地门禁在候选脏工作树执行，尚未绑定源码 SHA；最终 clean-commit r5 必须重跑。`
+- `command_or_tool`: `只读检查当前 main/origin/main、diff、验收矩阵、r4 artifacts 和本地监听端口；r4 `XRAY_TEST_SERVICES_EXTERNAL=1 ... ./scripts/check-local.sh` 的 19 gate 摘要、JUnit 与 Playwright 结果读取；通过 apply_patch 更新候选矩阵及本事件。`
+- `result`: `r4 summary 的 19/19 gate exit 0；JUnit 为 451 tests、449 passed、2 skipped、0 failures/errors；前端 84 passed、Playwright 8 passed。r4 source SHA 未记录且工作树当时有改动，因此只作为候选工作树证据。矩阵已保留旧 v0.14.1 本地门禁记录为历史项，当前 v0.14.2 本地门禁与 Release 均暂记 not-run。`
+- `exit_code`: `r4 check-local=0；本事件为台账/矩阵修改，最终验证及源码提交尚待执行。`
+- `status`: `passed`
+- `commit_or_tree`: `main/origin/main@a51169e862b1923343e292c433a0005ff981d7d2 + 当前未提交候选；源码 SHA 与 r4 evidence 未绑定。`
+- `time_logic`: `无新增业务时间规则；计量复用现有 Xray epoch/sequence；E2E 运行 id 与端口配置不改变业务时间；台账时间使用 Asia/Shanghai +08:00。`
+- `reuse`: `复用 Xray StatsService 用户计数、活动凭据解密、UsageService 幂等记录、现有序列化和 E2E database helper；r4 仅保留为候选历史证据，r5 将在干净源码提交重新产生。`
+- `rollback_ref`: `源码回退至 v0.14.1 或对新源码提交执行 git revert；无迁移、Token、凭据、AWS 资源或云状态需要回退。保留 r1-r4 验收日志与正在运行的 xray-cloud-acceptance 服务/卷。`
+
+### 2026-11-07T15:29:28+08:00 — xray-node-automation-20261106-01/034 quota reduction cadence confirmation
+
+- `event_id`: `xray-node-automation-20261106-01/034`
+- `run_id`: `xray-node-automation-20261106-01`
+- `timestamp`: `2026-11-07T15:29:28+08:00`
+- `actor`: `Codex`
+- `event_type`: `decision`
+- `path_scope`: `backend/apps/nodes/tasks.py; backend/apps/nodes/tests; docs/release-checklist-v0.14.2.md; docs/project-ledger.md; tests/acceptance/matrix.json`
+- `operation`: `记录用户对地址池自动缩容批次大小的明确确认。`
+- `reason`: `明确多台超额时每轮同步的删除范围，避免自动删除超出用户意图。`
+- `authorization`: `用户回答：每次同步删一台；该决策属于原任务的配额对齐授权。`
+- `implementation_scope`: `同一地区每次计划同步最多提交一台最早创建的超额服务器删除；若超额仍存在，由后续同步逐台收敛；最早目标不符合现有安全条件时保持阻塞，不越过它删除更晚服务器。`
+- `exclusions`: `不扩展为一次同步排队多台删除，不跳过不安全目标，不更改当前云资源。`
+- `assumptions`: `该批次语义沿用现有调度实现；源码/回归测试将在 clean-commit r5 及最终发布记录中核实。`
+- `risks`: `自动删除会影响订阅和节点可用性，故每次仅一个目标并继续使用既有 target-bound preview/fence 与订阅安全检查。`
+- `command_or_tool`: `用户回复 clarification item；未运行命令、未写云资源。`
+- `result`: `配额 4→2 时，每次同步只删除同地区最早的一台；下一次同步再次核对并至多删除一台，直至数量相符或现有安全门禁阻塞。`
+- `exit_code`: `not applicable`
+- `status`: `passed`
+- `commit_or_tree`: `main@a51169e862b1923343e292c433a0005ff981d7d2；候选修改已暂存，源码提交待创建。`
+- `time_logic`: `没有新增时间边界；调度仍由现有计划周期触发，每个周期的删除上限为一台。`
+- `reuse`: `复用现有地区排序、最早节点选择、fresh target preview、operation fence 与删除/订阅安全检查。`
+- `rollback_ref`: `代码以 v0.14.1 或新源码提交的 git revert 回退；无云写入或不可逆状态。`

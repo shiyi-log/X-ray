@@ -1,0 +1,15 @@
+gate	exit_code	started_at	finished_at	log
+runtime	0	2026-11-07T06:58:06Z	2026-11-07T06:58:07Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/runtime.log
+compose-config	0	2026-11-07T06:58:07Z	2026-11-07T06:58:07Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/compose-config.log
+django-check	0	2026-11-07T06:58:07Z	2026-11-07T06:58:07Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/django-check.log
+migration-drift	0	2026-11-07T06:58:07Z	2026-11-07T06:58:08Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/migration-drift.log
+ruff	0	2026-11-07T06:58:08Z	2026-11-07T06:58:08Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/ruff.log
+backend-tests	0	2026-11-07T06:58:08Z	2026-11-07T06:59:22Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/backend-tests.log
+openapi-determinism	0	2026-11-07T06:59:22Z	2026-11-07T06:59:23Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/openapi-determinism.log
+fixed-xray	0	2026-11-07T06:59:23Z	2026-11-07T06:59:24Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/fixed-xray.log
+subscription-formats	0	2026-11-07T06:59:24Z	2026-11-07T06:59:25Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/subscription-formats.log
+frontend-typecheck	0	2026-11-07T06:59:25Z	2026-11-07T06:59:31Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/frontend-typecheck.log
+frontend-lint	0	2026-11-07T06:59:31Z	2026-11-07T06:59:33Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/frontend-lint.log
+frontend-unit	0	2026-11-07T06:59:33Z	2026-11-07T06:59:46Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/frontend-unit.log
+frontend-build	0	2026-11-07T06:59:46Z	2026-11-07T06:59:55Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/frontend-build.log
+frontend-e2e	1	2026-11-07T06:59:55Z	2026-11-07T06:59:55Z	artifacts/acceptance/0.14.2/final-gates-20261107-r2/frontend-e2e.log
