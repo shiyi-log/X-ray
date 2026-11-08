@@ -20,7 +20,7 @@ host:
 
 ```bash
 tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.14.3/installer/one-click.sh \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.14.4/installer/one-click.sh \
   && sudo bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
 ```
 
@@ -30,7 +30,7 @@ same bootstrap and set the action explicitly:
 
 ```bash
 tmp="$(mktemp)" && curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --tlsv1.2 \
-  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.14.3/installer/one-click.sh \
+  --output "$tmp" https://raw.githubusercontent.com/shiyi-log/X-ray/v0.14.4/installer/one-click.sh \
   && sudo env XRAY_ONE_CLICK_ACTION=update XRAY_NONINTERACTIVE=1 bash "$tmp"; status=$?; rm -f "$tmp"; exit "$status"
 ```
 
@@ -38,11 +38,9 @@ Set `XRAY_INSTALLER_REF` when intentionally selecting another immutable tag or
 commit. The Xray archive itself is always selected from the pinned manifest and
 checked by SHA-256; no `latest` release is resolved.
 
-This repository is currently private. Anonymous `curl` access to the raw GitHub
-URL therefore returns `404`; use a host-side authenticated `gh api` download or
-publish the repository/installer through an authorized public artifact host
-before using the bootstrap command without credentials. The installer itself
-does not accept or print GitHub credentials.
+This repository is public. Anonymous `curl` access to the raw GitHub URL works
+with the pinned version tag. The installer itself does not accept or print
+GitHub credentials.
 
 The interactive wrapper installs only the Xray runtime and service helpers. It
 does not create subscription credentials, generate node configuration, or

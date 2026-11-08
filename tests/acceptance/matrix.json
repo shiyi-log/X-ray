@@ -1,6 +1,6 @@
 {
-  "version": "0.14.3",
-  "generated_at": "2026-11-08T08:08:59+08:00",
+  "version": "0.14.4",
+  "generated_at": "2026-11-08T11:21:51+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -9,6 +9,81 @@
     "risky_not_executed"
   ],
   "items": [
+    {
+      "id": "local-delivery-gates-0.14.4",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.4/final-gates-20261108-r2/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.4/final-gates-20261108-r2/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 509,
+            "passed": 507,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 84,
+          "browser_e2e": 8,
+          "candidate_commit": "d1b413da2bca6f18b2ea3c9f4987db90fef4f1db",
+          "candidate_worktree": true,
+          "started_at": "2026-11-08T03:11:16Z",
+          "finished_at": "2026-11-08T03:14:26Z",
+          "initial_attempt": {
+            "summary_file": "artifacts/acceptance/0.14.4/final-gates-20261108-r1/summary.tsv",
+            "failed_gate": "compose-config",
+            "exit_code": 1,
+            "reason": "Docker frontend image build ran out of host disk space; no shared cache, image, container, or volume was pruned."
+          },
+          "image_limitations": [
+            "The retry reused the existing 0.14.3 frontend and backup-tools images for the local harness; exact 0.14.4 runtime-image construction remains for candidate CI."
+          ],
+          "secret_scan_scope": [
+            "The local secrets gate ran the repository Gitleaks script, which scans committed Git history; the complete staged candidate diff, including acceptance summaries and JUnit evidence, was separately scanned with Gitleaks 8.24.3 stdin mode, --redact, and exit code 0."
+          ],
+          "residual_resources": [
+            "The dedicated X-ray gate PostgreSQL/Redis containers remain running and their named data volumes were retained; E2E-owned containers and temporary authentication state were removed."
+          ]
+        }
+      ],
+      "commit": "d1b413da2bca6f18b2ea3c9f4987db90fef4f1db",
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Dedicated X-ray gate PostgreSQL/Redis containers remain running; their named data volumes were retained."
+      ]
+    },
+    {
+      "id": "github-ci-v0.14.4",
+      "environment": "ci",
+      "status": "not-run",
+      "evidence": [],
+      "commit": "pending",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": ["existing self-hosted runner instances remain running"]
+    },
+    {
+      "id": "github-release-v0.14.4",
+      "environment": "release",
+      "status": "not-run",
+      "evidence": [],
+      "commit": "pending",
+      "provider": "github",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
     {
       "id": "local-delivery-gates-0.14.3",
       "environment": "local",

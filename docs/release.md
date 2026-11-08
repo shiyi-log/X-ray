@@ -6,7 +6,7 @@
 
 ```bash
 deploy/scripts/release.sh \
-  --version 0.14.3 \
+  --version 0.14.4 \
   --digest sha256:<backend-image-digest> \
   --config /etc/xray/config.env \
   --compose deploy/compose/production.yml
@@ -17,12 +17,11 @@ deploy/scripts/release.sh \
 ## GitHub 版本发布与前端热更新
 
 向 `main` 合并后，在 `VERSION` 与前端包版本一致的提交上创建不可变标签
-`v0.14.3`。`.github/workflows/release.yml` 会校验标签与版本、打包
+`v0.14.4`。`.github/workflows/release.yml` 会校验标签与版本、打包
 `installer/`、生成 `SHA256SUMS`，并创建 GitHub Release。安装器远程入口和
 `XRAY_INSTALLER_REF` 必须使用同一个标签；不要改成 `main` 或 `latest`。
-当前仓库为 private，匿名 raw GitHub 下载会返回 `404`；若要让没有 GitHub
-登录态的生产主机直接执行一行命令，需要先获得公开仓库或单独的公开安装器托管
-授权。不能把个人访问令牌写进脚本、命令行参数、日志或 URL。
+当前仓库为 public，匿名 raw GitHub 下载可使用固定版本标签；不能把个人访问令牌
+写进脚本、命令行参数、日志或 URL。
 
 管理台前端使用同源 `HEAD /` 请求比较 `ETag`/`Last-Modified`。生产切换到新的
 不可变 frontend 镜像后，已打开的管理台会提示刷新；这只代表浏览器静态包热更新，

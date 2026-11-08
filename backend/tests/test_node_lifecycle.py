@@ -689,6 +689,172 @@ def test_daily_restart_start_requires_new_ip_and_publishes_after_fresh_health(
 
 
 @pytest.mark.django_db
+def test_daily_restart_health_failure_invalidates_stale_subscription_revision(
+    prepared_node, admin, monkeypatch
+):
+    from datetime import UTC, date, datetime
+
+    from django.test import Client, override_settings
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
+    from apps.operations.services import OperationService
+    from apps.subscriptions.credentials import CredentialService
+    from apps.subscriptions.models import AccessProfile, SubscriptionRevision
+    from apps.subscriptions.publishing import Publisher
+    from apps.subscriptions.tokens import TokenService
+    from providers.base import Address
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.raw_cloud_state = "running"
+    node.health_state = "HEALTHY"
+    node.desired_generation = node.applied_generation = 1
+    node.save(
+        update_fields=[
+            "raw_cloud_state",
+            "health_state",
+            "desired_generation",
+            "applied_generation",
+            "updated_at",
+        ]
+    )
+    add_usable_config_revision(node)
+
+    protocol = NodeProtocol.objects.create(
+        node=node,
+        protocol="vless",
+        port=18443,
+        credential_scope="profile",
+    )
+    profile = AccessProfile.objects.create(name="daily-restart-health-failure")
+    issued = TokenService.issue(profile.pk)
+    credential = CredentialService.rotate(
+        node.pk,
+        profile_ids=[profile.pk],
+        protocol_ids=[protocol.pk],
+    )[0]
+    node.refresh_from_db()
+    node.applied_generation = node.desired_generation
+    node.health_state = "HEALTHY"
+    node.save(update_fields=["applied_generation", "health_state", "updated_at"])
+    credential.applied_generation = node.applied_generation
+    credential.save(update_fields=["applied_generation"])
+    NodeConfigRevision.objects.update_or_create(
+        node=node,
+        generation=node.applied_generation,
+        defaults={
+            "config_hash": "a" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
+    old_revision = Publisher.publish(issued.subscription_id)
+    subscription = profile.subscription
+
+    node.raw_cloud_state = "stopped"
+    node.health_state = "UNKNOWN"
+    node.save(update_fields=["raw_cloud_state", "health_state", "updated_at"])
+    local_date = date(2026, 11, 6)
+    setting = NodeAutomationSetting.objects.create(
+        daily_restart_enabled=True,
+        daily_restart_last_local_date=local_date,
+        daily_restart_last_node_id=node.pk,
+    )
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+    base_params = {
+        "region": node.region,
+        "account_id": str(node.cloud_account_id),
+        "automation": {
+            "kind": "daily_restart",
+            "policy_version": setting.policy_version,
+            "local_date": local_date.isoformat(),
+        },
+    }
+    stop = OperationService.submit(
+        kind="node.stop",
+        target_id=node.pk,
+        params={**base_params, "automation": {**base_params["automation"], "phase": "stop"}},
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=node.cloud_credential_version,
+    )
+    stop.status = "SUCCEEDED"
+    stop.save(update_fields=["status", "updated_at"])
+    start = OperationService.submit(
+        kind="node.start",
+        target_id=node.pk,
+        params={**base_params, "automation": {**base_params["automation"], "phase": "start"}},
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=node.cloud_credential_version,
+    )
+    def failed_health_probe(_candidate):
+        return {
+            "accepted": False,
+            "positive_control": True,
+            "fresh_connection": True,
+        }
+
+    monkeypatch.setattr(
+        "apps.nodes.probes.configured_health_probe",
+        lambda: failed_health_probe,
+    )
+    lifecycle, holder = make_lifecycle(
+        node,
+        health_probe=failed_health_probe,
+    )
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="stopped",
+    )
+    provider.addresses_after_lifecycle_write = (
+        Address("198.51.100.97", 4, "dynamic", node.external_id),
+    )
+
+    lifecycle.dispatch("start", node.pk, operation_id=start.pk)
+
+    node.refresh_from_db()
+    start.refresh_from_db()
+    subscription.refresh_from_db()
+    old_revision.refresh_from_db()
+    assert holder["provider"].action_calls == ["start"]
+    assert node.addresses[0]["value"] == "198.51.100.97"
+    assert node.health_state == "UNHEALTHY"
+    assert start.status == "NEEDS_RECONCILIATION"
+    assert start.error_code == "NODE_HEALTH_PROBE_FAILED"
+    assert start.result["subscription_publication_failures"] == 1
+    assert old_revision.usable is False
+    assert subscription.current_revision_id == old_revision.pk
+    assert SubscriptionRevision.objects.filter(subscription=subscription).count() == 1
+
+    with override_settings(ROOT_URLCONF="config.subscription_urls"):
+        response = Client().get(f"/s/{issued.raw_token}?format=clash")
+    assert response.status_code == 503
+    assert response["Cache-Control"] == "no-store"
+
+
+@pytest.mark.django_db
 def test_reboot_marks_node_healthy_only_after_positive_fresh_health_probe(
     prepared_node, admin, monkeypatch
 ):

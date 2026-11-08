@@ -5,7 +5,7 @@ import { resourcesApi, type SystemInfo } from '@/api/resources';
 import SystemSettings from './index.vue';
 
 const systemInfo: SystemInfo = {
-  version: '0.14.3',
+  version: '0.14.4',
   environment: 'test',
   debug: false,
   allowed_hosts: ['localhost'],
