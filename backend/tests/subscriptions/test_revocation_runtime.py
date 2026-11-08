@@ -615,7 +615,7 @@ def test_fixed_xray_shadowsocks_revocation_probe(tmp_path, monkeypatch):
     config_path = tmp_path / "config.json"
     journal_path = tmp_path / "apply-journal.json"
 
-    def start_server(passwords, generation):
+    def prepare_server(passwords, generation):
         config = {
             "log": {"loglevel": "none"},
             "inbounds": [{
@@ -637,6 +637,9 @@ def test_fixed_xray_shadowsocks_revocation_probe(tmp_path, monkeypatch):
         }))
         server_file = tmp_path / f"server-{generation}.json"
         server_file.write_bytes(raw)
+        return server_file
+
+    def run_server(server_file):
         process = subprocess.Popen(
             [binary, "run", "-config", str(server_file)],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
@@ -654,7 +657,7 @@ def test_fixed_xray_shadowsocks_revocation_probe(tmp_path, monkeypatch):
             pytest.fail("local fixed Xray server did not become ready")
         return process
 
-    server = start_server([old_password, control_password], 1)
+    server = run_server(prepare_server([old_password, control_password], 1))
     service = {
         "pid": 100,
         "started": 1000,
@@ -684,9 +687,10 @@ def test_fixed_xray_shadowsocks_revocation_probe(tmp_path, monkeypatch):
         assert armed["armed"] is True
         old_session = probe.sessions["old-ref"][1]
         old_client_process = old_session.process
+        next_server_file = prepare_server([control_password], 2)
         server.terminate()
         server.wait(timeout=5)
-        server = start_server([control_password], 2)
+        server = run_server(next_server_file)
         service.update(
             pid=101,
             started=2000,

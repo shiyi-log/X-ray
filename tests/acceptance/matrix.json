@@ -1,6 +1,6 @@
 {
   "version": "0.14.3",
-  "generated_at": "2026-11-08T07:33:01+08:00",
+  "generated_at": "2026-11-08T08:08:59+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1012,6 +1012,34 @@
           "test_harness_candidate_pending_remote_validation": true,
           "remote_fix_ci_status": "not-run-pending-push",
           "application_real_cloud_acceptance": "not-run"
+        },
+        {
+          "kind": "runner_fixed_xray_revocation_test_ordering_correction",
+          "checked_at": "2026-11-08T08:00:48+08:00",
+          "failed_run_id": 42426203909,
+          "failed_job_id": 128564909069,
+          "failed_head_commit": "051b3aa740726c2d1dd8a8f4bbe42dd3f546e91c",
+          "runner_name": "xray-actions-ec2-2x4-20261108-01",
+          "remote_conclusion": "failure",
+          "remote_failed_test": "backend/tests/subscriptions/test_revocation_runtime.py::test_fixed_xray_shadowsocks_revocation_probe",
+          "remote_failure": "existing_session_closed was None at line 715; 488 passed, 1 failed, 1 skipped.",
+          "remote_artifact_id": 13595951101,
+          "remote_artifact_digest": "sha256:638b875c7c637f67680d53598b99260be83538023c342ec437c3b98414b2cfb1",
+          "root_cause": "The test terminated the old Xray process before staging generation 2. Production installer writes the new config and current-generation before restarting the service. The keepalive could observe the expected old-service closure in generation 1, so the probe correctly kept it unconfirmed for generation 2.",
+          "fix_scope": "Test-only helper split stages config/generation/journal before terminating the old process, then starts the prepared target server. The production probe generation check and fail-closed verification remain unchanged.",
+          "initial_local_attempt": {
+            "exit_code": 1,
+            "collected": false,
+            "reason": "XRAY_TEST_DATABASE_URL was not set; pytest settings correctly refused to run without the dedicated PostgreSQL stack."
+          },
+          "registered_isolated_test_stack_ports": [55435, 56382],
+          "local_fixed_xray_version": "26.3.27",
+          "local_focused_test": {"exit_code": 0, "passed": 1, "duration_seconds": 6.64},
+          "test_stack_cleanup_exit_code": 0,
+          "named_test_volumes_retained": true,
+          "remote_fix_ci_status": "pending-test-commit",
+          "release_dispatch": "not-run",
+          "application_real_cloud_acceptance": "blocked/not-run"
         }
       ],
       "commit": "2bb35e08873d4f89f82a9f4721d02bc862656673",
@@ -1021,7 +1049,7 @@
       "residual_resources": [
         "Lightsail xray-actions-2x4-20261108-01 remains running at approximately USD24/month; hostKeys=[] blocks SSH, no ingress is open, actual accrued charge unread, and deletion was not authorized.",
         "EC2 i-092e2bb13b7821d13 remains running at t3.medium pricing USD0.0528/hour plus 50 GiB encrypted gp3, public IPv4 and network; actual accrued charge unread, no ingress is open, and ExpiresAt does not stop or delete it.",
-        "Remote CI and Release have not run; X-ray application-node AWS lifecycle, IP, subscription and traffic acceptance remain not-run."
+        "Latest delivery CI run 42426203909 failed before the local test-harness correction; no new run after the correction and no Release dispatch yet. X-ray application-node AWS lifecycle, IP, subscription and traffic acceptance remain blocked/not-run."
       ]
     }
   ]
