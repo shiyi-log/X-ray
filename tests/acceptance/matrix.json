@@ -143,7 +143,7 @@
     {
       "id": "github-release-v0.14.4",
       "environment": "release",
-      "status": "blocked",
+      "status": "passed",
       "evidence": [
         {
           "kind": "release_dispatch_blocked_by_browser_extension_ui",
@@ -157,6 +157,34 @@
           "dispatch_attempted": false,
           "blocker": "Chrome automation refused the workflow page because an extension UI is open; the user was asked to close or complete it.",
           "assets_read_back": false
+        },
+        {
+          "kind": "published_release_and_asset_readback",
+          "checked_at": "2026-11-08T13:25:42+08:00",
+          "release_id": 438046647,
+          "published_at": "2026-11-08T05:10:01Z",
+          "draft": false,
+          "prerelease": false,
+          "workflow_run": 42449659843,
+          "workflow_job": 128635959964,
+          "workflow_conclusion": "success",
+          "runner": "xray-actions-ec2-2x4-20261108-01",
+          "tag_commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
+          "assets": [
+            {
+              "name": "SHA256SUMS",
+              "sha256": "1b247fe373e90835c127948859fc346e26e41b902aeab2c61d21e43ec09f21fe"
+            },
+            {
+              "name": "xray-installer-0.14.4-manifest.json",
+              "sha256": "ff04106d304e712cbdc98e05879d62d4791fb2c40d1b5654c5e9bef19dbd44ce"
+            },
+            {
+              "name": "xray-installer-0.14.4.tar.gz",
+              "sha256": "a5142d85a2b4b337701b90a7b6316b5a2a152e9bfac03c4ec7fbb97d1d1eaaea"
+            }
+          ],
+          "sha256sums_contents_verified": true
         }
       ],
       "commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",

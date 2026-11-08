@@ -6602,3 +6602,39 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `status`: `passed`
 - `commit_or_tree`: `main@4de7a9b516394b6e2accf4266f18fa3b5b5abf5f; clean at the immediate post-push readback`
 - `rollback_ref`: `Use git revert 4de7a9b if the receipt is wrong; do not rewrite public history or move/delete v0.14.4.`
+
+### 2026-11-08T13:25:42+08:00 — xray-node-automation-20261106-01/069 correction to v0.14.4 Release status
+
+- `event_id`: `xray-node-automation-20261106-01/069`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `correction / release verification`
+- `path_scope`: `docs/version-record.md v0.14.4; docs/progress.md; tests/acceptance/matrix.json github-release-v0.14.4; public GitHub Release/tag/Actions metadata and release assets`
+- `operation`: `Append the formal Release publication and asset readback evidence that occurred after event /068, and supersede its stale 404/pending status without rewriting the historical event.`
+- `reason`: `The user cleared the browser extension blocker and had authorized a self-hosted v0.14.4 release. The earlier receipt was accurate at its timestamp but became stale after the later workflow dispatch.`
+- `authorization`: `User requested public project release and instructed that pending work be committed and pushed; this verification uses public GitHub reads and downloaded public release assets only.`
+- `read`: `Current local and remote main are both 96fb1eb48277a37b7a2a5791bf23ecb0d063cf5b. Local/remote annotated tag object eca50beb3c983b977ccd76f9ba42135d090fc596 peels to 68754381323d0ede33eb2bc1a059cf30f37398a3. GitHub Release API reports id 438046647, published 2026-11-08T05:10:01Z, draft=false, prerelease=false. Workflow run 42449659843 and job 128635959964 completed success on runner xray-actions-ec2-2x4-20261108-01; release validation, package, and publish steps completed success. Downloaded SHA256SUMS contents list tar.gz sha256 a5142d85a2b4b337701b90a7b6316b5a2a152e9bfac03c4ec7fbb97d1d1eaaea and manifest sha256 ff04106d304e712cbdc98e05879d62d4791fb2c40d1b5654c5e9bef19dbd44ce; independent streaming downloads match both, and SHA256SUMS hashes to 1b247fe373e90835c127948859fc346e26e41b902aeab2c61d21e43ec09f21fe. Local backend readiness and frontend login returned HTTP 200; the login page remains at the normal administrator password step. No real application AWS test server has been created.`
+- `command_or_tool`: `GitHub Releases API GET; Actions run/job GET; curl public SHA256SUMS and stream manifest/tar.gz through shasum -a 256; git ls-remote origin main/tag refs and local git rev-parse; GET http://127.0.0.1:9537/health/ready and http://127.0.0.1:9538/login; current CUA tab marked for user authentication handoff.`
+- `write`: `Updated the current v0.14.4 version index, appended the Release receipt to progress and this ledger, and changed the current github-release-v0.14.4 acceptance status to passed while retaining the earlier blocked event as historical evidence. No application source, VERSION, CHANGELOG, tag, Release, cloud resource, database, credential, subscription, or authentication configuration was changed.`
+- `time_logic`: `No application time behavior changed. Release publication time is recorded in UTC as 2026-11-08T05:10:01Z; the verification time is the machine-local 2026-11-08T13:25:42+08:00.`
+- `external_limit`: `The user has not completed TOTP binding or validated the dedicated CloudAccount in the isolated application. Real AWS create/start/stop/restart/delete, dynamic-IP/health readback, subscription publish/revoke, traffic, and node reconciliation remain blocked/not-run. Account-level Cost Explorer cannot establish cumulative spend for the two runner instances; no additional AWS write or test server was made in this event.`
+- `status`: `passed (Release receipt); blocked (real AWS application acceptance)`
+- `commit_or_tree`: `main@96fb1eb48277a37b7a2a5791bf23ecb0d063cf5b with documentation receipt changes pending validation and commit`
+- `rollback_ref`: `Revert only the documentation receipt commit if it is wrong; preserve the published Release/tag and public history. No cloud/database/security rollback applies.`
+
+### 2026-11-08T13:31:09+08:00 — xray-node-automation-20261106-01/070 publication receipt static gates
+
+- `event_id`: `xray-node-automation-20261106-01/070`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `validate`
+- `path_scope`: `docs/version-record.md; docs/progress.md; docs/project-ledger.md; tests/acceptance/matrix.json; repository boundaries and committed history`
+- `operation`: `Validate the publication receipt, current acceptance matrix, project boundaries, secret history, skill contract, JSON syntax, and documentation diff.`
+- `reason`: `The formal Release readback superseded the previously recorded 404 and required current-state receipt validation before delivery.`
+- `command_or_tool`: `python3 scripts/validate-acceptance.py; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager; jq empty tests/acceptance/matrix.json; git diff --check.`
+- `result`: `All six commands exited 0. Acceptance matrix valid; boundary check passed; Gitleaks 8.24.3 scanned 127 commits/~8.36 MB with no leaks; skill valid; JSON parse passed; diff check passed. No business/source tests were rerun because this continuation changed documentation only; the v0.14.4 local candidate evidence remains the previously recorded 19/19 gates, JUnit 507 passed/2 skipped, frontend 84 passed, and Playwright 8 passed.`
+- `time_logic`: `No application time behavior changed.`
+- `reuse`: `The release API, Actions run/job, asset SHA256SUMS, and asset stream checks can be reused for v0.14.4 publication verification; Fake/Stub/local candidate evidence is not real AWS acceptance.`
+- `status`: `passed (documentation gates); blocked (real AWS application acceptance)`
+- `commit_or_tree`: `main@96fb1eb48277a37b7a2a5791bf23ecb0d063cf5b plus pending documentation receipt changes`
+- `rollback_ref`: `Revert only the documentation receipt commit if needed; preserve published v0.14.4, its immutable tag, and all cloud/security state.`
