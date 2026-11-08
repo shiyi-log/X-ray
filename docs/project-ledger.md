@@ -6638,3 +6638,36 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `status`: `passed (documentation gates); blocked (real AWS application acceptance)`
 - `commit_or_tree`: `main@96fb1eb48277a37b7a2a5791bf23ecb0d063cf5b plus pending documentation receipt changes`
 - `rollback_ref`: `Revert only the documentation receipt commit if needed; preserve published v0.14.4, its immutable tag, and all cloud/security state.`
+
+### 2026-11-08T13:34:10+08:00 — xray-node-automation-20261106-01/071 release receipt push and worktree closeout
+
+- `event_id`: `xray-node-automation-20261106-01/071`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `git delivery verification`
+- `path_scope`: `main; origin/main; refs/tags/v0.14.4; docs publication receipts; acceptance matrix`
+- `operation`: `Commit and push the corrected v0.14.4 release receipt, then verify the public branch/tag refs, acceptance matrix, diff, and clean worktree.`
+- `authorization`: `The user requested uncommitted work be committed and pushed and authorized public v0.14.4 release publication.`
+- `command_or_tool`: `git commit -m "docs: reconcile v0.14.4 release receipt [skip ci]"; git push origin main; git status --short --branch; git rev-parse HEAD; git ls-remote origin refs/heads/main refs/tags/v0.14.4 refs/tags/v0.14.4^{}; python3 scripts/validate-acceptance.py; git diff --check.`
+- `result`: `Commit 0cbff52634d08e3837ff0d0d41feefcf6c29dcb3 pushed with exit 0. Local and remote main both read 0cbff52634d08e3837ff0d0d41feefcf6c29dcb3; annotated tag object eca50beb3c983b977ccd76f9ba42135d090fc596 still peels to 68754381323d0ede33eb2bc1a059cf30f37398a3. Acceptance validator and diff check exited 0; the worktree was clean at readback. GitHub's push response reports 105 Dependabot alerts on the public default branch: 1 critical, 40 high, 49 moderate, 15 low. This task did not investigate or modify dependencies.`
+- `external_limit`: `Real AWS application acceptance remains blocked/not-run until the user completes TOTP binding and validates the dedicated CloudAccount through the local app. Cumulative cost for the two runner instances remains unavailable from account-level Cost Explorer attribution.`
+- `status`: `passed (receipt delivery); blocked (real AWS application acceptance)`
+- `commit_or_tree`: `main@0cbff52634d08e3837ff0d0d41feefcf6c29dcb3 clean at the post-push readback`
+- `rollback_ref`: `Revert only the receipt documentation commit if necessary; preserve immutable public v0.14.4 Release/tag and all cloud/security state.`
+
+### 2026-11-08T13:36:12+08:00 — xray-node-automation-20261106-01/072 final documentation verification
+
+- `event_id`: `xray-node-automation-20261106-01/072`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `final verification`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; docs/version-record.md; tests/acceptance/matrix.json; staged documentation diff; main/tag refs`
+- `operation`: `Verify the release receipt and closeout documentation after pushing commit 0cbff52634d08e3837ff0d0d41feefcf6c29dcb3.`
+- `reason`: `The public release receipt required a final local validation and status record after its push.`
+- `command_or_tool`: `python3 scripts/validate-acceptance.py; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager; Docker Gitleaks 8.24.3 protect --staged --redact; git diff --cached --check; git status --short --branch.`
+- `result`: `Acceptance, boundary, secret-history, skill, staged Gitleaks, and staged diff checks all exited 0. Gitleaks scanned 128 commits/~8.37 MB with no leaks and the staged 3.21 KB documentation diff with no leaks. At this event, only docs/progress.md and docs/project-ledger.md are staged for the final receipt commit. The source candidate test suite was not rerun because this follow-up is documentation-only; previously recorded v0.14.4 candidate gates remain 19/19, JUnit 507 passed/2 skipped, frontend 84 passed, Playwright 8 passed.`
+- `time_logic`: `No application time behavior changed.`
+- `external_limit`: `Real AWS application lifecycle, dynamic IP/health, subscription publish/revoke, traffic and node reconciliation remain blocked/not-run pending user TOTP and dedicated CloudAccount validation. GitHub's push response reported 105 Dependabot alerts (1 critical, 40 high, 49 moderate, 15 low); not investigated in this scope.`
+- `status`: `passed (documentation verification); blocked (real AWS application acceptance)`
+- `commit_or_tree`: `main@0cbff52634d08e3837ff0d0d41feefcf6c29dcb3 plus final documentation receipt pending commit`
+- `rollback_ref`: `Revert only the final documentation receipt if necessary; preserve the immutable public v0.14.4 Release/tag and cloud/security state.`
