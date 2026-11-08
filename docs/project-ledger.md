@@ -6539,3 +6539,51 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `status`: `blocked` (Release workflow dispatch); candidate main CI and annotated tag passed.
 - `commit_or_tree`: `main@68754381323d0ede33eb2bc1a059cf30f37398a3 with pending audit receipt changes`
 - `rollback_ref`: `Keep immutable public main and v0.14.4 tag; rollback application code with git revert or v0.14.3, never rewrite public history or reverse security/cloud state.`
+
+### 2026-11-08T12:39:53+08:00 — xray-node-automation-20261106-01/065 post-candidate verification and current resource readback
+
+- `event_id`: `xray-node-automation-20261106-01/065`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `focused verification / read-only publication and cloud inventory`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md; docs/progress.md; docs/version-record.md; docs/release-checklist-v0.14.4.md; docs/project-ledger.md; tests/acceptance/matrix.json; .github/workflows/release.yml; docs/release.md; backend/apps/nodes/tasks.py; backend/tests/test_node_automation.py; GitHub repository/tag/release/Actions metadata; only the two X-ray runner resource names in AWS`
+- `operation`: `Reconfirm committed feature coverage, run the focused multi-region/one-delete-per-cycle regression against the dedicated gate database, verify public/tag/Release state, and read current X-ray runner state and account-level cost observations without changing cloud resources.`
+- `authorization`: `The user requested public v0.14.4 publication and authorized local AWS CLI creation of test/runner resources under a USD 1,000 total cap. This event uses only read operations for GitHub and AWS; the focused test uses the dedicated local gate PostgreSQL/Redis stack. No application credential, TOTP or MFA secret is requested or recorded.`
+- `read`: `Confirmed main@75c96d333694e4e2d33423a679f293c28ae6ca4d is a documentation-only child of CI/tag commit 68754381323d0ede33eb2bc1a059cf30f37398a3; worktree was clean before receipt updates. GitHub repository metadata reports public; release-by-tag GET for v0.14.4 returns 404. Code/test coverage review found lifecycle create/start/stop/reboot/delete, quota fill/shrink, scheduled restart/IP/health/subscription, node count reconciliation, periodic status/IP and traffic collection coverage. CI run 42442958213 is completed/success with artifact 13602539193, while its step API inconsistency remains recorded. AWS root identity fingerprint is sha256:4a0ef08458dd. Lightsail runner xray-actions-2x4-20261108-01 and EC2 runner xray-actions-ec2-2x4-20261108-01 are running. Cost Explorer for 2026-11-01 through 2026-11-08 reports account-wide EC2 - Other USD 0.0584878598 and Amazon Lightsail USD -0.0000000001; these are not attributable to the individual resources and billing can lag or include credits.`
+- `command_or_tool`: `Focused pytest for test_pool_sync_submits_only_one_global_oldest_delete_across_over_quota_regions and test_pool_sync_deletes_one_oldest_per_due_cycle_until_quota_two using dedicated gate ports 55435/56382; GitHub MCP GET repository and release/tag/workflow-run metadata; AWS_PROFILE=root STS, exact-name Lightsail/EC2 inventory and Cost Explorer read; CUA browser automation attempted on the already open Release workflow and was refused because another extension UI is open; git status and diff check.`
+- `result`: `Focused pytest exit 0: 2 passed, 28 deselected. GitHub confirms repository public, tag commit unchanged, and no formal v0.14.4 Release (404). CUA did not dispatch the workflow. Account-level cost figures are recorded as observations, not per-resource spend or a zero-cost claim. Matrix records the Release as blocked and real application AWS as blocked; application test server count remains 0.`
+- `write`: `Appended this event and a progress receipt; acceptance matrix now includes the focused quota run, current runner readback/cost limitation, and Release UI blocker. No source, version, tag, Git ref, cloud resource, database, credential, subscription or application configuration changed.`
+- `time_logic`: `No application time behavior changed. Runner creation/launch timestamps retain their returned offsets; the Cost Explorer period uses 2026-11-01 inclusive through 2026-11-09 exclusive.`
+- `external_limit`: `Release dispatch remains blocked until the open Chrome extension UI is closed; GitHub Release lookup is still 404 and no release assets exist. Real application AWS lifecycle/IP/health/subscription/traffic remains blocked because MFA is unbound and the existing CloudAccount credential envelope fails decryption. No AWS write or application test server was created. Account-level Cost Explorer data cannot establish exact per-resource cumulative spend.`
+- `status`: `blocked`
+- `commit_or_tree`: `main@75c96d333694e4e2d33423a679f293c28ae6ca4d clean before documentation receipts`
+- `rollback_ref`: `Revert only the receipt documentation commit if necessary; preserve public refs, v0.14.4 tag, named runner/test resources and all security/cloud state. No cloud rollback applies.`
+
+### 2026-11-08T12:46:00+08:00 — xray-node-automation-20261106-01/066 final receipt static gates
+
+- `event_id`: `xray-node-automation-20261106-01/066`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `final documentation and boundary verification`
+- `path_scope`: `docs/progress.md; docs/project-ledger.md; tests/acceptance/matrix.json; current documentation diff`
+- `operation`: `Rerun static validation after recording the current quota test, public Release blocker and AWS runner cost observations.`
+- `authorization`: `Documentation-only receipts for the user-authorized v0.14.4 release and test task; no code or cloud mutation.`
+- `command_or_tool`: `python3 scripts/validate-acceptance.py; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager; git diff --check; Gitleaks 8.24.3 stdin scan of git diff with --redact.`
+- `result`: `All six commands exited 0. Acceptance matrix valid; boundary passed; history scan checked 125 commits/~8.35 MB with no leaks; skill valid; diff check passed; changed documentation diff scan had no findings.`
+- `time_logic`: `No application time behavior changed.`
+- `reuse`: `Current receipt and candidate evidence are reusable for v0.14.4 local/quota validation; real AWS and device acceptance remain separate blocked gates.`
+- `status`: `passed`
+- `commit_or_tree`: `main@75c96d333694e4e2d33423a679f293c28ae6ca4d plus documentation receipts`
+- `rollback_ref`: `Revert only the documentation receipt commit if needed; keep public refs, immutable tag, runner resources and all security/cloud state.`
+
+### 2026-11-08T12:46:38+08:00 — xray-node-automation-20261106-01/067 correction to event /066 timestamp
+
+- `event_id`: `xray-node-automation-20261106-01/067`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `correction`
+- `path_scope`: `docs/project-ledger.md event xray-node-automation-20261106-01/066`
+- `operation`: `Correct the timestamp precision claim for the immediately preceding static-gates receipt.`
+- `reason`: `Event /066 was written with a guessed second-level timestamp rather than a contemporaneous clock read. The available clock evidence brackets the append between 2026-11-08T12:45:09+08:00 and 2026-11-08T12:46:38+08:00, but does not establish the exact original second.`
+- `result`: `Event /066's stated 12:46:00+08:00 is not asserted as the exact append time. This correction is recorded at the observed clock time 2026-11-08T12:46:38+08:00. Its command results and status are unchanged.`
+- `status`: `passed`
+- `commit_or_tree`: `main@75c96d333694e4e2d33423a679f293c28ae6ca4d plus documentation receipts`
+- `rollback_ref`: `Append a further correction only if new clock evidence establishes a more precise time; do not rewrite /066.`

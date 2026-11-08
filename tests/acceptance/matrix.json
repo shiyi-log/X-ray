@@ -1,6 +1,6 @@
 {
   "version": "0.14.4",
-  "generated_at": "2026-11-08T12:15:06+08:00",
+  "generated_at": "2026-11-08T12:39:53+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -52,6 +52,22 @@
           "residual_resources": [
             "The dedicated X-ray gate PostgreSQL/Redis containers remain running and their named data volumes were retained; E2E-owned containers and temporary authentication state were removed."
           ]
+        },
+        {
+          "kind": "focused_node_pool_sync_rerun",
+          "checked_at": "2026-11-08T12:39:53+08:00",
+          "tests": [
+            "test_pool_sync_submits_only_one_global_oldest_delete_across_over_quota_regions",
+            "test_pool_sync_deletes_one_oldest_per_due_cycle_until_quota_two"
+          ],
+          "result": {
+            "passed": 2,
+            "deselected": 28,
+            "failures": 0,
+            "exit_code": 0
+          },
+          "services": "Dedicated X-ray gate PostgreSQL/Redis stack on 127.0.0.1:55435 and 127.0.0.1:56382; no cloud acceptance database reused.",
+          "source_commit": "68754381323d0ede33eb2bc1a059cf30f37398a3"
         }
       ],
       "commit": "d1b413da2bca6f18b2ea3c9f4987db90fef4f1db",
@@ -83,6 +99,39 @@
             "digest": "sha256:c624420c6f07e1796e500efe7a2651e408fd7df120b2808739819edb58b5acb0"
           },
           "limitation": "Run and job APIs report completed/success and the evidence artifact exists; the job step endpoint still showed the complete-delivery-gates step as in_progress with later steps pending at read time. Preserve this API inconsistency rather than infer per-step details from it."
+        },
+        {
+          "kind": "aws_runner_readback_and_cost_observation",
+          "checked_at": "2026-11-08T12:39:53+08:00",
+          "profile": "root",
+          "account_ref": "sha256:4a0ef08458dd",
+          "resources": [
+            {
+              "provider": "aws-lightsail",
+              "name": "xray-actions-2x4-20261108-01",
+              "state": "running",
+              "bundle": "medium_3_0",
+              "created_at": "2026-11-08T03:00:01+08:00"
+            },
+            {
+              "provider": "aws-ec2",
+              "name": "xray-actions-ec2-2x4-20261108-01",
+              "state": "running",
+              "instance_type": "t3.medium",
+              "launch_time": "2026-11-07T20:00:57Z"
+            }
+          ],
+          "cost_explorer": {
+            "period_start": "2026-11-01",
+            "period_end_exclusive": "2026-11-09",
+            "service_amounts_usd": {
+              "EC2 - Other": "0.0584878598",
+              "Amazon Lightsail": "-0.0000000001"
+            },
+            "limitation": "Account-wide service totals are not attributable to these exact resources; billing adjustments and reporting delay mean these values are not a per-resource cost or a zero-cost claim."
+          },
+          "application_test_servers": 0,
+          "writes_attempted": false
         }
       ],
       "commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
@@ -94,8 +143,22 @@
     {
       "id": "github-release-v0.14.4",
       "environment": "release",
-      "status": "not-run",
-      "evidence": [],
+      "status": "blocked",
+      "evidence": [
+        {
+          "kind": "release_dispatch_blocked_by_browser_extension_ui",
+          "checked_at": "2026-11-08T12:39:53+08:00",
+          "repository_visibility": "public",
+          "workflow": "发布 X-ray 版本",
+          "required_ref": "main",
+          "tag": "v0.14.4",
+          "tag_commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
+          "release_api_status": 404,
+          "dispatch_attempted": false,
+          "blocker": "Chrome automation refused the workflow page because an extension UI is open; the user was asked to close or complete it.",
+          "assets_read_back": false
+        }
+      ],
       "commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
       "provider": "github",
       "region": null,
