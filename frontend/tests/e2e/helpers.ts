@@ -56,8 +56,15 @@ export function sanitizeTraceArchive(target: string) {
 }
 
 export function traceContainsSecret(target: string, secret: string) {
-  const archive = execFileSync('unzip', ['-p', target], {
-    maxBuffer: 64 * 1024 * 1024,
+  const script = [
+    'import sys, zipfile',
+    'needle = sys.stdin.buffer.read()',
+    'with zipfile.ZipFile(sys.argv[1]) as archive:',
+    '    found = any(needle in archive.read(name) for name in archive.namelist())',
+    "sys.stdout.write('1' if found else '0')",
+  ].join('\n');
+  const result = execFileSync('python3', ['-c', script, target], {
+    input: Buffer.from(secret),
   });
-  return archive.includes(Buffer.from(secret));
+  return result.equals(Buffer.from('1'));
 }
