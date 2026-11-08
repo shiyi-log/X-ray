@@ -6687,3 +6687,54 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `status`: `passed (Release and documentation closeout); blocked (real AWS application acceptance)`
 - `commit_or_tree`: `main@88a85d816e88ccbb8f6409cc92666ee84d0b1dc8 clean at final verification`
 - `rollback_ref`: `Preserve public v0.14.4 Release/tag and security/cloud state; revert only documentation closeout if a receipt is inaccurate.`
+
+
+### 2026-11-08T15:12:33+08:00 — xray-node-automation-20261106-01/074 bounded real-provider readback scope
+
+- `event_id`: `xray-node-automation-20261106-01/074`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `continuation scope and read audit`
+- `path_scope`: `AGENTS.md; docs/project-conventions.md; skills/xray-manager/SKILL.md and references/acceptance.md; docs/cloud-test-authorization.md; latest ledger/progress/matrix; backend/providers/aws_lightsail.py, base.py and authorization.py; existing application login page; dedicated runtime and named runner read APIs`
+- `requested_outcome`: `Continue the user's authorized real AWS acceptance autonomously where prerequisites permit, without changing the already published release.`
+- `scope`: `One bounded read-only production AwsLightsailProvider smoke against xray-actions-2x4-20261108-01 in ap-southeast-1 using the existing local root AWS profile; compare state, public address parsing and firewall mapping with independently captured AWS CLI reads. Retain the default DenyWrites authorizer and no Django/DB initialization. Save only allowlisted redacted evidence and update this ledger/progress/matrix.`
+- `exclusions`: `No authentication enrollment or bypass, session/DB/CloudAccount mutation, forged Operation or provider write authorization, cloud writes, SSH, public probes, resource creation/deletion, code changes, tag movement or new release.`
+- `authorization_boundary`: `Existing task authorizes AWS testing within USD1,000 and local AWS CLI provisioning. This action uses read APIs only on the already named runner; it cannot stand in for authenticated ManagedNode/Operation/subscription acceptance. The browser credential-change rule requires user handoff for initial TOTP; the existing login tab remains reserved for that step.`
+- `commands_and_observations`: `Read-only subagent runtime/AWS checks at 2026-11-08T15:10+08:00: backend /health/ready and frontend /login HTTP 200, session authenticated=false, dedicated PG/Redis healthy, both named runners running and EC2 status checks ok. Account-level estimated Cost Explorer data cannot establish task-specific actual cumulative costs. Main a8847ff was clean; git diff --check exit 0. No cloud/authentication writes occurred.`
+- `assumptions_and_risks`: `The runner can change state between independent reads; mismatch is a failed observation, never a reason to mutate it. Raw API responses, account IDs, ARNs, addresses, credentials and secret-bearing exceptions remain in memory and are not emitted. Requests are bounded with timeouts and no retry loop.`
+- `time_logic`: `Evidence uses actual aware Asia/Shanghai ISO-8601 execution time; this continuation changes no application schedule, TTL or daily-rotation semantics.`
+- `reuse_and_rollback`: `Reuse the existing production read adapter and immutable v0.14.4 code. Evidence receipt only; rollback with a scoped documentation revert, preserving public refs and all cloud/security state.`
+- `status`: `in-progress (bounded provider readback); blocked/not-run (authenticated real application acceptance)`
+- `commit_or_tree`: `main@a8847ff62cedf5c53091216613609ceaf32d9603 before this receipt`
+
+
+### 2026-11-08T15:14:32+08:00 — xray-node-automation-20261106-01/075 actual production provider readback
+
+- `event_id`: `xray-node-automation-20261106-01/075`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `real provider read-only evidence`
+- `path_scope`: `backend/providers/aws_lightsail.py production read methods; artifacts/acceptance/0.14.4/aws-provider-readback-20261108.json; tests/acceptance/matrix.json; docs/progress.md; this ledger`
+- `operation`: `Executed one inline Python smoke with PYTHONPATH=backend and backend/.venv/bin/python. boto3 clients use existing local root profile, fixed ap-southeast-1 and target xray-actions-2x4-20261108-01. SDK clients are wrapped in a read-method allowlist; provider retains default DenyWrites. Separate aws CLI responses are captured only in memory for comparison. No Django initialization, DB, credentials copying, cloud write, SSH or public probe.`
+- `result`: `Exit 0 at 2026-11-08T15:13:55+08:00. All 10 checks true: default DenyWrites, SDK/CLI identity, resource, state, addresses, get_public_ip, firewall, running state, IPv4 presence and zero inbound rules. Four SDK reads (STS identity, GetInstance twice, GetInstancePortStates) and three CLI reads (identity, instance, port states). Four SDK provider request IDs are retained in the redacted artifact; standard CLI JSON did not expose request IDs and no debug logging was enabled. No test server created.`
+- `write_summary`: `Created allowlisted JSON artifact SHA256 b1088196b6677c5ee3148651d79dcd43cf6fba6854d2817f41c020847d26d323; appended matrix evidence while retaining aws-real-cloud=blocked; appended progress receipt and ledger events. No source/version/tag/release change. Raw addresses, account IDs, ARNs, tags, credentials and exception text are absent from evidence.`
+- `time_logic`: `60-second total alarm and monotonic deadline, bounded individual CLI/SDK timeouts, no retry loop; aware Asia/Shanghai evidence timestamp. No application time rule changed.`
+- `evidence_boundary`: `passed applies only to standalone production-provider readback against existing infrastructure. ManagedNode/Operation lifecycle, changed-IP/health, scheduled reconciliation, real subscription create/revoke and traffic remain blocked/not-run pending legitimate TOTP/CloudAccount setup. It would change the tested path to inject a test write authorizer or fabricate Operations.`
+- `reuse_and_rollback`: `Reuse production read methods and redacted action/request-id evidence. Revert only this evidence receipt if needed; preserve immutable public v0.14.4 refs and all cloud/security state.`
+- `status`: `passed (standalone real provider readback); blocked (real application acceptance)`
+- `commit_or_tree`: `main@a8847ff62cedf5c53091216613609ceaf32d9603 plus scoped evidence receipt`
+
+
+### 2026-11-08T15:16:01+08:00 — xray-node-automation-20261106-01/076 evidence receipt final verification
+
+- `event_id`: `xray-node-automation-20261106-01/076`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `final static verification`
+- `path_scope`: `Only docs/project-ledger.md, docs/progress.md, tests/acceptance/matrix.json and artifacts/acceptance/0.14.4/aws-provider-readback-20261108.json`
+- `commands_and_exit_codes`: `python3 scripts/validate-acceptance.py=0; ./scripts/check-boundary.sh=0; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0; git diff --check=0; ./scripts/check-secrets.sh=0 (pinned Gitleaks 8.24.3 Docker fallback, 130 commits/~8.38 MB, no leaks); git diff --cached --check=0; staged receipt diff piped to pinned Gitleaks stdin --redact=0 (before this summary entry).`
+- `review_and_result`: `Independent read-only subagent review found no secrets or acceptance inflation and confirmed exactly four scoped files. Initial whole-JSON formatting noise was removed by inserting only the new evidence into original HEAD text; JSON semantic equality was checked. Final matrix retains aws-real-cloud=blocked. No source behavior changed, so business suites were not rerun; no new release/tag or cloud/authentication write occurred.`
+- `time_logic`: `No application time behavior changed; receipt timestamp uses actual aware Asia/Shanghai clock.`
+- `external_limit`: `The mandatory browser authentication-credential handoff remains unresolved. Do not create an agent-owned TOTP, disable MFA, modify identity DB state, inject test write authorization or fabricate application Operations to bypass it. Dedicated CloudAccount is also absent in the latest application setup evidence. Genuine application lifecycle, changed-IP/health, subscriptions and traffic acceptance cannot be declared passed. No additional AWS resources were created; account-level billing cannot establish task-specific cumulative actual cost.`
+- `git_and_rollback`: `Before receipt commit: main@a8847ff62cedf5c53091216613609ceaf32d9603; only four scoped evidence files staged. Commit and push this coherent receipt with no version change; verify clean worktree and origin/main after push. Rollback is a scoped documentation/evidence revert; preserve public v0.14.4 and all cloud/security state.`
+- `status`: `passed (bounded provider readback and receipt static gates); blocked/not-run (full real application acceptance)`

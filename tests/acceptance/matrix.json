@@ -1,6 +1,6 @@
 {
   "version": "0.14.4",
-  "generated_at": "2026-11-08T12:39:53+08:00",
+  "generated_at": "2026-11-08T15:14:32+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -917,6 +917,24 @@
           "test_servers_created": 0,
           "resource_cost_usd": 0,
           "reason": "Explicit-profile STS identity and current Lightsail bundle/blueprint queries succeeded without listing or modifying instances. Bundle monthly price is catalog metadata, not an actual bill. Normal application MFA and CloudAccount setup are still pending."
+        },
+        {
+          "kind": "standalone_real_provider_readback",
+          "timestamp": "2026-11-08T15:13:55+08:00",
+          "artifact": "artifacts/acceptance/0.14.4/aws-provider-readback-20261108.json",
+          "profile": "root",
+          "account_ref": "sha256:4a0ef08458dd",
+          "region": "ap-southeast-1",
+          "resource_ref": "xray-actions-2x4-20261108-01",
+          "source_commit": "a8847ff62cedf5c53091216613609ceaf32d9603",
+          "sdk_read_requests": 4,
+          "cli_read_requests": 3,
+          "checks_passed": 10,
+          "default_deny_writes": true,
+          "writes_attempted": false,
+          "db_access": false,
+          "real_application_acceptance": "blocked",
+          "reason": "Production AwsLightsailProvider state/public-address/firewall parsing matches independent real AWS CLI reads for the existing named runner. This read-only smoke does not exercise ManagedNode, Operation, changing IP, health probes, subscriptions or traffic. Application TOTP and CloudAccount prerequisites remain unresolved."
         }
       ],
       "commit": null,

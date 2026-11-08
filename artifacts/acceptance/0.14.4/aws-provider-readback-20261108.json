@@ -1,0 +1,49 @@
+{
+  "kind": "standalone_real_provider_readback",
+  "timestamp": "2026-11-08T15:13:55+08:00",
+  "status": "passed",
+  "region": "ap-southeast-1",
+  "profile": "root",
+  "account_ref": "sha256:4a0ef08458dd",
+  "resource_ref": "xray-actions-2x4-20261108-01",
+  "source_commit": "a8847ff62cedf5c53091216613609ceaf32d9603",
+  "checks": {
+    "default_deny_writes": true,
+    "sdk_cli_identity_equal": true,
+    "sdk_cli_resource_equal": true,
+    "sdk_cli_state_equal": true,
+    "sdk_cli_ip_equal": true,
+    "get_public_ip_cli_equal": true,
+    "sdk_cli_firewall_equal": true,
+    "running_state": true,
+    "ipv4_present": true,
+    "no_inbound_rules": true
+  },
+  "sdk_api_requests": [
+    {
+      "action": "sts:GetCallerIdentity",
+      "request_id": "afe90320-29e7-4426-9061-070a80ad28a8"
+    },
+    {
+      "action": "lightsail:GetInstance",
+      "request_id": "dffd85ce-1f1c-4263-ba1f-ce16420f0df1"
+    },
+    {
+      "action": "lightsail:GetInstance",
+      "request_id": "7f9eba9e-f5c6-46a2-831f-dd9128f5622e"
+    },
+    {
+      "action": "lightsail:GetInstancePortStates",
+      "request_id": "07cd5f03-dc5b-4e73-ab9f-0339c16a1553"
+    }
+  ],
+  "cli_actions": [
+    "sts:get-caller-identity",
+    "lightsail:get-instance",
+    "lightsail:get-instance-port-states"
+  ],
+  "cli_request_ids": "not exposed by standard CLI JSON; no debug enabled",
+  "db_access": false,
+  "writes_attempted": false,
+  "evidence_scope": "standalone production provider readback only; no ManagedNode, Operation, dynamic-IP change, subscription or traffic acceptance"
+}
