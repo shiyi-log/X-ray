@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 
 from apps.identity.models import SuperAdmin
 from apps.nodes.models import ManagedNode
-from apps.operations.models import ActionPreview, Operation
+from apps.operations.models import ActionPreview, Operation, OutboxEvent
 from apps.subscriptions.models import AccessProfile, SubscriptionToken
 from apps.subscriptions.tokens import TokenGone, TokenService
 
@@ -427,6 +427,83 @@ def test_node_delete_requires_preview_confirmation_recent_step_up_and_uuid_key(
     assert stale_step_up.status_code == 403
     assert stale_step_up.json()["code"] == "STEP_UP_REQUIRED"
     assert not Operation.objects.filter(kind="node.delete", target_id=node.pk).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("action", ["start", "stop", "reboot"])
+def test_node_lifecycle_actions_submit_idempotently_without_danger_preview(
+    recent_admin_client, cloud_account, action
+):
+    client, admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    key = str(uuid4())
+    path = f"/api/v1/nodes/{node.pk}/actions/{action}/"
+
+    response = client.post(path, {}, format="json", HTTP_IDEMPOTENCY_KEY=key)
+    replay = client.post(path, {}, format="json", HTTP_IDEMPOTENCY_KEY=key)
+
+    assert response.status_code == replay.status_code == 202
+    assert replay.json()["operation_id"] == response.json()["operation_id"]
+    operation = Operation.objects.get(pk=response.json()["operation_id"])
+    assert operation.admin == admin
+    assert operation.kind == f"node.{action}"
+    assert operation.target_id == node.pk
+    assert operation.params == {
+        "region": node.region,
+        "account_id": str(node.cloud_account_id),
+        "confirmation": "",
+    }
+    assert str(operation.idempotency_key) == key
+    assert operation.preview_id is None
+    assert operation.cloud_credential_version_id == node.cloud_credential_version_id
+    assert Operation.objects.filter(kind=f"node.{action}", target_id=node.pk).count() == 1
+    assert OutboxEvent.objects.filter(operation=operation).count() == 1
+    assert ManagedNode.objects.get(pk=node.pk).consumes_quota is True
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("action", ["start", "stop", "reboot"])
+def test_node_lifecycle_actions_require_uuid_idempotency_key(
+    recent_admin_client, cloud_account, action
+):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    path = f"/api/v1/nodes/{node.pk}/actions/{action}/"
+
+    missing = client.post(path, {}, format="json")
+    malformed = client.post(
+        path,
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY="not-a-uuid",
+    )
+
+    assert missing.status_code == malformed.status_code == 400
+    assert not Operation.objects.filter(kind=f"node.{action}", target_id=node.pk).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("action", ["start", "stop", "reboot"])
+def test_node_lifecycle_actions_require_recent_step_up(recent_admin_client, cloud_account, action):
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    session = client.session
+    session["recent_auth_until"] = (timezone.now() - timedelta(seconds=1)).isoformat()
+    session.save()
+
+    response = client.post(
+        f"/api/v1/nodes/{node.pk}/actions/{action}/",
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "STEP_UP_REQUIRED"
+    assert not Operation.objects.filter(kind=f"node.{action}", target_id=node.pk).exists()
 
 
 @pytest.mark.django_db

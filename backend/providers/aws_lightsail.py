@@ -380,7 +380,11 @@ class AwsLightsailProvider:
 
     @staticmethod
     def _lifecycle_operation_type(action: str) -> str:
-        operation_type = {"start": "StartInstance", "reboot": "RebootInstance"}.get(action)
+        operation_type = {
+            "start": "StartInstance",
+            "stop": "StopInstance",
+            "reboot": "RebootInstance",
+        }.get(action)
         if not operation_type:
             raise DomainError("CLOUD_OPERATION_TYPE_INVALID", "云操作类型不匹配", status_code=400)
         return operation_type

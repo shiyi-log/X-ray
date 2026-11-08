@@ -181,8 +181,14 @@ def validate_automated_restart(
     operation: Operation, node: ManagedNode, policy_version: int
 ) -> None:
     automation = operation.params.get("automation")
+    phase = automation.get("phase", "reboot") if isinstance(automation, dict) else None
+    expected_kind = {
+        "stop": "node.stop",
+        "start": "node.start",
+        "reboot": "node.reboot",
+    }.get(phase)
     if (
-        operation.kind != "node.reboot"
+        operation.kind != expected_kind
         or operation.target_type != "node"
         or operation.target_id != node.pk
         or not isinstance(automation, dict)
@@ -195,41 +201,84 @@ def validate_automated_restart(
 
     setting = NodeAutomationSetting.objects.select_for_update().filter(singleton_key=1).first()
     node = ManagedNode.objects.select_for_update().get(pk=node.pk)
+    local_date_text = str(automation.get("local_date") or "")
     try:
-        scheduled_date = datetime.strptime(
-            str(automation.get("local_date") or ""), "%Y-%m-%d"
-        ).date()
+        scheduled_date = datetime.strptime(local_date_text, "%Y-%m-%d").date()
     except ValueError as exc:
         raise DomainError("AUTOMATION_POLICY_STALE", "每日重启日期无效", status_code=409) from exc
-    if setting is None:
-        raise DomainError("AUTOMATION_POLICY_STALE", "每日重启策略已变化", status_code=409)
     now = timezone.now()
     if timezone.is_naive(now):
         raise DomainError("AUTOMATION_POLICY_STALE", "当前时间缺少时区", status_code=409)
-    try:
-        current_local_date = now.astimezone(ZoneInfo(setting.daily_restart_timezone)).date()
-    except (AttributeError, ValueError, ZoneInfoNotFoundError) as exc:
-        raise DomainError("AUTOMATION_POLICY_STALE", "每日重启时区无效", status_code=409) from exc
     if (
-        current_local_date != scheduled_date
-        or not setting.daily_restart_enabled
-        or setting.policy_version != policy_version
-        or setting.daily_restart_last_local_date != scheduled_date
-        or setting.daily_restart_last_node_id != node.pk
+        local_date_text != scheduled_date.isoformat()
         or operation.params.get("region") != node.region
         or operation.params.get("account_id") != str(node.cloud_account_id)
     ):
         raise DomainError("AUTOMATION_POLICY_STALE", "每日重启策略已变化", status_code=409)
+
+    if phase in {"stop", "reboot"}:
+        if setting is None:
+            raise DomainError("AUTOMATION_POLICY_STALE", "每日重启策略已变化", status_code=409)
+        try:
+            current_local_date = now.astimezone(ZoneInfo(setting.daily_restart_timezone)).date()
+        except (AttributeError, ValueError, ZoneInfoNotFoundError) as exc:
+            raise DomainError(
+                "AUTOMATION_POLICY_STALE", "每日重启时区无效", status_code=409
+            ) from exc
+        if (
+            current_local_date != scheduled_date
+            or not setting.daily_restart_enabled
+            or setting.policy_version != policy_version
+            or setting.daily_restart_last_local_date != scheduled_date
+            or setting.daily_restart_last_node_id != node.pk
+        ):
+            raise DomainError("AUTOMATION_POLICY_STALE", "每日重启策略已变化", status_code=409)
+    elif phase == "start":
+        stop_completed = Operation.objects.filter(
+            kind="node.stop",
+            target_type="node",
+            target_id=node.pk,
+            status="SUCCEEDED",
+            params__automation__kind="daily_restart",
+            params__automation__phase="stop",
+            params__automation__local_date=local_date_text,
+            params__automation__policy_version=policy_version,
+            params__region=node.region,
+            params__account_id=str(node.cloud_account_id),
+        ).exists()
+        if not stop_completed:
+            raise DomainError(
+                "AUTOMATION_POLICY_STALE", "每日重启停机阶段尚未确认", status_code=409
+            )
+
     if (
         node.desired_state != "PRESENT"
         or node.provisioning_state != "READY"
-        or node.health_state != "HEALTHY"
         or node.security_state != "OPEN"
-        or node.raw_cloud_state.casefold() != "running"
         or node.observation_error
     ):
         raise DomainError(
             "AUTOMATION_TARGET_INELIGIBLE", "每日重启目标状态已变化", status_code=409
+        )
+    if phase in {"stop", "reboot"} and (
+        node.health_state != "HEALTHY" or node.raw_cloud_state.casefold() != "running"
+    ):
+        raise DomainError(
+            "AUTOMATION_TARGET_INELIGIBLE", "每日重启目标状态已变化", status_code=409
+        )
+    if phase == "start" and node.raw_cloud_state.casefold() != "stopped":
+        raise DomainError(
+            "AUTOMATION_TARGET_INELIGIBLE", "每日重启目标尚未确认停机", status_code=409
+        )
+    if not any(
+        isinstance(address, dict)
+        and address.get("family", 4) == 4
+        and address.get("kind") == "dynamic"
+        and address.get("value")
+        for address in node.addresses or []
+    ):
+        raise DomainError(
+            "AUTOMATION_TARGET_INELIGIBLE", "每日重启目标缺少旧动态 IPv4", status_code=409
         )
 
     from apps.nodes.models import NodeConfigRevision

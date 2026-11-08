@@ -178,7 +178,8 @@ class NodeLifecycle:
                 changed_ipv4 = not require_ipv4_change or any(
                     address[0] not in previous_ipv4 for address in ipv4
                 )
-                if latest_state == expected_state and ipv4 and changed_ipv4:
+                address_requirement_met = bool(ipv4) or expected_state == "stopped"
+                if latest_state == expected_state and address_requirement_met and changed_ipv4:
                     stable_reads = stable_reads + 1 if snapshot == previous_snapshot else 1
                     if stable_reads >= INSTANCE_STABLE_READS:
                         return instance, ""
@@ -195,7 +196,7 @@ class NodeLifecycle:
                     return None, last_error or "CLOUD_STATE_UNEXPECTED"
                 if instance is None:
                     return None, last_error or "CLOUD_READ_AFTER_WRITE_FAILED"
-                if not ipv4:
+                if not ipv4 and expected_state != "stopped":
                     return None, "CLOUD_IPV4_READBACK_UNAVAILABLE"
                 if require_ipv4_change and not changed_ipv4:
                     return None, "CLOUD_ADDRESS_PROPAGATION_PENDING"
@@ -406,6 +407,7 @@ class NodeLifecycle:
         *,
         refresh_subscriptions: bool = False,
         defer_subscription_refresh: bool = False,
+        preserve_dynamic_ipv4_if_missing: bool = False,
     ) -> dict:
         if instance.ref != resource:
             raise DomainError(
@@ -441,6 +443,18 @@ class NodeLifecycle:
                 raise DomainError(
                     "NODE_TARGET_CHANGED", "节点目标在云读回期间发生变化", status_code=409
                 )
+            if preserve_dynamic_ipv4_if_missing and not any(
+                address.get("family") == 4 and address.get("kind") == "dynamic"
+                for address in addresses
+            ):
+                previous_dynamic_ipv4 = [
+                    address
+                    for address in locked.addresses or []
+                    if isinstance(address, dict)
+                    and address.get("family", 4) == 4
+                    and address.get("kind") == "dynamic"
+                ]
+                addresses = [*previous_dynamic_ipv4, *addresses]
             addresses_changed = locked.addresses != addresses
             locked.addresses = addresses
             locked.raw_cloud_state = instance.raw_state
@@ -1059,7 +1073,7 @@ class NodeLifecycle:
             )
 
         tracks_provider_operation = (
-            kind in {"start", "reboot"}
+            kind in {"start", "stop", "reboot"}
             and node.cloud_account.provider == "aws_lightsail"
         )
         claim = claim_operation(
@@ -1071,7 +1085,15 @@ class NodeLifecycle:
         )
         operation = assert_current(claim)
         automation = operation.params.get("automation")
-        if kind == "reboot" and automation is not None:
+        daily_restart_phase = (
+            automation.get("phase", "reboot")
+            if isinstance(automation, dict) and automation.get("kind") == "daily_restart"
+            else None
+        )
+        is_daily_restart = daily_restart_phase is not None
+        is_daily_restart_start = kind == "start" and daily_restart_phase == "start"
+        requires_health_check = kind == "reboot" or is_daily_restart_start
+        if kind in {"start", "stop", "reboot"} and automation is not None:
             policy_version = (
                 automation.get("policy_version") if isinstance(automation, dict) else None
             )
@@ -1099,13 +1121,13 @@ class NodeLifecycle:
             if error_code:
                 self._record_step(
                     operation,
-                    name="cloud.reboot.automation_preflight",
+                    name=f"cloud.{kind}.automation_preflight",
                     status="REJECTED",
                     evidence={"error_code": error_code},
                 )
                 self._finish(claim, status="FAILED", error_code=error_code)
                 return None
-        if kind == "reboot":
+        if kind == "reboot" or is_daily_restart:
             with transaction.atomic():
                 locked_node = ManagedNode.objects.select_for_update().get(pk=node.pk)
                 if (
@@ -1347,8 +1369,11 @@ class NodeLifecycle:
             )
             require_ipv4_change = (
                 kind == "start"
-                and str(node.raw_cloud_state).casefold() == "stopped"
                 and bool(previous_ipv4)
+                and (
+                    str(node.raw_cloud_state).casefold() == "stopped"
+                    or is_daily_restart_start
+                )
             )
             instance, read_error_code = self._wait_for_instance_readback(
                 provider,
@@ -1420,7 +1445,8 @@ class NodeLifecycle:
                 resource,
                 instance,
                 refresh_subscriptions=force_subscription_refresh,
-                defer_subscription_refresh=kind == "reboot",
+                defer_subscription_refresh=kind == "reboot" or is_daily_restart,
+                preserve_dynamic_ipv4_if_missing=kind == "stop",
             )
         except DomainError as exc:
             error_code = (
@@ -1477,7 +1503,7 @@ class NodeLifecycle:
             "published": observation["published"],
             "failed": observation["publication_failures"],
         }
-        if kind == "reboot":
+        if requires_health_check:
             if state_matches:
                 (
                     health_probe_status,
@@ -1607,7 +1633,7 @@ class NodeLifecycle:
             status = "SUCCEEDED"
             error_code = ""
 
-        if kind == "reboot" and health_error_code and status != "FAILED":
+        if requires_health_check and health_error_code and status != "FAILED":
             status = "NEEDS_RECONCILIATION"
             error_code = health_error_code
 
@@ -1645,7 +1671,7 @@ class NodeLifecycle:
                         "health_probe": health_probe_evidence,
                         "node_reconciliation": node_reconciliation,
                     }
-                    if kind == "reboot"
+                    if requires_health_check
                     else {}
                 ),
             },

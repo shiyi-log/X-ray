@@ -36,10 +36,12 @@ class FakeCloudProvider:
         self.lifecycle_readback_addresses = []
         self.start_operation_statuses = ["SUCCEEDED"]
         self.start_operation_status_calls = []
+        self.stop_operation_statuses = ["SUCCEEDED"]
+        self.stop_operation_status_calls = []
         self.reboot_operation_statuses = ["SUCCEEDED"]
         self.reboot_operation_status_calls = []
         self.omit_lifecycle_operation_id = False
-        self.lifecycle_operation_ids = {"start": [], "reboot": []}
+        self.lifecycle_operation_ids = {"start": [], "stop": [], "reboot": []}
         self.lifecycle_operation_snapshot_calls = []
         self.get_instance_calls = []
         self.action_calls = []
@@ -158,7 +160,8 @@ class FakeCloudProvider:
             None,
             (
                 f"fake-{action}-operation"
-                if action in {"start", "reboot"} and not self.omit_lifecycle_operation_id
+                if action in {"start", "stop", "reboot"}
+                and not self.omit_lifecycle_operation_id
                 else None
             ),
         )
@@ -177,15 +180,19 @@ class FakeCloudProvider:
         return list(self.lifecycle_operation_ids.get(action, ()))
 
     def get_operation_status(self, operation_id, resource, *, action):
-        if action not in {"start", "reboot"} or operation_id != f"fake-{action}-operation":
+        if action not in {"start", "stop", "reboot"} or operation_id != f"fake-{action}-operation":
             raise DomainError("CLOUD_OPERATION_TARGET_MISMATCH", "fake operation mismatch")
         statuses = (
             self.start_operation_statuses if action == "start" else self.reboot_operation_statuses
+            if action == "reboot"
+            else self.stop_operation_statuses
         )
         calls = (
             self.start_operation_status_calls
             if action == "start"
             else self.reboot_operation_status_calls
+            if action == "reboot"
+            else self.stop_operation_status_calls
         )
         calls.append(operation_id)
         index = min(len(calls) - 1, len(statuses) - 1)
@@ -194,6 +201,8 @@ class FakeCloudProvider:
             self.defer_start_address_until_operation_complete
             if action == "start"
             else self.defer_reboot_address_until_operation_complete
+            if action == "reboot"
+            else False
         )
         if status == "SUCCEEDED" and defer_address:
             current = self.instances[resource.resource_id]

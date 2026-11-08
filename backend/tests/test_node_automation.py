@@ -179,11 +179,20 @@ def _rebootable_node(node):
 
     node.desired_generation = node.applied_generation = 1
     node.health_state = "HEALTHY"
+    node.addresses = [
+        {
+            "value": "192.0.2.10",
+            "family": 4,
+            "kind": "dynamic",
+            "resource_id": node.external_id,
+        }
+    ]
     node.save(
         update_fields=[
             "desired_generation",
             "applied_generation",
             "health_state",
+            "addresses",
             "updated_at",
         ]
     )
@@ -701,16 +710,16 @@ def test_daily_restart_runs_one_at_boundary_and_rotates_on_next_local_day(
         lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
     )
     assert schedule_daily_node_restart()["scheduled"] == 1
-    reboot = Operation.objects.get(kind="node.reboot")
-    assert reboot.target_id == node.pk
-    validate_automated_restart(reboot, node, reboot.params["automation"]["policy_version"])
+    stop = Operation.objects.get(kind="node.stop")
+    assert stop.target_id == node.pk
+    validate_automated_restart(stop, node, stop.params["automation"]["policy_version"])
     setting = NodeAutomationSetting.objects.get(singleton_key=1)
     setting.policy_version += 1
     setting.save(update_fields=["policy_version", "updated_at"])
     with pytest.raises(DomainError) as stale:
-        validate_automated_restart(reboot, node, reboot.params["automation"]["policy_version"])
+        validate_automated_restart(stop, node, stop.params["automation"]["policy_version"])
     assert stale.value.code == "AUTOMATION_POLICY_STALE"
-    assert schedule_daily_node_restart()["scheduled"] == 0
+    assert schedule_daily_node_restart()["in_flight"] is True
     monkeypatch.setattr(
         "apps.nodes.automation.timezone.now",
         lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
@@ -718,10 +727,262 @@ def test_daily_restart_runs_one_at_boundary_and_rotates_on_next_local_day(
     next_day = schedule_daily_node_restart()
     assert next_day["scheduled"] == 0
     assert next_day["in_flight"] is True
-    reboot.status = "SUCCEEDED"
-    reboot.save()
+    stop.status = "SUCCEEDED"
+    stop.save()
+    ManagedNode.objects.filter(pk=node.pk).update(
+        raw_cloud_state="stopped", health_state="UNKNOWN"
+    )
+    continued = schedule_daily_node_restart()
+    start = Operation.objects.get(pk=continued["operation_id"])
+    assert continued["phase"] == "start"
+    assert start.kind == "node.start"
+    assert start.params["automation"]["local_date"] == "2026-11-06"
+    start.status = "SUCCEEDED"
+    start.save()
+    ManagedNode.objects.filter(pk=node.pk).update(
+        raw_cloud_state="running", health_state="HEALTHY"
+    )
     assert schedule_daily_node_restart()["scheduled"] == 1
-    assert Operation.objects.filter(kind="node.reboot", target_id=younger.pk).exists()
+    assert Operation.objects.filter(kind="node.stop", target_id=younger.pk).exists()
+
+
+@pytest.mark.django_db
+def test_daily_restart_uses_stop_start_phases_and_advances_after_start_success(
+    prepared_node, monkeypatch
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+
+    oldest, _ = prepared_node
+    _ready_node(oldest)
+    _rebootable_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _rebootable_node(younger)
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    setting = NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+
+    first = schedule_daily_node_restart()
+    stop = Operation.objects.get(pk=first["operation_id"])
+    assert stop.kind == "node.stop"
+    assert stop.params["automation"]["phase"] == "stop"
+    assert stop.params["automation"]["local_date"] == "2026-11-06"
+
+    stop.status = "SUCCEEDED"
+    stop.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        raw_cloud_state="stopped", health_state="UNKNOWN"
+    )
+    setting.daily_restart_enabled = False
+    setting.policy_version += 1
+    setting.save(update_fields=["daily_restart_enabled", "policy_version", "updated_at"])
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 22, 0, tzinfo=UTC),
+    )
+    continued = schedule_daily_node_restart()
+    start = Operation.objects.get(pk=continued["operation_id"])
+    assert continued["scheduled"] == 1
+    assert start.kind == "node.start"
+    assert start.target_id == oldest.pk
+    assert start.params["automation"]["phase"] == "start"
+    assert start.params["automation"]["local_date"] == "2026-11-06"
+    setting.daily_restart_enabled = True
+    setting.policy_version += 1
+    setting.save(update_fields=["daily_restart_enabled", "policy_version", "updated_at"])
+
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+    assert schedule_daily_node_restart()["in_flight"] is True
+
+    start.status = "SUCCEEDED"
+    start.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        raw_cloud_state="running", health_state="HEALTHY"
+    )
+    next_day = schedule_daily_node_restart()
+    next_stop = Operation.objects.get(pk=next_day["operation_id"])
+    assert next_day["scheduled"] == 1
+    assert next_stop.kind == "node.stop"
+    assert next_stop.target_id == younger.pk
+
+
+@pytest.mark.django_db
+def test_daily_restart_blocks_rotation_after_failed_start(prepared_node, monkeypatch):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+
+    oldest, _ = prepared_node
+    _ready_node(oldest)
+    _rebootable_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _rebootable_node(younger)
+    NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+
+    stop = Operation.objects.get(
+        pk=schedule_daily_node_restart()["operation_id"]
+    )
+    stop.status = "SUCCEEDED"
+    stop.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        raw_cloud_state="stopped", health_state="UNKNOWN"
+    )
+    start = Operation.objects.get(
+        pk=schedule_daily_node_restart()["operation_id"]
+    )
+    start.status = "FAILED"
+    start.save(update_fields=["status", "updated_at"])
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+
+    result = schedule_daily_node_restart()
+
+    assert result == {
+        "scheduled": 0,
+        "blocked": "RESTART_RECOVERY_REQUIRED",
+        "node_id": str(oldest.pk),
+    }
+    assert not Operation.objects.filter(kind="node.stop", target_id=younger.pk).exists()
+
+
+@pytest.mark.django_db
+def test_daily_restart_blocks_instead_of_skipping_failed_stop_target(prepared_node, monkeypatch):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+
+    oldest, _ = prepared_node
+    _ready_node(oldest)
+    _rebootable_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _rebootable_node(younger)
+    NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+
+    stop = Operation.objects.get(pk=schedule_daily_node_restart()["operation_id"])
+    stop.status = "FAILED"
+    stop.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        raw_cloud_state="running",
+        health_state="UNKNOWN",
+        observation_error="CLOUD_OPERATION_FAILED",
+    )
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+
+    result = schedule_daily_node_restart()
+
+    assert result == {
+        "scheduled": 0,
+        "blocked": "RESTART_RECOVERY_REQUIRED",
+        "node_id": str(oldest.pk),
+    }
+    assert not Operation.objects.filter(kind="node.stop", target_id=younger.pk).exists()
+
+
+@pytest.mark.django_db
+def test_daily_restart_accepts_audited_manual_recovery_after_failed_start(
+    prepared_node, monkeypatch
+):
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.tasks import schedule_daily_node_restart
+    from apps.operations.services import OperationService
+
+    oldest, _ = prepared_node
+    _ready_node(oldest)
+    _rebootable_node(oldest)
+    younger = _sibling(oldest, "younger")
+    _rebootable_node(younger)
+    NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+
+    stop = Operation.objects.get(pk=schedule_daily_node_restart()["operation_id"])
+    stop.status = "SUCCEEDED"
+    stop.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        raw_cloud_state="stopped", health_state="UNKNOWN"
+    )
+    start = Operation.objects.get(pk=schedule_daily_node_restart()["operation_id"])
+    start.status = "FAILED"
+    start.save(update_fields=["status", "updated_at"])
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+    assert schedule_daily_node_restart()["blocked"] == "RESTART_RECOVERY_REQUIRED"
+
+    manual_start = OperationService.submit(
+        kind="node.start",
+        target_id=oldest.pk,
+        params={"region": oldest.region, "account_id": str(oldest.cloud_account_id)},
+        key=uuid4(),
+        preview_id=None,
+        admin=start.admin,
+        cloud_credential_version=oldest.cloud_credential_version,
+    )
+    manual_start.status = "SUCCEEDED"
+    manual_start.result = {"addresses_changed": True}
+    manual_start.save(update_fields=["status", "result", "updated_at"])
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, 1, tzinfo=UTC),
+    )
+    manual_reboot = OperationService.submit(
+        kind="node.reboot",
+        target_id=oldest.pk,
+        params={"region": oldest.region, "account_id": str(oldest.cloud_account_id)},
+        key=uuid4(),
+        preview_id=None,
+        admin=start.admin,
+        cloud_credential_version=oldest.cloud_credential_version,
+    )
+    manual_reboot.status = "SUCCEEDED"
+    manual_reboot.result = {"health_state": "HEALTHY"}
+    manual_reboot.save(update_fields=["status", "result", "updated_at"])
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        raw_cloud_state="running",
+        health_state="HEALTHY",
+        observation_error="",
+        addresses=[
+            {
+                "value": "198.51.100.44",
+                "family": 4,
+                "kind": "dynamic",
+                "resource_id": oldest.external_id,
+            }
+        ],
+    )
+
+    recovered = schedule_daily_node_restart()
+
+    assert recovered["scheduled"] == 1, recovered
+    assert recovered["node_id"] == str(oldest.pk)
+    assert recovered["phase"] == "stop"
+    assert Operation.objects.get(pk=recovered["operation_id"]).target_id == oldest.pk
 
 
 @pytest.mark.django_db
@@ -778,7 +1039,9 @@ def test_daily_restart_blocks_when_health_probe_is_unavailable(prepared_node, mo
     assert result == {"scheduled": 0, "blocked": "HEALTH_PROBE_UNAVAILABLE"}
     setting.refresh_from_db()
     assert setting.daily_restart_last_local_date is None
-    assert not Operation.objects.filter(kind="node.reboot").exists()
+    assert not Operation.objects.filter(
+        params__automation__kind="daily_restart"
+    ).exists()
 
 
 @pytest.mark.django_db
@@ -807,15 +1070,15 @@ def test_daily_restart_skips_known_unhealthy_node_without_consuming_its_turn(
     assert result["scheduled"] == 1
     assert result["node_id"] == str(younger.pk)
     assert setting.daily_restart_last_node_id == younger.pk
-    assert Operation.objects.filter(kind="node.reboot", target_id=oldest.pk).count() == 0
+    assert Operation.objects.filter(kind="node.stop", target_id=oldest.pk).count() == 0
 
-    reboot = Operation.objects.get(kind="node.reboot", target_id=younger.pk)
+    stop = Operation.objects.get(kind="node.stop", target_id=younger.pk)
     ManagedNode.objects.filter(pk=younger.pk).update(health_state="UNHEALTHY")
     from apps.nodes.automation import validate_automated_restart
 
     with pytest.raises(DomainError) as error:
         validate_automated_restart(
-            reboot, younger, reboot.params["automation"]["policy_version"]
+            stop, younger, stop.params["automation"]["policy_version"]
         )
     assert error.value.code == "AUTOMATION_TARGET_INELIGIBLE"
 
@@ -839,15 +1102,29 @@ def test_daily_restart_fall_back_hour_runs_once_per_local_date(prepared_node, mo
         lambda: datetime(2026, 11, 1, 5, 30, tzinfo=UTC),
     )
     assert schedule_daily_node_restart()["scheduled"] == 1
-    Operation.objects.filter(kind="node.reboot").update(status="SUCCEEDED")
+    stop = Operation.objects.get(kind="node.stop")
+    stop.status = "SUCCEEDED"
+    stop.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=node.pk).update(
+        raw_cloud_state="stopped", health_state="UNKNOWN"
+    )
     monkeypatch.setattr(
         "apps.nodes.automation.timezone.now",
         lambda: datetime(2026, 11, 1, 6, 30, tzinfo=UTC),
     )
     repeated_hour = schedule_daily_node_restart()
+    assert repeated_hour["scheduled"] == 1
+    assert repeated_hour["phase"] == "start"
+    start = Operation.objects.get(kind="node.start")
+    start.status = "SUCCEEDED"
+    start.save(update_fields=["status", "updated_at"])
+    ManagedNode.objects.filter(pk=node.pk).update(
+        raw_cloud_state="running", health_state="HEALTHY"
+    )
+    repeated_hour = schedule_daily_node_restart()
     assert repeated_hour["scheduled"] == 0
     assert repeated_hour["local_date"] == "2026-11-01"
-    assert Operation.objects.filter(kind="node.reboot").count() == 1
+    assert Operation.objects.filter(kind="node.stop").count() == 1
 
 
 @pytest.mark.django_db
@@ -880,4 +1157,4 @@ def test_daily_restart_schedules_after_spring_forward_skips_configured_time(
 
     assert result["scheduled"] == 1
     assert result["local_date"] == "2026-03-08"
-    assert Operation.objects.get(kind="node.reboot").target_id == node.pk
+    assert Operation.objects.get(kind="node.stop").target_id == node.pk

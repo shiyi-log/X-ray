@@ -429,6 +429,40 @@ def test_start_and_reboot_persist_exact_readback_and_changed_addresses(
 
 
 @pytest.mark.django_db
+def test_stop_waits_for_provider_completion_and_preserves_dynamic_ip_without_stop_readback(
+    prepared_node, admin
+):
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.raw_cloud_state = "running"
+    node.save(update_fields=["raw_cloud_state", "updated_at"])
+    operation = make_node_action(admin, node, "stop")
+    lifecycle, holder = make_lifecycle(node)
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="running",
+    )
+    provider.lifecycle_readback_addresses = [()]
+
+    lifecycle.dispatch("stop", node.pk, operation_id=operation.pk)
+
+    node.refresh_from_db()
+    operation.refresh_from_db()
+    assert any(action == "stop" for _, action in provider.lifecycle_operation_snapshot_calls)
+    assert node.raw_cloud_state == "stopped"
+    assert node.addresses == [
+        {"value": "192.0.2.10", "family": 4, "kind": "dynamic"}
+    ]
+    assert operation.status == "SUCCEEDED"
+
+
+@pytest.mark.django_db
 def test_reboot_readback_republishes_active_subscription_with_new_dynamic_ip(
     prepared_node, admin
 ):
@@ -544,6 +578,114 @@ def test_reboot_readback_republishes_active_subscription_with_new_dynamic_ip(
     assert "198.51.100.93" in payload
     assert "192.0.2.10" not in payload
     assert TokenService.resolve(issued.raw_token).pk == subscription.pk
+
+
+@pytest.mark.django_db
+def test_daily_restart_start_requires_new_ip_and_publishes_after_fresh_health(
+    prepared_node, admin, monkeypatch
+):
+    from datetime import UTC, date, datetime
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.models import ManagedNode
+    from apps.operations.services import OperationService
+    from providers.base import Address
+
+    node, _create_operation = prepared_node
+    provision_node_for_action(node)
+    node.raw_cloud_state = "stopped"
+    node.health_state = "UNKNOWN"
+    node.desired_generation = node.applied_generation = 1
+    node.save(
+        update_fields=[
+            "raw_cloud_state",
+            "health_state",
+            "desired_generation",
+            "applied_generation",
+            "updated_at",
+        ]
+    )
+    add_usable_config_revision(node)
+    local_date = date(2026, 11, 6)
+    setting = NodeAutomationSetting.objects.create(
+        daily_restart_enabled=True,
+        daily_restart_last_local_date=local_date,
+        daily_restart_last_node_id=node.pk,
+    )
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 5, 20, 0, tzinfo=UTC),
+    )
+    base_params = {
+        "region": node.region,
+        "account_id": str(node.cloud_account_id),
+        "automation": {
+            "kind": "daily_restart",
+            "policy_version": setting.policy_version,
+            "local_date": local_date.isoformat(),
+        },
+    }
+    stop = OperationService.submit(
+        kind="node.stop",
+        target_id=node.pk,
+        params={**base_params, "automation": {**base_params["automation"], "phase": "stop"}},
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=node.cloud_credential_version,
+    )
+    stop.status = "SUCCEEDED"
+    stop.save(update_fields=["status", "updated_at"])
+    start = OperationService.submit(
+        kind="node.start",
+        target_id=node.pk,
+        params={**base_params, "automation": {**base_params["automation"], "phase": "start"}},
+        key=uuid4(),
+        preview_id=None,
+        admin=admin,
+        cloud_credential_version=node.cloud_credential_version,
+    )
+
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    lifecycle, holder = make_lifecycle(node)
+    provider = lifecycle.provider_for(node, None)
+    provider.instances[node.external_id] = provider._instance(
+        node.external_id,
+        {
+            "xray-manager": "true",
+            "xray-node": str(node.pk),
+            "xray-operation": str(node.operation_key),
+        },
+        state="stopped",
+    )
+    provider.addresses_after_lifecycle_write = (
+        Address("198.51.100.96", 4, "dynamic", node.external_id),
+    )
+    publications = []
+    monkeypatch.setattr(
+        "apps.subscriptions.publishing.Publisher.refresh_node_address",
+        lambda node_id: publications.append(
+            (
+                node_id,
+                ManagedNode.objects.get(pk=node_id).addresses[0]["value"],
+                ManagedNode.objects.get(pk=node_id).health_state,
+            )
+        )
+        or {"published": 1, "failed": 0},
+    )
+
+    lifecycle.dispatch("start", node.pk, operation_id=start.pk)
+
+    node.refresh_from_db()
+    start.refresh_from_db()
+    assert holder["provider"].action_calls == ["start"]
+    assert node.addresses[0]["value"] == "198.51.100.96"
+    assert node.raw_cloud_state == "running"
+    assert node.health_state == "HEALTHY"
+    assert start.status == "SUCCEEDED"
+    assert start.result["addresses_changed"] is True
+    assert start.result["health_state"] == "HEALTHY"
+    assert publications == [(node.pk, "198.51.100.96", "HEALTHY")]
 
 
 @pytest.mark.django_db

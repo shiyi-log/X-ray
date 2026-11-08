@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from celery import shared_task
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.identity.models import NodeAutomationSetting
@@ -87,6 +88,54 @@ def _node_has_inflight_operation(node_id) -> bool:
     return Operation.objects.filter(target_type="node", target_id=node_id).exclude(
         status__in=Operation.TERMINAL_STATUSES
     ).exists()
+
+
+def _daily_restart_recovery_ready(operation, node) -> bool:
+    from apps.nodes.models import NodeConfigRevision
+
+    if (
+        node.desired_state != "PRESENT"
+        or node.provisioning_state != "READY"
+        or node.security_state != "OPEN"
+        or node.raw_cloud_state.casefold() != "running"
+        or node.health_state != "HEALTHY"
+        or node.observation_error
+        or node.desired_generation != node.applied_generation
+        or not NodeConfigRevision.objects.filter(
+            node=node,
+            generation=node.applied_generation,
+            usable=True,
+        ).exists()
+    ):
+        return False
+
+    phase = operation.params.get("automation", {}).get("phase")
+    if phase == "stop":
+        return True
+    if phase != "start":
+        return False
+
+    manual_starts = Operation.objects.filter(
+        kind="node.start",
+        target_type="node",
+        target_id=node.pk,
+        status="SUCCEEDED",
+        created_at__gt=operation.created_at,
+        params__automation__isnull=True,
+        result__addresses_changed=True,
+    ).order_by("created_at", "pk")
+    return any(
+        Operation.objects.filter(
+            kind="node.reboot",
+            target_type="node",
+            target_id=node.pk,
+            status="SUCCEEDED",
+            created_at__gt=manual_start.created_at,
+            params__automation__isnull=True,
+            result__health_state="HEALTHY",
+        ).exists()
+        for manual_start in manual_starts
+    )
 
 
 @shared_task
@@ -403,7 +452,7 @@ def schedule_node_bootstrap():
 
 @shared_task
 def schedule_daily_node_restart():
-    """Queue at most one stable, eligible node restart per configured local day."""
+    """Queue one stop/start cycle at a time, resuming a confirmed stop before new work."""
     from apps.identity.models import SuperAdmin
     from apps.nodes.models import ManagedNode, NodeConfigRevision
 
@@ -413,30 +462,140 @@ def schedule_daily_node_restart():
             .filter(singleton_key=1)
             .first()
         )
-        if setting is None or not setting.daily_restart_enabled:
+        if setting is None:
             return {"scheduled": 0, "disabled": True}
         now = timezone.now()
+        if timezone.is_naive(now):
+            return {"scheduled": 0, "invalid_clock": True}
+
+        daily_operations = Operation.objects.filter(
+            target_type="node",
+            params__automation__kind="daily_restart",
+        )
+        inflight = daily_operations.exclude(status__in=Operation.TERMINAL_STATUSES)
+        if inflight.exists():
+            return {"scheduled": 0, "in_flight": True}
+
+        latest_success = (
+            daily_operations.filter(status="SUCCEEDED")
+            .filter(
+                Q(kind="node.start", params__automation__phase="start")
+                | Q(kind="node.reboot")
+            )
+            .order_by("-updated_at", "-created_at")
+            .first()
+        )
+        if (
+            latest_success is not None
+            and setting.daily_restart_last_success_node_id != latest_success.target_id
+        ):
+            setting.daily_restart_last_success_node_id = latest_success.target_id
+            setting.save(update_fields=["daily_restart_last_success_node_id", "updated_at"])
+
+        latest_failed_attempt = (
+            daily_operations.filter(
+                kind__in=["node.stop", "node.start"],
+                status__in=["FAILED", "CANCELLED", "PARTIALLY_SUCCEEDED"],
+                params__automation__phase__in=["stop", "start"],
+            )
+            .order_by("-created_at", "-pk")
+            .first()
+        )
+        if (
+            latest_failed_attempt is not None
+            and latest_success is not None
+            and latest_failed_attempt.created_at <= latest_success.created_at
+        ):
+            latest_failed_attempt = None
+        recovery_target_id = None
+        if latest_failed_attempt is not None:
+            failed_node = ManagedNode.objects.filter(
+                pk=latest_failed_attempt.target_id
+            ).first()
+            if failed_node is None or not _daily_restart_recovery_ready(
+                latest_failed_attempt, failed_node
+            ):
+                return {
+                    "scheduled": 0,
+                    "blocked": "RESTART_RECOVERY_REQUIRED",
+                    "node_id": str(latest_failed_attempt.target_id),
+                }
+            recovery_target_id = failed_node.pk
+
+        latest_stop = (
+            daily_operations.filter(
+                kind="node.stop",
+                status="SUCCEEDED",
+                params__automation__phase="stop",
+            )
+            .order_by("-created_at", "-pk")
+            .first()
+        )
+        if latest_stop is not None:
+            stop_automation = latest_stop.params.get("automation", {})
+            cycle_date = str(stop_automation.get("local_date") or "")
+            start_operation = daily_operations.filter(
+                kind="node.start",
+                target_type="node",
+                target_id=latest_stop.target_id,
+                params__automation__phase="start",
+                params__automation__local_date=cycle_date,
+            ).order_by("created_at", "pk").first()
+            if start_operation is not None:
+                if start_operation.status in {"FAILED", "CANCELLED", "PARTIALLY_SUCCEEDED"}:
+                    recovery_target_id = latest_stop.target_id
+            else:
+                admin = SuperAdmin.objects.filter(singleton_key=1, is_active=True).first()
+                if admin is None:
+                    return {"scheduled": 0, "admin_unavailable": True}
+                node = ManagedNode.objects.select_related(
+                    "cloud_account", "cloud_credential_version"
+                ).get(pk=latest_stop.target_id)
+                if node.raw_cloud_state.casefold() != "stopped":
+                    return {
+                        "scheduled": 0,
+                        "blocked": "RESTART_RECOVERY_REQUIRED",
+                        "node_id": str(node.pk),
+                    }
+                start_automation = {**stop_automation, "phase": "start"}
+                start_operation = OperationService.submit(
+                    kind="node.start",
+                    target_id=node.pk,
+                    params={
+                        "region": latest_stop.params["region"],
+                        "account_id": latest_stop.params["account_id"],
+                        "automation": start_automation,
+                    },
+                    key=uuid5(
+                        NAMESPACE_URL,
+                        f"xray-daily-restart:{setting.pk}:{cycle_date}:start",
+                    ),
+                    preview_id=None,
+                    admin=admin,
+                    cloud_credential_version=node.cloud_credential_version,
+                )
+                return {
+                    "scheduled": 1,
+                    "operation_id": str(start_operation.pk),
+                    "node_id": str(node.pk),
+                    "phase": "start",
+                    "local_date": cycle_date,
+                    "at": now.isoformat(),
+                }
+
+        if not setting.daily_restart_enabled:
+            return {"scheduled": 0, "disabled": True}
         try:
             zone = ZoneInfo(setting.daily_restart_timezone)
             scheduled_time = time.fromisoformat(setting.daily_restart_time)
         except (ValueError, ZoneInfoNotFoundError):
             return {"scheduled": 0, "invalid_schedule": True}
-        if timezone.is_naive(now):
-            return {"scheduled": 0, "invalid_clock": True}
         local_now = now.astimezone(zone)
         local_date = local_now.date()
         if local_now.timetz().replace(tzinfo=None) < scheduled_time:
             return {"scheduled": 0, "due": False}
         if setting.daily_restart_last_local_date == local_date:
             return {"scheduled": 0, "due": False, "local_date": local_date.isoformat()}
-
-        inflight = Operation.objects.filter(
-            kind="node.reboot",
-            target_type="node",
-            params__automation__kind="daily_restart",
-        ).exclude(status__in=Operation.TERMINAL_STATUSES)
-        if inflight.exists():
-            return {"scheduled": 0, "in_flight": True}
 
         admin = SuperAdmin.objects.filter(singleton_key=1, is_active=True).first()
         if admin is None:
@@ -477,15 +636,7 @@ def schedule_daily_node_restart():
         rotation_node_id = setting.daily_restart_last_success_node_id
         if rotation_node_id is None:
             rotation_node_id = (
-                Operation.objects.filter(
-                    kind="node.reboot",
-                    target_type="node",
-                    status="SUCCEEDED",
-                    params__automation__kind="daily_restart",
-                )
-                .order_by("-updated_at", "-created_at")
-                .values_list("target_id", flat=True)
-                .first()
+                latest_success.target_id if latest_success is not None else None
             )
             if rotation_node_id is not None:
                 setting.daily_restart_last_success_node_id = rotation_node_id
@@ -503,26 +654,48 @@ def schedule_daily_node_restart():
         )
         if previous_index is not None:
             nodes = nodes[previous_index + 1 :] + nodes[: previous_index + 1]
-        node = next(
-            (
-                candidate
-                for candidate in nodes
-                if not _node_has_inflight_operation(candidate.pk)
-            ),
-            None,
+        node = (
+            next(
+                (
+                    candidate
+                    for candidate in nodes
+                    if candidate.pk == recovery_target_id
+                    and not _node_has_inflight_operation(candidate.pk)
+                ),
+                None,
+            )
+            if recovery_target_id is not None
+            else next(
+                (
+                    candidate
+                    for candidate in nodes
+                    if not _node_has_inflight_operation(candidate.pk)
+                ),
+                None,
+            )
         )
         if node is None:
+            if recovery_target_id is not None:
+                return {
+                    "scheduled": 0,
+                    "blocked": "RESTART_RECOVERY_REQUIRED",
+                    "node_id": str(recovery_target_id),
+                }
             return {"scheduled": 0, "no_idle_nodes": True}
 
-        key = uuid5(NAMESPACE_URL, f"xray-daily-restart:{setting.pk}:{local_date.isoformat()}")
+        key = uuid5(
+            NAMESPACE_URL,
+            f"xray-daily-restart:{setting.pk}:{local_date.isoformat()}:stop",
+        )
         operation = OperationService.submit(
-            kind="node.reboot",
+            kind="node.stop",
             target_id=node.pk,
             params={
                 "region": node.region,
                 "account_id": str(node.cloud_account_id),
                 "automation": {
                     "kind": "daily_restart",
+                    "phase": "stop",
                     "policy_version": setting.policy_version,
                     "local_date": local_date.isoformat(),
                 },
@@ -549,5 +722,6 @@ def schedule_daily_node_restart():
         "operation_id": str(operation.pk),
         "node_id": str(node.pk),
         "local_date": local_date.isoformat(),
+        "phase": "stop",
         "at": now.isoformat(),
     }

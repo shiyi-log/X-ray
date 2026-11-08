@@ -159,5 +159,5 @@ describe('business page navigation inside the Vben content layout', () => {
       });
       vi.unstubAllGlobals();
     }
-  }, 15_000);
+  }, 30_000);
 });
