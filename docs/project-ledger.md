@@ -6395,3 +6395,11 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `verification`: Previous CI run exit 1 (`frontend-e2e`; 7 passed/1 failed), sanitized artifact inspection passed as above. Focused remote rerun, boundary/acceptance/skill gates, and `git diff --check` remain pending until the portability fix is pushed.
 - `time_logic`: No application time logic changed. E2E TOTP fixture behavior unchanged.
 - `rollback_ref`: Revert only the scoped helper and audit receipt from the new audit commit if needed; preserve sanitized history, AGPL license, cleaned tags/artifacts, and public visibility. Never restore old contaminated objects.
+
+- `event_id`: `xray-open-source-20261108-01/009`
+- `run_id`: `xray-open-source-20261108-01`
+- `event_type`: `history-rewrite secret-scan allowlist remapping`
+- `read`: Main push `7c8e2975a7ac8528aabbe2df0e82af32196ab7e7` fixed the missing-`unzip` trace assertion. Its Actions run `42433665104` then passed through frontend E2E and failed at the repository secrets gate: five pre-existing allowlisted documentation false positives now had rewritten commit IDs, and one old ignore fingerprint referenced an unreachable pruned commit.
+- `write`: Updated `.gitleaksignore` to the rewritten commit fingerprints for the same four `d95b581acc0471aa416d546ff28a5530daa242df` entries and one `6586e9d55844bd1678c3d49564e01da77a1d70ff` entry; removed the obsolete `3153ef...` fingerprint because that commit was absent from the filtered commit map and emitted no finding. No secret values, scan reports, or raw workflow logs added to the repository.
+- `verification`: `./scripts/check-secrets.sh` on the rewritten candidate exit 0; Gitleaks scanned 120 commits/~8.18 MB, `no leaks found`. The preceding Actions run's other steps before the secret gate completed; new push CI remains required to validate full workflow after the ignore update.
+- `rollback_ref`: Revert only `.gitleaksignore` and this receipt if justified; do not reinstate obsolete pre-rewrite fingerprints or contaminated Git objects.
