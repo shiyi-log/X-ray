@@ -6824,3 +6824,17 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `reuse_and_rollback`: `复用现有身份服务、隔离测试 fixture 和 /002 本地正常登录证据。代码可通过本次 scoped commit 的 git revert 回退；回退不得恢复被撤销的服务端会话或认证挑战。管理员密码同步属于本机忽略配置驱动的隔离测试数据库运行状态，不由 Git 回退改变。`
 - `git_and_release`: `起始 HEAD 为 4cbaa6c8d3b5801bb57bdd93bdaee54a20bf78ae，分支 main，初始仅三处本次身份改动未提交；用户此前要求先本地验证/扫描后推送并保持干净，当前提交推送待最终候选差异扫描。无 VERSION、tag、Release 或 Actions 调度变更；完整真实 AWS 验收未完成，因此不创建新版本。`
 - `status`: `passed (optional-TOTP local login evidence, auth tests and local/static gates); in-progress (candidate diff scan, scoped commit/push and clean-worktree readback); blocked/not-run (full real AWS application lifecycle/IP/health/subscription/traffic acceptance).`
+
+
+### 2026-11-08T17:21:55+08:00 — xray-optional-mfa-20261108-01/004 认证修复提交推送回执
+
+- `event_id`: `xray-optional-mfa-20261108-01/004`
+- `run_id`: `xray-optional-mfa-20261108-01`
+- `actor`: `Codex`
+- `event_type`: `command, validate`
+- `path_scope`: `本次五文件认证候选提交；当前 main 与 origin/main；验收矩阵与工作区状态`
+- `operation`: `仅暂存 backend/apps/identity/services.py、backend/apps/identity/views.py、backend/tests/test_auth_api.py、docs/project-ledger.md、docs/progress.md。staged diff Gitleaks 扫描通过（约 32.15 KB，无泄漏）；提交为 a367bfb23e00fedf0913668bcf5ae9b0dd09bb79，中文提交消息“修复可选 TOTP 登录与认证限速”；git push origin main exit 0；远端 refs/heads/main 读回同一 SHA；最终 status 显示 main...origin/main 且无修改。acceptance validator 和 git diff --check 均 exit 0。`
+- `result`: `源码提交已推送，工作区在 a367bfb 状态 clean；期间无 force push/reset、无其他文件进入提交。现有 `v0.14.4` Release/tag 未改动，本次没有建新版本或触发发布。`
+- `external_limit`: `认证与后端测试已通过，但完整用户目标仍包含实际 AWS 应用节点池、每日重启后的地址/运行状态、真实订阅签发/撤回和流量验收；这些仍未运行。应用没有经过验证的 CloudAccount/ManagedNode，不能将独立 provider 只读证据或本地 Fake/Stub 证据提升为真实应用验收通过。`
+- `rollback_ref`: `源码提交可用 git revert a367bfb23e00fedf0913668bcf5ae9b0dd09bb79 回退；不得恢复已经撤销的认证会话/挑战。保留 v0.14.4 与所有现有 AWS/runner 资源。`
+- `status`: `passed (scoped commit/push, remote readback and clean worktree); blocked/not-run (remaining real AWS application acceptance and new phase release).`
