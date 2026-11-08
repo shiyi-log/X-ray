@@ -6587,3 +6587,18 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `status`: `passed`
 - `commit_or_tree`: `main@75c96d333694e4e2d33423a679f293c28ae6ca4d plus documentation receipts`
 - `rollback_ref`: `Append a further correction only if new clock evidence establishes a more precise time; do not rewrite /066.`
+
+### 2026-11-08T12:49:52+08:00 — xray-node-automation-20261106-01/068 verification receipt push readback
+
+- `event_id`: `xray-node-automation-20261106-01/068`
+- `run_id`: `xray-node-automation-20261106-01`
+- `event_type`: `git delivery verification`
+- `path_scope`: `main; origin/main; refs/tags/v0.14.4; GitHub repository metadata`
+- `operation`: `Push the verified documentation receipts and read back the public branch and annotated release tag.`
+- `authorization`: `The user requested pending work be committed and pushed before further edits, and authorized public v0.14.4 delivery.`
+- `command_or_tool`: `git commit -m "docs: record v0.14.4 verification status [skip ci]"; git push origin main; git rev-parse HEAD; git status --short --branch; git ls-remote origin refs/heads/main refs/tags/v0.14.4 refs/tags/v0.14.4^{}; GitHub repository metadata GET.`
+- `result`: `Commit 4de7a9b516394b6e2accf4266f18fa3b5b5abf5f pushed with exit 0. Remote main reads back at the same SHA. The v0.14.4 annotated tag object remains eca50beb3c983b977ccd76f9ba42135d090fc596 and peels to 68754381323d0ede33eb2bc1a059cf30f37398a3. GitHub repository visibility is public. The push did not dispatch CI or Release because the commit message uses [skip ci].`
+- `external_limit`: `Formal v0.14.4 GitHub Release remains absent (Release GET 404); the Release workflow still needs a manual main dispatch after the Chrome extension UI blocker is cleared. Real application AWS test nodes remain blocked by MFA and application CloudAccount credential prerequisites.`
+- `status`: `passed`
+- `commit_or_tree`: `main@4de7a9b516394b6e2accf4266f18fa3b5b5abf5f; clean at the immediate post-push readback`
+- `rollback_ref`: `Use git revert 4de7a9b if the receipt is wrong; do not rewrite public history or move/delete v0.14.4.`
