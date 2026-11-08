@@ -6671,3 +6671,19 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `status`: `passed (documentation verification); blocked (real AWS application acceptance)`
 - `commit_or_tree`: `main@0cbff52634d08e3837ff0d0d41feefcf6c29dcb3 plus final documentation receipt pending commit`
 - `rollback_ref`: `Revert only the final documentation receipt if necessary; preserve the immutable public v0.14.4 Release/tag and cloud/security state.`
+### 2026-11-08T13:38:43+08:00 — xray-node-automation-20261106-01/073 final committed-state verification
+
+- `event_id`: `xray-node-automation-20261106-01/073`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `final verification`
+- `path_scope`: `main; origin/main; refs/tags/v0.14.4; GitHub Release API; docs receipts; acceptance matrix`
+- `operation`: `Re-read the committed/pushed release receipt, verify the current Release/tag/matrix/static gates, and confirm the worktree is clean.`
+- `reason`: `Complete the required final verification after the closeout receipt commit was pushed.`
+- `command_or_tool`: `git status --short --branch; git rev-parse HEAD; git ls-remote origin refs/heads/main refs/tags/v0.14.4 refs/tags/v0.14.4^{}; python3 scripts/validate-acceptance.py; ./scripts/check-boundary.sh; ./scripts/check-secrets.sh; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager; git diff --check; GitHub Releases API GET for v0.14.4.`
+- `result`: `All validators and readbacks exited 0. Worktree was clean at main@88a85d816e88ccbb8f6409cc92666ee84d0b1dc8 and remote main matched; tag object eca50beb3c983b977ccd76f9ba42135d090fc596 peeled to 68754381323d0ede33eb2bc1a059cf30f37398a3; Release 438046647 remained non-draft/non-prerelease. Gitleaks scanned 129 commits/~8.38 MB with no leaks. GitHub push response reported 105 Dependabot alerts (1 critical, 40 high, 49 moderate, 15 low); no dependency investigation or changes were performed.`
+- `time_logic`: `No application time behavior changed.`
+- `external_limit`: `Real AWS application lifecycle, dynamic IP/health, subscription creation/revocation, traffic and node reconciliation remain blocked/not-run until the user completes TOTP binding and validates the dedicated CloudAccount. Runner cumulative cost cannot be attributed from account-level Cost Explorer data.`
+- `status`: `passed (Release and documentation closeout); blocked (real AWS application acceptance)`
+- `commit_or_tree`: `main@88a85d816e88ccbb8f6409cc92666ee84d0b1dc8 clean at final verification`
+- `rollback_ref`: `Preserve public v0.14.4 Release/tag and security/cloud state; revert only documentation closeout if a receipt is inaccurate.`
