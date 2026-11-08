@@ -12,8 +12,8 @@
 
 - [x] 推送经过本地门禁验证的 `main` 候选，并确认 GitHub Actions CI 成功。run `42442958213` / job `128615896104` 为 completed/success，runner 为专用 EC2；artifact `13602539193` digest 为 `sha256:c624420c6f07e1796e500efe7a2651e408fd7df120b2808739819edb58b5acb0`。GitHub job step API 仍显示 delivery step in progress，与 run/job conclusion 不一致，已在矩阵中保留该限制。
 - [x] 在已验证的 `main` 候选 `68754381323d0ede33eb2bc1a059cf30f37398a3` 上创建 annotated `v0.14.4` 标签，并确认远端 peeled commit 相同。
-- [ ] 在 `main` 上手动运行 Release workflow。当前 Chrome 扩展界面阻止浏览器自动化，workflow 尚未 dispatch。
-- [ ] 回读正式 GitHub Release、标签 peeled commit，以及 tar.gz、manifest、`SHA256SUMS` 的远端摘要。
+- [x] 已在 `main` 上手动运行 Release workflow。run `42449659843` / job `128635959964` 在专用 EC2 runner 上 completed/success；先前 Chrome 扩展阻塞已解除，历史记录保留在验收矩阵中。
+- [x] 已回读正式 GitHub Release `438046647`（2026-11-08T05:10:01Z 发布，非 draft、非 prerelease），标签 peeled commit 为 `68754381323d0ede33eb2bc1a059cf30f37398a3`；tar.gz、manifest、`SHA256SUMS` 的远端摘要与独立流式下载 SHA-256 一致，完整摘要见 `tests/acceptance/matrix.json` 的 `published_release_and_asset_readback`。
 
 ## 外部验收边界
 

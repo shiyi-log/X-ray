@@ -6738,3 +6738,36 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `external_limit`: `The mandatory browser authentication-credential handoff remains unresolved. Do not create an agent-owned TOTP, disable MFA, modify identity DB state, inject test write authorization or fabricate application Operations to bypass it. Dedicated CloudAccount is also absent in the latest application setup evidence. Genuine application lifecycle, changed-IP/health, subscriptions and traffic acceptance cannot be declared passed. No additional AWS resources were created; account-level billing cannot establish task-specific cumulative actual cost.`
 - `git_and_rollback`: `Before receipt commit: main@a8847ff62cedf5c53091216613609ceaf32d9603; only four scoped evidence files staged. Commit and push this coherent receipt with no version change; verify clean worktree and origin/main after push. Rollback is a scoped documentation/evidence revert; preserve public v0.14.4 and all cloud/security state.`
 - `status`: `passed (bounded provider readback and receipt static gates); blocked/not-run (full real application acceptance)`
+
+
+### 2026-11-08T15:20:07+08:00 — xray-node-automation-20261106-01/077 resumed blocked audit and release checklist correction
+
+- `event_id`: `xray-node-automation-20261106-01/077`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `scope, current-state read audit and blocked eligibility`
+- `path_scope`: `Current git status/HEAD; identity/models.py MFA field metadata; cloud_accounts/models.py model metadata; dedicated xray-cloud-acceptance PostgreSQL read-only aggregate metadata; existing login page; docs/release-checklist-v0.14.4.md; existing matrix Release evidence; public GitHub Release/workflow GET; latest ledger/progress.`
+- `requested_outcome_and_scope`: `Keep the user's complete node automation/testing/release objective intact. Correct only two stale unchecked publication items in the v0.14.4 release checklist, append progress/audit evidence, and conclude the repeated authentication prerequisite audit. No source/version/tag change.`
+- `authorization_and_exclusions`: `Read-only dedicated database metadata and existing public release APIs only; no credential values, cloud writes, SSH, tests against shared DB, authentication changes/bypass, fabricated Operations, token/subscription mutation, resource deletion or new publication.`
+- `authoritative_revalidation`: `Current clean main@e12d0c450498ca2d8215614deef98fcf509109c9; dedicated PG/Redis healthy. docker exec psql used PGOPTIONS default_transaction_read_only=on plus BEGIN READ ONLY, selecting only count and totp_confirmed_at IS NOT NULL aggregates: admins=1, mfa_bound=false, cloud_accounts=0, managed_nodes=0; exit 0. Login tab remains at the normal login form and is marked for handoff. No secret envelope or credential value was selected.`
+- `resumed_turn_audit`: `Three consecutive resumed goal turns reached the same MFA/CloudAccount blocker: first turn completed the remaining bounded production-provider readback, second turn was no progress (health/session/login revalidation only), and this third turn revalidates actual DB prerequisites. A subagent found one independently correctable stale Release checklist receipt; after that correction it found no remaining existing application-acceptance step that can run without the same prerequisites. Standalone CLI smoke or repeated local tests cannot prove the missing application lifecycle/IP/health/subscription/traffic closure.`
+- `release_revalidation`: `Public GitHub GETs exit 0: Release 438046647 is non-draft/non-prerelease, published 2026-11-08T05:10:01Z; run 42449659843 is completed/success; SHA256SUMS, manifest and tarball all uploaded and API digests match the already independently streamed/recorded matrix hashes. No asset was redownloaded and no workflow was dispatched.`
+- `write_plan`: `Replace exactly docs/release-checklist-v0.14.4.md publication checklist lines for dispatch and formal Release/asset readback with checked successful receipts. Append this event, focused progress row and final static gate event. Preserve all historical matrix/ledger evidence, external unchecked items and immutable public refs.`
+- `risk_rollback_reuse`: `Documentation-only correction; rollback via scoped git revert. Reuse existing immutable Release/run/asset evidence. Preserve all cloud, authentication and subscription state. Existing runner resources remain outside this correction; no new AWS resources or billable provisioning action.`
+- `time_logic`: `Actual aware Asia/Shanghai timestamp; no application schedule/TTL behavior change.`
+- `status`: `in-progress (two-line checklist correction); blocked audit threshold met for remaining complete real application acceptance, with status transition to follow final receipt verification.`
+
+
+### 2026-11-08T15:20:47+08:00 — xray-node-automation-20261106-01/078 blocked-audit receipt final gates
+
+- `event_id`: `xray-node-automation-20261106-01/078`
+- `run_id`: `xray-node-automation-20261106-01`
+- `actor`: `Codex`
+- `event_type`: `final verification and blocked-audit conclusion`
+- `path_scope`: `Only docs/release-checklist-v0.14.4.md, docs/progress.md and docs/project-ledger.md`
+- `commands_and_exit_codes`: `python3 scripts/validate-acceptance.py=0; ./scripts/check-boundary.sh=0; backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0; git diff --check=0; ./scripts/check-secrets.sh=0 (pinned Gitleaks Docker fallback: 131 commits/~8.39 MB, no leaks). Final status inspection showed exactly these three documentation files modified.`
+- `result`: `Release checklist now agrees with the published immutable v0.14.4 receipt. No business tests rerun because there is no source change. Read-only actual database counts prove TOTP unbound and no CloudAccount/ManagedNode; browser handoff remains at normal login. The complete real application acceptance cannot proceed independently. After three consecutive resumed turns with the same prerequisite blocker and exhaustion of independent corrective work, the goal is eligible for blocked, not complete. Commit/push this coherent receipt and confirm clean main before goal status transition.`
+- `time_logic`: `No application time behavior change; actual aware receipt time.`
+- `limits_and_next_step`: `Owner completes initial TOTP through normal UI; a validated decryptable test CloudAccount then permits normal Operation-based node lifecycle/IP/health/subscription/traffic acceptance. No agent-owned credential, auth DB mutation, MFA disable, forged Operation or test write authorizer is an acceptable substitute. No new cloud provisioning, deletion, SSH or release occurred.`
+- `rollback_ref`: `Documentation-only scoped git revert; preserve public release/tag, original full goal and all cloud/security state.`
+- `status`: `passed (documentation and static verification); blocked (remaining full application acceptance)`
