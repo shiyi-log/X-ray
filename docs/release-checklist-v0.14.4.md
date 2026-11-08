@@ -5,13 +5,14 @@
 - [x] `VERSION`、后端/前端包、OpenAPI、Playwright 证据路径和安装器默认标签均为 `0.14.4`。
 - [x] `test_daily_restart_health_failure_invalidates_stale_subscription_revision` 保留真实 `Publisher`，验证健康失败后旧 revision 不可用、没有新 revision、公开订阅返回 `503` 与 `no-store`。
 - [x] 单独覆盖节点创建、停止、启动、重启、删除；地址池缺额补齐、超额时每周期删除一台最早创建的节点；每日排序轮转；状态/IP/流量同步及订阅节点数量核对。
-- [x] 在发布源码候选上运行 `scripts/check-local.sh`，记录 19 项门禁、JUnit、前端单测和 Playwright 的准确计数及证据路径。最终 r2 为 19/19；后端 507 passed、2 skipped，前端 84 passed，Playwright 8 passed。r1 因磁盘空间不足在前端镜像构建阶段失败；r2 复用了现有 0.14.3 前端和 backup-tools 镜像，精确 0.14.4 镜像构建留待候选 CI。
+- [x] 在发布源码候选上运行 `scripts/check-local.sh`，记录 19 项门禁、JUnit、前端单测和 Playwright 的准确计数及证据路径。最终 r2 为 19/19；后端 507 passed、2 skipped，前端 84 passed，Playwright 8 passed。r1 因磁盘空间不足在前端镜像构建阶段失败；r2 复用了现有 0.14.3 前端和 backup-tools 镜像，候选 CI run `42442958213` completed/success，精确镜像构建纳入远端 delivery pipeline。
 - [x] acceptance validator、Shop/archive 边界、全历史和候选差异秘密扫描、skill 校验和 `git diff --check` 通过。全历史 Gitleaks 扫描 123 个提交；另使用 Gitleaks 8.24.3 对完整暂存候选差异（含 r1/r2 摘要与 JUnit）执行红acted stdin 扫描，退出码 0。
 
 ## 公开发布
 
-- [ ] 推送经过本地门禁验证的 `main` 候选，并确认 GitHub Actions CI 成功。
-- [ ] 在已验证的 `main` 候选上创建 annotated `v0.14.4` 标签，手动运行 Release workflow。
+- [x] 推送经过本地门禁验证的 `main` 候选，并确认 GitHub Actions CI 成功。run `42442958213` / job `128615896104` 为 completed/success，runner 为专用 EC2；artifact `13602539193` digest 为 `sha256:c624420c6f07e1796e500efe7a2651e408fd7df120b2808739819edb58b5acb0`。GitHub job step API 仍显示 delivery step in progress，与 run/job conclusion 不一致，已在矩阵中保留该限制。
+- [x] 在已验证的 `main` 候选 `68754381323d0ede33eb2bc1a059cf30f37398a3` 上创建 annotated `v0.14.4` 标签，并确认远端 peeled commit 相同。
+- [ ] 在 `main` 上手动运行 Release workflow。当前 Chrome 扩展界面阻止浏览器自动化，workflow 尚未 dispatch。
 - [ ] 回读正式 GitHub Release、标签 peeled commit，以及 tar.gz、manifest、`SHA256SUMS` 的远端摘要。
 
 ## 外部验收边界

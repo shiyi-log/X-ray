@@ -1,6 +1,6 @@
 {
   "version": "0.14.4",
-  "generated_at": "2026-11-08T11:21:51+08:00",
+  "generated_at": "2026-11-08T12:15:06+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -44,7 +44,7 @@
             "reason": "Docker frontend image build ran out of host disk space; no shared cache, image, container, or volume was pruned."
           },
           "image_limitations": [
-            "The retry reused the existing 0.14.3 frontend and backup-tools images for the local harness; exact 0.14.4 runtime-image construction remains for candidate CI."
+        "The local retry reused the existing 0.14.3 frontend and backup-tools images. Candidate CI run 42442958213 completed success and uploaded acceptance artifact 13602539193; its step endpoint has an inconsistent in-progress display as recorded in the CI row."
           ],
           "secret_scan_scope": [
             "The local secrets gate ran the repository Gitleaks script, which scans committed Git history; the complete staged candidate diff, including acceptance summaries and JUnit evidence, was separately scanned with Gitleaks 8.24.3 stdin mode, --redact, and exit code 0."
@@ -65,9 +65,27 @@
     {
       "id": "github-ci-v0.14.4",
       "environment": "ci",
-      "status": "not-run",
-      "evidence": [],
-      "commit": "pending",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "run_id": 42442958213,
+          "attempt": 1,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
+          "runner": "xray-actions-ec2-2x4-20261108-01",
+          "started_at": "2026-11-08T03:29:54Z",
+          "finished_at": "2026-11-08T03:48:43Z",
+          "acceptance_artifact": {
+            "id": 13602539193,
+            "digest": "sha256:c624420c6f07e1796e500efe7a2651e408fd7df120b2808739819edb58b5acb0"
+          },
+          "limitation": "Run and job APIs report completed/success and the evidence artifact exists; the job step endpoint still showed the complete-delivery-gates step as in_progress with later steps pending at read time. Preserve this API inconsistency rather than infer per-step details from it."
+        }
+      ],
+      "commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
       "provider": "github-actions",
       "region": null,
       "cost": null,
@@ -78,7 +96,7 @@
       "environment": "release",
       "status": "not-run",
       "evidence": [],
-      "commit": "pending",
+      "commit": "68754381323d0ede33eb2bc1a059cf30f37398a3",
       "provider": "github",
       "region": null,
       "cost": null,
