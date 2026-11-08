@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { removeTraceNetworkArchive, screenshotPath, tracePath } from './helpers';
+import { sanitizeTraceArchive, screenshotPath, tracePath } from './helpers';
 
 const fixedOperation = '11111111-1111-4111-8111-111111111111';
 
@@ -20,7 +20,7 @@ test('刷新恢复会话、真实空状态与固定 Operation', async ({ page, c
   await expect(page.getByTestId('operation-id')).toHaveText(fixedOperation);
   await page.screenshot({ path: screenshotPath('desktop-operation.png'), fullPage: true });
   await context.tracing.stop({ path: sanitizedTrace });
-  removeTraceNetworkArchive(sanitizedTrace);
+  sanitizeTraceArchive(sanitizedTrace);
 });
 
 test('真实网络失败显示错误且不伪造系统数据', async ({ page, context }) => {

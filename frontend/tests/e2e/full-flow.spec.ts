@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 
 import {
   completePartialRevocation,
-  removeTraceNetworkArchive,
+  sanitizeTraceArchive,
   screenshotPath,
   traceContainsSecret,
   tracePath,
@@ -92,7 +92,7 @@ test('管理员从会话恢复完成一次性交付与部分撤销全流程', as
     if (traceStarted) {
       try {
         await context.tracing.stop({ path: sanitizedTrace });
-        removeTraceNetworkArchive(sanitizedTrace);
+        sanitizeTraceArchive(sanitizedTrace);
         if (traceContainsSecret(sanitizedTrace, deliveredToken)) {
           rmSync(sanitizedTrace, { force: true });
           traceError = new Error('Sanitized trace contained the one-time token and was removed');

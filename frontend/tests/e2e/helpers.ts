@@ -50,13 +50,9 @@ export function tracePath(name: string) {
   return path.join(acceptanceRoot, name);
 }
 
-export function removeTraceNetworkArchive(target: string) {
-  const entries = execFileSync('unzip', ['-Z1', target], { encoding: 'utf8' })
-    .split('\n')
-    .filter((entry) => entry.endsWith('trace.network'));
-  if (entries.length) {
-    execFileSync('zip', ['-d', target, ...entries], { stdio: 'ignore' });
-  }
+export function sanitizeTraceArchive(target: string) {
+  const sanitizer = path.resolve(import.meta.dirname, '../../../scripts/sanitize-playwright-trace.py');
+  execFileSync('python3', [sanitizer, target], { stdio: 'ignore' });
 }
 
 export function traceContainsSecret(target: string, secret: string) {
