@@ -4,7 +4,6 @@ import json
 from datetime import datetime
 from functools import wraps
 
-import pyotp
 from django.conf import settings
 from django.db import transaction
 from django.http import JsonResponse
@@ -22,7 +21,6 @@ from apps.identity.gate_settings import (
     set_provider_identity_network_enabled,
 )
 from common.admin_api import admin_endpoint, json_payload
-from common.crypto import configured_secret_store
 from common.errors import DomainError
 
 from .services import (
@@ -32,12 +30,12 @@ from .services import (
     local_one_click_login,
     local_one_click_login_enabled,
     password_login,
-    record_step_up,
     require_admin,
     require_recent_step_up,
     revoke_all,
     session_status,
     setup_totp,
+    verify_step_up,
 )
 
 
@@ -184,22 +182,12 @@ def logout_all(request):
 def step_up(request):
     payload = _json(request)
     admin = request.xray_admin
-    if not admin.check_password(str(payload.get("password") or "")):
-        raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
-    if admin.totp_secret_envelope:
-        code = str(payload.get("code") or "")
-        secret = (
-            configured_secret_store()
-            .decrypt(
-                admin.totp_secret_envelope,
-                purpose="control",
-                aad=f"totp:{admin.pk}".encode(),
-            )
-            .decode()
-        )
-        if not pyotp.TOTP(secret).verify(code, valid_window=0):
-            raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
-    until = record_step_up(request, admin)
+    until = verify_step_up(
+        request,
+        admin,
+        str(payload.get("password") or ""),
+        str(payload.get("code") or ""),
+    )
     return JsonResponse({"recent_auth_until": until.isoformat()})
 
 

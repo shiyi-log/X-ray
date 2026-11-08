@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import pyotp
 import pytest
 from django.contrib.auth.hashers import make_password
+from django.core.cache import cache
 from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -239,6 +240,224 @@ def test_totp_recovery_invalidates_pending_password_challenge(admin, csrf_client
     )
     assert fresh.json()["authenticated"] is True
     assert fresh.json()["mfa_enabled"] is False
+
+
+@override_settings(AUTH_RATE_LIMIT_MAX_FAILURES=2)
+def test_totp_challenge_rate_limits_failed_codes(admin, csrf_client):
+    from common.crypto import configured_secret_store
+
+    cache.clear()
+    secret = pyotp.random_base32()
+    admin.totp_secret_envelope = configured_secret_store().encrypt(
+        secret.encode(), purpose="control", aad=f"totp:{admin.pk}".encode()
+    )
+    admin.totp_confirmed_at = timezone.now()
+    admin.save(update_fields=["totp_secret_envelope", "totp_confirmed_at"])
+    login = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    challenge_id = login.json()["challenge_id"]
+    valid_code = pyotp.TOTP(secret).now()
+    invalid_code = "000000" if valid_code != "000000" else "000001"
+
+    for _ in range(2):
+        failed = csrf_client.post(
+            "/api/v1/auth/totp/verify",
+            {"challenge_id": challenge_id, "code": invalid_code},
+            format="json",
+        )
+        assert failed.status_code == 401
+        assert failed.json()["code"] == "MFA_INVALID"
+    assert MFAChallenge.objects.get(pk=challenge_id).failed_attempts == 2
+
+    limited = csrf_client.post(
+        "/api/v1/auth/totp/verify",
+        {"challenge_id": challenge_id, "code": invalid_code},
+        format="json",
+    )
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "AUTH_RATE_LIMITED"
+
+
+@override_settings(AUTH_RATE_LIMIT_MAX_FAILURES=2)
+def test_totp_setup_challenge_rate_limits_failed_codes(admin, csrf_client):
+    cache.clear()
+    csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    csrf_client.post(
+        "/api/v1/auth/step-up", {"password": "test-only-password-A"}, format="json"
+    )
+    setup = csrf_client.post("/api/v1/auth/totp/setup", {}, format="json")
+    challenge_id = setup.json()["challenge_id"]
+    secret = setup.json()["secret"]
+    valid_code = pyotp.TOTP(secret).now()
+    invalid_code = "000000" if valid_code != "000000" else "000001"
+
+    for _ in range(2):
+        failed = csrf_client.post(
+            "/api/v1/auth/totp/confirm",
+            {"challenge_id": challenge_id, "code": invalid_code},
+            format="json",
+        )
+        assert failed.status_code == 401
+        assert failed.json()["code"] == "MFA_INVALID"
+    assert MFAChallenge.objects.get(pk=challenge_id).failed_attempts == 2
+
+    limited = csrf_client.post(
+        "/api/v1/auth/totp/confirm",
+        {"challenge_id": challenge_id, "code": invalid_code},
+        format="json",
+    )
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "AUTH_RATE_LIMITED"
+
+
+@override_settings(AUTH_RATE_LIMIT_MAX_FAILURES=2)
+def test_recovery_challenge_rate_limits_failed_codes(admin, csrf_client):
+    from common.crypto import configured_secret_store
+
+    cache.clear()
+    admin.totp_secret_envelope = configured_secret_store().encrypt(
+        pyotp.random_base32().encode(), purpose="control", aad=f"totp:{admin.pk}".encode()
+    )
+    admin.totp_confirmed_at = timezone.now()
+    admin.recovery_code_hashes = [make_password("test-only-recovery-code")]
+    admin.save(
+        update_fields=["totp_secret_envelope", "totp_confirmed_at", "recovery_code_hashes"]
+    )
+    login = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    challenge_id = login.json()["challenge_id"]
+
+    for _ in range(2):
+        failed = csrf_client.post(
+            "/api/v1/auth/recovery-code",
+            {"challenge_id": challenge_id, "code": "invalid-recovery-code"},
+            format="json",
+        )
+        assert failed.status_code == 401
+        assert failed.json()["code"] == "RECOVERY_INVALID"
+    assert MFAChallenge.objects.get(pk=challenge_id).failed_attempts == 2
+
+    limited = csrf_client.post(
+        "/api/v1/auth/recovery-code",
+        {"challenge_id": challenge_id, "code": "invalid-recovery-code"},
+        format="json",
+    )
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "AUTH_RATE_LIMITED"
+
+
+@override_settings(AUTH_RATE_LIMIT_MAX_FAILURES=2)
+def test_password_step_up_rate_limits_failed_passwords(admin, csrf_client):
+    cache.clear()
+    csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+
+    for _ in range(2):
+        failed = csrf_client.post(
+            "/api/v1/auth/step-up", {"password": "wrong-password"}, format="json"
+        )
+        assert failed.status_code == 401
+        assert failed.json()["code"] == "STEP_UP_INVALID"
+
+    limited = csrf_client.post(
+        "/api/v1/auth/step-up", {"password": "wrong-password"}, format="json"
+    )
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "AUTH_RATE_LIMITED"
+
+
+@override_settings(AUTH_RATE_LIMIT_MAX_FAILURES=2)
+def test_totp_step_up_rate_limits_failed_codes(admin, csrf_client, monkeypatch):
+    from common.crypto import configured_secret_store
+
+    cache.clear()
+    frozen_now = datetime(2026, 11, 8, 12, 0, tzinfo=UTC)
+    original_verify = pyotp.TOTP.verify
+
+    def verify_at_frozen_time(self, code, for_time=None, valid_window=0):
+        return original_verify(self, code, for_time=frozen_now, valid_window=valid_window)
+
+    class FrozenDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return frozen_now.astimezone(tz) if tz else frozen_now.replace(tzinfo=None)
+
+    monkeypatch.setattr(pyotp.TOTP, "verify", verify_at_frozen_time)
+    monkeypatch.setattr("apps.identity.services.datetime", FrozenDateTime)
+    secret = pyotp.random_base32()
+    admin.totp_secret_envelope = configured_secret_store().encrypt(
+        secret.encode(), purpose="control", aad=f"totp:{admin.pk}".encode()
+    )
+    admin.totp_confirmed_at = timezone.now()
+    admin.last_totp_step = -1
+    admin.save(update_fields=["totp_secret_envelope", "totp_confirmed_at", "last_totp_step"])
+
+    login = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    verified = csrf_client.post(
+        "/api/v1/auth/totp/verify",
+        {"challenge_id": login.json()["challenge_id"], "code": pyotp.TOTP(secret).at(frozen_now)},
+        format="json",
+    )
+    assert verified.status_code == 200
+
+    valid_code = pyotp.TOTP(secret).now()
+    invalid_code = "000000" if valid_code != "000000" else "000001"
+    for _ in range(2):
+        failed = csrf_client.post(
+            "/api/v1/auth/step-up",
+            {"password": "test-only-password-A", "code": invalid_code},
+            format="json",
+        )
+        assert failed.status_code == 401
+        assert failed.json()["code"] == "STEP_UP_INVALID"
+
+    limited = csrf_client.post(
+        "/api/v1/auth/step-up",
+        {"password": "test-only-password-A", "code": invalid_code},
+        format="json",
+    )
+    assert limited.status_code == 429
+    assert limited.json()["code"] == "AUTH_RATE_LIMITED"
+
+
+def test_expired_totp_challenge_does_not_report_mfa_enabled(admin, csrf_client):
+    from common.crypto import configured_secret_store
+
+    admin.totp_secret_envelope = configured_secret_store().encrypt(
+        pyotp.random_base32().encode(), purpose="control", aad=f"totp:{admin.pk}".encode()
+    )
+    admin.totp_confirmed_at = timezone.now()
+    admin.save(update_fields=["totp_secret_envelope", "totp_confirmed_at"])
+    login = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    challenge = MFAChallenge.objects.get(pk=login.json()["challenge_id"])
+    challenge.expires_at = timezone.now() - timedelta(seconds=1)
+    challenge.save(update_fields=["expires_at"])
+
+    body = csrf_client.get("/api/v1/auth/session").json()
+    assert body["authenticated"] is False
+    assert body["mfa_required"] is False
+    assert body["mfa_enabled"] is False
 
 
 def test_existing_totp_login_and_replay_is_rejected(admin, csrf_client):

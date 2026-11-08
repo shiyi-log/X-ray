@@ -6805,3 +6805,22 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `external_limit_and_status`: `本地认证及代码验证通过；本次没有真实 AWS 写入、创建/删除测试服务器或订阅/流量操作。aws-real-cloud 仍因可用 CloudAccount/凭据解密与应用级操作验收缺失而未通过；MFA 强制绑定不再是当前阻塞。此记录不表示 v0.14.4 内容发生变化，也不表示已创建新 Release。`
 - `git_and_rollback`: `起始本地与 origin/main 均为 d3d1c7e3d396cf4154d6352def54b82a37cb5e89；用户要求验证扫描后推送现有相干认证改动，随后工作区干净再继续。当前认证代码以该 scoped commit 或 git revert 回退；本地隔离测试数据库密码同步是独立运行状态，不随 Git 回退。无 VERSION、tag、Release 或远端动作已执行。`
 - `status`: `passed (local optional-TOTP login and listed verification); in-progress (scoped push and rate-limit follow-up); blocked/not-run (full real AWS application acceptance and new release).`
+
+
+### 2026-11-08T17:17:02+08:00 — xray-optional-mfa-20261108-01/003 认证限速补齐与回归验证
+
+- `event_id`: `xray-optional-mfa-20261108-01/003`
+- `run_id`: `xray-optional-mfa-20261108-01`
+- `actor`: `Codex`
+- `event_type`: `modify, test, validate, review`
+- `path_scope`: `backend/apps/identity/services.py; backend/apps/identity/views.py; backend/tests/test_auth_api.py; docs/project-ledger.md; docs/progress.md; 专用 xray_test PostgreSQL/Redis；现有本地 X-ray 9537/9538 HTTP 只读探针`
+- `requested_outcome`: `按用户明确要求使未绑定 TOTP 的管理员可用密码正常登录，TOTP 绑定保持可选；完成本地认证与代码验证。原始节点自动化、真实云验收和发布目标继续保留。`
+- `implementation`: `身份服务对未绑定账号继续直接建立普通会话，不自动赋予敏感操作的近期 step-up；已绑定账号仍要求 TOTP/恢复码。补齐绑定登录 challenge、主动绑定确认、恢复码和密码/TOTP step-up 失败限速；过期/失效 challenge 不再误报为当前 MFA 已启用。新增已绑定 TOTP 的 step-up 错码限速 API 回归，固定 UTC 测试时钟以消除 30 秒验证码窗口边缘波动。未改数据库 schema、OpenAPI、版本号或发布标签。`
+- `commands_and_exit_codes`: `首个 pytest 命令因在 backend/ 子目录传入错误 --project backend 在收集前退出 2；修正后 focused auth API/schema 两次均 exit 0、31 passed；完整 backend+delivery pytest exit 0、517 passed、9 skipped（仅真实恢复镜像、固定 Xray 二进制、构建镜像和 disposable Linux/systemd host gates）；Ruff 0；acceptance validator 0；boundary 0；xray-manager skill validator 0；Gitleaks history scan 0（133 commits/~8.46 MB，无泄漏）；git diff --check 0。`
+- `runtime_and_login`: `复用 /002 记录的正常 CSRF/password 登录读回：9538 同源代理 HTTP 200，session authenticated=true、mfa_enabled=false、recent_auth_until=null，/api/v1/system HTTP 200；本轮只读复查 9537 /health/ready 和 9538 /login 均 HTTP 200。该本地管理员原本没有 TOTP secret，所以无需执行 TOTP 清除/重置写入。HTTP 客户端登录证据不冒充浏览器表单点击。`
+- `review`: `只读认证审查确认失败计数事务提交后才转成错误响应，不会随请求事务回滚；新 step-up 测试的登录/挑战顺序有效。其提出的低概率 TOTP 30 秒边缘风险已通过固定测试时钟消除。`
+- `authorization_and_external_limit`: `只使用专用 xray_test 与现存本机 X-ray 服务；测试进程启动前移除 AWS credential/profile 环境并禁用 metadata。没有 AWS API 写入、服务器创建/删除、SSH、公网探测、订阅签发/撤回或流量操作。生产 AWS provider 独立只读回读不代表应用级验收；当前仍无经应用验证的 CloudAccount/ManagedNode，aws-real-cloud 应保持 blocked/not-run。`
+- `time_logic`: `测试验证码使用固定 aware UTC 时间 2026-11-08T12:00:00Z；业务挑战仍按现有 aware UTC `[start,end)` 规则在 `now >= expires_at` 时过期。本轮没有变更生产计划、TTL、DST 或时间分区语义。审计时间使用机器实际 Asia/Shanghai 时钟。`
+- `reuse_and_rollback`: `复用现有身份服务、隔离测试 fixture 和 /002 本地正常登录证据。代码可通过本次 scoped commit 的 git revert 回退；回退不得恢复被撤销的服务端会话或认证挑战。管理员密码同步属于本机忽略配置驱动的隔离测试数据库运行状态，不由 Git 回退改变。`
+- `git_and_release`: `起始 HEAD 为 4cbaa6c8d3b5801bb57bdd93bdaee54a20bf78ae，分支 main，初始仅三处本次身份改动未提交；用户此前要求先本地验证/扫描后推送并保持干净，当前提交推送待最终候选差异扫描。无 VERSION、tag、Release 或 Actions 调度变更；完整真实 AWS 验收未完成，因此不创建新版本。`
+- `status`: `passed (optional-TOTP local login evidence, auth tests and local/static gates); in-progress (candidate diff scan, scoped commit/push and clean-worktree readback); blocked/not-run (full real AWS application lifecycle/IP/health/subscription/traffic acceptance).`

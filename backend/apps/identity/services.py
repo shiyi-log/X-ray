@@ -80,6 +80,25 @@ def _too_many_failures(username: str, ip: str | None) -> bool:
         return False
 
 
+def _assert_challenge_attempts_remaining(request, challenge: MFAChallenge) -> None:
+    if (
+        challenge.failed_attempts >= settings.AUTH_RATE_LIMIT_MAX_FAILURES
+        or _too_many_failures(challenge.admin.username, request_ip(request))
+    ):
+        raise DomainError(
+            "AUTH_RATE_LIMITED",
+            "验证尝试过于频繁，请稍后重试",
+            retryable=True,
+            status_code=429,
+        )
+
+
+def _record_challenge_failure(request, challenge: MFAChallenge) -> None:
+    challenge.failed_attempts += 1
+    challenge.save(update_fields=["failed_attempts"])
+    _record_failure(challenge.admin.username, request_ip(request))
+
+
 def _challenge_from_request(request, challenge_id: str | None) -> MFAChallenge:
     session_id = request.session.get("mfa_challenge_id")
     if not challenge_id or str(session_id) != str(challenge_id):
@@ -297,66 +316,98 @@ def _create_local_one_click_session(request) -> dict:
     return _start_session(request, admin, None)
 
 
-@transaction.atomic
 def complete_totp_setup(request, challenge_id: str, code: str) -> dict:
-    challenge = _challenge_from_request(request, challenge_id)
-    challenge = MFAChallenge.objects.select_for_update().select_related("admin").get(
-        pk=challenge.pk
-    )
-    step = _verify_pending_totp(request, challenge, code)
-    admin = SuperAdmin.objects.select_for_update().get(pk=challenge.admin_id)
-    if admin.totp_secret_envelope:
-        raise DomainError("TOTP_ALREADY_CONFIGURED", "验证器已绑定", status_code=409)
-    pending = request.session["pending_totp_envelope"]
-    secret = configured_secret_store().decrypt(
-        pending, purpose="control", aad=f"mfa-challenge:{challenge.pk}".encode()
-    )
-    admin.totp_secret_envelope = configured_secret_store().encrypt(
-        secret, purpose="control", aad=f"totp:{admin.pk}".encode()
-    )
-    admin.totp_confirmed_at = timezone.now()
-    recovery_codes = _new_recovery_codes()
-    admin.recovery_code_hashes = [make_password(code) for code in recovery_codes]
-    admin.last_totp_step = step
-    admin.save(
-        update_fields=[
-            "totp_secret_envelope",
-            "totp_confirmed_at",
-            "recovery_code_hashes",
-            "last_totp_step",
-            "updated_at",
-        ]
-    )
-    revoke_all(admin)
-    admin.refresh_from_db(fields=["session_version"])
-    return _start_session(request, admin, challenge, recovery_codes=recovery_codes)
+    failure = None
+    response = None
+    with transaction.atomic():
+        challenge = _challenge_from_request(request, challenge_id)
+        challenge = MFAChallenge.objects.select_for_update().select_related("admin").get(
+            pk=challenge.pk
+        )
+        _assert_challenge_attempts_remaining(request, challenge)
+        try:
+            step = _verify_pending_totp(request, challenge, code)
+        except DomainError as exc:
+            if exc.code == "MFA_INVALID":
+                _record_challenge_failure(request, challenge)
+            failure = exc
+        if failure is None:
+            admin = SuperAdmin.objects.select_for_update().get(pk=challenge.admin_id)
+            if admin.totp_secret_envelope:
+                raise DomainError("TOTP_ALREADY_CONFIGURED", "验证器已绑定", status_code=409)
+            pending = request.session["pending_totp_envelope"]
+            secret = configured_secret_store().decrypt(
+                pending, purpose="control", aad=f"mfa-challenge:{challenge.pk}".encode()
+            )
+            admin.totp_secret_envelope = configured_secret_store().encrypt(
+                secret, purpose="control", aad=f"totp:{admin.pk}".encode()
+            )
+            admin.totp_confirmed_at = timezone.now()
+            recovery_codes = _new_recovery_codes()
+            admin.recovery_code_hashes = [make_password(code) for code in recovery_codes]
+            admin.last_totp_step = step
+            admin.save(
+                update_fields=[
+                    "totp_secret_envelope",
+                    "totp_confirmed_at",
+                    "recovery_code_hashes",
+                    "last_totp_step",
+                    "updated_at",
+                ]
+            )
+            revoke_all(admin)
+            admin.refresh_from_db(fields=["session_version"])
+            response = _start_session(request, admin, challenge, recovery_codes=recovery_codes)
+    if failure is not None:
+        raise failure
+    return response
 
 
-@transaction.atomic
 def complete_totp(request, challenge_id: str, code: str) -> dict:
-    challenge = _challenge_from_request(request, challenge_id)
-    challenge = MFAChallenge.objects.select_for_update().select_related("admin").get(
-        pk=challenge.pk
-    )
-    admin = SuperAdmin.objects.select_for_update().get(pk=challenge.admin_id)
-    step = _verify_totp_for_admin(admin, code)
-    if step <= admin.last_totp_step:
-        raise DomainError("MFA_REPLAY", "验证码已使用", status_code=409)
-    admin.last_totp_step = step
-    admin.save(update_fields=["last_totp_step", "updated_at"])
-    return _start_session(request, admin, challenge)
+    failure = None
+    response = None
+    with transaction.atomic():
+        challenge = _challenge_from_request(request, challenge_id)
+        challenge = MFAChallenge.objects.select_for_update().select_related("admin").get(
+            pk=challenge.pk
+        )
+        _assert_challenge_attempts_remaining(request, challenge)
+        admin = SuperAdmin.objects.select_for_update().get(pk=challenge.admin_id)
+        try:
+            step = _verify_totp_for_admin(admin, code)
+            if step <= admin.last_totp_step:
+                raise DomainError("MFA_REPLAY", "验证码已使用", status_code=409)
+        except DomainError as exc:
+            if exc.code in {"MFA_INVALID", "MFA_REPLAY"}:
+                _record_challenge_failure(request, challenge)
+            failure = exc
+        if failure is None:
+            admin.last_totp_step = step
+            admin.save(update_fields=["last_totp_step", "updated_at"])
+            response = _start_session(request, admin, challenge)
+    if failure is not None:
+        raise failure
+    return response
 
 
-@transaction.atomic
 def complete_recovery(request, challenge_id: str, code: str) -> dict:
-    challenge = _challenge_from_request(request, challenge_id)
-    challenge = MFAChallenge.objects.select_for_update().select_related("admin").get(
-        pk=challenge.pk
-    )
-    admin = SuperAdmin.objects.select_for_update().get(pk=challenge.admin_id)
-    if not _consume_recovery_code(admin, code):
-        raise DomainError("RECOVERY_INVALID", "恢复码错误或已使用", status_code=401)
-    return _start_session(request, admin, challenge)
+    failure = None
+    response = None
+    with transaction.atomic():
+        challenge = _challenge_from_request(request, challenge_id)
+        challenge = MFAChallenge.objects.select_for_update().select_related("admin").get(
+            pk=challenge.pk
+        )
+        _assert_challenge_attempts_remaining(request, challenge)
+        admin = SuperAdmin.objects.select_for_update().get(pk=challenge.admin_id)
+        if not _consume_recovery_code(admin, code):
+            _record_challenge_failure(request, challenge)
+            failure = DomainError("RECOVERY_INVALID", "恢复码错误或已使用", status_code=401)
+        else:
+            response = _start_session(request, admin, challenge)
+    if failure is not None:
+        raise failure
+    return response
 
 
 def current_admin(request) -> SuperAdmin | None:
@@ -383,7 +434,26 @@ def current_admin(request) -> SuperAdmin | None:
 def session_status(request) -> dict:
     admin = current_admin(request)
     if admin is None:
-        pending_mfa = bool(request.session.get("mfa_challenge_id"))
+        challenge_id = request.session.get("mfa_challenge_id")
+        pending_mfa = False
+        binding = request.session.get("xray_challenge_binding")
+        if challenge_id and binding:
+            try:
+                challenge = MFAChallenge.objects.select_related("admin").get(
+                    pk=challenge_id,
+                    used_at__isnull=True,
+                    expires_at__gt=timezone.now(),
+                )
+                pending_mfa = bool(
+                    challenge.admin.totp_secret_envelope
+                    and challenge.session_binding == hashlib.sha256(binding.encode()).hexdigest()
+                    and (
+                        not challenge.source_ip
+                        or challenge.source_ip == request_ip(request)
+                    )
+                )
+            except MFAChallenge.DoesNotExist:
+                pass
         return {
             "authenticated": False,
             "mfa_required": pending_mfa,
@@ -429,6 +499,29 @@ def record_step_up(request, admin: SuperAdmin) -> datetime:
         revoked_at__isnull=True,
     ).update(last_step_up_at=now)
     return until
+
+
+def verify_step_up(request, admin: SuperAdmin, password: str, code: str) -> datetime:
+    ip = request_ip(request)
+    if _too_many_failures(admin.username, ip):
+        raise DomainError(
+            "AUTH_RATE_LIMITED",
+            "验证尝试过于频繁，请稍后重试",
+            retryable=True,
+            status_code=429,
+        )
+    if not admin.check_password(password):
+        _record_failure(admin.username, ip)
+        raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
+    if admin.totp_secret_envelope:
+        try:
+            _verify_totp_for_admin(admin, code)
+        except DomainError as exc:
+            if exc.code == "MFA_INVALID":
+                _record_failure(admin.username, ip)
+                raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401) from exc
+            raise
+    return record_step_up(request, admin)
 
 
 def require_admin(view: Callable):
