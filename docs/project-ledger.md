@@ -6771,3 +6771,37 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `limits_and_next_step`: `Owner completes initial TOTP through normal UI; a validated decryptable test CloudAccount then permits normal Operation-based node lifecycle/IP/health/subscription/traffic acceptance. No agent-owned credential, auth DB mutation, MFA disable, forged Operation or test write authorizer is an acceptable substitute. No new cloud provisioning, deletion, SSH or release occurred.`
 - `rollback_ref`: `Documentation-only scoped git revert; preserve public release/tag, original full goal and all cloud/security state.`
 - `status`: `passed (documentation and static verification); blocked (remaining full application acceptance)`
+
+
+### 2026-11-08 — xray-optional-mfa-20261108-01/001 用户授权可选 TOTP 与本地账号恢复
+
+- `event_id`: `xray-optional-mfa-20261108-01/001`
+- `run_id`: `xray-optional-mfa-20261108-01`
+- `requested_outcome`: `用户明确要求重置本地密码和TOTP并跑通登录，TOTP不应强制绑定；原始节点自动化/云验收/发布目标继续，提交消息使用中文。`
+- `scope`: `identity 服务/视图/恢复命令/focused tests；前端 auth/session/login/系统安全设置/step-up 及测试；API schema/OpenAPI/类型；当前认证规范/技能/开发文档；版本与发布/验收记录。后端测试串行且只用独立 gate DB；精确本地账号恢复仅作用于 xray-cloud-acceptance。`
+- `authorization_boundary`: `本次明确指令覆盖此前正式环境强制绑定MFA的旧产品规则，授权通过本机维护命令恢复唯一验收管理员；不使用测试一键登录或 XRAY_DISABLE_TOTP 绕过正常路径。保留已绑定TOTP/恢复码、密码、CSRF、服务端会话与版本撤销、敏感动作 preview/幂等键/近期二次验证。浏览器新增凭据仍须人工交接；维护恢复命令按本次明确授权在终端执行，秘密只在进程内存/隐藏输入传递。`
+- `exclusions`: `不读Shop/archive或其他项目秘密，不更改其他数据库/进程/端口/云资源/订阅；不输出或提交密码、TOTP、恢复码、Cookie、AWS密钥或原始payload；不建分支/硬重置/强推。`
+- `read_evidence`: `起始 main@d3d1c7e 工作区干净；已读AGENTS、conventions、xray-manager、TDD/测试准则、systematic-debugging、端口技能和身份实现。根因是password_login始终创建挑战且未绑定要求setup，step_up对未绑定强制报错。现有恢复命令可隐藏旧密码清TOTP并撤销会话。几项猜测文件不存在、portctl list不支持，未改变状态；首次中文heredoc因编码SyntaxError未执行，改用ASCII编码序列安全追加。`
+- `design`: `未绑定密码登录直接建立正常会话但不自动授予敏感操作近期验证；已绑定仍挑战TOTP。session/direct login提供mfa_enabled。未绑定step-up验密码、已绑定验密码及TOTP。可选绑定通过已登录且近期二次验证的 /totp/setup 空challenge请求创建绑定挑战，返回challenge_id供确认；旧挑战路径兼容，秘密只留内存。`
+- `risks_and_time_logic`: `认证规则是明确授权的产品变更，覆盖未绑定/已绑定/待确认绑定/错误密码/失效会话/CSRF和step-up。保持aware UTC、会话/挑战/近期验证[start,end)过期。密码/TOTP恢复会撤销旧会话，不得通过代码回退复活旧认证状态。`
+- `verification_plan`: `前后端focused RED/GREEN；完整隔离测试、OpenAPI确定性、Django/迁移/Ruff/typecheck/build/E2E、边界/秘密/skill/矩阵/diff；实际正常密码登录后继续原始真实云验收。`
+- `rollback_and_reuse`: `复用现有生产登录/会话/step-up/恢复命令及独立gate fixtures；代码以v0.14.4/scoped revert回退，不恢复被撤销认证/云状态。后续新版本使用中文提交，保留既有公开标签。`
+- `status`: `in-progress`
+
+
+### 2026-11-08T16:36:44+08:00 — xray-optional-mfa-20261108-01/002 本地认证验证与状态纠正
+
+- `event_id`: `xray-optional-mfa-20261108-01/002`
+- `run_id`: `xray-optional-mfa-20261108-01`
+- `actor`: `Codex`
+- `event_type`: `runtime, test, validate, correction`
+- `path_scope`: `现有认证改动涉及 backend/apps/identity、backend/config/openapi.py、backend/openapi/schema.yaml、backend/tests/test_auth_api.py、backend/tests/test_auth_schema.py、frontend/apps/web-antd auth/session/security settings、对应单测、认证说明与技能；本地 X-ray 测试服务 127.0.0.1:9537/9538 和隔离 xray_test 数据库。未修改任何业务源码文件。`
+- `correction_to_001`: `开始时 main@d3d1c7e 的工作区已有 25 个认证相关变更文件，并非干净工作区；实际管理员恢复目标是项目专用 xray_test 数据库，不是 xray-cloud-acceptance。唯一管理员当前 totp_secret_envelope 为空，因此没有调用 recover_superadmin，也没有进行 TOTP 清除写入。`
+- `authorization_and_secrets`: `用户明确要求重置本地管理员密码并取消强制 TOTP，且之前明确要求先验证、扫描、提交推送并保持干净。使用项目 main.py 的 dotenv 解析器在 Python 进程内加载被忽略的根目录 .env，并运行 sync_env_superadmin；设置命令只允许 XRAY_ENV=test、config.settings.test 和 xray_test/test_xray_test 数据库。凭据没有出现在命令参数、输出、URL、文件、日志或聊天。没有调用 AWS、SSH、外部系统或云写接口。`
+- `runtime_and_login`: `本机前端 9538、后端 9537 均由本仓库工作目录进程监听；/health/ready 返回 HTTP 200，database/redis 检查均为 ok。使用 CSRF 流程经 Vite 同源代理 POST /api/v1/auth/login，HTTP 200；随后 /api/v1/auth/session 为 authenticated=true、mfa_enabled=false、recent_auth_until=null，/api/v1/system HTTP 200。登录通过本机 HTTP 客户端验证，未声称完成浏览器表单点击；浏览器当前页面确认是常规登录表单。项目本地 XRAY_DISABLE_TOTP 配置为 true，但该管理员未绑定 TOTP，服务的未绑定密码登录分支先行建立会话；自动化后端测试显式设置 XRAY_DISABLE_TOTP=0，并覆盖 test/production 两种未绑定密码直登。`
+- `commands_and_exit_codes`: `focused backend pytest test_auth_api.py+test_auth_schema.py=0 (25 passed); full backend pytest=0 (403 passed, 2 skipped: fixed Xray binary absent); frontend unit=0 (18 files, 88 passed); frontend lint=0; frontend typecheck=0; frontend build=0; makemigrations --check --dry-run=0 (No changes detected); OpenAPI spectacular validate and deterministic checked-in schema comparison=0; Ruff 0; ./scripts/check-boundary.sh=0; ./scripts/check-secrets.sh=0 (Gitleaks 8.24.3, 132 commits/~8.40 MB, no leaks); skill validator=0; python3 scripts/validate-acceptance.py=0; git diff --check before documentation append=0. Initial typecheck/build invocations selected global pnpm 11.25 and exited 1; reruns through npx pnpm 10.33.0 passed. A direct backend/.venv/bin/ruff path was absent; pinned uvx Ruff 0.13.1 check passed.`
+- `review_findings`: `只读认证审查确认会话撤销及确认路径保持有效；同时发现现有 TOTP login challenge 未使用 MFAChallenge.failed_attempts 限制失败尝试，新加的未绑定密码 step-up 分支也没有失败限速；未认证 session_status 的 mfa_enabled 可能由过期 challenge 标记为 true。前两项需在下一干净代码变更中用 TDD 修复，完成前不发布新版本；低优先级状态语义待一并核对。`
+- `time_logic`: `本次代码未增加新的业务时钟规则；认证测试覆盖过期 step-up、challenge 生命周期及 TOTP 当前时间步。业务时间使用 aware UTC，超时仍按 now >= expiry 失效；本次登录的 timestamp 使用本地实际时钟 Asia/Shanghai。`
+- `external_limit_and_status`: `本地认证及代码验证通过；本次没有真实 AWS 写入、创建/删除测试服务器或订阅/流量操作。aws-real-cloud 仍因可用 CloudAccount/凭据解密与应用级操作验收缺失而未通过；MFA 强制绑定不再是当前阻塞。此记录不表示 v0.14.4 内容发生变化，也不表示已创建新 Release。`
+- `git_and_rollback`: `起始本地与 origin/main 均为 d3d1c7e3d396cf4154d6352def54b82a37cb5e89；用户要求验证扫描后推送现有相干认证改动，随后工作区干净再继续。当前认证代码以该 scoped commit 或 git revert 回退；本地隔离测试数据库密码同步是独立运行状态，不随 Git 回退。无 VERSION、tag、Release 或远端动作已执行。`
+- `status`: `passed (local optional-TOTP login and listed verification); in-progress (scoped push and rate-limit follow-up); blocked/not-run (full real AWS application acceptance and new release).`

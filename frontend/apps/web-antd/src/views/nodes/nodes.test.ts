@@ -445,7 +445,7 @@ describe('server management', () => {
       await flushPromises();
       await wrapper.findAll('button').find((button) => button.text().includes('启动'))!.trigger('click');
       await flushPromises();
-      expect(wrapper.text()).toContain('请退出并重新完成密码与 MFA 验证后再次操作');
+      expect(wrapper.text()).toContain('请在系统设置重新验证身份后再次操作');
     } finally {
       wrapper.unmount();
     }

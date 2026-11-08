@@ -84,6 +84,7 @@ describe('X-ray Vben route shell', () => {
       JSON.stringify({
         authenticated: false,
         mfa_required: false,
+        mfa_enabled: false,
         expires_at: null,
         recent_auth_until: null,
       }),
@@ -98,6 +99,7 @@ describe('X-ray Vben route shell', () => {
     useSessionStore().applySession({
       authenticated: true,
       mfa_required: false,
+      mfa_enabled: false,
       admin: { username: 'admin' },
       expires_at: null,
       recent_auth_until: null,

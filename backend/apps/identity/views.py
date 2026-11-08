@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
 
 import pyotp
@@ -32,6 +32,7 @@ from .services import (
     local_one_click_login,
     local_one_click_login_enabled,
     password_login,
+    record_step_up,
     require_admin,
     require_recent_step_up,
     revoke_all,
@@ -185,22 +186,20 @@ def step_up(request):
     admin = request.xray_admin
     if not admin.check_password(str(payload.get("password") or "")):
         raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
-    code = str(payload.get("code") or "")
-    if not admin.totp_secret_envelope:
-        raise DomainError("TOTP_SETUP_REQUIRED", "请先绑定验证器", status_code=409)
-    secret = (
-        configured_secret_store()
-        .decrypt(
-            admin.totp_secret_envelope,
-            purpose="control",
-            aad=f"totp:{admin.pk}".encode(),
+    if admin.totp_secret_envelope:
+        code = str(payload.get("code") or "")
+        secret = (
+            configured_secret_store()
+            .decrypt(
+                admin.totp_secret_envelope,
+                purpose="control",
+                aad=f"totp:{admin.pk}".encode(),
+            )
+            .decode()
         )
-        .decode()
-    )
-    if not pyotp.TOTP(secret).verify(code, valid_window=0):
-        raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
-    until = datetime.now().astimezone() + timedelta(seconds=settings.AUTH_STEP_UP_SECONDS)
-    request.session["recent_auth_until"] = until.isoformat()
+        if not pyotp.TOTP(secret).verify(code, valid_window=0):
+            raise DomainError("STEP_UP_INVALID", "身份验证失败", status_code=401)
+    until = record_step_up(request, admin)
     return JsonResponse({"recent_auth_until": until.isoformat()})
 
 

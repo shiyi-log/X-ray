@@ -8,6 +8,7 @@ import { Alert, Button, Card, Descriptions, DescriptionsItem, Input, InputNumber
 import { regionLabel, resourcesApi, type NodePoolCreationTemplate } from '@/api/resources';
 import PageState from '@/components/PageState.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import SecuritySettings from './SecuritySettings.vue';
 import { useResource } from '@/composables/useResource';
 
 const { data, loading, error, reload } = useResource(resourcesApi.system);
@@ -407,5 +408,6 @@ function saveStatusSyncInterval() {
         />
       </PageState>
     </Card>
+    <SecuritySettings class="mt-4" />
   </Page>
 </template>

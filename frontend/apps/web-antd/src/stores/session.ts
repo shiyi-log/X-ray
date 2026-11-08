@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 import { useTabbarStore, useUserStore } from '@vben/stores';
 
-import { authApi, type AdminSession, type LoginChallenge, type TotpSetup } from '@/api/auth';
+import { authApi, type AdminSession, type PasswordLoginResult, type TotpSetup } from '@/api/auth';
 import { clearSensitiveState, registerSensitiveClearer } from '@/api/request';
 
 interface SensitiveAuthState {
@@ -61,23 +61,26 @@ export const useSessionStore = defineStore('session', {
       this.applySession(authenticated);
       return authenticated;
     },
-    async passwordLogin(username: string, password: string): Promise<LoginChallenge> {
+    async passwordLogin(username: string, password: string): Promise<PasswordLoginResult> {
       this.clearSensitive();
       const challenge = await authApi.login(username, password);
-      this.sensitive.challengeId = challenge.challenge_id || '';
       if (challenge.authenticated) {
-        this.applySession({
-          authenticated: true,
-          mfa_required: false,
-          admin: challenge.admin,
-          expires_at: challenge.expires_at,
-          recent_auth_until: null,
-        });
+        this.applySession(challenge);
+      } else {
+        this.sensitive.challengeId = challenge.challenge_id || '';
       }
       return challenge;
     },
+    async stepUp(password: string, code?: string) {
+      const result = await authApi.stepUp(password, code);
+      if (this.session?.authenticated) {
+        this.session = { ...this.session, recent_auth_until: result.recent_auth_until };
+      }
+      return result;
+    },
     async beginTotpSetup(): Promise<TotpSetup> {
       const setup = await authApi.setupTotp(this.sensitive.challengeId);
+      this.sensitive.challengeId = setup.challenge_id || this.sensitive.challengeId;
       this.sensitive.setupSecret = setup.secret;
       this.sensitive.setupUri = setup.otpauth_uri;
       return setup;

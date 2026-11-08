@@ -46,11 +46,18 @@ environment files or secret-bearing output; record only redacted metadata.
 ## X-ray Safety Invariants
 
 - PostgreSQL is the source of truth; Redis/Celery work is reconstructible.
-- There is one database-enforced administrator. Password authentication creates
-  only a short-lived challenge unless an explicitly test-only local bypass is
-  enabled; production always requires MFA.
+- There is one database-enforced administrator. TOTP enrollment is optional and
+  initiated by the administrator after authenticated, recent step-up. Normal
+  password login starts a session when TOTP is unbound; a bound administrator
+  must complete TOTP or a one-time recovery code. Explicit local test login
+  bypasses remain unavailable in production.
 - Server-side sessions, CSRF, session-version invalidation, TOTP/recovery,
   purpose-separated AEAD envelopes, and secret redaction remain mandatory.
+- Sensitive actions still require recent step-up: password when TOTP is unbound,
+  password plus TOTP when bound. Ordinary password login grants no recent
+  step-up. Password or TOTP recovery invalidates old sessions and unused
+  authentication challenges; enrollment secrets and recovery codes stay in page
+  memory only.
 - Every side-effecting API requires a UUID `Idempotency-Key`. Dangerous actions
   require a fresh target-bound preview and step-up authentication.
 - Cloud capability is evidence-based: `SUPPORTED`, `UNSUPPORTED`, or

@@ -150,6 +150,54 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/api/v1/auth/step-up": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["auth_step_up_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/totp/confirm": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["auth_totp_confirm_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/api/v1/auth/totp/setup": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post: operations["auth_totp_setup_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/api/v1/cloud-accounts/": {
         readonly parameters: {
             readonly query?: never;
@@ -617,6 +665,7 @@ export interface components {
             readonly authenticated: boolean;
             /** Format: date-time */
             readonly expires_at?: string | null;
+            readonly mfa_enabled: boolean;
             readonly mfa_required: boolean;
             /** Format: date-time */
             readonly recent_auth_until?: string | null;
@@ -681,6 +730,10 @@ export interface components {
             readonly password: string;
             readonly username: string;
         };
+        readonly LoginResponse: (components["schemas"]["AdminSession"] & {
+            /** @enum {unknown} */
+            readonly authenticated?: true;
+        }) | components["schemas"]["LoginChallenge"];
         readonly ManagedNode: {
             readonly addresses?: readonly Record<string, never>[];
             readonly applied_generation?: number;
@@ -928,6 +981,16 @@ export interface components {
             /** Format: uri */
             readonly url: string;
         };
+        readonly StepUpRequest: {
+            /** @description Required when the administrator has enabled TOTP. */
+            readonly code?: string;
+            /** Format: password */
+            readonly password: string;
+        };
+        readonly StepUpResult: {
+            /** Format: date-time */
+            readonly recent_auth_until: string;
+        };
         readonly Subscription: {
             /** Format: date-time */
             readonly created_at?: string;
@@ -1032,6 +1095,27 @@ export interface components {
             readonly provider_identity_network_enabled?: boolean;
             readonly usage_sync_enabled?: boolean;
             readonly usage_sync_interval_minutes?: number;
+        };
+        readonly TotpConfirmedSession: components["schemas"]["AdminSession"] & {
+            readonly recovery_codes?: readonly string[];
+        };
+        readonly TotpConfirmRequest: {
+            /** Format: uuid */
+            readonly challenge_id: string;
+            readonly code: string;
+        };
+        readonly TotpSetup: {
+            /** Format: uuid */
+            readonly challenge_id: string;
+            /** Format: date-time */
+            readonly expires_at: string;
+            readonly otpauth_uri: string;
+            readonly secret: string;
+        };
+        /** @description An authenticated administrator with fresh step-up may omit challenge_id to begin optional enrollment. An existing password challenge may also be used. */
+        readonly TotpSetupRequest: {
+            /** Format: uuid */
+            readonly challenge_id?: string;
         };
         readonly UsageSyncSetting: {
             readonly enabled: boolean;
@@ -1529,7 +1613,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["LoginChallenge"];
+                    readonly "application/json": components["schemas"]["LoginResponse"];
                 };
             };
             /** @description Invalid request */
@@ -1590,6 +1674,168 @@ export interface operations {
             };
             /** @description Authentication required */
             readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly auth_step_up_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["StepUpRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["StepUpResult"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly auth_totp_confirm_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TotpConfirmRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TotpConfirmedSession"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly auth_totp_setup_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TotpSetupRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TotpSetup"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Fresh step-up required */
+            readonly 403: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

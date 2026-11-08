@@ -334,7 +334,7 @@ async function submitNodeAction(node: ManagedNode, action: 'start' | 'stop' | 'r
     await router.push(`/operations/${accepted.operation_id}`);
   } catch (caught) {
     actionError.value = caught instanceof ApiError && caught.code === 'STEP_UP_REQUIRED'
-      ? '近期身份验证已过期。请退出并重新完成密码与 MFA 验证后再次操作。'
+      ? '近期身份验证已过期。请在系统设置重新验证身份后再次操作。'
       : caught instanceof Error ? caught.message : '操作提交失败';
   } finally {
     busyAction.value = '';

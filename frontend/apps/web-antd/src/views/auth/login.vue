@@ -153,7 +153,7 @@ async function acknowledgeRecoveryCodes() {
       :show-third-party-login="false"
       :submit-button-text="preferRecovery ? '继续使用恢复码' : '登录'"
       title="管理员登录"
-      sub-title="验证管理员账号后，按账户状态完成多因素校验。"
+      sub-title="使用密码登录；已绑定验证器的账号还需动态验证码。"
       @submit="submitPassword"
     />
     <template v-else>

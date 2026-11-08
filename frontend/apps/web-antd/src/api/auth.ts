@@ -3,14 +3,14 @@ import { apiRequest } from './request';
 export interface AdminSession {
   authenticated: boolean;
   mfa_required: boolean;
+  mfa_enabled: boolean;
   admin?: { username: string };
   expires_at: string | null;
   recent_auth_until: string | null;
 }
 
 export interface LoginChallenge {
-  authenticated?: boolean;
-  admin?: { username: string };
+  authenticated?: false;
   challenge_id?: string;
   mfa_required: boolean;
   totp_setup_required: boolean;
@@ -18,6 +18,7 @@ export interface LoginChallenge {
 }
 
 export interface TotpSetup {
+  challenge_id?: string;
   secret: string;
   otpauth_uri: string;
   expires_at: string;
@@ -27,6 +28,8 @@ export interface AuthenticatedSession extends AdminSession {
   authenticated: true;
   recovery_codes?: string[];
 }
+
+export type PasswordLoginResult = AuthenticatedSession | LoginChallenge;
 
 export interface LocalLoginCapability {
   enabled: boolean;
@@ -42,9 +45,13 @@ export const authApi = {
   localLogin: () =>
     post<AuthenticatedSession>('/api/v1/auth/local-login', {}),
   login: (username: string, password: string) =>
-    post<LoginChallenge>('/api/v1/auth/login', { username, password }),
-  setupTotp: (challengeId: string) =>
-    post<TotpSetup>('/api/v1/auth/totp/setup', { challenge_id: challengeId }),
+    post<PasswordLoginResult>('/api/v1/auth/login', { username, password }),
+  stepUp: (password: string, code?: string) =>
+    post<{ recent_auth_until: string }>('/api/v1/auth/step-up', {
+      password, ...(code ? { code } : {}),
+    }),
+  setupTotp: (challengeId?: string) =>
+    post<TotpSetup>('/api/v1/auth/totp/setup', challengeId ? { challenge_id: challengeId } : {}),
   confirmTotp: (challengeId: string, code: string) =>
     post<AuthenticatedSession>('/api/v1/auth/totp/confirm', {
       challenge_id: challengeId,

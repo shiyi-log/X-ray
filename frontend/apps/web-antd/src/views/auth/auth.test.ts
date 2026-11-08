@@ -2,6 +2,8 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { createMemoryHistory, createRouter } from 'vue-router';
 
+import { useSessionStore } from '@/stores/session';
+
 import LoginView from './login.vue';
 
 async function mountLogin() {
@@ -23,12 +25,12 @@ async function mountLogin() {
 describe('安全登录', () => {
   beforeEach(() => setActivePinia(createPinia()));
 
-  it('本地密码直登沿用官方表单，跳转目标且不保存密码', async () => {
+  it('未绑定验证器时密码登录保留服务端会话和近期验证状态，并且不保存密码', async () => {
     const password = 'test-only-local-password';
     const fetch = vi.fn(async (input: RequestInfo | URL) => {
       const body = String(input).endsWith('/csrf')
         ? { csrf_token: 'csrf' }
-        : { authenticated: true, mfa_required: false, admin: { username: 'admin' } };
+        : { authenticated: true, mfa_required: false, mfa_enabled: false, admin: { username: 'admin' }, expires_at: '2035-11-08T16:00:00Z', recent_auth_until: '2035-11-08T15:30:00Z' };
       return new Response(JSON.stringify(body), {
         status: 200, headers: { 'Content-Type': 'application/json' },
       });
@@ -41,6 +43,8 @@ describe('安全登录', () => {
       await wrapper.get('[aria-label="login"]').trigger('click');
       await vi.waitFor(() => expect(router.currentRoute.value.path).toBe('/overview'));
       expect(wrapper.find('[data-testid="totp-code"]').exists()).toBe(false);
+      expect(useSessionStore().session?.recent_auth_until).toBe('2035-11-08T15:30:00Z');
+      expect(useSessionStore().session).toMatchObject({ mfa_enabled: false });
       expect((wrapper.get('[data-testid="password"]').element as HTMLInputElement).value).toBe('');
       expect(JSON.stringify({ ...localStorage })).not.toContain(password);
       expect(JSON.stringify({ ...sessionStorage })).not.toContain(password);
@@ -138,6 +142,7 @@ describe('安全登录', () => {
           JSON.stringify({
             authenticated: true,
             mfa_required: false,
+            mfa_enabled: false,
             admin: { username: 'admin' },
             expires_at: '2026-10-31T06:00:00Z',
             recent_auth_until: null,

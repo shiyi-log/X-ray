@@ -75,7 +75,7 @@ describe('business page navigation inside the Vben content layout', () => {
     }
     const pinia = createPinia();
     useSessionStore(pinia).applySession({
-      authenticated: true, mfa_required: false,
+      authenticated: true, mfa_required: false, mfa_enabled: false,
       admin: { username: 'local-test' }, expires_at: null, recent_auth_until: null,
     });
     const root = businessRoutes.find((route) => route.name === 'Root')!;

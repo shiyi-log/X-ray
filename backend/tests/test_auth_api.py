@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pyotp
 import pytest
 from django.contrib.auth.hashers import make_password
@@ -22,16 +24,29 @@ def csrf_client():
     return client
 
 
-def test_password_only_cannot_access_management(admin, csrf_client):
-    response = csrf_client.post(
-        "/api/v1/auth/login",
-        {"username": admin.username, "password": "test-only-password-A"},
-        format="json",
-    )
+def test_unauthenticated_session_reports_totp_disabled(csrf_client):
+    body = csrf_client.get("/api/v1/auth/session").json()
+
+    assert body["authenticated"] is False
+    assert body["mfa_enabled"] is False
+
+
+@pytest.mark.parametrize("environment", ["test", "production"])
+def test_unbound_admin_can_log_in_with_password_without_mfa_setup(admin, csrf_client, environment):
+    with override_settings(XRAY_ENV=environment, XRAY_DISABLE_TOTP=False):
+        response = csrf_client.post(
+            "/api/v1/auth/login",
+            {"username": admin.username, "password": "test-only-password-A"},
+            format="json",
+        )
     assert response.status_code == 200
-    assert response.json()["authenticated"] if "authenticated" in response.json() else True
-    assert csrf_client.get("/api/v1/auth/session").json()["authenticated"] is False
-    assert csrf_client.get("/api/v1/system").status_code in (401, 403)
+    assert response.json()["authenticated"] is True
+    assert response.json()["mfa_enabled"] is False
+    assert response.json()["totp_setup_required"] is False
+    assert response.json()["recent_auth_until"] is None
+    assert csrf_client.get("/api/v1/auth/session").json()["mfa_enabled"] is False
+    assert csrf_client.get("/api/v1/system").status_code == 200
+    assert not MFAChallenge.objects.filter(admin=admin).exists()
 
 
 @override_settings(XRAY_DISABLE_TOTP=True)
@@ -49,6 +64,9 @@ def test_test_only_totp_bypass_starts_server_session(admin, csrf_client):
 
 @override_settings(XRAY_ENV="production", XRAY_DISABLE_TOTP=True)
 def test_totp_bypass_flag_is_ignored_outside_test_environment(admin, csrf_client):
+    # An existing envelope must not be skipped even if legacy metadata is incomplete.
+    admin.totp_secret_envelope = {"test-only": "unreadable-envelope"}
+    admin.save(update_fields=["totp_secret_envelope"])
     response = csrf_client.post(
         "/api/v1/auth/login",
         {"username": admin.username, "password": "test-only-password-A"},
@@ -57,20 +75,34 @@ def test_totp_bypass_flag_is_ignored_outside_test_environment(admin, csrf_client
     assert response.status_code == 200
     body = response.json()
     assert body.get("authenticated") is not True
-    assert body["totp_setup_required"] is True
+    assert body["mfa_required"] is True
+    assert body["totp_setup_required"] is False
+    assert csrf_client.get("/api/v1/auth/session").json()["mfa_enabled"] is True
 
 
-def test_first_login_binds_totp_and_returns_recovery_codes(admin, csrf_client):
+def test_optional_totp_enrollment_returns_codes_and_revokes_password_only_sessions(
+    admin, csrf_client
+):
     login = csrf_client.post(
         "/api/v1/auth/login",
         {"username": admin.username, "password": "test-only-password-A"},
         format="json",
     )
-    challenge_id = login.json()["challenge_id"]
+    assert login.json()["authenticated"] is True
+    other_client = APIClient()
+    assert other_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    ).json()["authenticated"] is True
+    assert csrf_client.post(
+        "/api/v1/auth/step-up", {"password": "test-only-password-A"}, format="json"
+    ).status_code == 200
     setup = csrf_client.post(
-        "/api/v1/auth/totp/setup", {"challenge_id": challenge_id}, format="json"
+        "/api/v1/auth/totp/setup", {}, format="json"
     )
     assert setup.status_code == 200
+    challenge_id = setup.json()["challenge_id"]
     code = pyotp.TOTP(setup.json()["secret"]).now()
     confirmed = csrf_client.post(
         "/api/v1/auth/totp/confirm",
@@ -80,9 +112,133 @@ def test_first_login_binds_totp_and_returns_recovery_codes(admin, csrf_client):
     assert confirmed.status_code == 200
     body = confirmed.json()
     assert body["authenticated"] is True
+    assert body["mfa_enabled"] is True
     assert len(body["recovery_codes"]) == 10
     assert SuperAdmin.objects.get(pk=admin.pk).totp_secret_envelope
     assert csrf_client.get("/api/v1/system").status_code == 200
+    assert other_client.get("/api/v1/auth/session").json()["authenticated"] is False
+    assert csrf_client.get("/api/v1/auth/session").json()["mfa_enabled"] is True
+    assert csrf_client.post(
+        "/api/v1/auth/totp/confirm",
+        {"challenge_id": challenge_id, "code": code},
+        format="json",
+    ).status_code == 401
+
+
+def test_optional_totp_enrollment_requires_authenticated_session(csrf_client):
+    response = csrf_client.post("/api/v1/auth/totp/setup", {}, format="json")
+    assert response.status_code == 401
+    assert response.json()["code"] == "AUTH_REQUIRED"
+
+
+@pytest.mark.parametrize("recent_auth", [None, "invalid", "2026-11-08T00:00:00"])
+def test_optional_totp_enrollment_requires_fresh_step_up(admin, csrf_client, recent_auth):
+    csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    if recent_auth is not None:
+        session = csrf_client.session
+        session["recent_auth_until"] = recent_auth
+        session.save()
+    response = csrf_client.post("/api/v1/auth/totp/setup", {}, format="json")
+    assert response.status_code == 403
+    assert response.json()["code"] == "STEP_UP_REQUIRED"
+
+
+def test_password_step_up_for_unbound_admin_expires_without_forcing_totp(admin, csrf_client):
+    csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    invalid = csrf_client.post(
+        "/api/v1/auth/step-up", {"password": "wrong-password"}, format="json"
+    )
+    assert invalid.status_code == 401
+    assert invalid.json()["code"] == "STEP_UP_INVALID"
+    assert csrf_client.get("/api/v1/auth/session").json()["recent_auth_until"] is None
+    valid = csrf_client.post(
+        "/api/v1/auth/step-up", {"password": "test-only-password-A"}, format="json"
+    )
+    assert valid.status_code == 200
+    assert AdminSession.objects.get(admin=admin).last_step_up_at is not None
+    session = csrf_client.session
+    session["recent_auth_until"] = (timezone.now() - timedelta(seconds=1)).isoformat()
+    session.save()
+    expired = csrf_client.post("/api/v1/auth/totp/setup", {}, format="json")
+    assert expired.status_code == 403
+    assert expired.json()["code"] == "STEP_UP_REQUIRED"
+
+
+def test_bound_admin_step_up_still_requires_totp(admin, csrf_client):
+    from common.crypto import configured_secret_store
+
+    secret = pyotp.random_base32()
+    admin.totp_secret_envelope = configured_secret_store().encrypt(
+        secret.encode(), purpose="control", aad=f"totp:{admin.pk}".encode()
+    )
+    admin.totp_confirmed_at = timezone.now()
+    admin.save(update_fields=["totp_secret_envelope", "totp_confirmed_at"])
+    login = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    assert csrf_client.get("/api/v1/system").status_code == 401
+    assert csrf_client.post(
+        "/api/v1/auth/totp/verify",
+        {"challenge_id": login.json()["challenge_id"], "code": pyotp.TOTP(secret).now()},
+        format="json",
+    ).status_code == 200
+    assert csrf_client.get("/api/v1/auth/session").json()["mfa_enabled"] is True
+    missing_code = csrf_client.post(
+        "/api/v1/auth/step-up", {"password": "test-only-password-A"}, format="json"
+    )
+    assert missing_code.status_code == 401
+    verified = csrf_client.post(
+        "/api/v1/auth/step-up",
+        {"password": "test-only-password-A", "code": pyotp.TOTP(secret).now()},
+        format="json",
+    )
+    assert verified.status_code == 200
+    assert csrf_client.post("/api/v1/auth/totp/setup", {}, format="json").status_code == 409
+
+
+def test_totp_recovery_invalidates_pending_password_challenge(admin, csrf_client, monkeypatch):
+    from io import StringIO
+
+    from django.core.management import call_command
+
+    from common.crypto import configured_secret_store
+
+    admin.totp_secret_envelope = configured_secret_store().encrypt(
+        pyotp.random_base32().encode(), purpose="control", aad=f"totp:{admin.pk}".encode()
+    )
+    admin.totp_confirmed_at = timezone.now()
+    admin.save(update_fields=["totp_secret_envelope", "totp_confirmed_at"])
+    login = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    challenge_id = login.json()["challenge_id"]
+    monkeypatch.setattr("builtins.input", lambda _prompt: "RESET-TOTP")
+    monkeypatch.setattr("getpass.getpass", lambda _prompt: "test-only-password-A")
+    call_command("recover_superadmin", stdout=StringIO())
+    stale_setup = csrf_client.post(
+        "/api/v1/auth/totp/setup", {"challenge_id": challenge_id}, format="json"
+    )
+    assert stale_setup.status_code == 401
+    assert stale_setup.json()["code"] == "MFA_CHALLENGE_EXPIRED"
+    fresh = csrf_client.post(
+        "/api/v1/auth/login",
+        {"username": admin.username, "password": "test-only-password-A"},
+        format="json",
+    )
+    assert fresh.json()["authenticated"] is True
+    assert fresh.json()["mfa_enabled"] is False
 
 
 def test_existing_totp_login_and_replay_is_rejected(admin, csrf_client):

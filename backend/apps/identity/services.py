@@ -117,6 +117,8 @@ def password_login(request, username: str, password: str) -> dict:
             retryable=True,
             status_code=429,
         )
+    if not admin.totp_secret_envelope:
+        return _start_session(request, admin, None)
     challenge = MFAChallenge.objects.create(
         admin=admin,
         source_ip=ip,
@@ -140,7 +142,29 @@ def password_login(request, username: str, password: str) -> dict:
 
 
 def setup_totp(request, challenge_id: str) -> dict:
-    challenge = _challenge_from_request(request, challenge_id)
+    if challenge_id:
+        challenge = _challenge_from_request(request, challenge_id)
+        admin = challenge.admin
+    else:
+        admin = current_admin(request)
+        if admin is None:
+            raise DomainError("AUTH_REQUIRED", "需要登录", status_code=401)
+        if admin.totp_secret_envelope:
+            raise DomainError("TOTP_ALREADY_CONFIGURED", "验证器已绑定", status_code=409)
+        if not recent_step_up_valid(request):
+            raise DomainError(
+                "STEP_UP_REQUIRED", "请重新验证身份", status_code=403, retryable=True
+            )
+        challenge = MFAChallenge.objects.create(
+            admin=admin,
+            kind="totp_setup",
+            source_ip=request_ip(request),
+            session_binding=_session_binding(request),
+            expires_at=timezone.now() + timedelta(seconds=settings.MFA_CHALLENGE_SECONDS),
+        )
+        request.session["mfa_challenge_id"] = str(challenge.pk)
+    if admin.totp_secret_envelope:
+        raise DomainError("TOTP_ALREADY_CONFIGURED", "验证器已绑定", status_code=409)
     secret = pyotp.random_base32()
     envelope = configured_secret_store().encrypt(
         secret.encode(), purpose="control", aad=f"mfa-challenge:{challenge.pk}".encode()
@@ -150,7 +174,12 @@ def setup_totp(request, challenge_id: str) -> dict:
     uri = pyotp.TOTP(secret).provisioning_uri(
         name=challenge.admin.username, issuer_name="X-ray Manager"
     )
-    return {"secret": secret, "otpauth_uri": uri, "expires_at": challenge.expires_at.isoformat()}
+    return {
+        "challenge_id": str(challenge.pk),
+        "secret": secret,
+        "otpauth_uri": uri,
+        "expires_at": challenge.expires_at.isoformat(),
+    }
 
 
 def _secret_for_admin(admin: SuperAdmin) -> str:
@@ -240,6 +269,8 @@ def _start_session(
         "admin": {"username": admin.username},
         "expires_at": absolute.isoformat(),
         "mfa_required": False,
+        "mfa_enabled": bool(admin.totp_secret_envelope),
+        "totp_setup_required": False,
         "recent_auth_until": request.session.get("recent_auth_until"),
     }
     if recovery_codes is not None:
@@ -296,6 +327,8 @@ def complete_totp_setup(request, challenge_id: str, code: str) -> dict:
             "updated_at",
         ]
     )
+    revoke_all(admin)
+    admin.refresh_from_db(fields=["session_version"])
     return _start_session(request, admin, challenge, recovery_codes=recovery_codes)
 
 
@@ -350,15 +383,18 @@ def current_admin(request) -> SuperAdmin | None:
 def session_status(request) -> dict:
     admin = current_admin(request)
     if admin is None:
+        pending_mfa = bool(request.session.get("mfa_challenge_id"))
         return {
             "authenticated": False,
-            "mfa_required": bool(request.session.get("mfa_challenge_id")),
+            "mfa_required": pending_mfa,
+            "mfa_enabled": pending_mfa,
             "expires_at": None,
             "recent_auth_until": None,
         }
     return {
         "authenticated": True,
         "mfa_required": False,
+        "mfa_enabled": bool(admin.totp_secret_envelope),
         "admin": {"username": admin.username},
         "expires_at": request.session.get("absolute_expires_at"),
         "recent_auth_until": request.session.get("recent_auth_until"),
@@ -371,6 +407,28 @@ def revoke_all(admin: SuperAdmin) -> None:
         session_version=admin.session_version + 1, updated_at=now
     )
     AdminSession.objects.filter(admin=admin, revoked_at__isnull=True).update(revoked_at=now)
+    MFAChallenge.objects.filter(admin=admin, used_at__isnull=True).update(used_at=now)
+
+
+def recent_step_up_valid(request) -> bool:
+    value = request.session.get("recent_auth_until")
+    try:
+        return bool(value and timezone.now() < datetime.fromisoformat(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def record_step_up(request, admin: SuperAdmin) -> datetime:
+    now = timezone.now()
+    until = now + timedelta(seconds=settings.AUTH_STEP_UP_SECONDS)
+    request.session["recent_auth_until"] = until.isoformat()
+    AdminSession.objects.filter(
+        admin=admin,
+        session_version=admin.session_version,
+        session_key_hash=hashlib.sha256((request.session.session_key or "").encode()).hexdigest(),
+        revoked_at__isnull=True,
+    ).update(last_step_up_at=now)
+    return until
 
 
 def require_admin(view: Callable):
@@ -397,12 +455,7 @@ def require_recent_step_up(view: Callable):
     @wraps(view)
     @require_admin
     def wrapped(request, *args, **kwargs):
-        value = request.session.get("recent_auth_until")
-        try:
-            valid = bool(value and timezone.now() < datetime.fromisoformat(value))
-        except ValueError:
-            valid = False
-        if not valid:
+        if not recent_step_up_valid(request):
             return JsonResponse(
                 {
                     "code": "STEP_UP_REQUIRED",

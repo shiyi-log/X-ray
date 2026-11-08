@@ -92,10 +92,11 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             },
             "AdminSession": {
                 "type": "object",
-                "required": ["authenticated", "mfa_required"],
+                "required": ["authenticated", "mfa_required", "mfa_enabled"],
                 "properties": {
                     "authenticated": {"type": "boolean"},
                     "mfa_required": {"type": "boolean"},
+                    "mfa_enabled": {"type": "boolean"},
                     "admin": {
                         "type": "object",
                         "properties": {"username": {"type": "string"}},
@@ -124,6 +125,73 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                     "mfa_required": {"type": "boolean"},
                     "totp_setup_required": {"type": "boolean"},
                     "expires_at": {"type": "string", "format": "date-time"},
+                },
+            },
+            "LoginResponse": {
+                "oneOf": [
+                    {
+                        "allOf": [
+                            _ref("AdminSession"),
+                            {"properties": {"authenticated": {"enum": [True]}}},
+                        ]
+                    },
+                    _ref("LoginChallenge"),
+                ]
+            },
+            "TotpSetupRequest": {
+                "type": "object",
+                "description": (
+                    "An authenticated administrator with fresh step-up may omit challenge_id "
+                    "to begin optional enrollment. An existing password challenge may also be used."
+                ),
+                "properties": {"challenge_id": {"type": "string", "format": "uuid"}},
+            },
+            "TotpSetup": {
+                "type": "object",
+                "required": ["challenge_id", "secret", "otpauth_uri", "expires_at"],
+                "properties": {
+                    "challenge_id": {"type": "string", "format": "uuid"},
+                    "secret": {"type": "string"},
+                    "otpauth_uri": {"type": "string"},
+                    "expires_at": {"type": "string", "format": "date-time"},
+                },
+            },
+            "TotpConfirmRequest": {
+                "type": "object",
+                "required": ["challenge_id", "code"],
+                "properties": {
+                    "challenge_id": {"type": "string", "format": "uuid"},
+                    "code": {"type": "string", "writeOnly": True},
+                },
+            },
+            "TotpConfirmedSession": {
+                "allOf": [
+                    _ref("AdminSession"),
+                    {
+                        "type": "object",
+                        "properties": {
+                            "recovery_codes": {"type": "array", "items": {"type": "string"}}
+                        },
+                    },
+                ]
+            },
+            "StepUpRequest": {
+                "type": "object",
+                "required": ["password"],
+                "properties": {
+                    "password": {"type": "string", "format": "password", "writeOnly": True},
+                    "code": {
+                        "type": "string",
+                        "writeOnly": True,
+                        "description": "Required when the administrator has enabled TOTP.",
+                    },
+                },
+            },
+            "StepUpResult": {
+                "type": "object",
+                "required": ["recent_auth_until"],
+                "properties": {
+                    "recent_auth_until": {"type": "string", "format": "date-time"}
                 },
             },
             "LocalLoginCapability": {
@@ -700,9 +768,30 @@ def inject_contract(result: dict, generator, request, public) -> dict:
         "/api/v1/auth/login": {
             "post": _operation(
                 "auth_login_create",
-                response="LoginChallenge",
+                response="LoginResponse",
                 request="LoginRequest",
                 security=False,
+            )
+        },
+        "/api/v1/auth/totp/setup": {
+            "post": _operation(
+                "auth_totp_setup_create",
+                response="TotpSetup",
+                request="TotpSetupRequest",
+                extra_responses={"403": _response("ApiError", "Fresh step-up required")},
+            )
+        },
+        "/api/v1/auth/totp/confirm": {
+            "post": _operation(
+                "auth_totp_confirm_create",
+                response="TotpConfirmedSession",
+                request="TotpConfirmRequest",
+                security=False,
+            )
+        },
+        "/api/v1/auth/step-up": {
+            "post": _operation(
+                "auth_step_up_create", response="StepUpResult", request="StepUpRequest"
             )
         },
         "/api/v1/cloud-accounts/": {

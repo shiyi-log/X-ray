@@ -102,7 +102,9 @@ function submit() {
     </template>
     <Space direction="vertical" class="w-full" :size="16">
       <p class="text-muted-foreground">{{ description }}</p>
-      <Alert v-if="errorCode === 'STEP_UP_REQUIRED'" type="error" show-icon role="alert" message="近期身份验证已过期。请退出并重新完成密码与 MFA 验证后再次操作。" />
+      <Alert v-if="errorCode === 'STEP_UP_REQUIRED'" type="error" show-icon role="alert" message="近期身份验证已过期。请在系统设置重新验证身份后再次操作。">
+        <template #description><a href="/system">前往系统设置验证身份</a></template>
+      </Alert>
       <Alert v-else-if="errorMessage" type="error" show-icon role="alert" :message="errorMessage" />
       <Descriptions v-if="preview" bordered :column="1">
         <Descriptions.Item label="目标"><code class="break-all">{{ preview.target_id }}</code></Descriptions.Item>
