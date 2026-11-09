@@ -52,6 +52,9 @@ CI 使用测试专用 `xray_test` PostgreSQL 与 Redis、固定依赖和 Fake/St
 
 ## 当前外部限制
 
-截至 2026-09-17，没有独立生产服务器、域名/TLS、AWS/SWAS 账号与区域授权、
-预算、远程 SSH、Google 公网探测或 Shadowrocket 真机证据。对应矩阵项必须保持
-`blocked`、`not-run` 或 `risky_not_executed`，直到按授权表执行并产生证据。
+截至 2026-11-10，两台本轮授权 AWS Lightsail 测试节点已清理并由 provider 读回不存在；
+地址池、每日轮转重启、动态 IPv4、健康、订阅发布/撤回、节点计数和流量统计有范围内证据。
+完整 AWS 验收仍因 profile 级撤回正向控制未通过、旧删除 Operation 部分成功且修复未在 AWS
+重跑、逐资源最终账单未知而保持 `blocked`。SWAS、独立 SSH 登录、Google 公网探测、
+Shadowrocket 真机、独立生产服务器、域名/TLS 与生产部署没有运行；对应矩阵项继续保持
+`blocked`、`not-run` 或 `risky_not_executed`，不得由 GitHub Release 或本地/CI 结果替代。

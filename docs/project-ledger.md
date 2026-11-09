@@ -7112,4 +7112,24 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `writes_and_boundary`: `新增 progress 行及本台账事件；完整本地测试未 AWS/API 写、SSH、服务器、订阅或生产部署。版本仍 0.14.5，tag 未变；当前 main 尚未包含修复提交，新远端 delivery gate 尚待推送后验证。正式 Release 尚未 dispatch。`
 - `time_logic`: `无业务时间逻辑变化。r6 运行与台账用本机 Asia/Shanghai；CI summary 内时间为 UTC Z，两者保留原始时区，不做推断转换。`
 - `commit_or_tree_and_rollback`: `基于 main/b221f32ad91498e108369046efd649047cad642c 的工作树改动；本事件涉及 tracked scripts/tests/docs 和新增脚本。旧的 0.14.4/0.14.5 r1/r2 及本轮 r4/r5/r6 产物均保持未跟踪并未暂存。验证脚本可单独 revert；不改写 tag、撤回状态或云账本。`
-- `status`: `passed (长输出回归、18+1 focused tests、完整 r6 本地门禁及 E2E 清理读回); in-progress (源提交、远端 delivery gates、Release workflow 和资产 SHA-256); blocked (完整 AWS acceptance 和逐资源最终账单)。`
+- `status`: `passed (长输出回归、18+1 focused tests、完整 r6 本地门禁及 E2E 清理读回); passed (源提交与推送、远端 delivery gates、GitHub Release 和三项资产 SHA-256); blocked (完整 AWS acceptance 和逐资源最终账单)。`
+
+
+### 2026-11-10T04:44:42+08:00 — xray-node-pool-restart-20261110-01/008 v0.14.5 GitHub Release 与资产回读
+
+- `event_id`: `xray-node-pool-restart-20261110-01/008`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `publish_readback, validation, documentation`
+- `path_scope`: `README.md、docs/acceptance.md、docs/release-checklist-v0.14.5.md、docs/progress.md、docs/version-record.md、docs/project-ledger.md、tests/acceptance/matrix.json；GitHub Actions runs 42692116452 与 42694179688；GitHub Release v0.14.5 及其三项资产`
+- `goal_and_scope`: `从 main 手动发布已验证的不可变 v0.14.5 标签，回读 Release/tag/资产摘要，并更新发布与验收记录。生产镜像切换、生产部署和新的 AWS 写入不在此事件范围。`
+- `authorization_boundary_and_risk`: `用户明确授权测试后同步发布新版本。Release workflow 从 main 运行并校验现有 annotated tag；它发布的源码/安装器版本不等同于生产部署。两台 AWS 测试节点此前已清理，本续办未进行云写、SSH、实例操作或订阅签发/撤回。AWS 整体验收继续保持 blocked，不以 Release 成功覆盖 profile 级撤回控制、删除 Operation 部分成功或逐资源账单未知。`
+- `release_evidence`: `修复脚本提交 0353513271e139ab6a2d7c9f1753d82675ea828d 的 Delivery Gates run 42692116452 / job 129414242630 completed/success；完整门禁、脱敏证据上传、run-specific 镜像和浏览器认证状态清理、容器停止均成功。main 上 workflow_dispatch run 42694179688 / job 129421511925 completed/success。GitHub Release API 返回 id 439611923、tag v0.14.5、draft=false、prerelease=false、published_at=2026-11-09T20:34:27Z（Asia/Shanghai 2026-11-10T04:34:27+08:00）。远端 annotated tag object 780919d3512c937ef1e7483f6fc4b138a4e0020d peeled 到 e38b48b5f4b63795595ed9ff52f10a76b91ffb6f；Release 仍指向该不可变源码提交，0353513 仅含后续门禁脚本修复。`
+- `commands_and_exit_codes`: `GitHub Actions run/job readback 42692116452/129414242630=success；Release run/job readback 42694179688/129421511925=success；GitHub Release API/tag/asset metadata readback=0；git ls-remote origin refs/tags/v0.14.5 refs/tags/v0.14.5^{}` 返回 tag object 与 peeled commit；三项公开资产分别通过 curl 下载流计算 shasum -a 256，结果均与 GitHub asset digest 一致；下载的 SHA256SUMS 内 tarball 与 manifest 摘要也一致。Release warning 仅为 actions/checkout@v4 的 Node.js 20 deprecation，不影响 job。`
+- `asset_sha256`: `xray-installer-0.14.5.tar.gz=662c6ca60b4acd4913fc5d02de1018f2508a987c9f7b8db6ddfd83883f81740e；xray-installer-0.14.5-manifest.json=011a928b83b541364b98a6ad132a772e95aec9afe2d58303179e8e0683905aba；SHA256SUMS=91dcd60d0c8187327241557c31e8a00cdc6f2ab3584721748d183cc1b9e24f86。`
+- `writes`: `README 当前版本/发布状态、v0.14.5 发布清单、docs/acceptance 外部限制、progress、version-record 与 acceptance matrix 已更新；新增本台账事件。保留所有既有未跟踪 artifacts/acceptance 目录且未暂存。`
+- `verification`: `本地修复门禁证据 artifacts/acceptance/0.14.5/final-gates-20261110-r6/：19/19 gates exit 0、JUnit 534（532 passed、2 skipped）、frontend 88、Playwright 8。文档后验 `python3 -m json.tool tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0；`./scripts/check-boundary.sh`=0；`./scripts/check-secrets.sh`=0（138 commits、8.68 MB、no leaks）；`git diff --check`=0；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0。两次初始技能校验调用分别因系统 Python 缺少 PyYAML、传入 SKILL.md 文件而 exit 1，使用仓库虚拟环境并改传目录后通过。`
+- `time_and_cost`: `台账时间为 Asia/Shanghai 2026-11-10T04:44:42+08:00；Release API 原时间为 UTC 2026-11-09T20:34:27Z。未创建云资源、未执行云写；Release workflow runner 的实际费用未查询。此前 AWS 测试资源逐项最终账单仍未知。`
+- `remaining_limits`: `完整 AWS 验收仍 blocked：profile-level revoke 正向控制未通过；旧删除 Operation 部分成功，修复未在 AWS 重跑；实例级最终账单未知。SWAS、Shadowrocket 真机、Google 公网探测、独立生产服务器、域名/TLS 和生产部署未运行。Release workflow 的 Node.js deprecation warning 留待 runner actions 升级处理，不影响本次成功。`
+- `rollback_and_preservation`: `应用回退使用 v0.14.4 或对源码提交 e38b48b5f4b63795595ed9ff52f10a76b91ffb6f 执行 git revert；不移动/重写 v0.14.5 tag，不反向迁移，不恢复 Token tombstone、凭据、安全事件或云状态。文档修改可单独 git revert；所有未跟踪验收证据目录保留。`
+- `status`: `passed (main delivery gates、v0.14.5 Release、tag/三项资产摘要回读；r6 本地门禁；发布文档静态验证); blocked (完整 AWS 验收与逐资源最终账单); not-run (SWAS、设备、公网探测、生产镜像/部署); in-progress (回执提交与推送)。`

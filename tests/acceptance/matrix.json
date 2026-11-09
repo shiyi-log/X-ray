@@ -1,6 +1,6 @@
 {
   "version": "0.14.5",
-  "generated_at": "2026-11-10T03:40:48+08:00",
+  "generated_at": "2026-11-10T04:44:42+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -38,6 +38,34 @@
           "candidate_worktree": true,
           "started_at": "2026-11-09T19:00:28Z",
           "finished_at": "2026-11-09T19:03:10Z",
+          "residual_resources": [
+            "Dedicated X-ray PostgreSQL/Redis containers on 127.0.0.1:55435 and 127.0.0.1:56382 remain running with named volumes retained; E2E containers, temporary auth state and 55671-55674 listeners were removed."
+          ]
+        },
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.5/final-gates-20261110-r6/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.5/final-gates-20261110-r6/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 534,
+            "passed": 532,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 88,
+          "browser_e2e": 8,
+          "candidate_commit": "0353513271e139ab6a2d7c9f1753d82675ea828d",
+          "source_base_commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
+          "candidate_worktree": true,
+          "started_at": "2026-11-09T20:12:46Z",
+          "finished_at": "2026-11-09T20:16:19Z",
           "residual_resources": [
             "Dedicated X-ray PostgreSQL/Redis containers on 127.0.0.1:55435 and 127.0.0.1:56382 remain running with named volumes retained; E2E containers, temporary auth state and 55671-55674 listeners were removed."
           ]
@@ -103,6 +131,20 @@
           "status": "passed",
           "duration_seconds": 1130,
           "warning": "Actions targeting Node.js 20 were forced to run on Node.js 24; this compatibility warning did not fail the job."
+        },
+        {
+          "kind": "github_actions_delivery_gates",
+          "run_id": 42692116452,
+          "job_id": 129414242630,
+          "event": "push",
+          "commit": "0353513271e139ab6a2d7c9f1753d82675ea828d",
+          "status": "passed",
+          "completed_steps": [
+            "complete local delivery gates",
+            "upload sanitized acceptance evidence",
+            "remove run-specific images and browser authentication state",
+            "stop containers"
+          ]
         }
       ],
       "commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
@@ -114,6 +156,71 @@
       "residual_resources": [
         "Dedicated X-ray PostgreSQL/Redis containers and named volumes are retained for audit."
       ]
+    },
+    {
+      "id": "github-ci-v0.14.5",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "run_id": 42692116452,
+          "attempt": 1,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "0353513271e139ab6a2d7c9f1753d82675ea828d",
+          "acceptance_evidence_uploaded": true,
+          "cleanup_steps_passed": true
+        }
+      ],
+      "commit": "0353513271e139ab6a2d7c9f1753d82675ea828d",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-release-v0.14.5",
+      "environment": "release",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "published_release_and_asset_readback",
+          "checked_at": "2026-11-10T04:36:34+08:00",
+          "release_id": 439611923,
+          "published_at": "2026-11-09T20:34:27Z",
+          "draft": false,
+          "prerelease": false,
+          "workflow_run": 42694179688,
+          "workflow_job": 129421511925,
+          "workflow_conclusion": "success",
+          "required_ref": "main",
+          "tag": "v0.14.5",
+          "tag_commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
+          "assets": [
+            {
+              "name": "SHA256SUMS",
+              "sha256": "91dcd60d0c8187327241557c31e8a00cdc6f2ab3584721748d183cc1b9e24f86"
+            },
+            {
+              "name": "xray-installer-0.14.5-manifest.json",
+              "sha256": "011a928b83b541364b98a6ad132a772e95aec9afe2d58303179e8e0683905aba"
+            },
+            {
+              "name": "xray-installer-0.14.5.tar.gz",
+              "sha256": "662c6ca60b4acd4913fc5d02de1018f2508a987c9f7b8db6ddfd83883f81740e"
+            }
+          ],
+          "sha256sums_contents_verified": true,
+          "warning": "Release workflow succeeded with a Node.js 20 deprecation warning for actions/checkout@v4; no job failure resulted."
+        }
+      ],
+      "commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
+      "provider": "github",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
     },
     {
       "id": "local-delivery-gates-0.14.4",
