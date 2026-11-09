@@ -987,6 +987,19 @@ class NodeLifecycle:
 
             publication_batch = Publisher.invalidate_node(locked_node.pk)
             release_quota(locked_node.pk, cloud_absence_confirmed=True)
+            node_resource = (
+                NodeResource.objects.select_for_update()
+                .filter(
+                    node=locked_node,
+                    kind="instance",
+                    external_id=locked_node.external_id,
+                )
+                .first()
+            )
+            if node_resource is not None:
+                node_resource.cost_status = "RELEASED"
+                node_resource.released_at = node_resource.released_at or timezone.now()
+                node_resource.save(update_fields=["cost_status", "released_at"])
 
         self._record_step(
             operation,
@@ -996,6 +1009,7 @@ class NodeLifecycle:
                 "publication_batch_id": str(publication_batch.pk),
                 "affected_subscriptions": len(publication_batch.subscription_ids),
                 "published": publication_batch.result.get("published", 0),
+                "skipped": publication_batch.result.get("skipped", 0),
                 "failed": len(publication_batch.result.get("failures", [])),
             },
         )
@@ -1016,6 +1030,7 @@ class NodeLifecycle:
                 "publication_batch_id": str(publication_batch.pk),
                 "publication_batch_status": publication_batch.status,
                 "subscriptions_published": publication_batch.result.get("published", 0),
+                "subscriptions_skipped": publication_batch.result.get("skipped", 0),
                 "subscription_publication_failures": publication_failures,
                 "provider_request_id": mutation.request_id if mutation else None,
             },

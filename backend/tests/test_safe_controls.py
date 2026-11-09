@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 import pytest
@@ -130,6 +131,120 @@ def test_secret_delivery_is_returned_once_and_never_retrievable(recent_admin_cli
     assert repeated.status_code == 409
     assert repeated.json()["code"] == "SECRET_ALREADY_DELIVERED"
     assert body["token"] not in client.get("/api/v1/subscriptions/").content.decode()
+
+
+@pytest.mark.django_db
+def test_issued_published_subscription_revocation_returns_410_for_get_and_head(
+    recent_admin_client, cloud_account
+):
+    from apps.nodes.models import NodeConfigRevision, NodeProtocol
+    from apps.subscriptions.models import NodeCredential
+
+    client, _admin = recent_admin_client
+    node = _reserved_node(cloud_account)
+    _provisioned_node(node)
+    NodeProtocol.objects.create(node=node, protocol="vless", port=18443)
+    profile = AccessProfile.objects.create(name="published-link-revocation")
+
+    issued = client.post(
+        f"/api/v1/access-profiles/{profile.pk}/subscription/",
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert issued.status_code == 201
+    issued_body = issued.json()
+    assert issued_body["display_once"] is True
+    public_link = urlsplit(issued_body["url"])
+    assert public_link.scheme == "http"
+    assert public_link.netloc == "testserver"
+    assert public_link.query == ""
+    public_path = public_link.path
+    subscription_id = issued_body["subscription_id"]
+
+    node.refresh_from_db()
+    generation = node.desired_generation
+    node.applied_generation = generation
+    node.provisioning_state = "READY"
+    node.health_state = "HEALTHY"
+    node.raw_cloud_state = "running"
+    node.observation_error = ""
+    node.save(
+        update_fields=[
+            "applied_generation",
+            "provisioning_state",
+            "health_state",
+            "raw_cloud_state",
+            "observation_error",
+            "updated_at",
+        ]
+    )
+    credential = NodeCredential.objects.get(
+        node=node, profile=profile, revoked_at__isnull=True
+    )
+    credential.applied_generation = generation
+    credential.save(update_fields=["applied_generation"])
+    NodeConfigRevision.objects.update_or_create(
+        node=node,
+        generation=generation,
+        defaults={
+            "config_hash": "a" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
+
+    published = client.post(
+        f"/api/v1/subscriptions/{subscription_id}/publish/",
+        {},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert published.status_code == 200
+    assert published.json()["published_revision"] == 1
+
+    before_revoke = client.get(public_path)
+    assert before_revoke.status_code == 200
+    assert b"192.0.2.10" in before_revoke.content
+
+    token = SubscriptionToken.objects.get(subscription_id=subscription_id)
+    preview_response = client.post(
+        "/api/v1/operations/previews/",
+        {
+            "kind": "subscription.token_revoke",
+            "target_id": str(token.pk),
+            "params": {
+                "subscription_id": subscription_id,
+                "token_id": str(token.pk),
+            },
+        },
+        format="json",
+    )
+    assert preview_response.status_code == 201
+    preview = preview_response.json()
+    revoked = client.post(
+        f"/api/v1/subscriptions/{subscription_id}/tokens/{token.pk}/revoke/",
+        {"preview_id": preview["id"], "confirmation": preview["required_phrase"]},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert revoked.status_code == 200
+    assert revoked.json()["status"] == "REVOKED"
+    assert issued_body["token"] not in revoked.content.decode()
+
+    assert client.get(public_path).status_code == 410
+    after_revoke_head = client.head(public_path)
+    assert after_revoke_head.status_code == 410
+    assert after_revoke_head.content == b""
 
 
 @pytest.mark.django_db

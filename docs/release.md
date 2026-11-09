@@ -6,7 +6,7 @@
 
 ```bash
 deploy/scripts/release.sh \
-  --version 0.14.4 \
+  --version 0.14.5 \
   --digest sha256:<backend-image-digest> \
   --config /etc/xray/config.env \
   --compose deploy/compose/production.yml
@@ -17,7 +17,7 @@ deploy/scripts/release.sh \
 ## GitHub 版本发布与前端热更新
 
 向 `main` 合并后，在 `VERSION` 与前端包版本一致的提交上创建不可变标签
-`v0.14.4`。`.github/workflows/release.yml` 会校验标签与版本、打包
+`v0.14.5`。`.github/workflows/release.yml` 会校验标签与版本、打包
 `installer/`、生成 `SHA256SUMS`，并创建 GitHub Release。安装器远程入口和
 `XRAY_INSTALLER_REF` 必须使用同一个标签；不要改成 `main` 或 `latest`。
 当前仓库为 public，匿名 raw GitHub 下载可使用固定版本标签；不能把个人访问令牌

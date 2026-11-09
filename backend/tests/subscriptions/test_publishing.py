@@ -95,6 +95,65 @@ def test_invalidate_node_fails_closed_when_no_alternative_endpoint(
 
 
 @pytest.mark.django_db
+def test_invalidate_node_skips_current_token_with_confirmed_revocation_tombstone(
+    publishable_subscription,
+):
+    from apps.subscriptions.models import RevocationTombstone
+    from apps.subscriptions.publishing import Publisher
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    issued, subscription, node, _credential = publishable_subscription
+    revision = Publisher.publish(subscription.pk)
+    token = subscription.token_history.get(token_epoch=subscription.token_epoch)
+    TokenService.revoke_token(subscription.pk, token.pk)
+
+    batch = Publisher.invalidate_node(node.pk)
+
+    token.refresh_from_db()
+    revision.refresh_from_db()
+    assert issued.raw_token not in repr(issued)
+    assert batch.status == "SUCCEEDED"
+    assert batch.result == {"published": 0, "skipped": 1, "failures": []}
+    assert revision.usable is False
+    assert token.status == "REVOKED"
+    assert RevocationTombstone.objects.filter(
+        token_digest=token.token_digest,
+        revoked_at=token.revoked_at,
+        source_event_id__gt="",
+        source_sequence__isnull=False,
+    ).exists()
+    with pytest.raises(TokenGone):
+        TokenService.resolve(issued.raw_token)
+
+
+@pytest.mark.django_db
+def test_invalidate_node_does_not_skip_revoked_token_without_tombstone(
+    publishable_subscription,
+):
+    from django.utils import timezone
+
+    from apps.subscriptions.models import RevocationTombstone, SubscriptionToken
+    from apps.subscriptions.publishing import Publisher
+
+    _issued, subscription, node, _credential = publishable_subscription
+    revision = Publisher.publish(subscription.pk)
+    token = subscription.token_history.get(token_epoch=subscription.token_epoch)
+    SubscriptionToken.objects.filter(pk=token.pk).update(
+        status="REVOKED", revoked_at=timezone.now()
+    )
+
+    batch = Publisher.invalidate_node(node.pk)
+
+    revision.refresh_from_db()
+    assert not RevocationTombstone.objects.filter(token_digest=token.token_digest).exists()
+    assert batch.status == "PARTIALLY_SUCCEEDED"
+    assert batch.result["failures"] == [
+        {"subscription_id": str(subscription.pk), "code": "SUBSCRIPTION_TOKEN_INACTIVE"}
+    ]
+    assert revision.usable is False
+
+
+@pytest.mark.django_db
 def test_address_refresh_republishes_with_new_ip_and_invalidates_old_revision(
     publishable_subscription,
 ):

@@ -416,6 +416,10 @@ def test_pool_sync_deletes_one_oldest_per_due_cycle_until_quota_two(prepared_nod
 
     assert pending_cycle["deleted"] == 0
     assert pending_cycle["skipped"] == 1
+    setting.refresh_from_db()
+    assert setting.pool_sync_last_scheduled_at < timezone.now() - timedelta(
+        minutes=setting.pool_sync_interval_minutes
+    )
     assert Operation.objects.filter(kind="node.delete").count() == 1
 
     # The lifecycle read-back path is covered separately; model its confirmed result here.

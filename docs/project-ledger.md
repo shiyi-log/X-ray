@@ -6838,3 +6838,229 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `external_limit`: `认证与后端测试已通过，但完整用户目标仍包含实际 AWS 应用节点池、每日重启后的地址/运行状态、真实订阅签发/撤回和流量验收；这些仍未运行。应用没有经过验证的 CloudAccount/ManagedNode，不能将独立 provider 只读证据或本地 Fake/Stub 证据提升为真实应用验收通过。`
 - `rollback_ref`: `源码提交可用 git revert a367bfb23e00fedf0913668bcf5ae9b0dd09bb79 回退；不得恢复已经撤销的认证会话/挑战。保留 v0.14.4 与所有现有 AWS/runner 资源。`
 - `status`: `passed (scoped commit/push, remote readback and clean worktree); blocked/not-run (remaining real AWS application acceptance and new phase release).`
+
+
+### 2026-11-09T20:50:35+08:00 — xray-node-pool-restart-20261109-01/001 目标定义与基线复核
+
+- `event_id`: `xray-node-pool-restart-20261109-01/001`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `scope, read, inventory, authorization`
+- `requested_outcome_and_scope`: `按用户本轮授权验证地址池定时数量对齐（缺额创建、超额缩容）、每日按计划顺序只轮转一台服务器、AWS stop/start 后动态 IPv4 更新、节点状态/健康闭环、订阅签发/撤回、节点数核对、定时状态/IP 同步及流量统计；缺少实现时才补最小代码与 focused tests；完成本地验收后准备同步发布新版本。`
+- `in_scope`: `当前 main 中 nodes automation/lifecycle、identity/system schedule、subscriptions/node reconciliation/metering、关联 focused tests、验收矩阵、project ledger/progress、以及若发布则 VERSION/CHANGELOG/version-record/release evidence。真实测试资源仅在正常 CloudAccount/Operation 机制可用时创建，累计费用上限 USD 1,000。`
+- `authorization_boundary`: `用户明确授权自行创建测试服务器、配置由 Codex 选择、总费用不超过 USD 1,000；本轮明确请求同步发布新版本。所有测试节点必须可明确识别为本轮测试资源，真实写入须经 X-ray 正常 API、step-up、预览、幂等和审计；仅清理本轮创建的测试资源。不得操作生产主机、既有 CI runner 或其他项目资源。静态 IP 释放、公网探测和任何未标记的既有资源删除不在授权内。`
+- `exclusions_and_risks`: `不读 Shop、vue-shop-admin、shop-xray-installer 或 archive；不绕过 MFA/step-up、不改管理员或 CloudAccount 数据来伪造验收、不写未加密凭据、不输出任何 secret/Token/原始订阅 URI、不停止已有进程/容器、不硬重置/清理/强推。成本风险包括实例运行时间、镜像/磁盘/传输和已有 runner 的非本任务费用；只将可归因的本轮成本计入任务成本。真实动态 IP、健康、订阅撤回和流量路径不能由 Fake/Stub 结果代替。`
+- `rollback_and_reuse`: `源代码使用现有 v0.14.4 或相干提交的 scoped git revert；数据库只采用兼容迁移，不恢复被撤销 Token、认证或云状态。云侧仅清理有标签/资源身份的本轮测试节点；保留原始 Operation、审计、订阅 tombstone 和证据。复用现有 node automation、lifecycle、subscription metering 及 acceptance fixtures。`
+- `baseline_reads`: `读取 AGENTS.md、docs/project-conventions.md、docs/project-ledger.md、docs/progress.md、skills/xray-manager/SKILL.md、TDD 与 verification 技能、现有版本/验收矩阵/变更记录及 nodes/subscriptions/cloud account 相关代码路径。起始 HEAD=origin/main=940d155970a9571049192e07385ac717a9d14791，branch=main，worktree clean，当前 VERSION=0.14.4。三名子代理分别只读审计池同步、每日重启/IP/健康和订阅/计量；未运行云写入。`
+- `runtime_inventory`: `本机 127.0.0.1:9537 由本仓库 backend/manage.py runserver PID 93050 监听，但 /health/ready=503（database/redis unavailable）；9538、55432、55435 无监听；docker ps 未发现 X-ray 专用 PG/Redis 容器。未停止该进程或操作容器。历史记录中 CloudAccount/ManagedNode 为 0、旧 CloudAccount 凭据 v1 解密失败；该历史证据需在本轮隔离环境中重新确认，不能视作当前数据库事实。`
+- `command_correction`: `date -Is 在当前 macOS shell 不受支持并 exit 1；改用 date '+%Y-%m-%dT%H:%M:%S%z' exit 0，时间为本机实际 Asia/Shanghai 时钟。`
+- `time_logic`: `审计记录使用带 +08:00 的实际机器时间；业务计划继续按 Django aware UTC 存储、数据库配置 IANA 时区解释每日计划，间隔任务在 now >= last_scheduled_at + interval 时到期；测试须检查重复调度、跨日/DST、失败和动态 IP 读回。`
+- `status`: `in-progress；当前功能审计显示主要实现已存在于 v0.14.4，真实应用级 AWS 验收是否可执行取决于本轮专用环境与有效 CloudAccount 的重新核实。`
+
+
+### 2026-11-09T21:00:32+08:00 — xray-node-pool-restart-20261109-01/002 本地门禁资源与云测试预算预检
+
+- `event_id`: `xray-node-pool-restart-20261109-01/002`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `inventory, validate, decision`
+- `path_scope`: `LocalPortManager X-ray registrations; deploy/compose/test.yml; Makefile; scripts/check-local.sh; Docker image/volume metadata; AWS Lightsail bundle catalog response`
+- `operation`: `Read-only port ownership/current occupancy, container/image/volume metadata, free disk, provider identity hash and Lightsail bundle catalog; no cloud mutation.`
+- `result`: `LocalPortManager project 2fd3b838ea894306b826cc57534c87e8 (“X-ray Gate Test Stack 20261108”) owns 55435/56382; portctl check exit 0. Ports are free. Current main project registers 9537/9538/9541-9544/55433/56380; existing 9537 process remains owned by this checkout and is not ready. Existing named volumes xray-test-postgres and xray-test-redis were found and will not be reused or deleted. Docker disk has 94 GiB free; backend 0.14.4 test image exists, frontend/backup-tools test images are absent. AWS profile identity preflight succeeded; account/principal output was reduced to SHA-256 739ecd6da9e3bee2abc2efb1398725c0f17f40dce78730da50c1377965b0a9c6. Current Lightsail API catalog in us-east-1 returned small_3_0, 2 GiB, 2 vCPU, 60 GiB disk, 3072 GiB transfer, USD 12/month. No application server created.`
+- `command_correction`: `Initial get-bundles invocation used invalid --include-inactive=false and exited 2; corrected to AWS CLI boolean --no-include-inactive, read-only catalog query exited 0. Initial port API jq assumed a top-level array and exited 5; corrected to documented projects/ports object shape. Root repo lacks portctl.py; shared manager CLI was found in Duankou and used only for port checks/start control.`
+- `local_test_plan`: `Use only registered 55435/56382, run Compose in foreground through portctl with unique project xray-node-auto-20261109 and new explicit volume names xray-node-auto-20261109-postgres / xray-node-auto-20261109-redis; run scripts/check-local.sh with XRAY_TEST_SERVICES_EXTERNAL=1 and matching port overrides. Keep other X-ray registrations, existing xray-test volumes, process 93050, runner instances and trash-recovery resources untouched.`
+- `cloud_test_plan`: `If the isolated application can be authenticated normally and creates a valid encrypted CloudAccount through its API, use only one small_3_0 Lightsail test node, tagged/named with the run ID; keep measured duration short, run scheduled stop/start/IP/state/subscription/traffic checks, then delete only this test node through the app and confirm provider readback. Budget ceiling remains USD 1,000; catalog price is a monthly list price, not an actual task cost receipt.`
+- `time_logic`: `No schedule execution yet. Port checks are point-in-time; scheduled business tests must use fixed aware UTC clocks and configured IANA timezone. Actual inventory timestamp is 2026-11-09T21:00:32+08:00.`
+- `rollback_ref`: `No cloud resource change yet; local test containers/volumes will be named by this run. Stop only the foreground stack process created by this run after gates; retain its named data volumes for audit.`
+- `status`: `passed (port ownership/occupancy and read-only AWS price preflight); in-progress (isolated local test stack not yet started).`
+
+
+### 2026-11-09T21:28:38+08:00 — xray-node-pool-restart-20261109-01/003 r2 门禁、隔离应用路径与启动前复核
+
+- `event_id`: `xray-node-pool-restart-20261109-01/003`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `verification, read, runtime, decision`
+- `path_scope`: `docs/project-conventions.md; docs/project-ledger.md; docs/progress.md; docs/version-record.md; tests/acceptance/matrix.json; backend/config/settings; backend/apps/identity; backend/apps/cloud_accounts; providers; scripts/check-local.sh; local port registry; isolated PostgreSQL/Redis metadata`
+- `commands_and_exit_codes`: `git status/log/diff and source reads=0; temporary auth path existence check confirmed absent; Docker inventory/inspect=0; lsof existing backend showed PID 93050 on 9537, readiness HTTP 503, 9538 frontend unavailable; isolated PostgreSQL xray_test table-count query exited 1 because schema is not yet migrated; current DB is newly created dedicated stack. LocalPortManager check for current X-ray project 9541,9542=0; lsof found neither port listening. Verification-before-completion skill read. Three delegated read-only audits completed; no agent wrote files or called AWS.`
+- `local_gate_result`: `artifacts/acceptance/0.14.4/final-gates-20261109-r2/summary.tsv records all 19 gates exit 0; JUnit 526 tests, 524 passed, 2 skipped, no failures/errors; frontend 88 passed; Playwright 8 passed. The two skips require disposable Linux/systemd hosts. r1 preserved with frontend-e2e exit 1 due port conflict; r2 used registered E2E overrides and passed. Temporary auth directory is absent. Dedicated PostgreSQL/Redis containers remain healthy on 55435/56382 and named volumes are retained.`
+- `runtime_and_auth_boundary`: `Existing 9537 process is not stopped or reused; current 9541/9542 are registered to this X-ray project and free. Normal password login and password step-up are available for an unbound TOTP administrator; this run will keep TOTP/login bypass disabled and use the official bootstrap command only against the new isolated database. CloudAccount creation is through CSRF-protected authenticated API, AWS identity validation is read-only, credentials are encrypted through SecretStore, and any subsequent create/stop/start/delete/SSH must use normal Operation authorization and only the tagged test node. No API/database/AWS write or SSH has occurred yet.`
+- `decision_and_next_step`: `The dedicated database has no schema yet, so prior CloudAccount/ManagedNode counts are not applicable. Initialize only this run's xray_test schema and administrator, start a separate development-settings backend under managed registered ports 9541/9542 with stable local SecretStore configuration, and validate normal login/step-up/readiness before any AWS write. Do not alter existing DBs, account security, containers, volumes, runner resources or public Release.`
+- `time_logic`: `No business time behavior changed. Local record uses actual Asia/Shanghai time. Cloud test window and IANA timezone must be fixed in the task-specific authorization receipt before starting a billable instance; schedule acceptance uses aware UTC instants and the configured Asia/Shanghai schedule.`
+- `rollback_ref`: `Only this run's schema/admin/session/account and specifically tagged test resources may be handled; preserve audit records, token tombstones and named database volumes. Do not delete the current stack, other projects, existing 9537 process, AWS runners or public release.`
+- `status`: `passed (fresh local r2 gates and port/runtime inventory); in-progress (isolated schema/bootstrap and authenticated application path not yet run); not-run (AWS create/SSH/node/subscription/traffic acceptance).`
+
+
+### 2026-11-09T21:52:06+08:00 — xray-node-pool-restart-20261109-01/004 隔离运行态、CloudAccount 与单节点授权复核
+
+- `event_id`: `xray-node-pool-restart-20261109-01/004`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `read, runtime, authentication, authorization, decision`
+- `path_scope`: `Current git status/HEAD; dedicated PostgreSQL xray_test metadata; dedicated Docker health/ports; backend readiness; authenticated local API login/session/step-up; CloudAccount list/capabilities; nodes pool/scheduler/API/model source; delegated read-only audits.`
+- `commands_and_exit_codes`: `git state showed main@940d155970a9571049192e07385ac717a9d14791 equal origin/main, with only pre-existing docs/cloud-test-authorization.md, docs/project-ledger.md modifications and r1/r2 artifacts; docker ps/lsof/readiness checks=0 and readiness HTTP 200 on registered 9541 (PID 75546), dedicated postgres/redis healthy on 55435/56382; psql first attempted nonexistent role postgres (exit 2), then model-field guess region on CloudAccount (exit 1); corrected metadata-only connection as xray_test and confirmed 39 migrations, one enabled validated AWS Lightsail CloudAccount named xray-node-pool-restart-20261109-01 at credential version 1, zero NodePool rows and zero ManagedNode rows; no credential envelope/address was selected. A local Python urllib client loaded existing ignored development credentials in memory only; normal CSRF/password login HTTP 200, session authenticated=true and mfa_bound=false, password step-up HTTP 200, CloudAccount GET HTTP 200 with exactly one account, capability GET HTTP 200 with five entries; no passwords, cookies, AWS account number, capability payloads or secret fields were printed. CUA inspection found only GitHub tabs and was closed with completion summary. No AWS write or SSH occurred in this event.`
+- `read_and_audit_result`: `Dedicated app runtime uses a working readiness endpoint. Read-only provider capability receipt includes the implementation's local capability statuses but live_verified remains false; this is not proof of live create/delete, host-key pin, SSH, firewall, dynamic IP or data-plane operation. Pool audit confirmed quota sync submits deficit creates and one oldest excess delete per due cycle, with a safety recheck; creation can submit the full deficit, so this run must keep the target at exactly one. Restart audit confirmed deterministic (created_at, pk) order and one-node successful-cursor rotation; there is no user-configurable priority field. Existing r2 local gates remain the only complete local suite evidence so far. Subscription audit found strong unit coverage but no one-test HTTP issue/read/revoke/same-link-410 aggregate regression; that focused test is delegated separately.`
+- `requested_outcome_and_scope`: `Continue the user-authorized end-to-end pool/restart/IP/status/health/subscription/count/traffic acceptance. Reuse current main and the dedicated xray_test stack; configure one isolated us-east-1 quota only and perform every cloud mutation through the application's normal API, Operation, UUID idempotency, audit and read-after-write flow.`
+- `authorization_and_exclusions`: `Use only the AWS Lightsail account and resource scope already recorded in docs/cloud-test-authorization.md: one small_3_0 / ubuntu_24_04 instance, USD 5 task sub-budget, maximum two hours, delete only the node created by this run through pool quota reduction, and complete/verify deletion by 2026-11-09T23:30:00+08:00. No static IP, snapshot, unrelated runner/resource, production host, third-party probe, or credential/token/URI disclosure. User's USD 1,000 global cap remains the outer ceiling.`
+- `next_write_plan`: `Create the single-region NodePool through authenticated API at quota=1 / allow_create=true, configure pool sync and creation template to the verified account/region/plan/image, enable status sync, usage sync and Asia/Shanghai daily restart with today's target time already elapsed so one scheduled run can be exercised, then start only this run's worker/beat/outbox dispatcher against the same xray_test DSN and stable local SecretStore environment. Do not start a billable instance until all process/database/account scopes are rechecked and source-host public address/firewall scope can be limited. Wait for operation terminal state, provider readback, bootstrap with verified AWS host-key pin, healthy status, real subscription issue/read/revoke/410, node count and loopback-only traffic. Revoke test subscription, lower quota to zero for scheduler deletion, and verify provider absence before deadline.`
+- `time_logic`: `Machine clock was 2026-11-09T21:52:06+08:00 (UTC+08, no DST); schedule timezone remains Asia/Shanghai; select a same-date daily_restart_time earlier than the actual setup time to trigger at most one run, with database aware UTC storage and scheduler's daily guard. Pool/status/usage intervals stay at their supported minimum only for test acceleration; repeat scheduling must remain idempotent.`
+- `rollback_and_risks`: `If provider or bootstrap readback is uncertain, stop dispatch/retry at the normal operation reconciliation boundary and preserve evidence; do not bypass host-key pin or fabricate completion. Delete only the test node using pool quota 0 and normal node.delete operation, then verify provider absence. Stop only worker/beat/dispatcher processes spawned by this run; keep the dedicated named volumes for audit and preserve existing 9537/runner services. Code rollback, if later needed, uses a scoped revert/tag and never resurrects token tombstones or cloud/auth history.`
+- `status`: `passed (isolated runtime/auth/CloudAccount scope readback); in-progress (pool/config setup); not-run (AWS node create, SSH, stop/start, dynamic IP/health, subscription, traffic and application-side deletion).`
+
+
+### 2026-11-09T22:10:29+08:00 — xray-node-pool-restart-20261109-01/005 调度输入、队列与发布门禁复核
+
+- `event_id`: `xray-node-pool-restart-20261109-01/005`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `read, gate, decision`
+- `path_scope`: `Current main/worktree; dedicated PostgreSQL/Redis; NodePool allocation and automation-setting metadata; outbox/operation tables; Celery Beat schedule; subscription/admin API and metering/bootstrap source; cloud-test authorization.`
+- `commands_and_exit_codes`: `date and git status/rev-parse/diff-check=0; dedicated PostgreSQL read-only metadata query=0; backend readiness=HTTP 200; docker/lsof inventory=0. Confirmed main@940d155970a9571049192e07385ac717a9d14791 equals origin/main; worktree contains the scoped subscription regression test, current task authorization/ledger edits, and preserved r1/r2 evidence. Isolated database has 39 migrations, one pool allocation us-east-1:1, one pool-creation template, pool sync enabled at 5m, status/IP sync enabled at 5m, daily restart enabled at 21:30 Asia/Shanghai, usage sync enabled at 1m; no Operation or OutboxEvent rows exist. Only this repository's isolated PostgreSQL/Redis and API processes are present; no Celery worker/Beat/outbox dispatcher process was found. No secret-bearing account/template values were queried.`
+- `read_and_release_gate`: `Subscription admin API issues a one-time token, published content is rendered from active READY node credentials, and usage collector obtains generation-bound Xray counters over provider-attested SSH. Bootstrap health probe uses the test node's loopback SSH banner as positive control and exercises the active Shadowsocks profile. Current GitHub delivery run 42467021476 for this exact commit is completed/failure because deploy/docker/backup-tools.Dockerfile received HTTP 504 from the jq GitHub release download; acceptance validator and dependency setup succeeded, but the remote delivery gate is not passed. No v0.14.5 exists.`
+- `decision_and_next_step`: `Proceed only through this run's standard authenticated API and isolated queue: create a dedicated AccessProfile, issue its one-time subscription in memory, then start a single worker, Beat, and dispatcher against this run's dedicated xray_test DSN/Redis. Existing outbox is empty, so no historical operation can be dispatched. Keep raw subscription token/URL out of output, process arguments, logs, files, and ledger; public-path behavior can be exercised through Django's in-process test client to avoid the development server logging a token-bearing path. First cloud creation remains contingent on normal provider response and AWS-attested host key.`
+- `time_logic`: `Actual machine time 2026-11-09T22:10:29+08:00; schedule uses aware UTC persistence and Asia/Shanghai local date. Today's 21:30 restart time is already due, but the daily guard must submit no more than one stop/start cycle. Pool due interval is 5m; usage due interval is 1m.`
+- `authorization_and_rollback`: `Cloud boundary unchanged: one us-east-1 small_3_0/ubuntu_24_04 node, USD5 task sub-budget, two-hour maximum, deletion/readback by 23:30+08, no static IP/snapshot, only exact test node. If provider ownership, attestation, network or state readback is ambiguous, stop normal dispatcher processing for the run and preserve evidence; later cleanup only by lowering this test pool to zero via API and allowing its scheduler to delete the owned node.`
+- `status`: `passed (allocation/settings/outbox inventory and local API gate); passed (CI failure cause classified); in-progress (test profile/subscription and scheduled AWS application acceptance); not-run (AWS create/SSH/restart/dynamic IP/usage/deletion).`
+
+
+### 2026-11-09T23:31:00+08:00 — xray-node-pool-restart-20261109-01/006 云验收、撤回边界与隔离进程收尾
+
+- `event_id`: `xray-node-pool-restart-20261109-01/006`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `external_acceptance, cleanup, security_boundary, runtime`
+- `path_scope`: `本轮隔离 xray_test 数据库/Redis、X-ray API/worker/Beat/outbox 进程、AWS Lightsail 单节点、节点池/节点生命周期/订阅/用量记录及本轮验收证据`
+- `authorization`: `沿用 docs/cloud-test-authorization.md 与用户 2026-11-09 授权；仅 us-east-1 的 small_3_0/ubuntu_24_04 单节点，测试子预算 USD 5，最迟 2026-11-09T23:30:00+08:00 删除；不创建静态 IP、快照或额外实例。`
+- `cloud_evidence`: `通过正常管理员登录、step-up、CloudAccount、UUID 幂等键、Operation、durable outbox、Celery worker/Beat、审计及读后写确认完成 node.create 操作 d3b10617-d1eb-4eb7-a99e-f6e82c055f9a（SUCCEEDED，provider request id 仅记录在数据库）；节点 4031cd83-d19d-500e-a04a-debe18883d0b、资源 xray-9e613d8e-4031cd83 完成 bootstrap preflight/installer/firewall/config/health/publish，最终 READY/HEALTHY，云状态 running。`
+- `restart_and_sync_evidence`: `node.stop 操作 a20c0fda-5e68-4294-8480-795f40f7ae66 与 node.start 操作 aa062d12-b3f5-49ce-bcb9-08c3e38c59db 均 SUCCEEDED；stop 后 start，start 读回地址发生变化并返回 addresses_changed=true，随后健康探测通过、订阅重新发布。node.refresh 多次 SUCCEEDED；节点计数在创建阶段 quota=1/used=1，在清理阶段 quota=0/used=0。`
+- `usage_evidence`: `usage collector 多次运行并写入 2 条 UsageCheckpoint；两条均含上传或下载字节，时间范围为 2026-11-09T14:49:20Z 至 2026-11-09T15:07:04Z；采集来源为节点认证 SSH/Xray 统计，不接受浏览器提交值。`
+- `subscription_evidence`: `标准签发、发布和公开读取均成功；公开内容核对重启后的当前 IPv4。Token 撤回后同一链接 GET 与 HEAD 均返回 410，HEAD 响应体为空；数据库只保留撤回状态和 digest，不在本台账、参数、URL、截图或证据中记录原始 Token/URI。profile 级强制撤回 Operation 40f464a8-18db-464e-be5d-00b71b075831 最终 PARTIALLY_SUCCEEDED/REVOCATION_UNCONFIRMED，原因是 REVOCATION_POSITIVE_CONTROL_UNAVAILABLE；该不确定结果被 fail-closed 保留，未记录为全部成功。`
+- `cleanup_evidence`: `池调度器检测到 REVOCATION_UNCONFIRMED 后返回 blocked=1，不自动提交删除 Operation。随后按用户同一授权范围执行标准 node.delete 操作 785ed5d2-693d-4f13-b545-16eb5f9dd916，结果 SUCCEEDED；provider 读回 NotFound，应用节点 desired_state/provisioning_state=DELETED、consumes_quota=false，池 quota=0/used=0；没有静态 IP 或快照残留。自动池删除与人工标准清理回退严格区分。`
+- `runtime_cleanup`: `停止本轮隔离 API wrapper PID 75459 与 Django PID 75546 的命令及 lsof 复核均 exit 0，9541 已释放；未停止或复用现有 9537 服务 PID 93050。隔离 PostgreSQL/Redis 容器及命名卷保留供审计复核。`
+- `security_correction`: `一次开发服务器撤回后的 410 验收曾把带 Token 的 /s/<token> 请求路径写入 stderr；Token 随后已撤回，未写入文件、台账或 artifacts。该风险触发了最小 SecretMaskFilter 路径脱敏修复和 focused test；后续测试不再回显或保存原始 Token。`
+- `status`: `passed (真实 AWS 应用单节点 create/bootstrap/stop/start/dynamic-IP/health/refresh/usage/subscription/count/delete readback within authorized scope); blocked (profile-level revocation positive control unavailable, automatic pool delete intentionally fail-closed); passed (authorized test resource cleanup).`
+
+
+### 2026-11-09T23:32:00+08:00 — xray-node-pool-restart-20261109-01/007 TDD、聚焦回归与完整本地门禁
+
+- `event_id`: `xray-node-pool-restart-20261109-01/007`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `test, gate, correction`
+- `path_scope`: `backend/common/logging.py; backend/tests/test_logging.py; backend/apps/operations/management/commands/dispatch_outbox.py; backend/config/__init__.py; backend/tests/test_outbox.py; backend/tests/test_safe_controls.py; artifacts/acceptance/0.14.4/final-gates-20261109-r1/r2/r3`
+- `commands_and_exit_codes`: `错误环境变量的 focused pytest 首次 exit 1（2 个测试因公开基址被覆盖而失败）；修正为 config.settings.test、XRAY_TEST_DATABASE_URL=专用 55435/xray_test、XRAY_REDIS_URL=专用 56382 后 36 passed exit 0；新增日志脱敏测试先在正确隔离环境下 RED（1 failed，确认 /s/<token> 未被遮蔽），加入路径规则后 37 passed exit 0；相关 Ruff exit 0，git diff --check exit 0。完整 scripts/check-local.sh 使用 XRAY_TEST_SERVICES_EXTERNAL=1、登记的 55435/56382 与 55671-55674，r3 summary 所有 19 gates exit 0：后端 527 passed/2 skipped、前端 88 passed、Playwright 8 passed；两项 skip 仅需 disposable Linux/systemd 主机。boundary、secrets、skill、acceptance validator 均 exit 0。`
+- `evidence`: `artifacts/acceptance/0.14.4/final-gates-20261109-r3/summary.tsv 与 backend-and-delivery.junit.xml；r1 保留端口冲突失败证据，r2/r3 保留后续通过证据；临时 Playwright auth state 与 55671-55674 监听均已清理。`
+- `implementation`: `普通 Django 管理命令明确通过项目 Celery app.send_task 发布 outbox 任务，config/__init__.py 导入项目 celery_app；SecretMaskFilter 现在同时遮蔽 token= 键值和 /s/<token> 路径。`
+- `reuse_and_rollback`: `复用专用 55435/56382 容器和本轮 r3 证据；应用代码可从发布前相干提交执行 git revert，数据库、Token tombstone、撤回状态、审计和云资源状态不回退。`
+- `status`: `passed (focused and full local gates); external delivery remains to be rerun after the release candidate commit; Linux/systemd-only skips remain not-run.`
+
+
+### 2026-11-10T00:04:49+08:00 — xray-node-pool-restart-20261109-01/008 清理时间/成本读回与 0.14.5 发布证据修正
+
+- `event_id`: `xray-node-pool-restart-20261109-01/008`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `read, correction, validation, modify`
+- `path_scope`: `隔离 xray_test Operation/OperationStep 时间戳；Cost Explorer 账号级 Lightsail 汇总；docs/release-checklist-v0.14.5.md; docs/progress.md; docs/version-record.md; docs/cloud-test-authorization.md; tests/acceptance/matrix.json; .github/workflows/ci.yml; .github/workflows/release.yml`
+- `commands_and_exit_codes`: `只读 ORM 查询 Operation 785ed5d2-693d-4f13-b545-16eb5f9dd916=exit 0；provider absence step finished_at=2026-11-09T15:13:17.716837Z / 23:13:17.716837+08:00；Cost Explorer 2026-11-09 Amazon Lightsail service total query=exit 0, USD 0 account-level; focused pytest with dedicated 55435/56382=40 passed, 1 skipped, exit 0；workflow source reads=exit 0；git diff --check=exit 0 before these documentation edits.`
+- `time_logic`: `Operation node.create was created 2026-11-09T22:23:45.571365+08:00; cloud.create returned ACCEPTED at 22:44:03.978564+08:00. node.delete was created at 23:13:13.028093+08:00 and provider CONFIRMED_ABSENT at 23:13:17.716837+08:00, before the authorized 23:30+08 deadline; test operation window was under one hour and the two-hour cap. Database values are UTC aware and converted to Asia/Shanghai for comparison.`
+- `corrections`: `This event resolves the timing uncertainty in /006: the 23:31 ledger event is its documentation timestamp, not deletion time. It also corrects /007's reported full-suite path/count: the final candidate artifact is artifacts/acceptance/0.14.5/final-gates-20261109-r1/summary.tsv and records 528 passed/2 skipped, 19/19 gates; /007's 527 count and 0.14.4 path are superseded by this correction. AWS matrix status is blocked for the complete real-cloud acceptance because profile-level revocation positive control was unavailable and the pool scheduler correctly refused automatic deletion; successful single-link revoke and standard authorized cleanup remain separately evidenced.`
+- `cost_evidence`: `Cost Explorer returned account-wide Amazon Lightsail service UnblendedCost USD 0.00 for 2026-11-09 at query time 2026-11-10T00:00:58+08:00. It is not resource-attributable and may lag; matrix cost remains null and actual instance cost is not claimed as zero. AWS documentation states Lightsail plans use hourly pricing up to a monthly cap and instance charges continue while stopped until deletion; no attached billable resource remained after deletion.`
+- `workflow_readback`: `ci.yml triggers delivery-gates on push to main and has no workflow_dispatch. release.yml requires workflow_dispatch from refs/heads/main with a tag input and contents:write. GitHub connector has read/readback and rerun endpoints but no new workflow dispatch endpoint; gh CLI is absent. Release dispatch remains pending browser UI after candidate delivery CI passes.`
+- `writes`: `Corrected docs/release-checklist-v0.14.5.md test count and deletion deadline; added current candidate rows to docs/progress.md and docs/version-record.md; appended execution/cost receipt to docs/cloud-test-authorization.md; refreshed tests/acceptance/matrix.json focused test evidence, exact cleanup timestamp, cost limitation, and blocked aggregate cloud gate. No code, cloud, subscription, database, Git ref or process mutation occurred.`
+- `evidence_and_rollback`: `The 0.14.5 gate summary/JUnit are retained under artifacts/acceptance/0.14.5/final-gates-20261109-r1; dedicated PostgreSQL/Redis containers and named volumes remain for audit. Documentation/matrix changes are reversible by a scoped revert; do not remove retained evidence or restore tokens, credentials, audit state or AWS resources.`
+- `status`: `passed (time and provider absence readback before deadline; focused tests; documentation updates); blocked (complete profile-level revocation/pool auto-delete acceptance, per-resource final bill, candidate remote delivery/Release).`
+
+
+### 2026-11-10T00:18:10.000+08:00 — xray-node-pool-restart-20261109-01/009 0.14.5 r2 门禁与测试认证状态清理
+
+- `event_id`: `xray-node-pool-restart-20261109-01/009`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `verification, correction, cleanup, decision`
+- `path_scope`: `scripts/check-local.sh; artifacts/acceptance/0.14.5/final-gates-20261110-r1/r2; docs/release-checklist-v0.14.5.md; docs/progress.md; docs/version-record.md; docs/project-ledger.md; tests/acceptance/matrix.json; frontend/.playwright/admin.json metadata only`
+- `commands_and_exit_codes`: `First full-gate invocation stopped at runtime=1 because global pnpm was 11.25.0; no tests ran. Rerun exposed an in-memory Bash pnpm function delegating to Corepack 10.33.0, with no repository/global package-manager mutation; scripts/check-local.sh=0, 19/19 gates, backend pytest=528 passed/2 skipped, frontend unit=88 passed, Playwright=8 passed. Artifact: artifacts/acceptance/0.14.5/final-gates-20261110-r2/summary.tsv and backend-and-delivery.junit.xml. Acceptance matrix validator=0; boundary=0; committed-history secret scan=0 (135 commits, 8.49 MB, no leaks); skill validator=0; JSON parse and diff check=0. E2E listener probe confirms 55671-55674 absent; test container probe returned no remaining E2E/parser containers; dedicated PG/Redis on 55435/56382 remain. No new cloud writes.`
+- `correction`: `Supersedes the 0.14.5 full-gate artifact path recorded in /008 with the fresh final r2 artifact. Test counts remain 528 passed/2 skipped and 19 gates, now captured after Corepack selected the locked pnpm. The previous pnpm runtime failure is retained as an environment-only failed attempt, not a product test failure.`
+- `auth_state_handling`: `After E2E, frontend/.playwright/admin.json existed. Metadata-only stat showed birth 2026-11-08T07:00:49+08:00, mode 0644, and mtime 2026-11-10T00:12:19+08:00 during the current run; the path is Playwright's ignored auth-state output. No file content was read. The pre-run contents were not backed up and cannot be restored. Removed only the test auth-state output with unlink and verified the path absent (exit 0); no cookie value was exposed or copied. Do not run another E2E with the default auth-state path.`
+- `documentation_and_matrix`: `Updated release checklist, progress and version record to cite final r2 results; matrix generated_at/evidence points to r2 and correctly leaves aws-real-cloud blocked due profile-level revocation/pool auto-delete uncertainty and non-attributable cost. docs/project-ledger.md remains append-only; /007 and /008 historical entries are corrected by this event rather than rewritten.`
+- `rollback_and_residuals`: `Application changes are reversible through a scoped commit revert or v0.14.4 tag; never revert subscription tombstones/audit or cloud state. Keep dedicated PostgreSQL/Redis containers and named volumes for audit; retain unrelated 0.14.4 evidence untracked and unstaged. Current release candidate is not yet committed/pushed; no v0.14.5 tag or Release exists.`
+- `status`: `passed (full local r2 gates, matrix/boundary/secret/skill/diff checks, test-state cleanup); blocked (profile-level revocation positive control and automatic pool shrink; per-resource final billing; pending remote delivery CI/Release).`
+
+
+### 2026-11-10T00:22:30+08:00 — xray-node-pool-restart-20261109-01/010 README 云验收状态纠正
+
+- `event_id`: `xray-node-pool-restart-20261109-01/010`
+- `run_id`: `xray-node-pool-restart-20261109-01`
+- `actor`: `Codex`
+- `event_type`: `documentation_correction, read, modify`
+- `path_scope`: `README.md; tests/acceptance/matrix.json; docs/project-ledger.md`
+- `evidence`: `复核 matrix.json 的 aws-real-cloud 状态为 blocked；本轮授权 Lightsail 的 node.create、stop/start、动态 IP/健康、refresh、认证 SSH/Xray 用量采集、单链接签发/撤回、标准 node.delete 与 provider CONFIRMED_ABSENT 均有单独读回。profile-level 撤回正向控制缺失使自动池删除按 fail-closed 阻断；实例级最终账单仍未确认。`
+- `correction`: `README 旧句将“真实 AWS、远程 SSH、实例删除未执行”整体否认，与本轮测试事实冲突。改为明确记录单台 AWS 测试资源的创建/删除及认证 SSH/Xray 流量采集已执行，并单独列明 SWAS、独立 SSH 登录/公网探测、真机、独立生产服务器、域名/TLS 和生产部署未执行；保留候选发布尚待远端门禁与 Release workflow 的状态。同步将当前状态日期由 2026-11-09 更新为 2026-11-10。`
+- `commands_and_exit_codes`: `只读 matrix/ledger/README 复核 exit 0；本事件仅改文档，变更后 diff/static checks 待执行。`
+- `rollback_ref`: `仅 README.md 一句与追加式台账记录；可对本次相干提交做 scoped revert，不改变云资源、Token 墓碑、审计或数据库状态。`
+- `status`: `passed (source-of-truth discrepancy corrected); candidate release gates remain in-progress.`
+
+
+### 2026-11-10T00:31:00+08:00 — xray-node-pool-restart-20261110-01/001 双节点 AWS 补验范围与只读前提
+
+- `event_id`: `xray-node-pool-restart-20261110-01/001`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `scope, authorization, inventory, read`
+- `requested_outcome_and_scope`: `沿用用户本轮 AWS 测试服务器及 USD 1,000 总费用上限授权，额外补验真实池 quota 2→1 的自动缩容、只选最老节点、provider 缺失读回、剩余活动订阅可用；在同一隔离应用内核验每日重启排序、动态 IPv4/健康/发布及一次性订阅链接撤回。`
+- `authorization_boundary`: `依据当前任务用户明确授权新建测试服务器且总成本不超过 USD 1,000；为本次补验限定 us-east-1/small_3_0/ubuntu_24_04，最多两台，USD 25 子预算，每台最多 2 小时，最晚 2026-11-10T02:31:00+08:00 完成云端缺失读回。仅通过正常认证、近期 step-up、X-ray CloudAccount/Operation/PoolSetting/outbox/Celery 路径创建和清理本轮资源；任何身份/授权/归属不确定时停止写入。`
+- `in_scope`: `本轮新增 run 的两台测试 ManagedNode、每日重启与池同步 Operation、一个新测试 AccessProfile/Subscription/撤回 Token 及对应验收证据；不复用上一 run 中 REVOKING profile 或 DELETED node。`
+- `exclusions_and_risks`: `不设 XRAY_DISABLE_TOTP、不用一键登录、不修改管理员认证状态；不触碰 runner/既有 AWS 资源；不建立静态 IP/快照；不独立 SSH、不做公网探测；不输出凭据、完整 IP、Token、URI、私钥或 Cookie。逐台 Lightsail 成本未确认时保持 cost=null；Cost Explorer 账户汇总不能用作实例成本归因。`
+- `baseline_reads`: `读取仓库 AGENTS/项目约定/ledger/acceptance matrix/cloud authorization、0.14.5 checklist、节点池与订阅自动化代码/测试；确认 main 工作树尚有 0.14.5 候选改动。端口管理技能要求使用已登记端口并从 LocalPortManager API/CLI 核验后再启动。`
+- `runtime_inventory`: `只读 Docker/端口盘点：xray-node-auto-20261109-postgres-1 在 127.0.0.1:55435，xray-node-auto-20261109-redis-1 在 127.0.0.1:56382；本轮隔离 API/worker/Beat 未运行；既有 PID 93050 仍监听 9537，保持不变。隔离 DB aggregate 只读：CloudAccount=1（aws_lightsail、enabled、validated、OK），ManagedNode=1（DELETED、consumes_quota=false），AccessProfile=1（REVOKING，禁止复用），管理员=1 且尚未绑定 TOTP。没有 AWS API 写入。`
+- `commands_and_exit_codes`: `docker ps/端口检查=exit 0；xray_test 相关表/聚合状态只读查询=exit 0；首次 MFA JSONB 长度探测因类型错误 exit 1，未返回敏感字段，随后改用 JSONB 非空布尔聚合 exit 0。当前 AWS CloudAccount 只读数据库状态已核实，但 app 近期认证和运行时 CloudAccount 读回尚待验证。`
+- `time_logic`: `使用真实 Asia/Shanghai 时间记录；每台测试资源最长 2 小时，整个补验最迟 2026-11-10T02:31:00+08:00 清理并读回缺失；Daily restart 按应用配置 IANA timezone 与 aware UTC 规则运行，不以手工 stop/start 冒充 scheduler 选择证据。`
+- `rollback_and_reuse`: `如本地认证或服务健康前提失败，仅停止本 run 自行启动的进程组；不停止 PID 93050、其他容器或 runner。云资源若已创建，仅由应用正常 pool scheduler/node.delete 对本 run 两台逐一清理，保留 Operation/audit/Token tombstone 和数据库卷。复用已有専用 PG/Redis 与 CloudAccount，不读取其密文。`
+- `status`: `in-progress (new scoped authorization documented; no new server created); blocked until local app normal auth, registered port ownership and current CloudAccount API readback pass.`
+
+
+### 2026-11-10T01:00:51+08:00 — xray-node-pool-restart-20261110-01/002 认证运行环境及自动化前置复核
+
+- `event_id`: `xray-node-pool-restart-20261110-01/002`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, authentication, runtime, decision`
+- `path_scope`: `忽略的本地 .env（已加载但未回显）；隔离 API 127.0.0.1:9541；专用 PostgreSQL/Redis 55435/56382；CloudAccount、NodePool、NodeAutomationSetting、NodeStatusSyncSetting、ManagedNode、Operation、OutboxEvent、Subscription、AccessProfile 只读聚合；nodes/identity/subscriptions/outbox scheduler source`
+- `commands_and_exit_codes`: `首次 exec 子进程未继承管理员环境变量，脱敏登录检查返回 HTTP 401/AUTH_INVALID，exit 1；python-dotenv 未安装，import 尝试 exit 1；launchctl 在该执行域未返回值，后续未继续使用该通道。按项目约定在内存加载忽略的 .env 后，CSRF/login/step-up 分别 HTTP 200，authenticated=true、mfa_required=false、recent_auth_set=true；CloudAccount、system、pool、node、subscription API 均 HTTP 200，唯一有效 Lightsail CloudAccount 数为 1。未输出、传参、保存凭据值。只读 ORM 连接到专用 55435/xray_test 与 56382：有效 CloudAccount=1，pool allocation us-east-1:0，现存 ManagedNode 均 DELETED/不占额，唯一旧 profile 为 REVOKING，禁止复用；12 个 Operation 全部终态，待投递 OutboxEvent=0，活动订阅=0。节点池同步 enabled/5m，模板 us-east-1/small_3_0/ubuntu_24_04；状态/IP 同步 enabled/5m；每日重启 enabled/21:30 Asia/Shanghai；流量同步 enabled/1m。API PID 50668 监听登记端口 9541，Celery worker PID 53347 与 Beat PID 53348 活跃且 worker 当前连接专用 Redis/PostgreSQL；本轮 outbox dispatcher 尚未启动。旧 PID 93050/9537 未触碰。源码审查确认 Beat 每 60 秒触发同步/池/重启任务，操作需另由 deploy/scripts/run-outbox.sh 的 outbox dispatcher 投递给 worker。两项只读子代理审计同样确认无需改动 fail-closed 规则。`
+- `time_logic`: `当前记录时间 2026-11-10T01:00:51+08:00；当前日计划 21:30 尚未到时，需待两台节点 READY 后通过正常 system API 暂时设为本日稍后时间进行每日重启调度验收，再恢复原 21:30；池周期 5 分钟、状态/IP 周期 5 分钟、用量周期 1 分钟。所有 Operation/节点/地址/健康/发布与使用量均须异步读回。`
+- `decision_and_next_step`: `正常认证、step-up、CloudAccount API、池模板、专用数据库归属及成本子预算前提已复核通过；可以继续本 run 的应用内 API 操作。先启动只使用明确隔离 DSN/Redis 的 outbox dispatcher，再通过正常认证 API 调高本轮池额度至 2，由 beat 自动创建节点；没有人工创建节点替代 scheduler 证据。任何 outbox 目标/Operation/云资源超出本 run 范围立即停止投递并保留审计。`
+- `rollback_and_reuse`: `只停止本 run 后续启动的 outbox/API/worker/Beat 进程；仅通过当前隔离 CloudAccount 与应用池 scheduler 清理新建测试节点，保留现存 tombstone、Operation、审计和命名数据库卷。`
+- `status`: `passed (认证、step-up、CloudAccount API、配置/资源归属及队列前置复核); in-progress (本 run outbox 与节点池测试); not-run (本 run AWS 写入、daily restart、真实订阅/撤回、traffic checkpoint 和缩容)。`
+
+
+### 2026-11-10T01:20:55+08:00 — xray-node-pool-restart-20261110-01/003 两节点健康失败诊断与恢复判定
+
+- `event_id`: `xray-node-pool-restart-20261110-01/003`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, diagnosis, decision`
+- `path_scope`: `skills/xray-manager/SKILL.md; docs/project-conventions.md; backend/apps/operations/services.py; backend/apps/operations/handlers.py; backend/apps/nodes/bootstrap.py; backend/apps/nodes/probes.py; backend/apps/subscriptions/{credentials.py,admin_views.py,serializers.py}; 专用隔离 xray_test PostgreSQL 55435 的 ManagedNode/NodeProtocol/AccessProfile/Subscription/NodeCredential/Operation/OperationStep 只读字段; API/worker/Beat/outbox 进程归属`
+- `commands_and_exit_codes`: `skill/约定和源码读取=0；当前分支/工作树读取=0，main 仍为 940d155970a9571049192e07385ac717a9d14791 且保留既有候选脏改动；运行时进程与专用容器归属复核=0；隔离 DB ORM 只读聚合=0。查询两个节点无健康/地址正文输出。`
+- `observed_state`: `本 run 两个节点仍为 desired=PRESENT、cloud state=running、provisioning=PROVISIONED、health=UNHEALTHY、security=OPEN、generation 1 已应用，各有启用的 Shadowsocks 8388 protocol；当前无任何活动 AccessProfile、Subscription 或 NodeCredential。两个 bootstrap Operation 分别为 NEEDS_RECONCILIATION/NODE_HEALTH_PROBE_FAILED，安装、防火墙和配置步骤均成功，bootstrap.health 的 accepted/positive_control/fresh_connection 均为 false。节点观察时间为 2026-11-10T01:09:20+08:00 和 01:09:22+08:00。`
+- `retry_safety`: `源码与子代理只读审计确认通用 retry 可接受 NEEDS_RECONCILIATION；node.bootstrap handler 不会调用 provider.create_instance，但会重做现有节点的软件安装、防火墙核对、配置应用和健康检查。健康正向控制依赖活动 profile 的 SSH credential。恢复条件是先通过正常管理 API 创建本 run profile，再重试原两个 bootstrap Operation，随后异步读回健康和发布；在 profile/credential 前不得盲重试，不改健康门槛、不直接改数据库。`
+- `authorization_and_risk`: `继续沿用 2026-11-10T00:31:00+08:00 的授权，仅限本 run 两台 us-east-1/small_3_0/ubuntu_24_04 服务器、最多 2 小时且不得晚于 2026-11-10T02:31:00+08:00 完成资源清理/缺失读回、子预算 USD 25、总预算不超过用户 USD 1,000 授权。创建本 run 测试 profile/订阅、复用同一节点 bootstrap、每日重启/IP/健康/流量检查、池 2→1→0 和正常删除均限定同一隔离 CloudAccount 与资源归属。任何资源归属/Operation 不明即停止云写入。`
+- `current_time_and_limits`: `执行主机当前时间为 2026-11-10T01:20:55+08:00；余下约 70 分钟。隔离 API PID 50668、worker 53347、Beat 53348 及本 run outbox dispatcher PID 70345 仍归本项目；既有 9537 服务 PID 93050 与其他项目容器保持原样。`
+- `release_readback`: `子代理只读核验：HEAD 和 origin/main 均为 940d155970a9571049192e07385ac717a9d14791；v0.14.5 tag/Release 不存在；该旧 SHA 没有成功候选 CI，最新公开版本 v0.14.4。workflow 需要候选 commit 推送 main、该新 SHA delivery gates 全绿、annotated tag、再从 main 手动 dispatch Release；当前未发现 gh CLI。`
+- `rollback_and_reuse`: `profile/token 不可逆安全状态通过公开管理 API 保留 digest/tombstone，不恢复 Token；本 run 两个节点只用 X-ray Operation 标准删除并 provider 缺失读回；专用 DB/Redis 命名卷保留。应用回退使用发布前 v0.14.4 或相干提交 git revert，不逆转云操作/撤回/审计。`
+- `status`: `passed (两节点归属/状态、失败步证据、retry handler 与 profile 依赖只读确认); in-progress (本 run API profile 创建、bootstrap 恢复、重启/IP/流量/订阅/缩容验收和 USD25 子预算清理); blocked (v0.14.5 远端 CI/Release 尚未提交/推送)。`
+
+
+### 2026-11-10T03:14:27+08:00 — xray-node-pool-restart-20261110-01/004 双节点最终验收与 v0.14.5 r3 门禁
+
+- `event_id`: `xray-node-pool-restart-20261110-01/004`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `cloud_acceptance, test, gate, decision`
+- `path_scope`: `本轮两台授权 Lightsail 节点及 X-ray Operation/池/订阅/使用量读回；0.14.5 候选源代码、测试、版本文件、README、授权、验收矩阵、发布清单和 r3 本地证据`
+- `commands_and_exit_codes`: `scripts/check-local.sh r3=0，19/19 gates；JUnit 533（531 passed、2 skipped），前端 88 passed、Playwright 8 passed；修复后 lifecycle/publishing focused pytest=8 passed；矩阵 validator 首次因候选 commit 为空 exit 1，改为记录基线 SHA 并显式标记 candidate_worktree 后重跑 exit 0；boundary=0；历史 Gitleaks 8.24.3=0（135 commits、无泄漏）；skill validator=0；git diff --check=0；暂存差异 Gitleaks 8.24.3 protect --staged=0（约 169.89 KB、无泄漏）；staged diff check=0。`
+- `aws_acceptance`: `两台本轮授权节点由应用调度创建并达到 READY/HEALTHY。每日计划按 (created_at, pk) 选择最老节点 stop/start；provider/API 读回确认动态 IPv4 改变、健康恢复、状态/IP 同步完成且订阅发布使用当前地址。认证 SSH/Xray 收到 7 条流量 checkpoint，下载合计 301 bytes。订阅签发/发布/公开读取成功；撤回后同一 URL 的 GET/HEAD 均为 410，HEAD body 为空。池 2→1 由 scheduler 删除最老节点，Operation 20f43f8f-6479-48ee-8480-16d6b0ddc1e3 为 SUCCEEDED，provider 缺失、配额对账完成，保留节点订阅可发布。池 1→0 使用标准 node.delete；旧代码 Operation 6414aa62-c268-49f6-89cf-eb6ac77db16e 为 PARTIALLY_SUCCEEDED，因为撤回 Token 仍触发重新发布错误；provider 确认资源缺失、配额释放，最终 quota/used=0/0、expected/assigned/ready/published=0/0/0/0。当前墓碑校验修复通过 Fake 本地 8 项回归，未在 AWS 重跑。首轮 profile-level 撤回仍 REVOCATION_UNCONFIRMED，正向控制未通过且自动删除保持 fail-closed。`
+- `time_and_cost`: `本轮授权最晚 2026-11-10T02:31:00+08:00 完成缺失读回；最后一次 provider 缺失读回约在 02:34 +08，晚约三分钟。最终资源级 AWS 账单未知；Cost Explorer 的 USD 0 是账号级汇总，不可归因于这些实例，不报告实际资源成本为零。`
+- `remaining_limits`: `AWS 整体验收仍 blocked：profile-level revoke 正向控制缺失、第二台旧删除 Operation 部分成功、修复未重跑 AWS、最终读回超时且实例级账单未知。SWAS、真机、公网探测、生产镜像/部署未运行。候选远端 delivery CI、v0.14.5 tag 和 Release 尚未运行；此前不同旧 SHA 的 HTTP 504 失败不能当作成功证据。`
+- `residual_resources`: `两台测试云节点均已由 provider 确认不存在；专用 PostgreSQL/Redis 55435/56382 及命名卷保留供审计。E2E 容器、临时 auth state、55671–55674 监听已清理。旧 0.14.4 证据及 0.14.5 r1/r2 未跟踪目录保持原样、未暂存；只暂存 r3 summary/JUnit。`
+- `release_and_rollback`: `候选文件暂存于当前 main，基线/远端 main 为 940d155970a9571049192e07385ac717a9d14791；待提交、推送并等待该候选 SHA 的 delivery gates 成功，再创建 annotated v0.14.5 并从 main 手动 dispatch Release。应用可用 v0.14.4 或本阶段提交 git revert 回退；不恢复撤回 Token、账本墓碑、审计或云状态。`
+- `status`: `passed (本地 r3、focused regression、静态/边界/secret/skill/矩阵检查；节点重启/IP/健康/订阅/流量读回；2→1 自动缩容及云资源最终缺失确认); blocked (profile-level revoke 正向控制、第二台旧 Operation partial、AWS deadline 和资源级账单); in-progress (候选提交、远端 CI 与 Release)。`

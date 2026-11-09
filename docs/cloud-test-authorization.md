@@ -105,3 +105,57 @@ Release 工具补齐（2026-11-08）：SSM 只读预检确认 runner 原先未�
 runner CI 验证继续（2026-11-08）：推送 `dc06d8d65bb9dd853fdad1b550ad295edab12a43` 后，run `42421788707` / job `128551579276` 已成功执行依赖安装、验收预检、Compose 配置、Django、迁移漂移、Ruff 和 backend/frontend/backup-tools 镜像构建，随后在 `backend-tests` 的固定 Xray 测试二进制下载步骤因 runner 未安装 `unzip` 失败。artifact `13593881867`，摘要 `sha256:6e463fdcf16ace4cf9a330e142c11eb6647f7ac1b13fdf02d08f1a046c7ed372`；上传和 runner 资源清理步骤均成功。代码候选改用 Python `zipfile` 只提取已通过 manifest SHA-256 校验归档内名为 `xray` 的固定成员，不依赖系统 unzip。临时 ZIP 的存在/缺失成员回归 3 项通过；完整本地 19/19 gates 通过，backend/delivery `488 passed, 2 skipped`，前端 84、E2E 8 均通过。首次本地 E2E 因独立当前主线服务占用 `55433/56380` 退出 1；保持其运行，改用已登记 `55671–55674` E2E 端口与 `55435/56382` 门禁数据库端口后全量通过。测试 Compose 容器/network 已移除且保留本轮命名卷，所选端口复核为空闲。
 
 本轮 AWS CLI 仅做身份/权限只读诊断：default profile 的账号指纹为 `sha256:b1746f68f5be`，其 EC2/SSM describe 请求被拒绝；root profile 的账号指纹为 `sha256:4a0ef08458dd`，与 runner 授权记录一致。通过 root profile 只读查询专用 runner `i-092e2bb13b7821d13`，状态为 `running`。本次 CI 提取修复没有触发 AWS 写入。该身份读回不证明 X-ray 应用 CloudAccount/MFA 已配置，也不改变真实应用节点、动态 IP/健康、订阅创建/撤回或流量验收仍 `blocked`/`not-run` 的状态。
+
+## 2026-11-09T21:28:38+08:00 — 节点池、动态 IP、订阅与计量验收
+
+用户本轮明确要求在 AWS 创建测试服务器，配置由代理选择，测试节点数量补齐/缩容、每日一台 stop/start、动态 IPv4 与状态/健康同步、订阅创建/撤回、节点数量核对和流量统计，并授权费用不高于 USD 1,000。此记录把执行范围进一步限缩为一台 Lightsail 测试节点；所有节点写入都必须通过 X-ray 正常 CloudAccount/Operation、近期 step-up、预览、幂等和审计路径。测试资源不会与现有 runner 或其他 AWS 资源混用。
+
+| 字段 | 本次精确范围 |
+| --- | --- |
+| authorization_ref / run_id | 当前对话 2026-11-09 用户请求；`xray-node-pool-restart-20261109-01` |
+| provider / account_ref | AWS Lightsail / 当前只读 AWS `root` profile caller account SHA-256 `94a91b85428b`；凭据不复制或输出 |
+| region / plan / image | `us-east-1` / `small_3_0` / `ubuntu_24_04`；用户授权代理选择配置；目录读取 USD 12/月，实际费用以账单为准 |
+| resource identity | 仅本 run 通过 X-ray `node.create` 创建并读回的单个节点；通过 run ID 和 Operation/ManagedNode UUID 追踪，禁止复用或删除既有实例 |
+| task budget / lifetime | 用户总上限 USD 1,000；本测试子预算 USD 5；最多一台、最长两小时，最迟 `2026-11-09T23:30:00+08:00` 经 X-ray `node.delete` 删除并读回；不创建静态 IP、快照或额外实例 |
+| allowed_actions | 仅该测试节点的 create/read/tag、应用所需 firewall 配置、自动 bootstrap、节点状态/IP/健康读回、计划 stop/start、通过该节点自测订阅和流量、以及把该节点池额度设为 0 后由 pool scheduler 提交 `node.delete` 并完成云端读回。每一云写入均用新的 UUID `Idempotency-Key` 并保留 Operation/审计证据 |
+| ssh_scope | 仅该测试节点；使用 Lightsail `GetInstanceAccessDetails` 提供的临时认证信息和 AWS 返回的 host key pin；只走应用 `NodeBootstrapRuntime`，不使用 `ssh-keyscan`/TOFU、不访问其他主机，密钥只在进程内存 |
+| public_probe_scope | 只连接本轮测试节点的 IPv4 和本轮短暂开放的服务端口；客户端来源限制到当前运行主机的单一出口 `/32`。出口地址仅向 AWS 官方 `checkip.amazonaws.com` 做一次只读查询并只在内存使用。流量统计目标使用测试节点 loopback echo，不请求第三方网站 |
+| stop / delete / IP release | `stop_authorized=yes`，仅由每日重启验收对本轮节点执行；`delete_authorized=yes`，仅缩容验收删除本轮节点；`release_ip_authorized=no`，不创建/释放静态 IP |
+| exclusions | 不触碰现有 Lightsail/EC2 runner、其他 AWS 账号/区域/资源；不做公开第三方探测、生产 TLS/生产域名、设备验收；不输出凭据、订阅 Token/原始 URI、私钥、Cookie 或完整公网地址 |
+
+AWS CLI 只读预检（2026-11-09 21:28+08）：`sts get-caller-identity` 仅保存 SHA-256 摘要；`us-east-1` Lightsail 当前实例数为 0、无 run-name 冲突；`small_3_0` 目录读取价格为 USD 12/月、2 vCPU；未执行创建、SSH 或其他云写入。若应用不能在上述范围内安全完成运行时初始化、来源限缩或费用读回，应停止后续写入并保留失败/阻塞证据。
+
+### 2026-11-09/10 — 授权节点执行与清理收据
+
+- 使用正常 X-ray CloudAccount、step-up、Operation、UUID 幂等、outbox/Celery、审计和读后写路径，仅创建 1 台授权节点；创建 Operation `d3b10617-d1eb-4eb7-a99e-f6e82c055f9a` 于 2026-11-09T22:23:45+08:00 建立，`cloud.create` 步骤于 22:44:03+08:00 返回接受。
+- stop/start、动态 IPv4 更新、健康探测、refresh、UsageCheckpoint、订阅签发/公开读取/撤回均按项目台账 `xray-node-pool-restart-20261109-01/006` 读回；不在本文件保存 Token、URI 或公网地址。
+- profile 级撤回 Operation `40f464a8-18db-464e-be5d-00b71b075831` 为 `PARTIALLY_SUCCEEDED/REVOCATION_UNCONFIRMED`；池调度器 fail-closed 阻断自动删除。随后仅对本授权节点执行标准 `node.delete` Operation `785ed5d2-693d-4f13-b545-16eb5f9dd916`；provider `CONFIRMED_ABSENT` 读回于 2026-11-09T23:13:17.716837+08:00，早于 23:30 截止。节点计数为 quota 0 / used 0，无静态 IP 或快照残留。
+- 2026-11-10T00:00:58+08:00 的 Cost Explorer 只读查询对 2026-11-09 的账号级 Amazon Lightsail 服务汇总返回 USD 0.00。该值不具备实例级归因且可能受计费延迟影响，不能据此宣称本节点实际成本为 USD 0；实际最终账单金额仍待 AWS 账单结算。AWS 说明 Lightsail 实例按小时计费并受月费上限约束，删除后停止实例费用；本次确认没有静态 IP、快照、磁盘或负载均衡器残留。
+
+## 2026-11-10T00:31:00+08:00 — 双节点真实池自动缩容补验
+
+用户在当前任务中明确授权创建 AWS 测试服务器，配置由代理选择，总费用不超过 USD 1,000。本次补验使用新的 run scope，不沿用已于 2026-11-09 23:30 结束的单节点授权。
+
+| 字段 | 本次精确范围 |
+| --- | --- |
+| authorization_ref / run_id | 当前对话 2026-11-10 用户请求；`xray-node-pool-restart-20261110-01` |
+| provider / account | AWS Lightsail；仅使用隔离数据库中现存、已验证且 enabled 的 X-ray CloudAccount；未读取或输出账户凭据 |
+| region / plan / image | `us-east-1` / `small_3_0` / `ubuntu_24_04` |
+| resource identity | 最多 2 台由本 run 通过 X-ray `node.create` / 节点池定时补齐创建、并以本 run 名称和 Operation/ManagedNode UUID 识别的实例；禁止操作既有 runner 或其他资源 |
+| task budget / lifetime | 本子任务预算上限 USD 25，计入用户总上限 USD 1,000；最多 2 台、每台最长 2 小时；最迟 `2026-11-10T02:31:00+08:00` 完成 exact-resource 云端缺失读回。任一预期超限、身份不匹配、正常认证失败或资源归属不确定时立即停止写入并清理已明确归属实例 |
+| allowed_actions | 仅经正常管理员登录、近期 step-up、X-ray CloudAccount、PoolSetting、Operation、UUID 幂等、outbox/Celery、审计和读后写路径创建/读取/标记本次 2 台节点；运行计划内每日重启调度并核对只选计划顺序中的一台；验证 stop/start 后新 IPv4、健康和订阅重新发布；签发/发布/读取及撤回一次性链接；将池 quota 从 2 降至 1 后验证 scheduler 仅提交最老节点的自动 `node.delete`、provider 确认缺失、配额由 2 归 1 且另一节点订阅仍可读；再通过池 scheduler 降至 0 清理余下测试节点并确认 quota/used 均为 0 |
+| ssh_scope / probes | 仅对本 run 节点使用应用 `NodeBootstrapRuntime` 和认证 SSH/Xray collector，密钥只在进程内存；不 SSH 其他主机、不运行独立公网探测、不访问第三方目标 |
+| stop / delete / static IP | 仅为每日重启验收 stop/start 本 run 节点；仅本 run 的两节点允许由池 scheduler 删除；不创建或释放静态 IP，不创建快照/额外磁盘/负载均衡器 |
+| exclusions | 不设置 `XRAY_DISABLE_TOTP`、不启用一键登录、不修改管理员 MFA/密码、不改写数据库伪造云状态；不读取或输出任何凭据、Token、订阅 URI、私钥、Cookie、完整公网 IP；不触碰现有 AWS runner、其他账户/区域或其他项目资源 |
+
+只读前置复核（2026-11-10 00:31+08）：隔离数据库 `xray_test` 中 CloudAccount 计数 1，provider 为 Lightsail、enabled 且 validated，`last_validation_code=OK`；既有测试节点状态为 `DELETED`、`consumes_quota=false`，旧 profile 为 `REVOKING`，不得复用。隔离 PostgreSQL/Redis 容器仍运行；API/worker/Beat 当前未运行。身份表仅一名管理员且尚未绑定 TOTP。后续服务须使用专用已登记端口，并显式关闭 TOTP bypass 与 one-click login；正常登录/近期 step-up 或 CloudAccount 读回任一不满足时不得创建节点。
+
+### 执行结果更正（2026-11-10T02:34+08:00）
+
+- 正常登录/step-up 和应用调度路径创建两台测试节点并完成 READY/HEALTHY。每日重启按 `(created_at, pk)` 选中最老的一台；AWS stop/start 后应用读回新 IPv4、恢复健康并更新订阅发布。周期状态/IP 刷新和认证 SSH/Xray 用量采集完成，7 条 checkpoint 合计下载 301 bytes。
+- 新测试订阅完成签发、发布、公开读取；测试链接撤回后 GET/HEAD 均为 `410`，HEAD 响应体为空。第一次临时控制台撤回因未带入预览绑定的 Token ID 返回 `PREVIEW_STALE`；随后使用正常认证、step-up、精确预览和幂等 API 路径完成撤回，没有绕过安全校验。
+- 池从 2 降至 1 后，调度器创建自动删除 Operation `20f43f8f-6479-48ee-8480-16d6b0ddc1e3`，状态 `SUCCEEDED`；选中最老节点，provider 确认缺失，配额归一，另一节点保持可发布。
+- 池从 1 降至 0 后，标准删除 Operation `6414aa62-c268-49f6-89cf-eb6ac77db16e` 为 `PARTIALLY_SUCCEEDED`：订阅发布步骤报告 `SUBSCRIPTION_TOKEN_INACTIVE`，因为该测试 Token 已撤销；provider 仍确认实例缺失且配额释放。最后一次缺失读回约在 02:34 +08，晚于本轮授权截止 `02:31` 约三分钟。最终池 quota/used 为 0/0，节点 expected/assigned/ready/published 为 0/0/0/0；7 条流量 checkpoint 合计下载 301 bytes。
+- 后续代码修正只在当前 token 为 `REVOKED`、撤回时间与不可变墓碑及安全事件匹配、且不存在其他活动 Token 时跳过无意义的重发；活动 Token 仍无可发布替代节点时保持失败关闭。Fake 生命周期/API 回归已覆盖该行为；没有重新创建 AWS 资源复跑候选代码。
+- 只读数据库复核发现已删除节点的两个 `NodeResource` 仍记录 `cost_status=ACTIVE`。候选修正已在精确 provider 缺失路径将对应资源记为 `RELEASED` 并记录 `released_at`；未直接改写测试数据库审计记录。Cost Explorer 账号级汇总不具实例归因，最终资源账单仍未知；不得将 USD 0.00 账号汇总解释成本节点最终费用为零。
+- 两台本轮 AWS 测试资源均由正常应用删除流程确认缺失；未创建静态 IP、快照或额外磁盘。隔离 PostgreSQL/Redis 与命名卷保留供审计。SWAS、设备、独立公网探测、生产主机/TLS/部署均未运行。

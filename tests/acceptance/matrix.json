@@ -1,6 +1,6 @@
 {
-  "version": "0.14.4",
-  "generated_at": "2026-11-08T15:14:32+08:00",
+  "version": "0.14.5",
+  "generated_at": "2026-11-10T03:08:52+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -9,6 +9,102 @@
     "risky_not_executed"
   ],
   "items": [
+    {
+      "id": "local-delivery-gates-0.14.5",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.5/final-gates-20261110-r3/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.5/final-gates-20261110-r3/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 533,
+            "passed": 531,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 88,
+          "browser_e2e": 8,
+          "candidate_commit": null,
+          "source_base_commit": "940d155970a9571049192e07385ac717a9d14791",
+          "candidate_worktree": true,
+          "started_at": "2026-11-09T19:00:28Z",
+          "finished_at": "2026-11-09T19:03:10Z",
+          "residual_resources": [
+            "Dedicated X-ray PostgreSQL/Redis containers on 127.0.0.1:55435 and 127.0.0.1:56382 remain running with named volumes retained; E2E containers, temporary auth state and 55671-55674 listeners were removed."
+          ]
+        },
+        {
+          "kind": "subscription_issue_publish_revoke_http_regression",
+          "checked_at": "2026-11-09T15:10:00Z",
+          "result": {
+            "issue": 1,
+            "publish": 1,
+            "public_get": 200,
+            "current_ipv4_in_published_content": true,
+            "revoke_preview": 201,
+            "revoke": 200,
+            "revoked_get": 410,
+            "revoked_head": 410,
+            "head_body_empty": true,
+            "raw_token_recorded": false
+          }
+        },
+        {
+          "kind": "focused_candidate_regressions",
+          "checked_at": "2026-11-10T00:04:49.000+08:00",
+          "tests": [
+            "backend/tests/test_logging.py",
+            "backend/tests/test_outbox.py",
+            "backend/tests/test_safe_controls.py",
+            "tests/installer/test_one_click.py",
+            "tests/installer/test_release_package.py"
+          ],
+          "result": {
+            "passed": 40,
+            "skipped": 1,
+            "failures": 0,
+            "skip_reason": "one-click runtime integration requires a disposable Linux host"
+          }
+        },
+        {
+          "kind": "focused_lifecycle_subscription_regressions",
+          "tests": [
+            "backend/tests/test_node_lifecycle.py",
+            "backend/tests/subscriptions/test_publishing.py"
+          ],
+          "result": {
+            "passed": 8,
+            "skipped": 0,
+            "failures": 0,
+            "errors": 0,
+            "covers": [
+              "confirmed missing cloud resource releases the matching quota resource",
+              "existing or uncertain provider readback keeps the resource active",
+              "revoked token URL remains unavailable after node deletion",
+              "active subscription still fails closed when there is no replacement node"
+            ]
+          }
+        }
+      ],
+      "commit": "940d155970a9571049192e07385ac717a9d14791",
+      "source_base_commit": "940d155970a9571049192e07385ac717a9d14791",
+      "candidate_worktree": true,
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Dedicated X-ray PostgreSQL/Redis containers and named volumes are retained for audit."
+      ]
+    },
     {
       "id": "local-delivery-gates-0.14.4",
       "environment": "local",
@@ -743,7 +839,7 @@
       "environment": "external",
       "status": "not-run",
       "evidence": [],
-      "commit": null,
+      "commit": "940d155970a9571049192e07385ac717a9d14791",
       "provider": null,
       "region": null,
       "cost": null,
@@ -814,6 +910,12 @@
       "id": "aws-real-cloud",
       "environment": "real_cloud",
       "status": "blocked",
+      "blockers": [
+        "Profile-level revocation positive control remains unavailable: the first run's REVOCATION_UNCONFIRMED correctly blocked its automatic deletion. The later active-subscription 2-to-1 automatic shrink passed, but does not cover profile-level revocation.",
+        "The second node's old-code cleanup Operation was PARTIALLY_SUCCEEDED after a revoked-token republish error, although provider absence and quota release were confirmed; the post-fix behavior has only local Fake coverage and was not rerun on AWS.",
+        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources.",
+        "Final provider absence readback completed around 2026-11-10 02:34 +08, about three minutes after the 02:31 authorization deadline."
+      ],
       "evidence": [
         {
           "kind": "historical_aws_identity_preflight",
@@ -935,12 +1037,66 @@
           "db_access": false,
           "real_application_acceptance": "blocked",
           "reason": "Production AwsLightsailProvider state/public-address/firewall parsing matches independent real AWS CLI reads for the existing named runner. This read-only smoke does not exercise ManagedNode, Operation, changing IP, health probes, subscriptions or traffic. Application TOTP and CloudAccount prerequisites remain unresolved."
+        },
+        {
+          "kind": "real_cloud_operation",
+          "authorization_ref": "docs/cloud-test-authorization.md#xray-node-pool-restart-20261109-01",
+          "provider_request_id": "077c89c2-17d7-4913-865e-3ec531f7c770",
+          "resource_ref": "redacted:xray-9e613d8e-4031cd83",
+          "region": "us-east-1",
+          "operation_id": "d3b10617-d1eb-4eb7-a99e-f6e82c055f9a",
+          "timestamp": "2026-11-09T14:23:45Z",
+          "probe_results": [
+            "node.create SUCCEEDED; bootstrap preflight, installer, firewall, config, health and initial publish completed; node READY/HEALTHY and cloud running",
+            "node.stop and node.start SUCCEEDED; start readback reported addresses_changed=true and health passed; subscription republished with the current IPv4",
+            "node.refresh completed repeatedly; two authenticated usage checkpoints contained upload or download bytes",
+            "subscription issue/publish/public GET succeeded; revoked GET and HEAD returned 410 and HEAD body was empty",
+            "In the first run, automatic pool deletion was blocked on REVOCATION_UNCONFIRMED; standard node.delete SUCCEEDED; provider CONFIRMED_ABSENT at 2026-11-09T23:13:17.716837+08:00 before the 23:30 deadline; quota was released"
+          ]
+        },
+        {
+          "kind": "real_cloud_dual_node_pool_restart_acceptance",
+          "authorization_ref": "docs/cloud-test-authorization.md#xray-node-pool-restart-20261110-01",
+          "run_id": "xray-node-pool-restart-20261110-01",
+          "region": "us-east-1",
+          "resource_ref": "redacted:two-authorized-test-nodes",
+          "created_nodes": 2,
+          "daily_restart_order": "(created_at, pk), oldest node first",
+          "probe_results": [
+            "Two scheduler-created nodes reached READY/HEALTHY; the scheduled oldest node stopped and started, its dynamic IPv4 changed, health recovered, status/IP sync completed and subscription content was republished with the current address.",
+            "Seven authenticated SSH/Xray usage checkpoints were read; downloaded bytes totaled 301.",
+            "Subscription issue/publish/public read succeeded; after revoke, the same URL returned GET/HEAD 410 and HEAD had an empty body.",
+            "Pool 2-to-1 automatic shrink selected the oldest node; Operation 20f43f8f-6479-48ee-8480-16d6b0ddc1e3 was SUCCEEDED, provider absence and quota reconciliation were confirmed, and the remaining active subscription stayed publishable.",
+            "Pool 1-to-0 cleanup used standard node.delete. Operation 6414aa62-c268-49f6-89cf-eb6ac77db16e was PARTIALLY_SUCCEEDED because old code attempted to republish a revoked token; provider absence and quota release were confirmed, with final expected/assigned/ready/published counts 0/0/0/0.",
+            "A code fix now validates the revoke tombstone before skipping republish; regression tests pass locally with Fake provider, but this fix was not rerun against AWS."
+          ],
+          "cleanup_readback_approximate": "2026-11-10T02:34:00+08:00",
+          "authorization_deadline": "2026-11-10T02:31:00+08:00",
+          "cleanup_late_by_minutes_approximate": 3,
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false
+        },
+        {
+          "kind": "aws_cost_explorer_readback",
+          "read_at": "2026-11-10T00:00:58+08:00",
+          "period": {
+            "start": "2026-11-09",
+            "end_exclusive": "2026-11-10"
+          },
+          "service": "Amazon Lightsail",
+          "account_service_total_usd": 0.0,
+          "resource_attributable": false,
+          "final_bill_confirmed": false,
+          "actual_test_resource_cost_usd": null
         }
       ],
       "commit": null,
+      "source_base_commit": "940d155970a9571049192e07385ac717a9d14791",
+      "candidate_worktree": true,
       "provider": "aws-lightsail",
-      "region": null,
-      "cost": 0,
+      "region": "us-east-1",
+      "cost": null,
+      "cost_status": "not-attributable; final bill pending",
       "residual_resources": []
     },
     {

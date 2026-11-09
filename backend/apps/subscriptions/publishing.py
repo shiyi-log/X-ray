@@ -17,6 +17,7 @@ from .models import (
     AccessProfile,
     NodeCredential,
     PublicationBatch,
+    RevocationTombstone,
     Subscription,
     SubscriptionRevision,
     SubscriptionToken,
@@ -125,6 +126,29 @@ def decrypt_payload(revision: SubscriptionRevision, format: str) -> bytes:
 
 
 class Publisher:
+    @staticmethod
+    def _has_confirmed_current_token_revocation(subscription: Subscription) -> bool:
+        token = SubscriptionToken.objects.filter(
+            subscription=subscription,
+            token_epoch=subscription.token_epoch,
+            token_digest=subscription.token_digest,
+        ).first()
+        if (
+            token is None
+            or token.status != "REVOKED"
+            or token.revoked_at is None
+            or SubscriptionToken.objects.filter(
+                subscription=subscription, status="ACTIVE"
+            ).exists()
+        ):
+            return False
+        return RevocationTombstone.objects.filter(
+            token_digest=token.token_digest,
+            revoked_at=token.revoked_at,
+            source_event_id__gt="",
+            source_sequence__isnull=False,
+        ).exists()
+
     @staticmethod
     def _endpoints(
         subscription: Subscription,
@@ -356,15 +380,23 @@ class Publisher:
                 pk__in=[value.current_revision_id for value in affected]
             ).update(usable=False, invalidated_at=timezone.now())
             completed = 0
+            skipped = 0
             failures = []
             for subscription in affected:
                 try:
                     cls._publish_locked(subscription, excluded_node_ids={node_id})
                     completed += 1
                 except (NoPublishableEndpoints, DomainError) as exc:
+                    if (
+                        isinstance(exc, DomainError)
+                        and exc.code == "SUBSCRIPTION_TOKEN_INACTIVE"
+                        and cls._has_confirmed_current_token_revocation(subscription)
+                    ):
+                        skipped += 1
+                        continue
                     failures.append({"subscription_id": str(subscription.pk), "code": exc.code})
             batch.status = "SUCCEEDED" if not failures else "PARTIALLY_SUCCEEDED"
-            batch.result = {"published": completed, "failures": failures}
+            batch.result = {"published": completed, "skipped": skipped, "failures": failures}
             batch.completed_at = timezone.now()
             batch.save(update_fields=["status", "result", "completed_at"])
             return batch

@@ -171,10 +171,26 @@ def make_delete_operation(admin, node):
 
 
 def provision_node_for_delete(node):
+    from apps.nodes.models import NodeResource
+
     node.external_id = node.deterministic_name
     node.addresses = [{"value": "192.0.2.10", "family": 4, "kind": "dynamic"}]
     node.provisioning_state = "PROVISIONED"
     node.save(update_fields=["external_id", "addresses", "provisioning_state", "updated_at"])
+    NodeResource.objects.get_or_create(
+        node=node,
+        kind="instance",
+        external_id=node.external_id,
+        defaults={
+            "ownership_tags": {
+                "xray-manager": "true",
+                "xray-node": str(node.pk),
+                "xray-operation": str(node.operation_key),
+            },
+            "cost_status": "ACTIVE",
+            "releasable": False,
+        },
+    )
 
 
 def make_node_action(admin, node, action):
@@ -1706,7 +1722,7 @@ def test_retry_republishes_new_address_without_rebooting_again(prepared_node, ad
 
 @pytest.mark.django_db
 def test_delete_releases_quota_only_after_exact_absence_readback(prepared_node, admin):
-    from apps.nodes.models import ManagedNode
+    from apps.nodes.models import ManagedNode, NodeResource
 
     node, _create_operation = prepared_node
     provision_node_for_delete(node)
@@ -1736,11 +1752,21 @@ def test_delete_releases_quota_only_after_exact_absence_readback(prepared_node, 
     assert operation.steps.filter(
         name="cloud.delete.read_after_write", status="CONFIRMED_ABSENT"
     ).exists()
+    resource = NodeResource.objects.get(
+        node=node, kind="instance", external_id=node.external_id
+    )
+    assert resource.cost_status == "RELEASED"
+    assert resource.released_at is not None
 
 
 @pytest.mark.django_db
-def test_delete_invalidates_public_subscription_revision_before_success(
-    prepared_node, admin
+@pytest.mark.parametrize(
+    "revoke_before_delete",
+    [False, True],
+    ids=["active-token-fails-closed", "revoked-token-remains-unavailable"],
+)
+def test_delete_invalidates_public_subscription_revision(
+    prepared_node, admin, revoke_before_delete
 ):
     from django.test import Client, override_settings
 
@@ -1790,6 +1816,10 @@ def test_delete_invalidates_public_subscription_revision_before_success(
         },
     )
     published = Publisher.publish(issued.subscription_id)
+    subscription = profile.subscription
+    if revoke_before_delete:
+        token = subscription.token_history.get(token_epoch=subscription.token_epoch)
+        TokenService.revoke_token(subscription.pk, token.pk)
     provision_node_for_delete(node)
     operation = make_delete_operation(admin, node)
     lifecycle, _holder = make_lifecycle(node)
@@ -1808,16 +1838,27 @@ def test_delete_invalidates_public_subscription_revision_before_success(
     published.refresh_from_db()
     operation.refresh_from_db()
     assert published.usable is False
-    assert operation.result["publication_batch_status"] == "PARTIALLY_SUCCEEDED"
     with override_settings(ROOT_URLCONF="config.subscription_urls"):
         response = Client().get(f"/s/{issued.raw_token}")
-    assert response.status_code == 503
-    assert response.content == b"subscription unavailable\n"
+        head_response = Client().head(f"/s/{issued.raw_token}")
+    if revoke_before_delete:
+        assert operation.status == "SUCCEEDED"
+        assert operation.result["publication_batch_status"] == "SUCCEEDED"
+        assert operation.result["subscriptions_skipped"] == 1
+        assert response.status_code == 410
+        assert head_response.status_code == 410
+        assert head_response.content == b""
+    else:
+        assert operation.status == "PARTIALLY_SUCCEEDED"
+        assert operation.result["publication_batch_status"] == "PARTIALLY_SUCCEEDED"
+        assert operation.result["subscriptions_skipped"] == 0
+        assert response.status_code == 503
+        assert response.content == b"subscription unavailable\n"
 
 
 @pytest.mark.django_db
 def test_delete_keeps_quota_when_readback_finds_resource(prepared_node, admin):
-    from apps.nodes.models import ManagedNode
+    from apps.nodes.models import ManagedNode, NodeResource
 
     node, _create_operation = prepared_node
     provision_node_for_delete(node)
@@ -1845,11 +1886,16 @@ def test_delete_keeps_quota_when_readback_finds_resource(prepared_node, admin):
     assert operation.steps.filter(
         name="cloud.delete.read_after_write", status="RESOURCE_PRESENT"
     ).exists()
+    resource = NodeResource.objects.get(
+        node=node, kind="instance", external_id=node.external_id
+    )
+    assert resource.cost_status == "ACTIVE"
+    assert resource.released_at is None
 
 
 @pytest.mark.django_db
 def test_delete_keeps_quota_when_readback_is_unavailable(prepared_node, admin):
-    from apps.nodes.models import ManagedNode
+    from apps.nodes.models import ManagedNode, NodeResource
 
     node, _create_operation = prepared_node
     provision_node_for_delete(node)
@@ -1876,6 +1922,11 @@ def test_delete_keeps_quota_when_readback_is_unavailable(prepared_node, admin):
     assert operation.status == "NEEDS_RECONCILIATION"
     assert operation.error_code == "CLOUD_DELETE_READ_AFTER_WRITE_UNCONFIRMED"
     assert operation.error_details == {"read_error_code": "CLOUD_READ_FAILED"}
+    resource = NodeResource.objects.get(
+        node=node, kind="instance", external_id=node.external_id
+    )
+    assert resource.cost_status == "ACTIVE"
+    assert resource.released_at is None
 
 
 @pytest.mark.django_db

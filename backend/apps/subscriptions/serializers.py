@@ -72,6 +72,7 @@ def subscription_representation(subscription) -> dict:
         subscription.profile.node_credentials.filter(
             revoked_at__isnull=True,
             credential_scope="profile",
+            node__consumes_quota=True,
             protocol__enabled=True,
             protocol__credential_scope="profile",
         )

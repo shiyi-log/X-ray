@@ -298,8 +298,9 @@ def schedule_node_pool_sync():
             deleted += 1
             break
 
-        setting.pool_sync_last_scheduled_at = now
-        setting.save(update_fields=["pool_sync_last_scheduled_at", "updated_at"])
+        if not skipped or created or deleted:
+            setting.pool_sync_last_scheduled_at = now
+            setting.save(update_fields=["pool_sync_last_scheduled_at", "updated_at"])
 
     return {
         "created": created,

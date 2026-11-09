@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import re
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from django.db import IntegrityError, transaction
@@ -36,7 +36,7 @@ class TokenGone(Exception):
 @dataclass(frozen=True, slots=True)
 class IssuedToken:
     subscription_id: UUID
-    raw_token: str
+    raw_token: str = field(repr=False)
 
 
 def _fresh_token() -> tuple[str, str]:

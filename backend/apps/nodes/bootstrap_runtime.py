@@ -328,7 +328,7 @@ def download_pinned_bundle(
             status_code=503,
         )
 
-    request = Request(url, headers={"User-Agent": "X-ray-node-bootstrap/0.14.4"})
+    request = Request(url, headers={"User-Agent": "X-ray-node-bootstrap/0.14.5"})
     try:
         with opener(request, timeout=30) as response:
             final_url = urlsplit(response.geturl())

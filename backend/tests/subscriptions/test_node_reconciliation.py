@@ -133,6 +133,20 @@ def test_node_counts_count_distinct_ready_nodes_and_report_drift(ready_node):
         "published": 1,
         "mismatch": True,
     }
+    ready_node.consumes_quota = False
+    ready_node.desired_state = "DELETED"
+    ready_node.provisioning_state = "DELETED"
+    ready_node.save(
+        update_fields=["consumes_quota", "desired_state", "provisioning_state", "updated_at"]
+    )
+    assert subscription.profile.node_credentials.filter(revoked_at__isnull=True).exists()
+    assert subscription_representation(subscription)["node_counts"] == {
+        "expected": 1,
+        "assigned": 0,
+        "ready": 0,
+        "published": 1,
+        "mismatch": True,
+    }
 
 
 @pytest.mark.django_db

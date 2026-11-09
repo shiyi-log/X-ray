@@ -35,7 +35,7 @@ def test_one_click_supports_interactive_install_and_update():
     assert "XRAY_ONE_CLICK_ACTION" in content
     assert "old_binary_present" in content
     assert "SERVICE_RESTART_FAILED" in content
-    assert "ref=${XRAY_INSTALLER_REF:-v0.14.4}" in content
+    assert "ref=${XRAY_INSTALLER_REF:-v0.14.5}" in content
 
 
 def _write_archive(path: Path, marker: str) -> None:

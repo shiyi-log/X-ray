@@ -11,9 +11,9 @@ step-up，未绑定时重新验证密码，已绑定时验证密码与 TOTP。�
 
 ## 当前状态
 
-2026-11-08：当前交付候选版本为 `0.14.4`。本版完成地址池配额定时对齐、每日按计划轮转一台服务器并在重启后核对动态 IP、健康状态与订阅发布，以及节点状态/IP/流量同步和订阅节点数量核对；超额地区每轮最多删除创建时间最早的一台。新增每日重启健康失败后的订阅撤回失败关闭回归。真实 AWS bootstrap 尚未验收；自动创建仍可能停在 `PROVISIONED`/`NEEDS_RECONCILIATION`，实际云、SSH、动态 IP、设备订阅和生产验收继续以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 的证据为准。
+2026-11-10：当前交付候选版本为 `0.14.5`。本版完善地址池调度重试、删除后资源账本状态、订阅节点数量核对和撤销 Token 的失效发布处理，并补齐 outbox Celery app 绑定与订阅路径日志脱敏。两台授权范围内 Lightsail 节点完成池补齐、按 `(created_at, pk)` 选取一台每日 stop/start、动态 IPv4/健康/IP 刷新、订阅签发/发布/撤回、节点计数和流量统计验收；池从 `2→1` 的自动缩容成功。池降至 0 后，第二台实例已由 provider 确认缺失且配额释放，但当时的删除 Operation 因已撤销 Token 仍尝试重新发布而为 `PARTIALLY_SUCCEEDED`；候选代码现仅在撤销时间、墓碑和无活动 Token 均验证时跳过重发，并通过本地回归，未重跑真实 AWS。清理读回比授权截止晚约三分钟，实例级最终账单未知，profile 级撤回正向控制仍未通过；完整边界以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
 
-真实 AWS/SWAS、远程 SSH、Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS、实例删除、静态 IP 释放和生产发布没有执行。本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产上线。
+本轮两台授权 AWS Lightsail 测试节点均已清理并读回不存在，通过认证 SSH/Xray 采集流量；尚未执行 SWAS、独立 SSH 登录或 Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS 或生产部署。`v0.14.5` 仍待候选远端门禁和正式 Release workflow；本地 Compose、Fake/Stub、镜像、恢复演练、提交与标签都不代表生产部署。
 
 - [正式设计规格](docs/superpowers/specs/2026-09-16-xray-manager-design.md)
 - [开发计划总览](docs/superpowers/plans/2026-09-16-xray-manager.md)
