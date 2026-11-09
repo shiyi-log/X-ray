@@ -7079,3 +7079,37 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `release_dispatch_blocker`: `仓库没有可用的 GitHub workflow-dispatch API connector，gh CLI 未安装。Codex in-app browser 的 GitHub 页面处于未登录状态；Google Chrome 自动化返回扩展 UI 正打开的阻断提示，无法操作 workflow_dispatch 表单。未向 GitHub 提交 Release dispatch；未获取、传输或暴露任何认证信息。已请求用户关闭 Chrome 扩展弹窗并确认该 profile 已登录，以便继续手动 dispatch。`
 - `remaining_limits`: `正式 GitHub Release、三项上传资产 SHA-256 尚未验证；候选 tag 仅证明源码发布指针，不等同于 Release 或生产部署。profile-level revoke 正向控制、AWS 清理约三分钟超时及实例级成本未知状态保持不变。`
 - `status`: `passed (候选 main push、其专属远端 delivery gates、annotated tag 与 refs readback、更新后的本地静态门禁); in-progress (等待浏览器 GitHub 登录态以运行 Release workflow 并验证资产); blocked (完整 AWS acceptance)。`
+
+
+### 2026-11-10T04:06:04+08:00 — xray-node-pool-restart-20261110-01/006 修复 Xray 版本检查 SIGPIPE 并续办发布
+
+- `event_id`: `xray-node-pool-restart-20261110-01/006`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, diagnosis, test, modify, decision`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/project-ledger.md、docs/progress.md、scripts/check-local.sh、scripts/fetch-xray-test-asset.sh、tests/subscriptions/verify_formats.sh、tests/deploy/test_delivery_contract.py；GitHub run 42686317185/job 129393994622 的日志；Release workflow 与 v0.14.5 tag/Release 只读状态`
+- `goal_and_scope`: `完成 v0.14.5 Release 工作流与资产回读，并修复导致 main 文档回执 run 失败的本地交付门禁根因。允许新增共享 Xray 固定版本检查脚本及其功能回归；不改业务池/订阅代码、版本号、已推送 tag 或 AWS 状态。发布仅指 GitHub Release，不代表生产镜像切换或生产部署。`
+- `authorization_boundary_and_risk`: `用户明确授权同步发布新版本；可在 GitHub Actions 的 main 上运行 Release workflow 并发布现有不可变 v0.14.5 tag。AWS 测试节点已清理，本续办不再执行任何云写、SSH、实例操作或订阅签发/撤回。修复范围仅测试/交付脚本；v0.14.5 tag 仍指向已通过候选门禁的 e38b48b，main 上的验证脚本修复需单独门禁验证，不改写 tag。`
+- `remote_failure_evidence`: `只读获取 run 42686317185/job 129393994622 原始日志及 job/step 摘要。完整交付脚本的 backend-tests gate 在 pytest 启动前 exit 141；Django check、迁移漂移、Ruff、固定 Xray 下载与 SHA 校验均已成功。日志显示版本 banner 与资产路径后再次出现版本 banner，随后 backend-tests 141。根因定位为 check-local.sh 的版本检查用 version | head -n 1 | grep，在 pipefail 下上游可能因 SIGPIPE 退出；旧 jq/HTTP 504 判断已被日志否证。未重跑失败 job，避免把相同缺陷归为偶发。`
+- `commands_and_exit_codes`: `远端 GitHub connector read-only run/job/log/step 读回=成功；新增测试先红：backend/.venv/bin/python -m pytest -q tests/deploy/test_delivery_contract.py::test_fixed_xray_version_check_consumes_complete_version_output，exit 1，1 failed，假 Xray 长尾输出复现 BrokenPipeError；修复后同命令 exit 0，1 passed；backend/.venv/bin/python -m pytest -q tests/deploy/test_delivery_contract.py tests/subscriptions，exit 0，18 passed、1 skipped；bash -n 四个 shell 脚本=0；rg 易损版本管道扫描=0；git diff --check=0。完整 scripts/check-local.sh 待运行。`
+- `writes`: `新增 scripts/check-xray-version.sh，完整捕获 version 输出并只检查首行；将 check-local、下载校验及订阅格式脚本改用共享检查；新增长尾输出 SIGPIPE 回归。现阶段尚未改验收矩阵、进度、版本记录或发布清单；待新远端门禁与 Release readback 后追加准确回执。`
+- `reuse_and_rollback`: `复用专用数据库/Redis和现有 0.14.5 r3 业务验收，不复用失败 run 为通过证据。验证脚本改动可通过单独 git revert 回退；保留既有所有未跟踪 acceptance artifacts。已确认远端 Release 为 404、v0.14.5 annotated tag peeled 到 e38b48b，workflow 只要求 tag commit 是 main 祖先；GitHub connector 没有 dispatch 接口，Chrome 已存在 GitHub Actions 标签页，待手动运行 workflow。`
+- `time_logic`: `本事件无业务时间或调度规则改动；台账使用本机 Asia/Shanghai 墙上时钟 2026-11-10T04:06:04+08:00。`
+- `commit_or_tree_and_rollback`: `基于 main/b221f32ad91498e108369046efd649047cad642c；相关源文件已修改，工作区另有本任务之外的未跟踪 acceptance artifacts 并完整保留。源码变更未提交；回退仅针对本事件脚本/测试提交，不改写 v0.14.5 tag、撤回 Token 墓碑或云状态。`
+- `status`: `passed (SIGPIPE 根因复现、聚焦测试、相关交付/订阅测试及 shell/diff 静态检查); in-progress (完整本地门禁、提交/推送、远端门禁、GitHub Release 与三项资产摘要); blocked (真实 AWS 整体验收保持 blocked，逐资源账单未知)。`
+
+
+### 2026-11-10T04:17:20+08:00 — xray-node-pool-restart-20261110-01/007 修复脚本完整本地门禁与临时资源清理
+
+- `event_id`: `xray-node-pool-restart-20261110-01/007`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `test, validate, decision`
+- `path_scope`: `scripts/check-local.sh 与其完整 19 门禁；r6 证据目录；隔离 E2E 容器/55671–55674 端口/临时认证状态；保留中的 X-ray 9537 服务和 PG/Redis 55435/56382`
+- `commands_and_exit_codes`: `首次本地全量调用 r4 在 runtime 因当前 pnpm 11.25.0 与要求 10.33.x 不符而 exit 1；r5 在 zsh 启动 Bash 子脚本时 shell function 未按预期传递，仍检测到 11.25.0 并 exit 1；单独 Bash 下 `pnpm(){ corepack pnpm@10.33.0 "$@"; }; export -f pnpm; ./scripts/check-runtime.sh` exit 0。r6 使用 Bash、Corepack 10.33.0、已有专用测试 DB/Redis 与隔离 E2E 端口执行完整脚本，`scripts/check-local.sh=0`，19/19 gates exit 0；JUnit XML 534 tests、532 passed、2 skipped、0 failures/errors；前端 unit 88 passed；Playwright 8 passed；固定 Xray/订阅格式、ShellCheck、boundary、Gitleaks、skill、acceptance-matrix 均 exit 0。Focused `tests/deploy/test_delivery_contract.py tests/subscriptions` 为 18 passed、1 skipped；版本检查回归红=1、绿=0。`
+- `evidence`: `artifacts/acceptance/0.14.5/final-gates-20261110-r4/`、`r5/` 保留环境失败；`artifacts/acceptance/0.14.5/final-gates-20261110-r6/{summary.tsv,backend-and-delivery.junit.xml}` 为通过证据。`
+- `runtime_and_cleanup`: `E2E 由 run id 50cf6df2-1128-484d-881b-fd8f4f9adcef 命名，使用已登记空闲的 backend/frontend/PostgreSQL/Redis 55671–55674；结束后精确 run-label 查询无残留容器，端口无监听，临时 auth 目录由本轮 shell trap 的 unlink/rmdir 清理；`frontend/.playwright/admin.json` 不存在。原进程 93050 仍监听已登记的 9537；本轮未操作该进程或专用 PG/Redis 容器/卷。`
+- `writes_and_boundary`: `新增 progress 行及本台账事件；完整本地测试未 AWS/API 写、SSH、服务器、订阅或生产部署。版本仍 0.14.5，tag 未变；当前 main 尚未包含修复提交，新远端 delivery gate 尚待推送后验证。正式 Release 尚未 dispatch。`
+- `time_logic`: `无业务时间逻辑变化。r6 运行与台账用本机 Asia/Shanghai；CI summary 内时间为 UTC Z，两者保留原始时区，不做推断转换。`
+- `commit_or_tree_and_rollback`: `基于 main/b221f32ad91498e108369046efd649047cad642c 的工作树改动；本事件涉及 tracked scripts/tests/docs 和新增脚本。旧的 0.14.4/0.14.5 r1/r2 及本轮 r4/r5/r6 产物均保持未跟踪并未暂存。验证脚本可单独 revert；不改写 tag、撤回状态或云账本。`
+- `status`: `passed (长输出回归、18+1 focused tests、完整 r6 本地门禁及 E2E 清理读回); in-progress (源提交、远端 delivery gates、Release workflow 和资产 SHA-256); blocked (完整 AWS acceptance 和逐资源最终账单)。`

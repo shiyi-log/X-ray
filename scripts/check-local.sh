@@ -133,7 +133,7 @@ ensure_fixed_xray() {
   if [[ ! -x "$XRAY_TEST_BINARY" ]]; then
     "$root_dir/scripts/fetch-xray-test-asset.sh"
   fi
-  "$XRAY_TEST_BINARY" version | head -n 1 | grep -F 'Xray 26.3.27'
+  bash "$root_dir/scripts/check-xray-version.sh" "$XRAY_TEST_BINARY"
 }
 
 gate_compose_config() {

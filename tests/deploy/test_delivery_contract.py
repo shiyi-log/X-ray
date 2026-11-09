@@ -194,6 +194,36 @@ run_gate failing_gate failing_gate
     )[1] == "1"
 
 
+def test_fixed_xray_version_check_consumes_complete_version_output(tmp_path):
+    script = (ROOT / "scripts/check-local.sh").read_text(encoding="utf-8")
+    match = re.search(r"(?ms)^ensure_fixed_xray\(\) \{\n.*?^\}", script)
+    assert match is not None
+
+    fake_binary = tmp_path / "xray"
+    fake_binary.write_text(
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "sys.stdout.write('Xray 26.3.27 fixture\\n')\n"
+        "sys.stdout.write('x' * 1000000 + '\\n')\n",
+        encoding="utf-8",
+    )
+    fake_binary.chmod(0o755)
+    shell = f"""
+set -euo pipefail
+root_dir={str(ROOT)!r}
+XRAY_TEST_BINARY={str(fake_binary)!r}
+{match.group(0)}
+ensure_fixed_xray
+"""
+
+    result = subprocess.run(
+        ["bash", "-c", shell], cwd=ROOT, text=True, capture_output=True, check=False
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Xray 26.3.27 fixture" in result.stdout
+
+
 def test_test_stack_honors_project_registered_database_ports():
     environment = {
         **os.environ,

@@ -16,7 +16,7 @@ if [[ ! -x "$xray_binary" ]]; then
   echo "fixed Xray v26.3.27 binary is required: $xray_binary" >&2
   exit 1
 fi
-if ! "$xray_binary" version | head -n 1 | grep -Fq "Xray 26.3.27"; then
+if ! bash "$project_root/scripts/check-xray-version.sh" "$xray_binary" >/dev/null; then
   echo "XRAY_TEST_BINARY is not the pinned Xray 26.3.27 runtime" >&2
   exit 1
 fi

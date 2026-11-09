@@ -40,5 +40,5 @@ fi
 
 python3 "$root_dir/scripts/extract-xray-test-asset.py" "$archive" "$runtime_dir"
 chmod 755 "$runtime_dir/xray"
-"$runtime_dir/xray" version | head -n 1
+bash "$root_dir/scripts/check-xray-version.sh" "$runtime_dir/xray"
 printf '%s\n' "$runtime_dir/xray"
