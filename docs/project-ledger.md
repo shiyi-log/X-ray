@@ -7132,4 +7132,19 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `time_and_cost`: `台账时间为 Asia/Shanghai 2026-11-10T04:44:42+08:00；Release API 原时间为 UTC 2026-11-09T20:34:27Z。未创建云资源、未执行云写；Release workflow runner 的实际费用未查询。此前 AWS 测试资源逐项最终账单仍未知。`
 - `remaining_limits`: `完整 AWS 验收仍 blocked：profile-level revoke 正向控制未通过；旧删除 Operation 部分成功，修复未在 AWS 重跑；实例级最终账单未知。SWAS、Shadowrocket 真机、Google 公网探测、独立生产服务器、域名/TLS 和生产部署未运行。Release workflow 的 Node.js deprecation warning 留待 runner actions 升级处理，不影响本次成功。`
 - `rollback_and_preservation`: `应用回退使用 v0.14.4 或对源码提交 e38b48b5f4b63795595ed9ff52f10a76b91ffb6f 执行 git revert；不移动/重写 v0.14.5 tag，不反向迁移，不恢复 Token tombstone、凭据、安全事件或云状态。文档修改可单独 git revert；所有未跟踪验收证据目录保留。`
-- `status`: `passed (main delivery gates、v0.14.5 Release、tag/三项资产摘要回读；r6 本地门禁；发布文档静态验证); blocked (完整 AWS 验收与逐资源最终账单); not-run (SWAS、设备、公网探测、生产镜像/部署); in-progress (回执提交与推送)。`
+- `status`: `passed (main delivery gates、v0.14.5 Release、tag/三项资产摘要回读；r6 本地门禁；发布文档静态验证); blocked (完整 AWS 验收与逐资源最终账单); not-run (SWAS、设备、公网探测、生产镜像/部署)。`
+
+
+### 2026-11-10T04:53:58+08:00 — xray-node-pool-restart-20261110-01/009 发布回执提交与远端 refs 最终核验
+
+- `event_id`: `xray-node-pool-restart-20261110-01/009`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `commit, push, publish_readback, final_verification`
+- `path_scope`: `README.md、docs/acceptance.md、docs/progress.md、docs/project-ledger.md、docs/release-checklist-v0.14.5.md、docs/version-record.md、tests/acceptance/matrix.json；origin/main、origin/v0.14.5 与 GitHub Release v0.14.5`
+- `goal_and_scope`: `提交并同步 v0.14.5 发布回执文档，最终核对 main/tag/Release 状态和未跟踪验收证据保留情况。`
+- `commands_and_exit_codes`: `git diff --cached --check=0；git commit -m "docs: record v0.14.5 release receipts [skip ci]"=0，生成 a9a968a640759d582dcad1c33f84c1100e263dd0；git push origin main=0；git ls-remote origin refs/heads/main refs/tags/v0.14.5 refs/tags/v0.14.5^{}=0，main 与发布回执提交相同、annotated tag object 780919d3512c937ef1e7483f6fc4b138a4e0020d peeled 到 e38b48b5f4b63795595ed9ff52f10a76b91ffb6f；Release API 最终读回 id 439611923、draft=false、prerelease=false，三项 asset digest 不变。工作区在该提交后 tracked clean，历史和当前 acceptance artifacts 仍为未跟踪并保持原样。`
+- `verification`: `最终 docs/matrix JSON parse、acceptance validator、boundary check、secret scan（138 commits/8.68 MB/no leaks）、skill validator、git diff --check 全部 exit 0。Release 源码/tag 与文档 receipt commit 分开：v0.14.5 不可变 tag 继续指向 e38b48b；a9a968a 只同步发布/验收记录，未更改版本号、CHANGELOG、Release assets 或 AWS 状态。`
+- `time_and_cost`: `最终 refs/Release 读回时间为 Asia/Shanghai 2026-11-10T04:53:58+08:00。未创建额外云资源或执行云写。Release workflow runner 与此前 AWS 测试资源的逐资源实际费用均未查询；不能据本事件报告 USD 0。`
+- `rollback_and_preservation`: `文档回执可通过 git revert a9a968a640759d582dcad1c33f84c1100e263dd0 单独撤销；应用回退使用 v0.14.4 或对 e38b48b 执行 git revert。保留所有未跟踪 acceptance artifacts；不反向迁移，不恢复撤回 Token、凭据、安全事件或云状态。`
+- `status`: `passed (release、资产哈希、tag/main refs、文档校验和回执同步); blocked (profile 级撤回正向控制、AWS 删除 Operation 旧部分成功且修复未实云重跑、实例级账单未知); not-run (SWAS、设备、公网探测、生产镜像/部署)。`
