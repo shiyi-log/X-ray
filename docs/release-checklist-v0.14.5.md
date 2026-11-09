@@ -20,8 +20,9 @@
 
 ## 公开发布
 
-- [ ] 推送 `main` 候选并确认 X-ray delivery gates 成功；上一次同提交远端失败原因为固定 jq 下载 HTTP 504，不能复用为通过证据。
-- [ ] 创建 annotated `v0.14.5` 标签，手动运行 Release workflow，并回读 Release、标签目标提交及三项资产 SHA-256。
+- [x] 推送候选 `e38b48b5f4b63795595ed9ff52f10a76b91ffb6f` 到 `main` 并确认 X-ray delivery gates run `42681779767` / job `129377918267` 成功；上一次旧提交因固定 jq 下载 HTTP 504 失败，未复用为通过证据。
+- [x] 创建并推送 annotated `v0.14.5`；tag object `780919d3512c937ef1e7483f6fc4b138a4e0020d` peeled 到候选提交。
+- [ ] 从 `main` 手动运行 Release workflow，并回读 Release、标签目标提交及三项资产 SHA-256。
 
 ## 外部边界
 

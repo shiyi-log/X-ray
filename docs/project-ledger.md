@@ -7064,3 +7064,18 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `residual_resources`: `两台测试云节点均已由 provider 确认不存在；专用 PostgreSQL/Redis 55435/56382 及命名卷保留供审计。E2E 容器、临时 auth state、55671–55674 监听已清理。旧 0.14.4 证据及 0.14.5 r1/r2 未跟踪目录保持原样、未暂存；只暂存 r3 summary/JUnit。`
 - `release_and_rollback`: `候选文件暂存于当前 main，基线/远端 main 为 940d155970a9571049192e07385ac717a9d14791；待提交、推送并等待该候选 SHA 的 delivery gates 成功，再创建 annotated v0.14.5 并从 main 手动 dispatch Release。应用可用 v0.14.4 或本阶段提交 git revert 回退；不恢复撤回 Token、账本墓碑、审计或云状态。`
 - `status`: `passed (本地 r3、focused regression、静态/边界/secret/skill/矩阵检查；节点重启/IP/健康/订阅/流量读回；2→1 自动缩容及云资源最终缺失确认); blocked (profile-level revoke 正向控制、第二台旧 Operation partial、AWS deadline 和资源级账单); in-progress (候选提交、远端 CI 与 Release)。`
+
+
+### 2026-11-10T03:42:53+08:00 — xray-node-pool-restart-20261110-01/005 候选 CI 与标签读回
+
+- `event_id`: `xray-node-pool-restart-20261110-01/005`
+- `run_id`: `xray-node-pool-restart-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `publish_readback, validation, handoff`
+- `path_scope`: `origin/main 与 annotated v0.14.5 refs；GitHub Actions delivery run；README、验收矩阵、进度、发布清单与版本记录`
+- `remote_delivery_evidence`: `候选提交 e38b48b5f4b63795595ed9ff52f10a76b91ffb6f 已推送 origin/main。Actions run 42681779767、job 129377918267 在 18m50s 后 completed/success。唯一 annotation 是 Node.js 20 deprecation，并提示相关 actions 已被 runner 强制运行于 Node.js 24；job 最终成功。annotated tag v0.14.5 已推送；本地与远端 tag object 为 780919d3512c937ef1e7483f6fc4b138a4e0020d，peeled SHA 与远端 main 均为 e38b48b5f4b63795595ed9ff52f10a76b91ffb6f。`
+- `commands_and_exit_codes`: `git push origin main=0；Actions UI job readback=completed/success；git tag -a/push=0；git rev-parse tag object/peeled target=0；git ls-remote main/tag=0；acceptance matrix=0；boundary=0；Gitleaks 8.24.3 history=0（136 commits、8.66 MB、无泄漏）；skill=0；diff-check=0。`
+- `documentation_receipt`: `同步 README、progress、version-record、release checklist 与 matrix：候选 commit/tag/远端 CI 已记录；GitHub Release dispatch 和三项资产 digest 仍待运行/读回。完整 AWS 验收仍 blocked，逐资源最终费用未知。`
+- `release_dispatch_blocker`: `仓库没有可用的 GitHub workflow-dispatch API connector，gh CLI 未安装。Codex in-app browser 的 GitHub 页面处于未登录状态；Google Chrome 自动化返回扩展 UI 正打开的阻断提示，无法操作 workflow_dispatch 表单。未向 GitHub 提交 Release dispatch；未获取、传输或暴露任何认证信息。已请求用户关闭 Chrome 扩展弹窗并确认该 profile 已登录，以便继续手动 dispatch。`
+- `remaining_limits`: `正式 GitHub Release、三项上传资产 SHA-256 尚未验证；候选 tag 仅证明源码发布指针，不等同于 Release 或生产部署。profile-level revoke 正向控制、AWS 清理约三分钟超时及实例级成本未知状态保持不变。`
+- `status`: `passed (候选 main push、其专属远端 delivery gates、annotated tag 与 refs readback、更新后的本地静态门禁); in-progress (等待浏览器 GitHub 登录态以运行 Release workflow 并验证资产); blocked (完整 AWS acceptance)。`

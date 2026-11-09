@@ -1,6 +1,6 @@
 {
   "version": "0.14.5",
-  "generated_at": "2026-11-10T03:08:52+08:00",
+  "generated_at": "2026-11-10T03:40:48+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -33,7 +33,7 @@
           ],
           "frontend_unit_tests": 88,
           "browser_e2e": 8,
-          "candidate_commit": null,
+          "candidate_commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
           "source_base_commit": "940d155970a9571049192e07385ac717a9d14791",
           "candidate_worktree": true,
           "started_at": "2026-11-09T19:00:28Z",
@@ -93,9 +93,19 @@
               "active subscription still fails closed when there is no replacement node"
             ]
           }
+        },
+        {
+          "kind": "github_actions_delivery_gates",
+          "run_id": 42681779767,
+          "job_id": 129377918267,
+          "event": "push",
+          "commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
+          "status": "passed",
+          "duration_seconds": 1130,
+          "warning": "Actions targeting Node.js 20 were forced to run on Node.js 24; this compatibility warning did not fail the job."
         }
       ],
-      "commit": "940d155970a9571049192e07385ac717a9d14791",
+      "commit": "e38b48b5f4b63795595ed9ff52f10a76b91ffb6f",
       "source_base_commit": "940d155970a9571049192e07385ac717a9d14791",
       "candidate_worktree": true,
       "provider": null,
