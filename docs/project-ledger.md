@@ -7148,3 +7148,121 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `time_and_cost`: `最终 refs/Release 读回时间为 Asia/Shanghai 2026-11-10T04:53:58+08:00。未创建额外云资源或执行云写。Release workflow runner 与此前 AWS 测试资源的逐资源实际费用均未查询；不能据本事件报告 USD 0。`
 - `rollback_and_preservation`: `文档回执可通过 git revert a9a968a640759d582dcad1c33f84c1100e263dd0 单独撤销；应用回退使用 v0.14.4 或对 e38b48b 执行 git revert。保留所有未跟踪 acceptance artifacts；不反向迁移，不恢复撤回 Token、凭据、安全事件或云状态。`
 - `status`: `passed (release、资产哈希、tag/main refs、文档校验和回执同步); blocked (profile 级撤回正向控制、AWS 删除 Operation 旧部分成功且修复未实云重跑、实例级账单未知); not-run (SWAS、设备、公网探测、生产镜像/部署)。`
+
+
+### 2026-11-10T10:05:03+08:00 — xray-revoke-delete-20261110-01/001 新 AWS 复验范围与授权边界
+
+- `event_id`: `xray-revoke-delete-20261110-01/001`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `scope, authorization, read, decision`
+- `requested_outcome_and_scope`: `基于用户对本任务明确的测试服务器及 USD 1,000 总费用授权，使用最多一台 AWS Lightsail 复验 profile-level revoke 在存在同节点同协议幸存 credential 时的正向控制与 410/幸存链接可用；随后用撤回 Token 墓碑执行池 1→0 标准删除并核对 Operation、provider 缺失、资源释放和节点数量。每日重启/IP/健康/流量及一般订阅发布场景已有此前读回，本次不重复执行。`
+- `authorization_boundary`: `不延长或沿用已于 2026-11-10T02:31:00+08:00 到期的前一授权。新窗口限于 us-east-1/small_3_0/ubuntu_24_04，最多 1 台、90 分钟、USD 25 子预算，最终期限 2026-11-10T12:30:00+08:00；总费用不得超过用户 USD 1,000 上限。所有云副作用只通过已验证 X-ray CloudAccount、认证 API、step-up、Operation、池调度器、幂等、outbox/Celery 与审计进行。`
+- `in_scope_files_and_systems`: `docs/cloud-test-authorization.md、docs/project-ledger.md；随后仅为实现上述验收所需的节点池/订阅 Operation API、专用 xray_test PostgreSQL/Redis 55435/56382、登记本机 API 端口 9541、最多一个本 run Lightsail 节点及其应用资源记录。`
+- `exclusions_and_risks`: `禁止触碰既有 runner/其他云资源、旧 9537 服务、其他项目数据库/端口/凭据；禁止 TOTP bypass/一键登录、直接数据库伪造、手工 SSH/TOFU、独立公网探测、静态 IP/快照、SWAS/真机/生产部署。凭据、Token、URI、私钥、Cookie、完整 IP 不写日志/证据。逐资源最终账单若不可读则保持未知；账号级费用不可归因。`
+- `baseline_reads`: `重新读取 AGENTS.md、project-conventions、xray-manager 与 local-port-management 技能、项目台账、progress、cloud authorization、acceptance matrix；检查 git status/diff、v0.14.5 tag/Release 状态、当前服务端口和专用容器；并行子代理只读审查撤回预检 patch 与发布状态。当前 HEAD/main/origin/main 为 a7890cde18ed5b828876cb879590d6294bcbdb62；仅 backend/apps/subscriptions/revocation_runtime.py 与 backend/tests/subscriptions/test_revocation_runtime.py 是 tracked dirty files；已有 acceptance artifact 目录保留。`
+- `runtime_inventory`: `只读端口/容器检查 exit 0：登记端口 9541 空闲；PID 93050 属于现有 9537 服务并保持运行；专用 xray-node-auto-20261109 PostgreSQL/Redis 映射 55435/56382 仍运行。已知源目录登记项目 ID 为 dcd1571c890e4144a825b9f403ddcaaf；启动前必须再执行 portctl check。此前专用 DB CloudAccount 有效、验证 OK，管理员正常登录与 step-up 已成功，但本轮必须从 9541 当前 API 重新验证；本次尚未启动服务或调用 AWS。`
+- `review_evidence`: `只读撤回代码审查未发现目标协议覆盖或资格判断错误；按节点/协议要求活动、当前 applied-generation 幸存凭据，执行阶段仍有第二次检查。并发边界是请求被受理后幸存 credential 可能被并行撤回，后续执行仍 fail-closed；不阻断本轮验收。Release 审查确认 v0.14.5 Release id 439611923、tag 不可变，当前撤回 patch 不在该版本；新阶段需更新版本元数据、门禁、提交、push、候选 CI、annotated tag 和 Release。`
+- `time_logic`: `记录本机 Asia/Shanghai 时间 2026-11-10T10:05:03+08:00；每个实例从应用接受 create Operation 开始不超过 90 分钟，整个 run 最迟 2026-11-10T12:30:00+08:00 完成 provider 缺失读回；过期即停止新增写入。`
+- `rollback_and_reuse`: `复用专用 PG/Redis 命名容器与已验证 CloudAccount，但启动后重新验证；使用登记 9541，不影响 9537。若已创建节点，回退/收尾仅通过 X-ray pool scheduler 与标准 node.delete Operation 清理本 run 唯一节点，保留安全 Token tombstone、审计、Operation 和数据库卷。源码用本阶段相干提交 git revert；不移动/重写 v0.14.5、不反向迁移或恢复安全状态。`
+- `status`: `passed (新授权/边界记录、现状盘点、代码与发布只读审查); in-progress (登记端口验证、隔离 runtime/auth/API 前提和新 AWS 验收); not-run (本 run AWS 写入/节点创建/订阅/撤回/删除与最终成本读回)。`
+
+
+### 2026-11-10T10:16:52+08:00 — xray-revoke-delete-20261110-01/002 开发环境 CSRF 根因与本地配置修复范围
+
+- `event_id`: `xray-revoke-delete-20261110-01/002`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `diagnosis, scope, test, modify`
+- `path_scope`: `backend/config/settings/base.py、backend/config/settings/development.py、backend/config/settings/test.py、backend/tests/test_development_settings.py；127.0.0.1:9541 的 CSRF/login HTTP 元数据；隔离 xray_test/Redis 连接状态`
+- `root_cause_evidence`: `9541 /health/ready=HTTP 200，database/redis=ok；GET /api/v1/auth/csrf=200 并产生 64 字符 masked token 和 32 字符 CSRF cookie；开发设置实际 CSRF_COOKIE_SECURE=true，HTTP 请求不会发送该 cookie，登录以 CSRF_FAILED=403 拒绝。源码中 base.py 在 XRAY_DEBUG 未设置时先把 DEBUG 设为 false，因而推导 secure-cookie 默认 true；development.py 后续再设 DEBUG=true，却未重置 Cookie 配置。没有绕过 CSRF、没有执行 CloudAccount 写入或 AWS 操作。`
+- `scope_extension`: `只修改开发设置的 session/CSRF Cookie 名称为非 __Host 本地名称，并让默认 Secure 标志兼容 HTTP loopback；环境显式设 XRAY_SESSION_COOKIE_SECURE/XRAY_CSRF_COOKIE_SECURE=true 时继续尊重。新增 subprocess 配置契约回归测试；production.py/base.py/test.py 和生产 Cookie/安全配置保持原样。`
+- `tdd_plan`: `先新增 backend/tests/test_development_settings.py，用隔离 subprocess 导入 config.settings.development，验证默认本地 HTTP 可用和显式 Secure opt-in；先运行并记录预期失败，再改 development.py，仅改所需配置，随后重跑聚焦与全量后端测试。`
+- `runtime_boundary`: `现有 API PID/portctl process group 属于本 run，health pass；登录 CSRF probe 失败后未启动 worker/Beat/outbox，未创建 AWS 资源。若开发 Cookie 修复/聚焦测试未通过，先停止本 run API，再报告阻塞；不改安全旁路。`
+- `rollback_and_reuse`: `本地配置修复可通过相干提交 git revert；production.py 与 test.py 不改，安全 Token/审计/云状态不可回退。已确认专用数据库 55435 与 Redis 56382 可连接，之后 API 重用当前运行时并重新认证。`
+- `status`: `passed (根因定位与边界确认); in-progress (TDD red/green 与开发环境 API 认证); blocked (启动 worker/AWS 验收直至标准 CSRF/认证与 step-up 正常通过)。`
+
+
+### 2026-11-10T10:20:28+08:00 — xray-revoke-delete-20261110-01/003 CSRF 配置修复与本地回归
+
+- `event_id`: `xray-revoke-delete-20261110-01/003`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `test, modify, runtime, diagnosis`
+- `path_scope`: `backend/config/settings/development.py、backend/tests/test_development_settings.py；登记端口 9541 API；duankou 项目受管端口检查；专用 PostgreSQL/Redis`
+- `commands_and_exit_codes`: `python3 -m json.tool matrix + acceptance validator=0；boundary=0；xray-manager skill validator=0；git diff --check=0；首个误用的项目根 portctl 路径 exit 2（文件不存在），改用 /Users/shiyi/Documents/ChatGPT/duankou/portctl.py check exit 0；隔离 DB/Redis metadata/PING=0，确认 xray_test、55435、56382、正常 bypass=0、provider network env=true。新增测试 RED：test_development_settings.py 1 failed/1 passed，默认实际 __Host 名称及两个 Secure=true 与预期矛盾；修改后 GREEN：2 passed。Ruff 初次路径不存在 exit 127、随后 venv `python -m ruff` 因模块未安装 exit 1；`/Users/shiyi/.local/bin/ruff` 已定位，正确 lint 待重跑。`
+- `writes`: `新增独立 settings subprocess 测试，确认开发 Cookie 名称使用 xray_dev_session/xray_dev_csrf、默认 Secure=false、显式环境 opt-in 仍为 true；development.py 添加同名 Cookie 和 Secure 环境变量读取。production/base/test settings 未修改。`
+- `runtime`: `通过 portctl run 在 9541 启动 API，/health/ready=200 且 database/redis=ok；CSRF endpoint=200，但首次标准登录返回 403/CSRF_FAILED。只读请求/session cookie metadata 证明 HTTP 下 Secure cookie 未发送。开发设置修复后已通过 Ctrl+C 停止本 run API，portctl 进程组退出 130，9541 已空闲；尚未启动 worker/Beat/outbox，尚无 AWS 写入。下一步经受管启动重新加载设置，再用标准 cookie jar/login/step-up/API 路径复验。`
+- `security_and_cost`: `无 TOTP bypass/一键登录；未输出或保存认证内容；未调用 AWS；测试数据库和 Redis 限定本地专用容器。`
+- `rollback_and_reuse`: `仅撤销 development.py/settings regression 的相干提交即可回退本地 HTTP cookie 行为；生产配置和用户态/云端状态不回滚。保留 9537 服务、55435/56382 容器和所有 acceptance artifacts。`
+- `status`: `passed (根因复现、TDD 回归 red/green、文档/边界/技能和本地健康检查); in-progress (正确 lint、开发 API 标准登录/step-up/CloudAccount 读回、workers 与 AWS 验收)。`
+
+
+### 2026-11-10T10:33:02+08:00 — xray-revoke-delete-20261110-01/004 实际云写入前门禁
+
+- `event_id`: `xray-revoke-delete-20261110-01/004`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `preflight, cloud_read, queue, decision`
+- `path_scope`: `本机隔离 API 9541；专用 PostgreSQL/Redis 55435/56382；X-ray CloudAccount / Cloud API / pool/system API；AWS Lightsail us-east-1 bundle price read；worker/Beat/outbox queue`
+- `commands_and_exit_codes`: `development settings red/green 2 passed；focused Ruff 4 个 Python 文件=0；matrix/acceptance validator=0；boundary=0；skill quick validator=0；git diff --check=0；受管端口校验=0；health/readiness=200；正常密码 login=200、step-up=200、system/cloud accounts=200；live CloudAccount validate API `POST .../validate/`=200，验证时间已回读但身份正文不持久化；pool/node/operation GET=200；只读 AWS `get_bundles` via X-ray AwsLightsailProvider=0，`small_3_0` USD 12.0、captured_at 2026-11-10T02:30:34.953116+00:00；Celery inspect ping=0/pong=true。初始错误 portctl X-ray 根路径 exit 2、Ruff 路径 exit 127/模块 exit 1、pool/system 元数据错误字段 null、Celery ping 相对路径 exit 1、AWS plan 用系统 Python exit 1，均以正确入口重试得到上述成功证据；不复用错误尝试为通过。`
+- `prewrite_state`: `API 9541 health=200，database/redis=ok；CloudAccount API 有且仅有 1 个已启用/validated Lightsail account，刚完成实时身份验证；system provider_network enabled/source DATABASE；pool sync enabled/5m，唯一 creation template=us-east-1/small_3_0/ubuntu_24_04；池 quota/used=0/0，3 个历史节点均 DELETED 且不占额；无非终态 Operation；本 run outbox dispatcher、Beat 与 Celery worker 已启动，ping 返回 pong。正常密码会话与近期 step-up 成功。`
+- `decision`: `满足本次授权和费用/时间边界，允许开始唯一一台本 run AWS 节点创建。只通过正常认证 API 把该池 us-east-1 quota 从 0 提到 1，不直接调用 provider create；由已启用 5 分钟池同步 scheduler/outbox/Celery 创建并记录 Operation。创建后每台仍须在 90 分钟内、且整个 run 不晚于 2026-11-10T12:30:00+08:00 通过标准应用删除及 provider 缺失读回。`
+- `current_local_runtime`: `API portctl session 67938；worker session 34230；Beat 96906；outbox loop 62938；API listener PID 34697；此前旧 9537 PID 93050 保留；这些进程只连接本 run 专用 PG/Redis。测试期间日志重定向 /dev/null，HTTP 脚本不回显 cookie、password、token、URI 或完整 IP。`
+- `time_logic_and_cost`: `本事件记录 2026-11-10T10:33:02+08:00；CloudAccount verified_at 和 AWS bundle price captured_at 均带 UTC offset；节点单体寿命上限 90 分钟；截至本事件尚未创建资源，预计方案价 USD 12/月；总窗口硬截止 12:30 +08，子预算 USD 25，最终账单不以价格目录代替。`
+- `rollback_and_reuse`: `池期望值回落 0 后必须由同一 scheduler/标准 node.delete 收敛；只清理本 run 通过创建 Operation 生成的 ManagedNode，保留撤回墓碑、所有审计/Operation 与数据库卷。若任何认证、归属或费用限制不匹配，立即停止创建并报告。`
+- `status`: `passed (本地 API/auth/CloudAccount/worker/Beat/preflight、价格和登记端口); in-progress (启动唯一本 run scheduler 创建); not-run (新节点创建、profile 撤回、订阅 GET/HEAD、池 1→0 删除和 final-cost readback)。`
+
+### 2026-11-10T12:07:17+08:00 — xray-revoke-delete-20261110-01/005 AWS Token 撤回与池删除终态读回
+
+- `event_id`: `xray-revoke-delete-20261110-01/005`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `cloud_read, acceptance`
+- `path_scope`: `本轮唯一授权 Lightsail 测试节点；X-ray Operation、ManagedNode、NodeResource、PoolSetting、订阅计数、outbox 与 provider 状态读回`
+- `commands_and_exit_codes`: `本事件使用本轮执行交接中的最终 API/provider 读回摘要；没有再次调用 AWS，也未重放云写入。摘要记录池 scheduler 删除 Operation 3dfd0491-097b-49ec-9200-504bc50994a3 为 SUCCEEDED；provider=CONFIRMED_ABSENT、cloud_absence_confirmed=true、quota_released=true；Node=DELETED 且不消耗配额，NodeResource=RELEASED；pool quota/used=0/0；pending outbox=0；两份订阅的 expected/assigned/ready/published=0/0/0/0 且 mismatch=false。撤回链接 GET/HEAD=410，HEAD 响应体 0 字节；测试节点恢复 READY/HEALTHY、generation=6/6。`
+- `prewrite_state`: `使用已记录的 xray-revoke-delete-20261110-01/004 预检状态；本次没有新的 AWS 写入。旧双节点运行中的 PARTIALLY_SUCCEEDED Operation 6414aa62-c268-49f6-89cf-eb6ac77db16e 保留为历史证据；候选修复之后的新 Operation 已通过真实 provider 缺失和配额释放读回。`
+- `decision`: `标准 API Token 撤回与修复后的池 1→0 删除通过；该摘要没有证明 profile 级节点撤回正向控制成功，因此 acceptance matrix 继续将该子项标记为未通过。`
+- `time_logic_and_cost`: `本事件记录时间为 2026-11-10T12:07:17+08:00，不等同云操作完成时间；执行交接没有保留精确 Operation/provider 响应时间。逐资源最终账单仍未知，不能用账号级 Cost Explorer 汇总代替。`
+- `rollback_and_reuse`: `云资源仅由本轮标准 Operation 删除；保留 Token 墓碑、撤回审计、Operation、provider 证据和专用数据库卷。不得回滚已撤回 Token 或云端事实。`
+- `status`: `passed (标准 Token 撤回、链接 GET/HEAD 410、修复后的池删除、provider 缺失、配额/资源释放和节点数量对账); blocked (profile 级节点撤回正向控制、逐资源最终账单); not-run (SWAS、真机、公网探测、生产)。`
+
+### 2026-11-10T12:07:17+08:00 — v0.14.6 版本元数据同步与本地门禁状态
+
+- `event_id`: `xray-revoke-delete-20261110-01/006`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, write, test, release_candidate`
+- `path_scope`: `VERSION、backend/pyproject.toml、backend/config/settings/base.py、backend/apps/nodes/bootstrap_runtime.py、backend/openapi/schema.yaml、frontend/package.json、frontend/apps/web-antd/package.json、frontend/apps/web-antd/src/views/system/system.test.ts、frontend/playwright.config.ts、installer/README.md、installer/one-click.sh、tests/installer/test_one_click.py、tests/installer/test_release_package.py、CHANGELOG.md、README.md、docs/acceptance.md、docs/cloud-test-authorization.md、tests/acceptance/matrix.json`
+- `commands_and_exit_codes`: `在版本同步之前 scripts/check-local.sh r1 exit 1：进程环境误带 XRAY_DISABLE_TOTP=1，9 项认证测试不符合当前关闭 bypass 的门禁设置，另有 1 项固定 Xray UDP 用例失败；使用 XRAY_DISABLE_TOTP=0 后认证 focused suite 29 passed，UDP 单项复跑 1 passed。随后专用 PG/Redis 55435/56382 上的完整 r2 为 19/19 gates exit 0，JUnit 540 项（538 passed、2 skipped）、前端 88 passed、Playwright 8 passed；证据 artifacts/acceptance/0.14.6/final-gates-20261110-r2/。r2 执行时 VERSION 尚为 0.14.5，属于版本同步前的代码候选证据，不替代 0.14.6 元数据同步后的最终门禁。`
+- `prewrite_state`: `main@a7890cde18ed5b828876cb879590d6294bcbdb62`，任务开始时 worktree 已有节点池/订阅代码、测试、授权文档与台账的未提交改动；未重置、覆盖或清理这些工作。`
+- `write_summary`: `版本元数据从 0.14.5 同步到 0.14.6；更新 OpenAPI、安装器默认 tag、前端/后端显示版本及对应断言；增加 0.14.6 changelog；更新 acceptance matrix 到当前版本并追加本轮 AWS 删除回读；README 和 acceptance 文档只更新当前候选/限制说明。未改动已发布 v0.14.5 tag。`
+- `time_logic`: `每日重启计划、IANA 时区、日期去重和按 (created_at, pk) 选择顺序均未改动；本次修复仅影响已确认撤销 Token 的删除后发布决策，其他活动 Token 或证据不匹配仍 fail-closed。`
+- `rollback_and_reuse`: `应用变更以不可变 v0.14.5 为回退点，或对本阶段提交执行 git revert；不反向迁移、不恢复 Token 墓碑/安全事件/云操作状态。复用 r2 的专用 PG/Redis 证据卷与脱敏 acceptance artifact；r2 只证明版本同步前代码候选。`
+- `status`: `in-progress (版本同步完成，待重新运行 post-sync 全门禁、验收矩阵/边界/秘密/技能/diff 检查，再提交、推送、核验 Delivery Gates 并发布 v0.14.6); blocked (profile 级撤回正向控制与逐资源账单); not-run (SWAS、设备、公网探测、生产)。`
+
+### 2026-11-10T12:24:04+08:00 — xray-revoke-delete-20261110-01/007 post-sync 门禁与隔离端口处置
+
+- `event_id`: `xray-revoke-delete-20261110-01/007`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, write, test, cleanup`
+- `path_scope`: `backend/uv.lock；tests/acceptance/matrix.json；docs/progress.md；本机 Local Port Manager 中 X-ray 项目登记；本轮专用 docker compose 项目 xray-gate-test-stack-20261110`
+- `commands_and_exit_codes`: `旧 gate 端口 55435/56382 被管理器判定 conflict，监听由容器项目 xray-node-auto-20261109 持有，未复用、未停止。E2E 项目 5098b32dceeb4593bb7455676fe26859 的 55671-55674 登记/空闲检查=0。为本轮注册全新 gate 项目 f19638b4485c40409efb67df0a0e7f7e，端口 55437/56384，路径为本仓库；注册后 portctl check=0。Compose test stack `up -d --wait`=0，两容器 healthy；`scripts/check-local.sh` r3=1（runtime 检测 pnpm 11.25.0，不符 10.33.x）；在 PATH 前置既有 Corepack pnpm 10.33.0 后 r4=0，19/19 gates，JUnit 540（538 passed/2 skipped/0 failure/error），前端 88 passed，E2E 8 passed。`uv lock --project backend --check`=0；acceptance matrix、boundary、Gitleaks、skill 和最终 `git diff --check`=0。精确 r4 摘要 `artifacts/acceptance/0.14.6/final-gates-20261110-r4/summary.tsv`。`
+- `prewrite_state`: `main@a7890cde18ed5b828876cb879590d6294bcbdb62；根目录原 .env 未 source 或回显。55435/56382 当前由另一 compose 项目监听；旧 API 9537 与本轮 AWS API 9541 均未停止。新端口登记经 manager API/portctl 校验后方启动。`
+- `write_summary`: `同步 backend/uv.lock 的本地项目版本到 0.14.6；更新矩阵引用至 r4 并记录本地容器停止后的数据卷/空闲端口；进度表追加 r1/r2 pre-sync、r3 runtime 失败和 r4 post-sync 通过证据。新容器以唯一 compose 项目名和专用命名卷启动；随后仅对此项目执行 docker compose down，容器/network 移除，专用 PostgreSQL/Redis 数据卷保留。未修改或停止任何其他登记项。`
+- `time_logic`: `应用每日重启/池同步的时间逻辑未变更；本轮测试端口和数据库操作不改变业务时区、去重或节点排序规则。`
+- `rollback_and_reuse`: `应用回退点为 v0.14.5 或本阶段 git revert；不删除本轮留存的命名卷或端口登记。后续门禁可在新登记端口 55437/56384、E2E 55671-55674 与 Corepack pnpm 10.33.0 前置条件下复用。`
+- `status`: `passed (post-sync local gates、端口校验、容器健康、matrix、lock check、diff check); in-progress (commit/push、main Delivery Gates、annotated tag、GitHub Release/资产核验); blocked (profile 级节点撤回正向控制、逐资源最终账单); not-run (SWAS、设备、公网探测、生产)。`
+
+### 2026-11-10T12:27:00+08:00 — xray-revoke-delete-20261110-01/008 版本索引候选记录
+
+- `event_id`: `xray-revoke-delete-20261110-01/008`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `write, release_candidate`
+- `path_scope`: `docs/version-record.md`
+- `write_summary`: `追加 0.14.6 候选索引，准确标记候选提交 SHA、annotated tag、GitHub Release 和远端 CI 尚待产生；写入已通过的本地 r4 证据、AWS 标准池删除通过结果、profile 级控制/账单阻断及 v0.14.5 回退引用。正式 release facts 将在提交、CI、tag 和 Release 读回后补齐。`
+- `authorization`: `用户当前请求明确要求测试、同步并发布新版本；项目阶段发布契约要求更新版本记录。`
+- `rollback_and_reuse`: `最终代码以 v0.14.5 为回退点；不重写现有 tag，也不反向迁移或恢复 Token 墓碑/云状态。`
+- `status`: `passed (候选版本索引与 r4 evidence reference 已记录); in-progress (source commit、remote CI、tag、Release 和资产读回待完成)。`

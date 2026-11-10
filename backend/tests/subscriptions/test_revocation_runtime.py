@@ -67,6 +67,79 @@ def request_revocation(admin, profile):
     )
 
 
+@pytest.mark.parametrize("control_state", ["revoked", "stale"], ids=["missing", "unapplied"])
+@pytest.mark.django_db
+def test_profile_revocation_request_rejects_missing_positive_control(
+    admin, shadowsocks_profiles, control_state
+):
+    from django.utils import timezone
+
+    from apps.subscriptions.models import NodeCredential
+    from common.errors import DomainError
+
+    (
+        _node,
+        profile,
+        _survivor,
+        _target_credential,
+        survivor_credential,
+        _target_link,
+        _survivor_link,
+    ) = shadowsocks_profiles
+    updates = {"revoked_at": timezone.now()} if control_state == "revoked" else {
+        "applied_generation": 0
+    }
+    NodeCredential.objects.filter(pk=survivor_credential.pk).update(**updates)
+    preview = make_preview(admin, profile)
+
+    with pytest.raises(DomainError) as error:
+        RevocationService.request(
+            profile.pk,
+            key=uuid4(),
+            preview_id=preview.pk,
+            confirmation="REVOKE PROFILE",
+            admin=admin,
+        )
+
+    assert error.value.code == "REVOCATION_POSITIVE_CONTROL_UNAVAILABLE"
+    profile.refresh_from_db()
+    assert profile.status == "ACTIVE"
+    assert not Operation.objects.filter(
+        kind="subscription.revoke", target_id=profile.pk
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_profile_revocation_request_accepts_current_positive_control(
+    admin, shadowsocks_profiles
+):
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    node, profile, survivor, target_credential, _survivor_credential, target_link, survivor_link = (
+        shadowsocks_profiles
+    )
+    preview = make_preview(admin, profile)
+    operation = RevocationService.request(
+        profile.pk,
+        key=uuid4(),
+        preview_id=preview.pk,
+        confirmation="REVOKE PROFILE",
+        admin=admin,
+        test_only_skip_runtime_preflight=False,
+    )
+
+    profile.refresh_from_db()
+    survivor.refresh_from_db()
+    assert profile.status == "REVOKING"
+    assert survivor.status == "ACTIVE"
+    assert RevocationNodeState.objects.get(operation=operation, node=node).credential_refs == [
+        str(target_credential.pk)
+    ]
+    with pytest.raises(TokenGone):
+        TokenService.resolve(target_link.raw_token)
+    assert TokenService.resolve(survivor_link.raw_token).profile_id == survivor.pk
+
+
 class ProbeChannel:
     def __init__(self, generation):
         self.generation = generation

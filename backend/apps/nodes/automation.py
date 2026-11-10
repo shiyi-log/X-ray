@@ -54,6 +54,8 @@ def has_subscription_endpoint_fallback(node: ManagedNode) -> bool:
         .order_by("pk")
     )
     for subscription in subscriptions:
+        if Publisher._has_confirmed_current_token_revocation(subscription):
+            continue
         revision = subscription.current_revision
         node_versions = revision.node_versions if revision else {}
         if not isinstance(node_versions, dict) or not any(

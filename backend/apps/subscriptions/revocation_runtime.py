@@ -28,13 +28,35 @@ def _unconfirmed(code="REVOCATION_PROBE_UNCONFIRMED"):
 
 def validate_request_profile(profile):
     credentials = (
-        NodeCredential.objects.select_for_update()
+        NodeCredential.objects.select_for_update(of=("self",))
         .filter(profile=profile, revoked_at__isnull=True)
-        .select_related("protocol")
+        .select_related("node", "protocol")
         .order_by("node_id", "pk")
     )
+    nodes = {}
+    credential_refs = {}
+    required_protocols = {}
     for credential in credentials:
         RevocationExecutor._credential(credential)
+        nodes[credential.node_id] = credential.node
+        credential_refs.setdefault(credential.node_id, set()).add(credential.pk)
+        required_protocols.setdefault(credential.node_id, set()).add(
+            credential.protocol_id
+        )
+
+    for node_id, protocol_ids in required_protocols.items():
+        node = nodes[node_id]
+        if node.desired_generation != node.applied_generation:
+            raise _unconfirmed()
+        controls = {
+            credential.protocol_id
+            for credential in access.active_node_credentials(
+                node, excluded_credential_refs=credential_refs[node_id]
+            )
+            if credential.applied_generation == node.applied_generation
+        }
+        if not protocol_ids.issubset(controls):
+            raise _unconfirmed("REVOCATION_POSITIVE_CONTROL_UNAVAILABLE")
 
 
 class RevocationExecutor(NodeExecutor):

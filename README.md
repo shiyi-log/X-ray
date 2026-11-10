@@ -11,9 +11,9 @@ step-up，未绑定时重新验证密码，已绑定时验证密码与 TOTP。�
 
 ## 当前状态
 
-2026-11-10：当前已发布版本为 `0.14.5`。本版完善地址池调度重试、删除后资源账本状态、订阅节点数量核对和撤销 Token 的失效发布处理，并补齐 outbox Celery app 绑定与订阅路径日志脱敏。两台授权范围内 Lightsail 节点完成池补齐、按 `(created_at, pk)` 选取一台每日 stop/start、动态 IPv4/健康/IP 刷新、订阅签发/发布/撤回、节点计数和流量统计验收；池从 `2→1` 的自动缩容成功。池降至 0 后，第二台实例已由 provider 确认缺失且配额释放，但当时的删除 Operation 因已撤销 Token 仍尝试重新发布而为 `PARTIALLY_SUCCEEDED`；候选代码现仅在撤销时间、墓碑和无活动 Token 均验证时跳过重发，并通过本地回归，未重跑真实 AWS。清理读回比授权截止晚约三分钟，实例级最终账单未知，profile 级撤回正向控制仍未通过；完整边界以 `VERSION`、`docs/progress.md` 与 `tests/acceptance/matrix.json` 为准。
+2026-11-10：`0.14.6` 候选修复了节点池缩容删除遇到已撤销 Token 时的无意义重新发布；撤回时间、不可变墓碑与安全事件不匹配或仍有活动 Token 时继续失败关闭。修复已通过新的授权 AWS 测试运行：池 `1→0` 删除 Operation `3dfd0491-097b-49ec-9200-504bc50994a3` 成功，provider 确认缺失、配额与资源账本释放，池和订阅节点计数均为零。授权范围内的双节点测试此前已覆盖补齐、按 `(created_at, pk)` 每日重启一台、动态 IPv4/健康/IP 刷新、订阅签发/发布/撤回和流量统计。`0.14.6` 本地全门禁通过；profile 级节点撤回正向控制尚未确认，AWS 逐资源最终账单未知，SWAS、真机、独立公网探测和生产未运行；状态详见 `docs/progress.md` 与 `tests/acceptance/matrix.json`。
 
-本轮两台授权 AWS Lightsail 测试节点均已清理并读回不存在，通过认证 SSH/Xray 采集流量；尚未执行 SWAS、独立 SSH 登录或 Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS 或生产部署。annotated `v0.14.5` 标签指向 `e38b48b`；GitHub Release `439611923` 已于 2026-11-10 04:34 +08 发布，资产摘要及 `SHA256SUMS` 已核对。完整 AWS 验收仍有独立阻断；本地 Compose、Fake/Stub、镜像、恢复演练、提交、标签和 GitHub Release 都不代表生产部署。
+`v0.14.5` 的 annotated 标签指向 `e38b48b`，GitHub Release `439611923` 已发布且资产摘要与 `SHA256SUMS` 已核对。`0.14.6` 发布候选的本地门禁已通过，新的 AWS 运行已验证修复后的节点池删除；profile 级节点撤回正向控制和逐资源最终账单仍待确认。尚未执行 SWAS、独立 SSH 登录或 Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS 或生产部署。本地 Compose、Fake/Stub、镜像、提交、标签和 GitHub Release 都不代表生产部署。
 
 - [正式设计规格](docs/superpowers/specs/2026-09-16-xray-manager-design.md)
 - [开发计划总览](docs/superpowers/plans/2026-09-16-xray-manager.md)

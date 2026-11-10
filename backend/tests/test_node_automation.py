@@ -475,6 +475,21 @@ def test_pool_sync_blocks_deleting_the_only_publishable_subscription_node(prepar
 
 
 @pytest.mark.django_db
+def test_pool_delete_skips_fallback_for_confirmed_revoked_current_token(prepared_node):
+    from apps.nodes.automation import has_subscription_endpoint_fallback
+    from apps.subscriptions.models import SubscriptionToken
+    from apps.subscriptions.tokens import TokenService
+
+    node, _operation = prepared_node
+    _ready_node(node)
+    subscription = _publish_subscription_on_nodes("revoked-current-token", [node])
+    token = SubscriptionToken.objects.get(subscription=subscription)
+    TokenService.revoke_token(subscription.pk, token.pk)
+
+    assert has_subscription_endpoint_fallback(node) is True
+
+
+@pytest.mark.django_db
 def test_pool_sync_allows_oldest_delete_when_subscription_has_another_endpoint(
     prepared_node,
 ):

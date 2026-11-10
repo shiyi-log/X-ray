@@ -1,6 +1,6 @@
 {
-  "version": "0.14.5",
-  "generated_at": "2026-11-10T04:44:42+08:00",
+  "version": "0.14.6",
+  "generated_at": "2026-11-10T12:22:14+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -9,6 +9,49 @@
     "risky_not_executed"
   ],
   "items": [
+    {
+      "id": "local-delivery-gates-0.14.6",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.6/final-gates-20261110-r4/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.6/final-gates-20261110-r4/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 540,
+            "passed": 538,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 88,
+          "browser_e2e": 8,
+          "source_base_commit": "a7890cde18ed5b828876cb879590d6294bcbdb62",
+          "candidate_worktree": true,
+          "started_at": "2026-11-10T04:16:34Z",
+          "finished_at": "2026-11-10T04:20:18Z",
+          "residual_resources": [
+            "The isolated gate containers were stopped; named volumes xray-gate-test-stack-20261110-postgres and xray-gate-test-stack-20261110-redis remain for audit. Ports 55437/56384 remain registered to this isolated X-ray gate project."
+          ]
+        }
+      ],
+      "commit": "a7890cde18ed5b828876cb879590d6294bcbdb62",
+      "source_base_commit": "a7890cde18ed5b828876cb879590d6294bcbdb62",
+      "candidate_worktree": true,
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Dedicated local PostgreSQL/Redis named volumes are retained for audit; containers are stopped and their ports are unoccupied."
+      ]
+    },
     {
       "id": "local-delivery-gates-0.14.5",
       "environment": "local",
@@ -1029,9 +1072,7 @@
       "status": "blocked",
       "blockers": [
         "Profile-level revocation positive control remains unavailable: the first run's REVOCATION_UNCONFIRMED correctly blocked its automatic deletion. The later active-subscription 2-to-1 automatic shrink passed, but does not cover profile-level revocation.",
-        "The second node's old-code cleanup Operation was PARTIALLY_SUCCEEDED after a revoked-token republish error, although provider absence and quota release were confirmed; the post-fix behavior has only local Fake coverage and was not rerun on AWS.",
-        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources.",
-        "Final provider absence readback completed around 2026-11-10 02:34 +08, about three minutes after the 02:31 authorization deadline."
+        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources."
       ],
       "evidence": [
         {
@@ -1205,6 +1246,45 @@
           "resource_attributable": false,
           "final_bill_confirmed": false,
           "actual_test_resource_cost_usd": null
+        },
+        {
+          "kind": "real_cloud_revoked_token_pool_delete_regression",
+          "authorization_ref": "docs/cloud-test-authorization.md#xray-revoke-delete-20261110-01",
+          "run_id": "xray-revoke-delete-20261110-01",
+          "evidence_recorded_at": "2026-11-10T11:59:09+08:00",
+          "region": "us-east-1",
+          "resource_ref": "redacted:single-authorized-test-node",
+          "operation_id": "3dfd0491-097b-49ec-9200-504bc50994a3",
+          "operation_status": "SUCCEEDED",
+          "provider_state": "CONFIRMED_ABSENT",
+          "cloud_absence_confirmed": true,
+          "quota_released": true,
+          "node_state": "DELETED",
+          "node_consumes_quota": false,
+          "node_resource_state": "RELEASED",
+          "pool_quota": 0,
+          "pool_used": 0,
+          "pending_outbox": 0,
+          "subscription_counts": {
+            "expected": 0,
+            "assigned": 0,
+            "ready": 0,
+            "published": 0,
+            "mismatch": false
+          },
+          "revoked_link_checks": {
+            "get_status": 410,
+            "head_status": 410,
+            "head_body_bytes": 0
+          },
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "probe_results": [
+            "Standard target-bound preview, step-up and API token revocation completed; old and rotated test links returned GET/HEAD 410 with an empty HEAD body.",
+            "The scheduler-created node recovered READY/HEALTHY at generation 6/6 after retrying its original bootstrap Operation.",
+            "The pool scheduler deleted the exact test node; provider absence, quota release, NodeResource RELEASED and zero pool/subscription counts were read back.",
+            "This run does not establish a successful profile-level node revocation positive control."
+          ]
         }
       ],
       "commit": null,

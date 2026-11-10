@@ -1,5 +1,12 @@
 # 变更记录
 
+## 0.14.6 - 2026-11-10
+
+- 修复节点池缩容删除遇到已撤销 Token 时仍尝试重新发布的问题：仅在撤回时间、不可变墓碑与安全事件一致且不存在其他活动 Token 时跳过发布；其他情况继续失败关闭。
+- 在新的授权 AWS 测试运行中验证池 `1→0` 调度删除 Operation `3dfd0491-097b-49ec-9200-504bc50994a3` 成功，provider 确认资源缺失、配额释放，`NodeResource` 状态为 `RELEASED`，池 quota/used 与订阅 expected/assigned/ready/published 均为 `0/0/0/0`。
+- 完成专用测试环境本地全门禁：19 项门禁通过，后端 538 项通过、2 项因需一次性 Linux 主机而跳过，前端 88 项、浏览器 E2E 8 项通过。
+- AWS profile 级节点撤回正向控制仍未确认，逐资源最终账单也未知；账号级 Cost Explorer 汇总不可归因。SWAS、真机、独立公网探测和生产未运行。
+
 ## 0.14.5 - 2026-11-10
 
 - 修复 Django 管理命令投递 durable outbox 时未显式绑定项目 Celery app 的问题，避免普通管理进程误用 Celery `default` app 或错误 broker。

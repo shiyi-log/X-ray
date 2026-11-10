@@ -159,3 +159,30 @@ AWS CLI 只读预检（2026-11-09 21:28+08）：`sts get-caller-identity` 仅保
 - 后续代码修正只在当前 token 为 `REVOKED`、撤回时间与不可变墓碑及安全事件匹配、且不存在其他活动 Token 时跳过无意义的重发；活动 Token 仍无可发布替代节点时保持失败关闭。Fake 生命周期/API 回归已覆盖该行为；没有重新创建 AWS 资源复跑候选代码。
 - 只读数据库复核发现已删除节点的两个 `NodeResource` 仍记录 `cost_status=ACTIVE`。候选修正已在精确 provider 缺失路径将对应资源记为 `RELEASED` 并记录 `released_at`；未直接改写测试数据库审计记录。Cost Explorer 账号级汇总不具实例归因，最终资源账单仍未知；不得将 USD 0.00 账号汇总解释成本节点最终费用为零。
 - 两台本轮 AWS 测试资源均由正常应用删除流程确认缺失；未创建静态 IP、快照或额外磁盘。隔离 PostgreSQL/Redis 与命名卷保留供审计。SWAS、设备、独立公网探测、生产主机/TLS/部署均未运行。
+
+## 2026-11-10T10:05:03+08:00 — profile 撤回正向控制与墓碑删除复验
+
+本窗口沿用当前对话中用户对 AWS 测试服务器和 USD 1,000 总费用上限的明确授权；不沿用已过期的 `xray-node-pool-restart-20261110-01` 时间窗口。目标仅为补验 profile 级撤回正向控制和已修复的 Token 墓碑删除路径。
+
+| 字段 | 本次精确范围 |
+| --- | --- |
+| authorization_ref / run_id | 当前任务用户授权；`xray-revoke-delete-20261110-01` |
+| provider / account | AWS Lightsail；仅使用隔离 `xray_test` 数据库中 enabled、validated 的 X-ray CloudAccount；启动后须经认证 API 再读回确认 |
+| region / plan / image | `us-east-1` / `small_3_0` / `ubuntu_24_04`；不得改用其他套餐或区域 |
+| resource identity | 最多 1 台仅由本 run 的节点池自动化通过 X-ray `node.create` 创建的节点，以 run ID、ManagedNode UUID 和 Operation UUID 限定；禁止复用、修改或删除任何既有 AWS 资源 |
+| task budget / lifetime | 用户总上限 USD 1,000；本子任务绝对上限 USD 25；最多 1 台、最长 90 分钟；最迟 `2026-11-10T12:30:00+08:00` 经应用删除并由 provider 精确读回缺失。超预算、身份/归属不符或期限将到时立即停止新写入并优先通过应用标准删除流程清理本 run 节点 |
+| allowed_actions | 仅经正常管理员认证、近期 step-up、CloudAccount、PoolSetting、Operation、UUID 幂等、outbox/Celery 和审计路径将本轮池期望设为 1 并由 scheduler 创建节点；在同一节点/协议上建立目标与幸存 profile 并签发/发布测试订阅；用新鲜目标绑定 preview 和 step-up 执行 profile 级撤回，读回撤回 Operation、目标订阅永久 410、幸存订阅仍可读及远端正向控制；随后撤回幸存测试 Token，把池期望设为 0 并由 scheduler 执行标准 `node.delete`，读回 Operation `SUCCEEDED`、provider `CONFIRMED_ABSENT`、`NodeResource.RELEASED` 及 quota/used/expected/assigned/ready/published 对账 |
+| ssh_scope / probes | 仅由 X-ray 已配置的 `NodeBootstrapRuntime`、profile 撤回探测和认证运行时处理本 run 节点；不手工 SSH、不使用 TOFU、不访问第三方目标 |
+| stop / delete / static IP | 不做每日 stop/start；仅允许通过 X-ray 池 scheduler 删除本 run 唯一节点；不创建或释放静态 IP，不创建快照、额外磁盘或负载均衡器 |
+| exclusions | 不设置 TOTP bypass 或一键登录，不修改管理员认证状态，不直接改数据库伪造云结果；不触碰 runner、其他 AWS 资源/账号/区域；不执行独立公网探测、SWAS、设备、生产 TLS/域名/部署；不输出凭据、完整 IP、Token、原始 URI、私钥、Cookie 或秘密异常 |
+| rollback / residuals | 应用代码以本阶段提交 `git revert` 回退，禁止移动/重写 `v0.14.5`；云资源只由 X-ray 标准 Operation 删除，保留撤回墓碑、审计和 Operation；专用 PostgreSQL/Redis 容器及数据卷保留 |
+
+执行前提：必须在专用 PostgreSQL/Redis `55435/56382` 上用 `config.settings.development`、`XRAY_ENV=test` 的隔离运行时；`XRAY_DISABLE_TOTP` 与 `XRAY_LOCAL_ONE_CLICK_LOGIN` 保持关闭。API 只使用登记端口 `9541`，不得影响已有 `9537` 服务。正常认证、近期 step-up、当前 CloudAccount API 读回、预算/期限可满足性任一失败时，不创建资源。最终账单逐资源读回若不可用，成本状态保持未知，不用账号级 Cost Explorer 汇总替代。
+
+### 执行结果记录（2026-11-10T12:07:17+08:00）
+
+- 通过原 `node.bootstrap` Operation 重试后，测试节点读回 `READY/HEALTHY`，当前代际与目标代际均为 `6`。
+- 使用标准 API、目标绑定预览及 step-up 撤回测试 Token；对应旧链接和临时轮换链接的 GET/HEAD 均为 `410`，HEAD 响应体为 0 字节。此读回证明 Token 撤回，不作为 profile 级节点撤回正向控制成功证据。
+- 池定时同步创建标准删除 Operation `3dfd0491-097b-49ec-9200-504bc50994a3`，状态 `SUCCEEDED`。provider 读回 `CONFIRMED_ABSENT`，`cloud_absence_confirmed=true`、`quota_released=true`；节点 `DELETED` 且不再占配额，`NodeResource` 为 `RELEASED`；池 quota/used 为 `0/0`，outbox 待投递数为 0。
+- 两份订阅的 expected/assigned/ready/published 均为 `0/0/0/0`，`mismatch=false`。没有保留本轮 AWS 节点或静态 IP、磁盘、快照；专用 PostgreSQL/Redis 及命名卷继续保留作审计。
+- 本条记录依据本轮终态读回摘要整理，Operation/provider 调用的精确完成时间未随摘要保留；记录时间不是云操作时间。逐资源最终账单仍未确认，账号级 Cost Explorer 汇总不能作为其替代。
