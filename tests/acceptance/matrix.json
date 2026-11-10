@@ -1,6 +1,6 @@
 {
   "version": "0.14.6",
-  "generated_at": "2026-11-10T15:05:39+08:00",
+  "generated_at": "2026-11-10T15:33:50+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1719,6 +1719,47 @@
         }
       ],
       "commit": "1f8f8b84377f518164174f68245e556f0f8f0259",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-ci-v0.14.6-profile-revoke-aa08bdd",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_gates",
+          "run_id": 42773284874,
+          "job_id": 129685834932,
+          "attempt": 1,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "aa08bdd2bf6aa63b611109e641f70fb9faf05bcd",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 542,
+            "passed": 541,
+            "skipped": 1,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 88,
+          "browser_e2e": 8,
+          "acceptance_evidence_uploaded": true,
+          "artifact_id": 13743735854,
+          "artifact_size_bytes": 2910276,
+          "artifact_digest": "sha256:babab7874f1d5b63cbbb2b11f8ef47e7eb69580b8e88ab981382f73249ea1593",
+          "cleanup_steps_passed": true
+        }
+      ],
+      "commit": "aa08bdd2bf6aa63b611109e641f70fb9faf05bcd",
       "provider": "github-actions",
       "region": null,
       "cost": null,

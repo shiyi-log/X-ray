@@ -7383,3 +7383,38 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `current_hashes_before_this_append`: `backend/tests/subscriptions/test_revocation_runtime.py=346094686fb52f1cd14ea2972a51f3d7637002b952f02509e9e5c96609e71068；tests/acceptance/matrix.json=8e41c39c2656f70da2cf028d195839b9f272f771de53d637c64c1ca866050c41；docs/progress.md=3876a338e3ec1d37207e99b0cfca6a9a4bafacf63aac50fff038dbd9c54781f4；docs/project-ledger.md=bd8b68dd4d367a4b2e6da60fb3c4edb9c83c029871066bf2cc316c7cde0de0f3。`
 - `verification`: `matrix.json 最终更新时间后，python3 scripts/validate-acceptance.py、Node JSON parse 与 git diff --check 均 exit 0；边界、秘密和技能校验均 exit 0。`
 - `status`: `passed (hash 记录更正；未改变测试、业务行为、验收结果、AWS 状态或版本/tag/Release)。`
+
+### 2026-11-10T15:26:56+08:00 — xray-profile-revoke-api-20261110-01/004 精确 SHA Delivery Gates 收尾
+
+- `event_id`: `xray-profile-revoke-api-20261110-01/004`
+- `run_id`: `xray-profile-revoke-api-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `remote_validation, readback, modify`
+- `path_scope`: `backend/tests/subscriptions/test_revocation_runtime.py、tests/acceptance/matrix.json、docs/progress.md、docs/project-ledger.md；GitHub main commit aa08bdd2bf6aa63b611109e641f70fb9faf05bcd、Delivery Gates run/job/artifact、v0.14.6 tag/Release`
+- `requested_outcome_and_scope`: `完成新增 profile 撤回 API 集成回归的 main 同步，并核验该精确提交的远端 Delivery Gates 与证据上传；不创建第二个版本、不部署生产。`
+- `authorization_boundary_and_risk`: `用户原请求授权测试、同步和发布；本次仅推送测试/审计提交，没有 AWS/SSH/生产写入。AWS 测试窗口已于 2026-11-10T12:30:00+08:00 到期，profile 级云端撤回正向控制和逐资源账单仍受阻。`
+- `source_commit_and_push`: `本地 main commit aa08bdd2bf6aa63b611109e641f70fb9faf05bcd（test: cover profile revocation API lifecycle），包含测试、matrix、progress、ledger 四文件；git commit=0，git push origin main=0；远端 refs/heads/main 读回同一 SHA。`
+- `delivery_gates_readback`: `GitHub Actions Delivery Gates run 42773284874，event=push，head_sha=aa08bdd2bf6aa63b611109e641f70fb9faf05bcd，completed/success；唯一 job 129685834932 completed/success，2026-11-10T07:09:11Z 至 07:21:43Z。27 个 job steps 全部 success，包含验收预检、完整 local delivery gates、sanitized evidence 上传、run-specific image/auth-state 清理和容器停止。artifact 13743735854 name=xray-acceptance-42773284874-1，size=2,910,276 bytes，digest=sha256:babab7874f1d5b63cbbb2b11f8ef47e7eb69580b8e88ab981382f73249ea1593，expired=false。`
+- `release_readback`: `git ls-remote 读回 main=aa08bdd2bf6aa63b611109e641f70fb9faf05bcd；v0.14.6 annotated tag object=254a6a9c4af0c6691f7fc69308dd97b4ef50ebb0，peeled commit=1f8f8b84377f518164174f68245e556f0f8f0259。Release API 仍返回已发布 Release id 439984636、draft=false、prerelease=false、published_at=2026-11-10T05:34:12Z；三项资产名字/大小/digest 与 /011 回执一致。没有创建新版本/tag/Release。`
+- `commands_and_exit_codes`: `python3 scripts/validate-acceptance.py=0；bash scripts/check-boundary.sh=0；bash scripts/check-secrets.sh=0（144 commits scanned，无泄漏）；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0；Node JSON parse=0；git diff --check=0；GitHub run/job/artifact/Release readback=success；git push=0。`
+- `preappend_hashes`: `backend/tests/subscriptions/test_revocation_runtime.py=346094686fb52f1cd14ea2972a51f3d7637002b952f02509e9e5c96609e71068；tests/acceptance/matrix.json=f61a78d90a23171aaa9f97cbafccca7f6718ee15305e335411e672238e2a9a5c；docs/progress.md=ba760edbabbd442ea3d9a94c8155df79adc518134d75f5ceda67d15efefd9365；docs/project-ledger.md=18b1c7192ab84f99d16031cb1057fc99476205baf186cabc85abea9c92ce69bc。`
+- `write_summary`: `matrix.json 新增 aa08bdd2 精确 SHA 的 GitHub CI 通过项和 artifact digest；progress.md 记录远端结果、tag/Release 未变；ledger 追加远端收尾事件。AWS matrix 继续 blocked；本地 Fake/Stub profile API 测试与真实云验收明确分开。`
+- `runtime_and_cleanup`: `远端 run-specific 清理步骤全部 success；本地专用 gate containers 仍停止，命名数据卷保留，55437/56384 登记保留，E2E 55671-55674 已释放。10 个本地未跟踪 acceptance evidence 目录仍保留，没有被 stage、commit 或删除。`
+- `time_logic`: `仅记录 UTC Actions 时间与本机 Asia/Shanghai 审计时间；不涉及业务调度、时区、每日重启排序或 TTL 逻辑。`
+- `reuse_and_rollback`: `可复用精确 SHA Delivery Gates run/job/artifact、r6 本地 JUnit 和 profile API integration test。测试/审计代码提交可 `git revert aa08bdd2bf6aa63b611109e641f70fb9faf05bcd`；应用阶段回退点仍为 v0.14.5；保留 v0.14.6 Release/tag、撤回墓碑、审计和云状态。`
+- `status`: `passed (test commit 推送、精确 SHA 远端 19/19 Delivery Gates、上传 artifact、release/tag 读回及本地静态校验); blocked (真实 AWS profile 撤回正向控制与逐资源最终账单，AWS 只读 AccessDenied); not-run (新 AWS 写入、SWAS、设备、公网探测、生产部署)。`
+
+### 2026-11-10T15:34:46+08:00 — xray-profile-revoke-api-20261110-01/005 远端测试汇总补充
+
+- `event_id`: `xray-profile-revoke-api-20261110-01/005`
+- `run_id`: `xray-profile-revoke-api-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `remote_readback, modify, validation`
+- `path_scope`: `GitHub Actions job 129685834932 日志；tests/acceptance/matrix.json、docs/progress.md、docs/project-ledger.md`
+- `requested_outcome_and_scope`: `从已完成 run 的脱敏 job log 精确读取后端、前端和浏览器测试摘要，并补入远端 CI 结构化证据。`
+- `remote_test_summary`: `run 42773284874 的 job logs 显示 complete local delivery gates 成功，summary.tsv 已生成。后端 542 tests：541 passed、1 skipped、0 failure/error；唯一 skip 为 tests/installer/test_service.py，需要显式选择的一次性 Linux systemd host。Frontend unit tests=88 passed；Playwright=8 passed。subscription format、boundary 和 secret scan 通过。artifact 13743735854 digest 与 /004 一致。`
+- `commands_and_exit_codes`: `GitHub job logs API readback=success；从过滤后的日志只提取测试汇总与 gate 摘要，没有复制原始完整日志或环境内容。python3 scripts/validate-acceptance.py=0；bash scripts/check-boundary.sh=0；bash scripts/check-secrets.sh=0（144 commits、no leaks）；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0；Node JSON parse=0；git diff --check=0。`
+- `preappend_hashes`: `tests/acceptance/matrix.json=c1a07ce49ba59ab2e22b971d20e23335cd9ed9aee6b6093b1398668e3e375413；docs/progress.md=1eaca7bed07c85fba6e74419a7c671faa907df042389ddde6e4974826e4c418a；docs/project-ledger.md=d8d3ab6804b0814a5c740761c229d0e24c1564d790d950b5acef177982ea784c。`
+- `write_summary`: `matrix.json 远端 CI evidence 补充后端 541/1、前端 88 和 E2E 8；progress.md 增加同一精确 SHA 的远端测试计数和唯一 skip 原因。没有改变程序代码、版本、标签、Release 或 AWS 状态。`
+- `time_logic`: `本次仅读取 workflow 时间戳和测试输出；没有业务时间逻辑变化。`
+- `status`: `passed (精确 SHA 远端测试明细与结构化回执、最终 acceptance/boundary/secret/skill/JSON/diff 校验); blocked (真实 AWS profile 撤回正向控制和逐资源最终费用); not-run (新 AWS 写入、SWAS、设备、公网探测、生产部署)。`
