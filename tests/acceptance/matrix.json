@@ -1,6 +1,6 @@
 {
   "version": "0.14.6",
-  "generated_at": "2026-11-10T12:22:14+08:00",
+  "generated_at": "2026-11-10T13:38:31+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1644,6 +1644,79 @@
       "residual_resources": [
         "No AWS application-node write was made. Local test containers were stopped; dedicated named volumes and port registration are retained."
       ]
+    },
+    {
+      "id": "github-ci-v0.14.6-candidate-1f8f8b8",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_gates",
+          "run_id": 42760469328,
+          "job_id": 129644696187,
+          "attempt": 1,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "1f8f8b84377f518164174f68245e556f0f8f0259",
+          "acceptance_evidence_uploaded": true,
+          "artifact_id": 13736944710,
+          "artifact_size_bytes": 3091938,
+          "artifact_digest": "sha256:ce50a1e186fc7f3cea2cc0754b933bf2c981e86b358421b9761dd6d83691475f",
+          "cleanup_steps_passed": true
+        }
+      ],
+      "commit": "1f8f8b84377f518164174f68245e556f0f8f0259",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-release-v0.14.6",
+      "environment": "release",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "published_release_and_asset_readback",
+          "checked_at": "2026-11-10T13:38:31+08:00",
+          "release_id": 439984636,
+          "published_at": "2026-11-10T05:34:12Z",
+          "draft": false,
+          "prerelease": false,
+          "workflow_run": 42762908619,
+          "workflow_job": 129652586153,
+          "workflow_conclusion": "success",
+          "required_ref": "main",
+          "tag": "v0.14.6",
+          "tag_object": "254a6a9c4af0c6691f7fc69308dd97b4ef50ebb0",
+          "tag_commit": "1f8f8b84377f518164174f68245e556f0f8f0259",
+          "assets": [
+            {
+              "name": "SHA256SUMS",
+              "size": 197,
+              "sha256": "9bb935727a22b0871e1d30ec6a5a1f46de3e65f9ca9f200a62cc834397761725"
+            },
+            {
+              "name": "xray-installer-0.14.6-manifest.json",
+              "size": 601,
+              "sha256": "eeacaac3678fbae113a68dca1fdf7da25a69431ea41706243bd5fe3d6bc3febc"
+            },
+            {
+              "name": "xray-installer-0.14.6.tar.gz",
+              "size": 22552,
+              "sha256": "1312a0660a8b2b3335bece5e0e82bfd0df77234e80c7b85a7f2431d316932b66"
+            }
+          ],
+          "sha256sums_contents_verified": true,
+          "manifest_identity_verified": true
+        }
+      ],
+      "commit": "1f8f8b84377f518164174f68245e556f0f8f0259",
+      "provider": "github",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
     }
   ]
 }

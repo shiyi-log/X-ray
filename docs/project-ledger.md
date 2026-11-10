@@ -7285,3 +7285,54 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `reuse_and_rollback`: `复用登记端口 55437/56384、专用 volumes xray-gate-test-stack-20261110-postgres/redis 和 r4 本地全门禁证据。修复仅限测试 helper；提交后可单独 git revert，应用版本回退点为 v0.14.5。保留所有现有验收 artifacts、数据卷、端口登记和 AWS/撤回墓碑状态。`
 - `postwrite_hashes`: `待本事件文件写入完成后计算并在后续最终验证事件记录。`
 - `status`: `passed (CI 根因确认、本地 focused 回归两种环境共 6 次通过、Ruff/boundary/diff、专用服务清理); failed (原 main 候选 Delivery Gates); in-progress (fix commit/push/new SHA CI/tag/Release); blocked (AWS profile 正向控制、逐资源账单); not-run (SWAS、设备、公网探测、生产)。`
+
+### 2026-11-10T13:29:00+08:00 — xray-revoke-delete-20261110-01/010 新提交 Delivery Gates 通过与发布前读回
+
+- `event_id`: `xray-revoke-delete-20261110-01/010`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, verify, release_candidate`
+- `path_scope`: `main/origin/main、GitHub Actions run 42760469328/job 129644696187、验收 artifact 13736944710、v0.14.6 标签与 GitHub Release API、.github/workflows/release.yml、VERSION`
+- `requested_outcome_and_scope`: `完成已授权的 v0.14.6 源码 Release。只将已验证提交打 annotated tag 并从 main 派发仓库现有 Release workflow；不做生产部署或 AWS/SSH 写入。`
+- `authorization_boundary_and_risk`: `用户请求明确要求测试、同步、发布新版本。run 42760469328 对应精确提交 1f8f8b84377f518164174f68245e556f0f8f0259 且完整门禁成功后，允许继续 tag/Release。AWS 测试授权已于 2026-11-10T12:30:00+08:00 到期，本轮不续期、不重跑云操作；profile 级节点撤回控制与逐资源最终账单保持 blocked。`
+- `baseline_reads`: `2026-11-10T13:29:00+08:00；main 与 origin/main 均为 1f8f8b84377f518164174f68245e556f0f8f0259；工作树无 tracked diff，保留 10 个已有未跟踪 acceptance evidence 目录。HEAD VERSION=0.14.6，HEAD 对象类型为 commit。远端 refs 中 main 指向该 SHA，v0.14.6 tag 无本地/远端 ref。Release API 按 tag 查询返回 404。Release workflow 仅允许在 refs/heads/main 上 workflow_dispatch，校验 annotated tag、tag 内 VERSION、tag commit 为 origin/main 祖先；随后从 tag commit 打包并上传安装器 tarball、manifest、SHA256SUMS。`
+- `remote_gate_evidence`: `run 42760469328 状态/conclusion=completed/success，head SHA=1f8f8b84377f518164174f68245e556f0f8f0259；唯一 job 129644696187=completed/success。完整本地交付门禁、sanitized acceptance evidence 上传、run-specific image/browser auth cleanup、容器停止与 job 完成步骤均 success。artifact 13736944710 已读回，3,091,938 bytes，GitHub digest=sha256:ce50a1e186fc7f3cea2cc0754b933bf2c981e86b358421b9761dd6d83691475f；本轮未下载解包该 artifact。`
+- `commands_and_exit_codes`: `GitHub API run/jobs/artifact readback=0；Release-by-tag API 404（确认尚无该 Release）；git show-ref 本地 origin/main、git ls-remote main/tag、git status=0；HEAD 版本/对象核对=0。Delivery Gates run 42760469328 的 workflow/job conclusion 均 success。`
+- `decision`: `以 exact SHA 1f8f8b84377f518164174f68245e556f0f8f0259 为 v0.14.6 发布提交；创建 annotated tag 后推送，再通过 GitHub Actions 页面在 main 手动派发 Release workflow。发布资产必须读回并核对 GitHub digest、SHA256SUMS 内容和三项资产 SHA-256。`
+- `time_logic`: `仅记录 2026-11-10T13:29:00+08:00 的操作读回时间；未改变业务时间、节点池或每日重启调度逻辑。`
+- `rollback_and_reuse`: `源码回退点为已发布 v0.14.5 或对此阶段提交执行 git revert；保留 v0.14.6 annotated tag、GitHub Release、验收证据、Token 墓碑、审计和云事实。未跟踪验收目录维持原样。`
+- `status`: `passed (精确 SHA 的远端完整 Delivery Gates 及清理；tag/Release 尚无远端 ref/资源); in-progress (annotated tag push、workflow_dispatch、Release/资产读回与最终台账); blocked (AWS profile 级撤回正向控制和逐资源账单); not-run (SWAS、设备、公网探测、生产)。`
+
+### 2026-11-10T13:43:49+08:00 — xray-revoke-delete-20261110-01/011 v0.14.6 Release 完成与最终校验
+
+- `event_id`: `xray-revoke-delete-20261110-01/011`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `release, readback, validate, write`
+- `path_scope`: `docs/project-ledger.md、docs/progress.md、docs/version-record.md、tests/acceptance/matrix.json；GitHub tag v0.14.6、Delivery Gates/Release workflow runs、GitHub Release 与三个 release assets`
+- `requested_outcome_and_scope`: `完成用户授权的 X-ray 0.14.6 GitHub 源码/安装器发布并归档精确 CI、Release 与资产读回；不执行生产部署，不在 AWS 授权窗口结束后重跑真实云操作。`
+- `authorization_boundary_and_risk`: `原始请求授权测试、同步和发布新版本；源提交通过 Delivery Gates 后创建 annotated tag 并派发仓库 Release workflow。AWS 测试授权于 2026-11-10T12:30:00+08:00 到期，之后没有 AWS/SSH 写入；完整 AWS 验收仍受 profile 级节点撤回正向控制未确认和逐资源最终账单未知阻塞。`
+- `release_readback`: `Delivery Gates run 42760469328/job 129644696187 在 SHA 1f8f8b84377f518164174f68245e556f0f8f0259 completed/success。Annotated tag v0.14.6 object 254a6a9c4af0c6691f7fc69308dd97b4ef50ebb0，peeled commit 与 release source 一致。main workflow_dispatch Release run 42762908619/job 129652586153 completed/success；Release id 439984636，published_at=2026-11-10T05:34:12Z，draft=false，prerelease=false。工作流步骤包含 tag 校验、检出验证提交、安装器打包和 Release 上传，均 success。`
+- `asset_integrity`: `API 返回且状态为 uploaded 的资产恰为三项：SHA256SUMS size=197 SHA-256=9bb935727a22b0871e1d30ec6a5a1f46de3e65f9ca9f200a62cc834397761725；xray-installer-0.14.6-manifest.json size=601 SHA-256=eeacaac3678fbae113a68dca1fdf7da25a69431ea41706243bd5fe3d6bc3febc；xray-installer-0.14.6.tar.gz size=22552 SHA-256=1312a0660a8b2b3335bece5e0e82bfd0df77234e80c7b85a7f2431d316932b66。独立公开下载流的 shasum 均与 API digest 相同；SHA256SUMS 内两项内容与 tarball/manifest 计算值相同；Node JSON parse 读回 manifest version=0.14.6、tag=v0.14.6、commit=1f8f8b84377f518164174f68245e556f0f8f0259。tarball 已流式哈希但未本地解包；验收 evidence artifact 13736944710 的 size/digest 已读回，但未下载解包。`
+- `commands_and_exit_codes`: `git tag -a=0；git push origin refs/tags/v0.14.6=0；git ls-remote/annotated tag 与 peeled SHA 读回=0；GitHub Delivery/Release run、job、steps、Release metadata/assets API readback=success；三个 curl|shasum 与 manifest Node parse=0。jq empty=0；scripts/validate-acceptance.py=0；check-boundary.sh=0；check-secrets.sh=0；git diff --check=0。系统 Python skill validator 初次 exit 1（缺 PyYAML）；确认 backend/.venv 内 PyYAML 6.0.3 后以 backend/.venv/bin/python 运行 vendor skill validator=0、Skill is valid。一次只读摘要 jq 表达式写错并 exit 5，修正查询后 matrix 状态核验成功；未造成文件更改。`
+- `write_summary`: `progress.md 新增 Delivery Gates/tag/Release/资产成功记录；version-record.md 将 0.14.6 候选索引定稿为实际 release source/tag/Release/asset hashes；matrix.json 新增独立的 SHA 1f8f8b8 CI passed 与 GitHub Release passed 项并更新时间。保留 SHA 0c24323 的 failed CI 历史；matrix 的 aws-real-cloud 仍 blocked，AWS 后续标准 Token 撤回/池删除读回与旧 PARTIALLY_SUCCEEDED 事件分别保留，不把标准 Token 撤回结果当作 profile 级正向控制。project-ledger.md 追加本完成事件。`
+- `prewrite_hashes`: `project-ledger.md (event /010 后)=8e47540078898b686173ba004fae62ecd7af85c9018f443e4c80c0eaf30b55fe；progress.md=890f2c84ad68ef24cb5d225c1731e9d02cff2dc4f1832ed5866ea3068dcd440f；version-record.md=70f0d84cb3155eb246c02c2d651bb212fc9edb5b39603283e337d3ae971bd09c；matrix.json=8efbb33fc2ab4fb91998bf40f6136342e3e9de890af7c53bd2a2c9285c8dfe01。`
+- `postwrite_hashes`: `progress.md=890f2c84ad68ef24cb5d225c1731e9d02cff2dc4f1832ed5866ea3068dcd440f；version-record.md=70f0d84cb3155eb246c02c2d651bb212fc9edb5b39603283e337d3ae971bd09c；matrix.json=8efbb33fc2ab4fb91998bf40f6136342e3e9de890af7c53bd2a2c9285c8dfe01。ledger 的自包含最终事件追加后哈希未写入自身；最终状态另由 closeout 命令核对。`
+- `time_logic`: `所有记录使用执行机器 Asia/Shanghai 时间；Release published_at 保留 GitHub 返回的 UTC Z 时间。未改变业务调度、时区、节点排序、重启日期或 expiry 规则。`
+- `reuse_and_rollback`: `可复用的本地 r4 全门禁 evidence、GitHub Delivery artifact metadata、tag/Release API readback、SHA256SUMS 和 manifest 核验。源码回退点为 v0.14.5 或对 release source 1f8f8b84377f518164174f68245e556f0f8f0259 执行 git revert；保留 v0.14.6 tag/Release、撤销墓碑、审计和云状态。10 个已有未跟踪 acceptance evidence 目录未暂存或删除。`
+- `status`: `passed (v0.14.6 exact-source Delivery Gates、annotated tag、GitHub Release、三项资产哈希/manifest 校验及本地静态检查); blocked (profile 级节点撤回正向控制与 AWS 逐资源最终账单); not-run (SWAS、设备、公网探测、生产部署)。此 GitHub Release 不表示生产部署。`
+
+### 2026-11-10T13:45:52+08:00 — xray-revoke-delete-20261110-01/012 hash 更正与收尾验证
+
+- `event_id`: `xray-revoke-delete-20261110-01/012`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `correction, validate, closeout`
+- `path_scope`: `docs/project-ledger.md、docs/progress.md、docs/version-record.md、tests/acceptance/matrix.json 与当前 git worktree`
+- `correction`: `追加更正 event /011 的 prewrite_hashes 字段：/011 写入前 progress.md 的正确 SHA-256 是 0c12dca486111a01f7565ebc0d40d2aa662ac7e165957c34cf2328d13319c97c；version-record.md 是 a4c97e2ccc759828eca7bc7ffc13eecfb97c5ae45e7381a465cefeb9419af9d6；matrix.json 是 922b71635ad6376b51d8ecbf7e9abfcb50ef2aef953c4b5d1aedda658836e9cc。/011 中 project-ledger.md event /010 后的 prewrite hash 8e47540078898b686173ba004fae62ecd7af85c9018f443e4c80c0eaf30b55fe 正确；/011 所列 progress/version/matrix postwrite hashes 也正确。原事件保留不改写。`
+- `commands_and_exit_codes`: `jq empty=0；python3 scripts/validate-acceptance.py=0；scripts/check-boundary.sh=0；scripts/check-secrets.sh=0（142 commits scanned, no leaks）；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0（Skill is valid）；git diff --check=0。系统 Python 缺 PyYAML 的首次 skill validator exit 1 已通过项目虚拟环境复验成功。`
+- `prewrite_hashes`: `project-ledger.md (event /011 后)=cd8f4873dd34a65fa76e3b66bc810fb05d07973e492c2fce8ffebacef549b2aa；progress.md=890f2c84ad68ef24cb5d225c1731e9d02cff2dc4f1832ed5866ea3068dcd440f；version-record.md=70f0d84cb3155eb246c02c2d651bb212fc9edb5b39603283e337d3ae971bd09c；matrix.json=8efbb33fc2ab4fb91998bf40f6136342e3e9de890af7c53bd2a2c9285c8dfe01。`
+- `worktree_readback`: `main 在 release-source SHA 1f8f8b84377f518164174f68245e556f0f8f0259，与 origin/main 一致；四个受控文档为本任务修改项。保留 10 个现有未跟踪 acceptance evidence 目录，均未加入暂存区或删除。`
+- `time_logic`: `本事件按执行机器 Asia/Shanghai 时间记录；没有业务时间逻辑变化。`
+- `rollback_and_reuse`: `文档/矩阵修改为审计回执，按需可 revert 该窄范围 receipt commit；已发布程序回退仍使用 v0.14.5 或对 release source 执行 git revert，不撤销 Release/tag、不恢复 Token 墓碑、凭据、审计或云状态。`
+- `status`: `passed (Release、资产、矩阵、边界、秘密、技能、diff 验证); blocked (AWS profile 级正向控制与最终账单); not-run (SWAS、设备、公网探测、生产部署)。当前四份审计文档仍待作为一个相干回执提交同步到 main。`
