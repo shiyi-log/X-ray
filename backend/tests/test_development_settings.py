@@ -7,6 +7,7 @@ from pathlib import Path
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 SETTINGS_SCRIPT = """
 import json
+import os
 from config.settings import development
 
 print(json.dumps({
@@ -14,6 +15,7 @@ print(json.dumps({
     "csrf_cookie_name": development.CSRF_COOKIE_NAME,
     "session_cookie_secure": development.SESSION_COOKIE_SECURE,
     "csrf_cookie_secure": development.CSRF_COOKIE_SECURE,
+    "ld_library_path_present": bool(os.environ.get("LD_LIBRARY_PATH")),
 }))
 """
 
@@ -26,6 +28,9 @@ def development_cookie_settings(overrides=None):
         "XRAY_ENV": "test",
         "XRAY_DEBUG": "0",
     }
+    library_path = os.environ.get("LD_LIBRARY_PATH")
+    if library_path:
+        environment["LD_LIBRARY_PATH"] = library_path
     environment.update(overrides or {})
     result = subprocess.run(
         [sys.executable, "-c", SETTINGS_SCRIPT],
@@ -47,7 +52,15 @@ def test_development_settings_use_http_compatible_cookie_defaults():
         "csrf_cookie_name": "xray_dev_csrf",
         "session_cookie_secure": False,
         "csrf_cookie_secure": False,
+        "ld_library_path_present": bool(os.environ.get("LD_LIBRARY_PATH")),
     }
+
+
+def test_development_settings_subprocess_preserves_dynamic_library_path():
+    settings = development_cookie_settings()
+    expected_present = bool(os.environ.get("LD_LIBRARY_PATH"))
+
+    assert settings["ld_library_path_present"] is expected_present
 
 
 def test_development_settings_preserve_explicit_secure_cookie_opt_in():

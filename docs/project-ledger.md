@@ -7266,3 +7266,22 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `authorization`: `用户当前请求明确要求测试、同步并发布新版本；项目阶段发布契约要求更新版本记录。`
 - `rollback_and_reuse`: `最终代码以 v0.14.5 为回退点；不重写现有 tag，也不反向迁移或恢复 Token 墓碑/云状态。`
 - `status`: `passed (候选版本索引与 r4 evidence reference 已记录); in-progress (source commit、remote CI、tag、Release 和资产读回待完成)。`
+
+### 2026-11-10T13:06:24+08:00 — xray-revoke-delete-20261110-01/009 Delivery Gates 动态库路径修复与候选失败回执
+
+- `event_id`: `xray-revoke-delete-20261110-01/009`
+- `run_id`: `xray-revoke-delete-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, test, modify, validation, cleanup, release_candidate`
+- `path_scope`: `backend/tests/test_development_settings.py、docs/progress.md、docs/version-record.md、tests/acceptance/matrix.json、docs/project-ledger.md；GitHub Actions run 42756164782/job 129630953647；本地端口登记 f19638b4485c40409efb67df0a0e7f7e 和 Compose 项目 xray-gate-test-stack-20261110`
+- `requested_outcome_and_scope`: `继续 v0.14.6 验收与发布：独立确认 main Delivery Gates 的失败原因，修复测试子进程动态库路径回归，保存失败与本地修复证据，并准备针对新提交重跑远端门禁。只修改设置测试 helper 和本次审计/验收记录；不修改业务运行时代码。`
+- `authorization_boundary_and_risk`: `原请求授权测试后同步发布 GitHub 版本，待精确候选 SHA Delivery Gates 成功后可创建 annotated tag 并运行已审查的 Release workflow。云测试授权于 2026-11-10T12:30:00+08:00 到期，本事件无 AWS、SSH、生产或订阅外部写入；完整 AWS 验收仍 blocked，发布不得覆盖该状态。`
+- `baseline_reads`: `以 main/origin/main 0c24323f085819dcc157d8be0527e1414140d0b9 为基线；保留唯一的既有未提交 test_development_settings.py 修改及全部未跟踪 acceptance artifacts。读取 project conventions、X-ray/local-port 技能、工作流、测试文件、版本/进度/矩阵和台账；GitHub 日志确认两个测试子进程均 return code 127，动态加载器找不到 libpython3.13.so.1.0。`
+- `prewrite_hashes`: `backend/tests/test_development_settings.py=3622ee415fe94eb36c29a0bd66237fc96aee2cdb；docs/project-ledger.md=814b203645bf4ef6faa5a0a4770b0f9a59d659da；docs/progress.md=1d63a02d980608897e2d060adee4aba03ae73faf；docs/version-record.md=969b0509170f106de5377c32f2835a6b6f601f69；tests/acceptance/matrix.json=4a0189f05634c15d4605197c615cd8247554a271。`
+- `diagnosis`: `run 42756164782 / job 129630953647 at commit 0c24323f085819dcc157d8be0527e1414140d0b9 completed failure: 2 failed, 537 passed, 1 skipped。失败为 development settings HTTP cookie defaults 与 secure opt-in 两个测试；subprocess.run 使用环境白名单且没有透传 runner 提供的 LD_LIBRARY_PATH，因此动态链接 Python 子进程无法加载共享库。`
+- `write_summary`: `保留并审阅既有测试补丁：子进程 JSON 只回报 LD_LIBRARY_PATH 是否存在，不输出变量值；helper 仅在父进程变量非空时将该值加入环境白名单。追加本次进度、版本候选与矩阵失败回执，保持 AWS profile 正向撤回控制及逐资源账单为 blocked。`
+- `commands_and_exit_codes`: `GitHub Actions job log readback=0；错误的 uv 相对项目目录命令 exit 2；未提供 XRAY_TEST_DATABASE_URL 的 pytest 初始化 exit 1，未收集测试；通过 Local Port Manager API 与 /Users/shiyi/Documents/ChatGPT/duankou/portctl.py 确认登记项目目录和 55437/56384 归属、portctl check=0。精确 Compose 项目启动=0，PostgreSQL/Redis healthy；在专用 DSN 55437/Redis 56384 上，env -u LD_LIBRARY_PATH 的 focused pytest=3 passed，LD_LIBRARY_PATH=/usr/lib 的 focused pytest=3 passed；`uvx --from ruff==0.13.1 ruff check backend/tests/test_development_settings.py`=0；`scripts/check-boundary.sh`=0；`git diff --check`=0。仅停止本轮 Compose 项目且未删除命名卷；停止后 portctl check=0，卷仍标记为该 Compose 项目。`
+- `time_logic`: `未改变节点池周期同步、按日一台重启、计划排序或业务时区逻辑；本事件台账按本地 Asia/Shanghai 墙上时间记录。`
+- `reuse_and_rollback`: `复用登记端口 55437/56384、专用 volumes xray-gate-test-stack-20261110-postgres/redis 和 r4 本地全门禁证据。修复仅限测试 helper；提交后可单独 git revert，应用版本回退点为 v0.14.5。保留所有现有验收 artifacts、数据卷、端口登记和 AWS/撤回墓碑状态。`
+- `postwrite_hashes`: `待本事件文件写入完成后计算并在后续最终验证事件记录。`
+- `status`: `passed (CI 根因确认、本地 focused 回归两种环境共 6 次通过、Ruff/boundary/diff、专用服务清理); failed (原 main 候选 Delivery Gates); in-progress (fix commit/push/new SHA CI/tag/Release); blocked (AWS profile 正向控制、逐资源账单); not-run (SWAS、设备、公网探测、生产)。`

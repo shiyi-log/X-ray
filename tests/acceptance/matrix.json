@@ -1606,6 +1606,44 @@
         "EC2 i-092e2bb13b7821d13 remains running at t3.medium pricing USD0.0528/hour plus 50 GiB encrypted gp3, public IPv4 and network; actual accrued charge unread, no ingress is open, and ExpiresAt does not stop or delete it.",
         "Latest delivery CI run 42426203909 failed before the local test-harness correction; no new run after the correction and no Release dispatch yet. X-ray application-node AWS lifecycle, IP, subscription and traffic acceptance remain blocked/not-run."
       ]
+    },
+    {
+      "id": "github-ci-v0.14.6-candidate-0c24323",
+      "environment": "ci",
+      "status": "failed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_gates",
+          "run_id": 42756164782,
+          "job_id": 129630953647,
+          "event": "push",
+          "commit": "0c24323f085819dcc157d8be0527e1414140d0b9",
+          "conclusion": "failure",
+          "backend_tests": {
+            "total": 540,
+            "passed": 537,
+            "skipped": 1,
+            "failures": 2,
+            "errors": 0
+          },
+          "failed_tests": [
+            "backend/tests/test_development_settings.py::test_development_settings_use_http_compatible_cookie_defaults",
+            "backend/tests/test_development_settings.py::test_development_settings_preserve_explicit_secure_cookie_opt_in"
+          ],
+          "root_cause": "The subprocess environment allowlist omitted LD_LIBRARY_PATH; the loader exited 127 because libpython3.13.so.1.0 was not found.",
+          "local_fix_verification": "Focused tests passed 3/3 with LD_LIBRARY_PATH unset and 3/3 with it set; Ruff, boundary and diff checks passed. New remote verification is pending.",
+          "remote_release": "not-run"
+        }
+      ],
+      "commit": "0c24323f085819dcc157d8be0527e1414140d0b9",
+      "source_base_commit": "0c24323f085819dcc157d8be0527e1414140d0b9",
+      "candidate_worktree": false,
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": [
+        "No AWS application-node write was made. Local test containers were stopped; dedicated named volumes and port registration are retained."
+      ]
     }
   ]
 }
