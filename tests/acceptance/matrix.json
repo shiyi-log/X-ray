@@ -1,6 +1,6 @@
 {
   "version": "0.14.6",
-  "generated_at": "2026-11-10T13:38:31+08:00",
+  "generated_at": "2026-11-10T15:05:39+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -40,10 +40,51 @@
           "residual_resources": [
             "The isolated gate containers were stopped; named volumes xray-gate-test-stack-20261110-postgres and xray-gate-test-stack-20261110-redis remain for audit. Ports 55437/56384 remain registered to this isolated X-ray gate project."
           ]
+        },
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.6/final-gates-20261110-r6/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.6/final-gates-20261110-r6/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 542,
+            "passed": 540,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 88,
+          "browser_e2e": 8,
+          "source_base_commit": "8baca05a56fefb1395e5219bf47a0bdb3c2d6ce2",
+          "candidate_worktree": true,
+          "started_at": "2026-11-10T06:48:33Z",
+          "finished_at": "2026-11-10T06:51:54Z",
+          "residual_resources": [
+            "The isolated gate containers were stopped; named PostgreSQL/Redis volumes remain for audit. Gate ports 55437/56384 remain registered to this X-ray project; E2E ports 55671-55674 were released."
+          ]
+        },
+        {
+          "kind": "profile_revocation_api_integration_test",
+          "junit_file": "artifacts/acceptance/0.14.6/final-gates-20261110-r6/backend-and-delivery.junit.xml",
+          "test_case": "test_profile_force_revoke_api_returns_410_and_preserves_survivor_link_and_counts",
+          "provider_boundary": "Fake SSH transport with isolated PostgreSQL/Redis",
+          "checks": [
+            "Authenticated management API preview and force-revoke submit returned expected success statuses.",
+            "Revoked public subscription GET/HEAD returned 410; HEAD body was empty.",
+            "Surviving public subscription GET/HEAD returned 200 and published content remained available.",
+            "Target and surviving profile node counts matched expected assigned/ready/published values."
+          ],
+          "source_base_commit": "8baca05a56fefb1395e5219bf47a0bdb3c2d6ce2",
+          "candidate_worktree": true
         }
       ],
-      "commit": "a7890cde18ed5b828876cb879590d6294bcbdb62",
-      "source_base_commit": "a7890cde18ed5b828876cb879590d6294bcbdb62",
+      "commit": "8baca05a56fefb1395e5219bf47a0bdb3c2d6ce2",
+      "source_base_commit": "8baca05a56fefb1395e5219bf47a0bdb3c2d6ce2",
       "candidate_worktree": true,
       "provider": null,
       "region": null,
@@ -1071,8 +1112,8 @@
       "environment": "real_cloud",
       "status": "blocked",
       "blockers": [
-        "Profile-level revocation positive control remains unavailable: the first run's REVOCATION_UNCONFIRMED correctly blocked its automatic deletion. The later active-subscription 2-to-1 automatic shrink passed, but does not cover profile-level revocation.",
-        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources."
+        "Real-AWS profile-level revocation positive control remains unverified. The local Fake/Stub API integration passes but does not establish cloud behavior; the earlier REVOCATION_UNCONFIRMED block and later active-subscription 2-to-1 shrink do not prove profile-level revocation.",
+        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources, and the latest read-only inventory and billing calls returned AccessDenied."
       ],
       "evidence": [
         {
@@ -1285,6 +1326,17 @@
             "The pool scheduler deleted the exact test node; provider absence, quota release, NodeResource RELEASED and zero pool/subscription counts were read back.",
             "This run does not establish a successful profile-level node revocation positive control."
           ]
+        },
+        {
+          "kind": "post_authorization_window_aws_readonly_recheck",
+          "authorization_window_expired_at": "2026-11-10T12:30:00+08:00",
+          "instance_inventory_readback": "AccessDenied",
+          "cost_explorer_readback": "AccessDenied",
+          "current_instance_count": null,
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "reason": "The read-only AWS CLI recheck was denied; current resource inventory and attributable final cost remain unknown."
         }
       ],
       "commit": null,

@@ -7336,3 +7336,50 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `time_logic`: `本事件按执行机器 Asia/Shanghai 时间记录；没有业务时间逻辑变化。`
 - `rollback_and_reuse`: `文档/矩阵修改为审计回执，按需可 revert 该窄范围 receipt commit；已发布程序回退仍使用 v0.14.5 或对 release source 执行 git revert，不撤销 Release/tag、不恢复 Token 墓碑、凭据、审计或云状态。`
 - `status`: `passed (Release、资产、矩阵、边界、秘密、技能、diff 验证); blocked (AWS profile 级正向控制与最终账单); not-run (SWAS、设备、公网探测、生产部署)。当前四份审计文档仍待作为一个相干回执提交同步到 main。`
+
+### 2026-11-10T14:37:32+08:00 — xray-profile-revoke-api-20261110-01 定义与测试覆盖
+
+- `event_id`: `xray-profile-revoke-api-20261110-01/001`
+- `run_id`: `xray-profile-revoke-api-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, inventory, modify, test`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、backend/apps/subscriptions/revocation.py、backend/apps/subscriptions/serializers.py、backend/tests/subscriptions/test_revocation_runtime.py、backend/tests/subscriptions/test_node_reconciliation.py、tests/acceptance/matrix.json、docs/progress.md；专用 gate Compose 项目 f19638b4485c40409efb67df0a0e7f7e 与 55437/56384`
+- `requested_outcome_and_scope`: `补强 profile 级撤回的本地端到端回归：通过已认证管理 API 提交撤回，在 Fake SSH/节点 executor 下执行撤回，再验证目标订阅 GET/HEAD=410、幸存订阅 GET/HEAD=200 和两者节点计数。仅当回归暴露实际行为缺陷时才修改业务实现。`
+- `authorization_boundary_and_risk`: `仅本机专用 PostgreSQL/Redis 和 Fake/Stub；不连接 55435/56382（由另一个 X-ray 验收 Compose 项目持有），不执行 AWS/SSH/provider/公网写入或读取。此前 AWS 窗口已于 2026-11-10T12:30:00+08:00 到期；本机 AWS CLI 对 Lightsail/Cost Explorer 只读返回 AccessDenied，不将其作为资源或费用读回。`
+- `baseline_reads`: `2026-11-10T14:25-14:37+08:00 读取项目约定、X-ray/TDD/verification 技能、撤回 API/worker/公开读取实现、发布 serializer、现有 profile/token/node-count tests、验收矩阵和台账。当前 main 与 origin/main 均为 8baca05a56fefb1395e5219bf47a0bdb3c2d6ce2；起始 tracked tree clean，保留 10 个未跟踪验收目录。现有 Fake 覆盖直接 RevocationService 和 TokenService，但未将 profile force-revoke API、公开 HTTP 链接和 surviving subscription node counts 放在同一场景。`
+- `write_summary`: `新增 backend/tests/subscriptions/test_revocation_runtime.py 的 profile force-revoke API 集成测试；测试路径包括管理 API preview/submit、Fake SSH config apply/probe、目标 GET/HEAD=410、幸存链接 GET/HEAD=200，以及目标/幸存订阅的 assigned/ready/published 计数。此阶段尚未改业务实现。为保持事件顺序可审计，本定义记录紧随该测试草稿写入；其余文件和云状态未修改。`
+- `prewrite_hashes`: `backend/tests/subscriptions/test_revocation_runtime.py 基于 HEAD=cc1c6d7d5eff90b680b6c76931b14d94e8ac4947d68aafe8d02cfb26a357b160；docs/project-ledger.md 在 /012 后。`
+- `port_and_runtime_state`: `duankou portctl 对本项目登记 55437/56384 校验通过且未占用；Docker inventory 显示 55435/56382 属于 xray-node-auto-20261109，未触碰。专用 gate test containers 当前未运行；XRAY_TEST_DATABASE_URL 与 XRAY_TEST_REDIS_URL 未设置。`
+- `time_logic`: `只在测试 fixture 内创建带 aware UTC offset 的管理员会话期限；未改变业务时间、时区、每日重启/池同步或订阅 TTL。`
+- `rollback_and_reuse`: `删除或 git revert 本 run 的测试与审计回执即可撤销本地测试覆盖；不回滚 v0.14.6、Token 撤回墓碑或云状态。复用本项目登记的 55437/56384 和命名数据卷，不删除卷或释放端口。`
+- `status`: `in-progress (新增 API 链路测试待 RED/GREEN/focused/full-suite 验证和矩阵/进度回执); blocked (真实 AWS profile 级撤回正向控制和资源级最终账单，且只读云 API AccessDenied); not-run (本轮 AWS/SSH/provider 写入、SWAS、设备、公网探测、生产部署)。`
+
+### 2026-11-10T15:04:07+08:00 — xray-profile-revoke-api-20261110-01/002 本地回归与审计收尾
+
+- `event_id`: `xray-profile-revoke-api-20261110-01/002`
+- `run_id`: `xray-profile-revoke-api-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `test, validation, modify`
+- `path_scope`: `backend/tests/subscriptions/test_revocation_runtime.py、tests/acceptance/matrix.json、docs/progress.md、docs/project-ledger.md；r5/r6 本地验收 artifacts；已登记 gate ports 55437/56384 与 E2E ports 55671-55674`
+- `requested_outcome_and_scope`: `完成 profile force-revoke 管理 API、Fake SSH 执行、公开订阅撤回/幸存链接和节点计数的本地集成回归；归档完整本地门禁并为新增测试准备 main Delivery Gates。`
+- `authorization_boundary_and_risk`: `仅使用已完成的本地专用 PostgreSQL/Redis 与 Fake SSH 证据；本事件没有 AWS/SSH/provider/公网写入。云测试授权窗口于 2026-11-10T12:30:00+08:00 到期；近期 AWS 资源清单和 Cost Explorer 只读调用返回 AccessDenied，当前资源数和逐资源最终费用未知。`
+- `baseline_and_prewrite_hashes`: `main/origin/main 基线为 8baca05a56fefb1395e5219bf47a0bdb3c2d6ce2。写前 SHA-256：backend/tests/subscriptions/test_revocation_runtime.py=346094686fb52f1cd14ea2972a51f3d7637002b952f02509e9e5c96609e71068；tests/acceptance/matrix.json=cfbe3733ba136e39796c8302d8103614c6a43829b3fa5d8675ff927c079ca44e；docs/progress.md=3876a338e3ec1d37207e99b0cfca6a9a4bafacf63aac50fff038dbd9c54781f4；docs/project-ledger.md=7fc3c4f07139bee565999beb17f1b0934e596c08e41ba91aae7c049397b9392a。保留原有未跟踪 acceptance evidence 目录。`
+- `commands_and_exit_codes`: `scripts/check-local.sh r5=1，仅 frontend-e2e 因现有 127.0.0.1:9537 被占用而失败；未停止既有服务。隔离 E2E ports 55671-55674 后 scripts/check-local.sh r6=0，19/19 gates；Junit=542 tests（540 passed、2 skipped、0 failure/error），frontend=88 passed，Playwright=8 passed。r6 JUnit 包含 test_profile_force_revoke_api_returns_410_and_preserves_survivor_link_and_counts。后端测试确认撤回目标 GET/HEAD=410（HEAD body 0 字节），幸存链接 GET/HEAD=200；节点计数目标 expected/assigned/ready/published=1/0/0/0、幸存=1/1/1/1。当前文档后验 python3 scripts/validate-acceptance.py=0；bash scripts/check-boundary.sh=0；bash scripts/check-secrets.sh=0（143 commits、无泄漏）；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0；Node JSON parse=0；git diff --check=0。`
+- `write_summary`: `在 acceptance matrix 保留 r4 历史并追加 r6 与 profile API 集成证据；AWS 行继续 blocked，并新增授权过期后的只读 AccessDenied 证据。progress.md 增加 r5 端口冲突、r6 完整通过和真实 AWS 未完成状态。无业务运行时代码变化，无版本/tag/Release 变化；v0.14.6 已在前序事件发布。`
+- `postwrite_hashes`: `backend/tests/subscriptions/test_revocation_runtime.py=346094686fb52f1cd14ea2972a51f3d7637002b952f02509e9e5c96609e71068；tests/acceptance/matrix.json=cfbe3733ba136e39796c8302d8103614c6a43829b3fa5d8675ff927c079ca44e；docs/progress.md=3876a338e3ec1d37207e99b0cfca6a9a4bafacf63aac50fff038dbd9c54781f4；ledger self-hash will be read after append. Files were not edited after these hash reads except this ledger append. `
+- `runtime_and_cleanup`: `r6 artifacts contain 19/19 exit-zero gates and the exact integration testcase. The dedicated gate containers are stopped, PostgreSQL/Redis named volumes retained; port manager registration for 55437/56384 retained; E2E ports 55671-55674 released. Docker readback showed no r6 gate container/listener. Existing 9537 service and separate 55435/56382 stack were not stopped or reused. Existing untracked acceptance directories remain untouched.`
+- `time_logic`: `没有业务调度、业务时区、每日重启排序或 TTL 逻辑变化。测试会话使用带 UTC offset 的过期时间；本地 HTTP/订阅检查不代表 AWS 时序结果。`
+- `reuse_and_rollback`: `可复用 r6 完整门禁摘要、JUnit、Fake SSH profile API 场景以及 matrix/progress 结构化回执。新增测试与审计可按相干提交 revert；应用回退点为 v0.14.5，不撤销 v0.14.6 release/tag，也不恢复撤回墓碑、审计或云状态。`
+- `status`: `passed (profile API/GET-HEAD/node-count 本地回归；r6 19/19 gates；矩阵、边界、秘密、技能、JSON 与 diff 验证); in-progress (相干提交、推送 main、核验精确 SHA 的 Delivery Gates); blocked (真实 AWS profile 撤回正向控制及逐资源最终账单，云只读 AccessDenied); not-run (新 AWS 写入、SWAS、设备、公网探测、生产部署)。`
+
+### 2026-11-10T15:07:36+08:00 — xray-profile-revoke-api-20261110-01/003 hash 记录更正
+
+- `event_id`: `xray-profile-revoke-api-20261110-01/003`
+- `run_id`: `xray-profile-revoke-api-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `correction, validation`
+- `corrects`: `xray-profile-revoke-api-20261110-01/002 的 baseline_and_prewrite_hashes 与 postwrite_hashes 说明。`
+- `reason`: `/002 的 hash 读取发生在验收矩阵最终 generated_at 更新时间之前；“文件没有在 hash 读取后修改”的说明对 matrix.json 不准确。按追加式台账约定保留原事件并在此纠正。`
+- `current_hashes_before_this_append`: `backend/tests/subscriptions/test_revocation_runtime.py=346094686fb52f1cd14ea2972a51f3d7637002b952f02509e9e5c96609e71068；tests/acceptance/matrix.json=8e41c39c2656f70da2cf028d195839b9f272f771de53d637c64c1ca866050c41；docs/progress.md=3876a338e3ec1d37207e99b0cfca6a9a4bafacf63aac50fff038dbd9c54781f4；docs/project-ledger.md=bd8b68dd4d367a4b2e6da60fb3c4edb9c83c029871066bf2cc316c7cde0de0f3。`
+- `verification`: `matrix.json 最终更新时间后，python3 scripts/validate-acceptance.py、Node JSON parse 与 git diff --check 均 exit 0；边界、秘密和技能校验均 exit 0。`
+- `status`: `passed (hash 记录更正；未改变测试、业务行为、验收结果、AWS 状态或版本/tag/Release)。`

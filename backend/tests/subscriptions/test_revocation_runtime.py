@@ -303,6 +303,154 @@ def test_default_revocation_executes_real_config_and_keeps_other_profile(
 
 
 @pytest.mark.django_db
+def test_profile_force_revoke_api_returns_410_and_preserves_survivor_link_and_counts(
+    admin, shadowsocks_profiles, monkeypatch
+):
+    from datetime import timedelta
+
+    from django.utils import timezone
+    from rest_framework.test import APIClient
+
+    from apps.nodes import bootstrap_runtime
+    from apps.nodes.models import NodeConfigRevision
+    from apps.subscriptions import access
+    from apps.subscriptions.models import NodeCredential
+    from apps.subscriptions.publishing import Publisher
+
+    node, target, survivor, removed, retained, target_link, survivor_link = shadowsocks_profiles
+    node.pool.region_allocations.update(quota=1)
+    node.raw_cloud_state = "running"
+    node.health_state = "HEALTHY"
+    node.provisioning_state = "READY"
+    node.security_state = "OPEN"
+    node.observation_error = ""
+    node.save(
+        update_fields=[
+            "raw_cloud_state",
+            "health_state",
+            "provisioning_state",
+            "security_state",
+            "observation_error",
+            "updated_at",
+        ]
+    )
+    NodeConfigRevision.objects.update_or_create(
+        node=node,
+        generation=node.applied_generation,
+        defaults={
+            "config_hash": "a" * 64,
+            "xray_version": "26.3.27",
+            "installer_version": "1.0.0",
+            "bundle_hash": "test-bundle",
+            "usable": True,
+            "probe_result": {
+                "generation": node.applied_generation,
+                "app_health_passed": True,
+                "accepted": True,
+                "positive_control": True,
+                "fresh_connection": True,
+            },
+        },
+    )
+    Publisher.publish(target_link.subscription_id)
+    Publisher.publish(survivor_link.subscription_id)
+
+    client = APIClient()
+    session = client.session
+    session["admin_id"] = str(admin.pk)
+    session["session_version"] = admin.session_version
+    session["absolute_expires_at"] = (timezone.now() + timedelta(hours=1)).isoformat()
+    session["recent_auth_until"] = (timezone.now() + timedelta(minutes=5)).isoformat()
+    session.save()
+
+    target_path = f"/s/{target_link.raw_token}"
+    survivor_path = f"/s/{survivor_link.raw_token}"
+    assert client.get(target_path).status_code == 200
+    assert client.get(survivor_path).status_code == 200
+
+    preview_response = client.post(
+        "/api/v1/operations/previews/",
+        {
+            "kind": "subscription.revoke",
+            "target_id": str(target.pk),
+            "params": {"profile_id": str(target.pk)},
+        },
+        format="json",
+    )
+    assert preview_response.status_code == 201
+    preview = preview_response.json()
+    revoke_response = client.post(
+        f"/api/v1/access-profiles/{target.pk}/force-revoke/",
+        {"preview_id": preview["id"], "confirmation": preview["required_phrase"]},
+        format="json",
+        HTTP_IDEMPOTENCY_KEY=str(uuid4()),
+    )
+    assert revoke_response.status_code == 202
+    assert client.get(target_path).status_code == 410
+
+    channel = ProbeChannel(node.applied_generation)
+    connection = ProbeConnection(channel)
+    monkeypatch.setattr(bootstrap_runtime, "_ssh_transport", lambda _node: connection)
+
+    class Transport:
+        def apply(self, request):
+            return {
+                "ok": True,
+                "applied_generation": request["generation"],
+                "config_test_passed": True,
+                "service_restarted": True,
+                "rollback_performed": False,
+                "config_hash": hashlib.sha256(
+                    json.dumps(request["config"], separators=(",", ":")).encode()
+                ).hexdigest(),
+            }
+
+    monkeypatch.setattr(access, "configured_factory", lambda: lambda _node: Transport())
+    operation = RevocationService(
+        lifecycle_factory=UnconfirmedIsolation,
+        invalidate_node=lambda _node_id: None,
+    ).run(revoke_response.json()["operation_id"])
+
+    assert operation.status == "SUCCEEDED"
+    assert client.get(target_path).status_code == 410
+    target_head = client.head(target_path)
+    assert target_head.status_code == 410
+    assert target_head.content == b""
+    survivor_get = client.get(survivor_path)
+    assert survivor_get.status_code == 200
+    assert b"192.0.2.50" in survivor_get.content
+    survivor_head = client.head(survivor_path)
+    assert survivor_head.status_code == 200
+    assert survivor_head.content == b""
+
+    removed.refresh_from_db()
+    retained.refresh_from_db()
+    assert removed.revoked_at is not None
+    assert retained.revoked_at is None
+    assert NodeCredential.objects.filter(
+        profile=survivor, node=node, revoked_at__isnull=True
+    ).count() == 1
+
+    subscriptions = client.get("/api/v1/subscriptions/")
+    assert subscriptions.status_code == 200
+    by_profile = {item["profile_id"]: item for item in subscriptions.json()["items"]}
+    assert by_profile[str(target.pk)]["node_counts"] == {
+        "expected": 1,
+        "assigned": 0,
+        "ready": 0,
+        "published": 0,
+        "mismatch": True,
+    }
+    assert by_profile[str(survivor.pk)]["node_counts"] == {
+        "expected": 1,
+        "assigned": 1,
+        "ready": 1,
+        "published": 1,
+        "mismatch": False,
+    }
+
+
+@pytest.mark.django_db
 def test_lost_revocation_fence_stops_without_quarantine_or_finalization(
     admin, revocable_profile
 ):
