@@ -1,6 +1,6 @@
 {
   "version": "0.14.7",
-  "generated_at": "2026-11-11T21:13:30+08:00",
+  "generated_at": "2026-11-11T21:31:43+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -2349,15 +2349,46 @@
           "provider_boundary": "isolated PostgreSQL/Redis; no cloud provider"
         }
       ],
-      "commit": "e8382c35a25e97830e1b89e6a6dab3fdd4013e4f",
+      "commit": "fcbb6bcb7b2a484ff8fee32991e41becf555e445",
       "source_base_commit": "e8382c35a25e97830e1b89e6a6dab3fdd4013e4f",
-      "candidate_worktree": true,
+      "candidate_worktree": false,
       "provider": "dedicated local PostgreSQL and Redis",
       "region": null,
       "cost": 0,
       "residual_resources": [
         "Containers and network for xray-usage-retry-20261111 are stopped; named PostgreSQL/Redis volumes are preserved."
       ]
+    },
+    {
+      "id": "github-ci-lease-concurrency-fcbb6bc",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "run_id": 43027604185,
+          "job_id": 130546149910,
+          "event": "push",
+          "workflow": "X-ray delivery gates",
+          "commit": "fcbb6bcb7b2a484ff8fee32991e41becf555e445",
+          "status": "completed",
+          "conclusion": "success",
+          "completed_at": "2026-11-11T13:29:08Z",
+          "artifact_id": 13859457452,
+          "artifact_name": "xray-acceptance-43027604185-1",
+          "artifact_size_bytes": 3107723,
+          "artifact_sha256": "bb5b4fbab815f6862d0031c4b02543284335d97b295eea0987b30963a4c21a88",
+          "cleanup_steps_passed": true,
+          "aws_writes_attempted": false
+        }
+      ],
+      "commit": "fcbb6bcb7b2a484ff8fee32991e41becf555e445",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": [],
+      "source_base_commit": "e8382c35a25e97830e1b89e6a6dab3fdd4013e4f",
+      "candidate_worktree": false
     },
     {
       "id": "aws-renewed-profile-browser-readback-20261111-03",
