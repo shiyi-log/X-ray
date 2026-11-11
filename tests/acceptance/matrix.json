@@ -2468,7 +2468,7 @@
             "exit_code": 1,
             "reason": "PATH resolved pnpm 11.25.0 instead of required 10.33.x; no subsequent gates ran"
           },
-          "result": "passed_local_candidate_worktree; remote_ci_and_real_aws_not_run"
+          "result": "passed_local_candidate_worktree; exact_sha_remote_ci_passed; v0.14.7_release_published; real_aws_blocked"
         }
       ],
       "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
@@ -2480,6 +2480,101 @@
       "residual_resources": [
         "The xray-usage-retry-20261111 PostgreSQL/Redis named volumes and port registration 55437/56384 are preserved; its containers and network were stopped."
       ]
+    }
+    ,
+    {
+      "id": "github-ci-v0.14.7-cfd9abe3",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "run_id": 43000867669,
+          "job_id": 130456358096,
+          "attempt": 1,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089",
+          "completed_at": "2026-11-11T10:26:37Z",
+          "acceptance_evidence_uploaded": true,
+          "artifact_id": 13846214995,
+          "artifact_name": "xray-acceptance-43000867669-1",
+          "artifact_size_bytes": 2877442,
+          "artifact_sha256": "3c61fb6fce92cdbb1452bf867edcd84c0067476e62a9f023541bf6d49e5f32d1",
+          "cleanup_steps_passed": true
+        }
+      ],
+      "commit": "cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-release-v0.14.7",
+      "environment": "release",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_release_workflow",
+          "run_id": 43004179718,
+          "job_id": 130467444753,
+          "attempt": 1,
+          "workflow": "发布 X-ray 版本",
+          "event": "workflow_dispatch",
+          "conclusion": "success",
+          "tag": "v0.14.7",
+          "commit": "cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089",
+          "release_id": 441542757,
+          "published_at": "2026-11-11T10:30:51Z",
+          "draft": false,
+          "prerelease": false,
+          "assets": {
+            "xray-installer-0.14.7.tar.gz": "dcd7c96946fb2108802f1fe2d27f845c78d273e9a17fe895c8152c6e66f02d1b",
+            "xray-installer-0.14.7-manifest.json": "87ebc3409e8309af5de27c4a57563ca7147912ac5357fc568385d55a53d645c9",
+            "SHA256SUMS": "a550413e6fce5ecf3e37ed6a3d85793643cf3625ad46e9b78b90b51d4bece2bf"
+          },
+          "checksums_match_sha256sums": true
+        }
+      ],
+      "commit": "cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "aws-identity-session-release-check-20261111",
+      "environment": "real_cloud",
+      "status": "blocked",
+      "evidence": [
+        {
+          "kind": "authorization_prerequisite_readback",
+          "checked_at": "2026-11-11T10:34:52Z",
+          "authorized_account_digest": "94a91b85428b",
+          "configured_profiles_checked": 2,
+          "canonical_account_field_digests": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "any_profile_matches_authorized_account": false,
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_query_attempted": false,
+          "xray_admin_session_verified": false,
+          "step_up_verified": false,
+          "cloud_account_readback_verified": false,
+          "browser_xray_tab_found": false,
+          "result": "blocked_before_cloud_write; authorization window expired"
+        }
+      ],
+      "commit": "cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089",
+      "provider": "aws-lightsail",
+      "region": "us-east-1",
+      "cost": null,
+      "cost_status": "authorized account and resource-level cost unverified",
+      "residual_resources": []
     }
   ]
 }
