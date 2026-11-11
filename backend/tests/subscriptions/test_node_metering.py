@@ -1,9 +1,12 @@
 import io
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 from uuid import uuid4
 
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
+from django.db import close_old_connections, connections
 
 
 @pytest.mark.django_db
@@ -482,3 +485,35 @@ def test_periodic_usage_skips_node_with_active_collection_lease(ready_node, monk
     assert result["collected"] == 0
     ready_node.refresh_from_db()
     assert ready_node.usage_sync_lease_id == lease_id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_usage_workers_claim_node_lease_once(ready_node):
+    from datetime import UTC, datetime
+
+    from apps.subscriptions.tasks import _claim_usage_sync_node
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    now = datetime(2026, 11, 11, 9, 0, tzinfo=UTC)
+    barrier = Barrier(2)
+
+    def claim():
+        close_old_connections()
+        try:
+            barrier.wait(timeout=5)
+            result = _claim_usage_sync_node(ready_node.pk, now, retry_only=False)
+            return result[0] if result else None
+        finally:
+            connections.close_all()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        claims = list(executor.map(lambda _worker: claim(), range(2)))
+
+    winners = [lease_id for lease_id in claims if lease_id is not None]
+    assert len(winners) == 1
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_lease_id == winners[0]
+    assert ready_node.usage_sync_lease_expires_at == datetime(
+        2026, 11, 11, 9, 5, tzinfo=UTC
+    )

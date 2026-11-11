@@ -1,6 +1,6 @@
 {
   "version": "0.14.7",
-  "generated_at": "2026-11-11T17:23:00+08:00",
+  "generated_at": "2026-11-11T21:13:30+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -2325,6 +2325,41 @@
     }
     ,
     {
+      "id": "usage-sync-lease-concurrency-local-20261111",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "postgresql_two_worker_lease_race",
+          "timestamp": "2026-11-11T12:55:19Z",
+          "source_base_commit": "e8382c35a25e97830e1b89e6a6dab3fdd4013e4f",
+          "test_file": "backend/tests/subscriptions/test_node_metering.py",
+          "test_case": "test_concurrent_usage_workers_claim_node_lease_once",
+          "focused_file_tests": 22,
+          "passed": 22,
+          "failed": 0,
+          "ruff_exit_code": 0,
+          "artifact_log": "artifacts/acceptance/0.14.7/final-gates-20261111-usage-lease/lease-concurrency.log",
+          "dedicated_compose_project": "xray-usage-retry-20261111",
+          "database_port": 55437,
+          "redis_port": 56384,
+          "containers_and_network_stopped": true,
+          "named_volumes_preserved": true,
+          "aws_writes_attempted": false,
+          "provider_boundary": "isolated PostgreSQL/Redis; no cloud provider"
+        }
+      ],
+      "commit": "e8382c35a25e97830e1b89e6a6dab3fdd4013e4f",
+      "source_base_commit": "e8382c35a25e97830e1b89e6a6dab3fdd4013e4f",
+      "candidate_worktree": true,
+      "provider": "dedicated local PostgreSQL and Redis",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Containers and network for xray-usage-retry-20261111 are stopped; named PostgreSQL/Redis volumes are preserved."
+      ]
+    },
+    {
       "id": "aws-renewed-profile-browser-readback-20261111-03",
       "environment": "real_cloud",
       "status": "blocked",
@@ -2567,6 +2602,26 @@
           "cloud_account_readback_verified": false,
           "browser_xray_tab_found": false,
           "result": "blocked_before_cloud_write; authorization window expired"
+        },
+        {
+          "kind": "authorization_prerequisite_readback",
+          "checked_at": "2026-11-11T12:55:19Z",
+          "authorized_account_digest": "94a91b85428b",
+          "configured_profiles_checked": 2,
+          "canonical_account_field_digests": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "any_profile_matches_authorized_account": false,
+          "xray_application_ports": [9537, 9538, 9541],
+          "xray_application_ports_listening": false,
+          "xray_admin_session_verified": false,
+          "step_up_verified": false,
+          "cloud_account_readback_verified": false,
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_query_attempted": false,
+          "result": "blocked_before_cloud_write; the 90-minute authorization window is no longer current"
         }
       ],
       "commit": "cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089",
