@@ -7786,3 +7786,13 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `reuse_and_rollback`: docs/matrix receipt can be reverted separately; application rollback uses `v0.14.6` or `git revert cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089`. Migrations 0008/0009 remain forward-only; preserve token tombstones, security and cloud state. Preserve all existing untracked acceptance directories, raw logs and named DB volumes. Local/Fake, CI and GitHub Release evidence do not establish AWS or production acceptance.
 - `status`: `passed` local 19/19 gates, exact-SHA CI, tag, Release, asset digest and static validators; `blocked` authorized AWS identity/session/step-up/CloudAccount, positive revoke control, node/traffic reconciliation and resource cost; `not-run` real cloud lifecycle and production.
 - `final_worktree`: after this entry, re-read status; only the four scoped audit files may be staged. Source SHA, remote main and peeled tag remain `cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089`.
+- `final_worktree`: after this entry, re-read status; only the four scoped audit files may be staged. Source SHA, remote main and peeled tag remain `cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089`.
+
+### 2026-11-11T18:41:48+08:00 — xray-release-0147-20261111-01/006 发布回执验证与保留状态复核
+
+- `event_id`: `xray-release-0147-20261111-01/006`; `run_id`: `xray-release-0147-20261111-01`.
+- `path_scope`: `docs/version-record.md`, `docs/progress.md`, `tests/acceptance/matrix.json`, `docs/project-ledger.md`; staged audit diff; remaining acceptance artifacts.
+- `commands_and_exit_codes`: `jq -e . tests/acceptance/matrix.json` + `python3 scripts/validate-acceptance.py`=0; `./scripts/check-boundary.sh`=0; `./scripts/check-secrets.sh`=0 (146 commits, 9.04 MB, no leaks); `backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0; `git diff --check`=0; `git diff --cached --check`=0. Exact staged scope is four audit files only; 11 existing untracked artifact directories are preserved.
+- `decision`: `Earlier acceptance validator exit 1 was caused by two newly added matrix entries missing required residual_resources. Both entries were corrected and the full validators reran successfully. No source, tag, Release asset, AWS or production state changed during this documentation correction.`
+- `status`: `passed` documentation/matrix/schema/boundary/secret/skill/diff validation; `blocked` real AWS prerequisites and lifecycle/accounting acceptance; `not-run` production deployment.
+- `commit_or_tree`: `main` source release remains `cfd9abe3dd2a4e2e227ef589d7843c9dcbac3089`; published receipt commit currently staged for the repository closeout.
