@@ -100,6 +100,10 @@ class ManagedNode(models.Model):
     observed_at = models.DateTimeField(null=True, blank=True)
     observation_error = models.CharField(max_length=100, blank=True, default="")
     last_error_code = models.CharField(max_length=100, blank=True, default="")
+    usage_sync_retry_count = models.PositiveSmallIntegerField(default=0)
+    usage_sync_retry_at = models.DateTimeField(null=True, blank=True)
+    usage_sync_lease_id = models.UUIDField(null=True, blank=True)
+    usage_sync_lease_expires_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -107,6 +111,11 @@ class ManagedNode(models.Model):
         indexes = [
             models.Index(fields=["pool", "consumes_quota"]),
             models.Index(fields=["cloud_account", "region", "external_id"]),
+            models.Index(fields=["usage_sync_retry_at"], name="node_usage_retry_at_idx"),
+            models.Index(
+                fields=["usage_sync_lease_expires_at"],
+                name="node_usage_lease_exp_idx",
+            ),
         ]
 
 

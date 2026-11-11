@@ -1,6 +1,6 @@
 {
-  "version": "0.14.6",
-  "generated_at": "2026-11-10T15:33:50+08:00",
+  "version": "0.14.7",
+  "generated_at": "2026-11-11T17:23:00+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -341,7 +341,7 @@
             "reason": "Docker frontend image build ran out of host disk space; no shared cache, image, container, or volume was pruned."
           },
           "image_limitations": [
-        "The local retry reused the existing 0.14.3 frontend and backup-tools images. Candidate CI run 42442958213 completed success and uploaded acceptance artifact 13602539193; its step endpoint has an inconsistent in-progress display as recorded in the CI row."
+            "The local retry reused the existing 0.14.3 frontend and backup-tools images. Candidate CI run 42442958213 completed success and uploaded acceptance artifact 13602539193; its step endpoint has an inconsistent in-progress display as recorded in the CI row."
           ],
           "secret_scan_scope": [
             "The local secrets gate ran the repository Gitleaks script, which scans committed Git history; the complete staged candidate diff, including acceptance summaries and JUnit evidence, was separately scanned with Gitleaks 8.24.3 stdin mode, --redact, and exit code 0."
@@ -435,7 +435,9 @@
       "provider": "github-actions",
       "region": null,
       "cost": null,
-      "residual_resources": ["existing self-hosted runner instances remain running"]
+      "residual_resources": [
+        "existing self-hosted runner instances remain running"
+      ]
     },
     {
       "id": "github-release-v0.14.4",
@@ -645,7 +647,10 @@
           },
           "local_sha256_match": true,
           "manual_fallback": true,
-          "actions_workflow_runs": [42371981253, 42372069677]
+          "actions_workflow_runs": [
+            42371981253,
+            42372069677
+          ]
         }
       ],
       "commit": "72705321685b4294d9128f626fff83f5ce572132",
@@ -665,7 +670,13 @@
           "junit_file": "artifacts/acceptance/0.14.1/final-gates-20261107-r2/backend-and-delivery.junit.xml",
           "gates": 19,
           "nonzero_exit_codes": 0,
-          "backend_tests": {"total": 450, "passed": 448, "skipped": 2, "failures": 0, "errors": 0},
+          "backend_tests": {
+            "total": 450,
+            "passed": 448,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
           "frontend_unit_tests": 84,
           "browser_e2e": 8,
           "candidate_base_commit": "1a05af0de89697a6249f0ac2b094cad5294fa2a4",
@@ -692,7 +703,13 @@
           "junit_file": "artifacts/acceptance/0.14.2/final-gates-20261107-r5/backend-and-delivery.junit.xml",
           "gates": 19,
           "nonzero_exit_codes": 0,
-          "backend_tests": {"total": 452, "passed": 450, "skipped": 2, "failures": 0, "errors": 0},
+          "backend_tests": {
+            "total": 452,
+            "passed": 450,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
           "skip_reasons": [
             "one-click runtime integration requires a disposable Linux host",
             "service integration requires an explicitly selected disposable Linux systemd host"
@@ -722,7 +739,12 @@
           "junit_file": "artifacts/acceptance/0.13.0/final-gates-2/backend-and-delivery.junit.xml",
           "gates": 19,
           "nonzero_exit_codes": 0,
-          "backend_tests": {"passed": 417, "skipped": 2, "failures": 0, "errors": 0},
+          "backend_tests": {
+            "passed": 417,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
           "frontend_unit_tests": 82,
           "browser_e2e": 8,
           "commit": "b76d62fcb06f83042fee496f5ded6f1de06c79ac",
@@ -819,8 +841,18 @@
           "commit": "2544e21e29b79927d26ab940bfdd6e6f6ea0d197",
           "status": "blocked",
           "runs": [
-            {"run_id": 42187129135, "workflow": "X-ray delivery gates", "conclusion": "failure", "job_steps": 0},
-            {"run_id": 42187198168, "workflow": "发布 X-ray 版本", "conclusion": "failure", "job_steps": 0}
+            {
+              "run_id": 42187129135,
+              "workflow": "X-ray delivery gates",
+              "conclusion": "failure",
+              "job_steps": 0
+            },
+            {
+              "run_id": 42187198168,
+              "workflow": "发布 X-ray 版本",
+              "conclusion": "failure",
+              "job_steps": 0
+            }
           ],
           "reason": "Both push-triggered workflows completed with failure before any job step ran; no successful remote CI evidence exists."
         },
@@ -829,7 +861,13 @@
           "commit": "938c3c5c7bbe088d08cb47031567074f9f9d9e1f",
           "status": "blocked",
           "runs": [
-            {"run_id": 42258919918, "workflow": "X-ray delivery gates", "conclusion": "failure", "runner_id": 0, "job_steps": 0}
+            {
+              "run_id": 42258919918,
+              "workflow": "X-ray delivery gates",
+              "conclusion": "failure",
+              "runner_id": 0,
+              "job_steps": 0
+            }
           ],
           "candidate_status": "not-run",
           "reason": "This run tested only the baseline commit before the v0.14.0 candidate was pushed."
@@ -839,7 +877,13 @@
           "commit": "3294abad3c6d918c8ebe9cfb3502b33071955449",
           "status": "blocked",
           "runs": [
-            {"run_id": 42293837152, "workflow": "X-ray delivery gates", "conclusion": "failure", "runner_id": 0, "job_steps": 0}
+            {
+              "run_id": 42293837152,
+              "workflow": "X-ray delivery gates",
+              "conclusion": "failure",
+              "runner_id": 0,
+              "job_steps": 0
+            }
           ],
           "candidate_status": "not-run",
           "reason": "This run covered the pushed base commit before the success-cursor implementation and current release candidate."
@@ -849,8 +893,20 @@
           "commit": "1c2a5ca78fbe809f4f5a21f7e6d6c358133d5b8d",
           "status": "blocked",
           "runs": [
-            {"run_id": 42305314710, "workflow": "X-ray delivery gates", "attempt": 2, "conclusion": "failure", "job_steps": 0},
-            {"run_id": 42305314132, "workflow": "发布 X-ray 版本", "attempt": 2, "conclusion": "failure", "job_steps": 0}
+            {
+              "run_id": 42305314710,
+              "workflow": "X-ray delivery gates",
+              "attempt": 2,
+              "conclusion": "failure",
+              "job_steps": 0
+            },
+            {
+              "run_id": 42305314132,
+              "workflow": "发布 X-ray 版本",
+              "attempt": 2,
+              "conclusion": "failure",
+              "job_steps": 0
+            }
           ],
           "reason": "Both push-triggered workflows and one explicit retry completed without any job steps; local r10 gates passed, but remote CI evidence is blocked."
         },
@@ -859,7 +915,13 @@
           "commit": "578490344dbdff1e58ac9e106f46578c2b1c35a4",
           "status": "blocked",
           "runs": [
-            {"run_id": 42307090391, "workflow": "X-ray delivery gates", "attempt": 1, "conclusion": "failure", "job_steps": 0}
+            {
+              "run_id": 42307090391,
+              "workflow": "X-ray delivery gates",
+              "attempt": 1,
+              "conclusion": "failure",
+              "job_steps": 0
+            }
           ],
           "reason": "This follow-up commit only recorded release readback; its push-triggered workflow also failed with no job steps."
         },
@@ -874,8 +936,18 @@
           "commit": "33d36785e76ae00dc83652ee7f6ace0e56c18c96",
           "status": "blocked",
           "runs": [
-            {"run_id": 42341132257, "workflow": "X-ray delivery gates", "runner_id": 0, "job_steps": 0},
-            {"run_id": 42341132078, "workflow": "发布 X-ray 版本", "runner_id": 0, "job_steps": 0}
+            {
+              "run_id": 42341132257,
+              "workflow": "X-ray delivery gates",
+              "runner_id": 0,
+              "job_steps": 0
+            },
+            {
+              "run_id": 42341132078,
+              "workflow": "发布 X-ray 版本",
+              "runner_id": 0,
+              "job_steps": 0
+            }
           ],
           "reason": "The two workflow jobs had runner_id=0 and no steps. The root cause is unknown; this is not remote CI pass evidence."
         },
@@ -933,9 +1005,33 @@
           "timestamp": "2026-11-07T17:23:10+08:00",
           "status": "blocked",
           "runs": [
-            {"commit": "6e263291bd1ab148351f89026955d274e07a6587", "run_id": 42356950660, "job_id": 128357005184, "conclusion": "failure", "runner_id": 0, "job_steps": 0, "annotations_http_status": 200},
-            {"commit": "990b3f858725966465f4ccf19ce9a9310445a755", "run_id": 42353586340, "job_id": 128346739818, "conclusion": "failure", "runner_id": 0, "job_steps": 0, "annotations_http_status": 200},
-            {"commit": "990b3f858725966465f4ccf19ce9a9310445a755", "run_id": 42353586370, "job_id": 128346739890, "conclusion": "failure", "runner_id": 0, "job_steps": 0, "annotations_http_status": 200}
+            {
+              "commit": "6e263291bd1ab148351f89026955d274e07a6587",
+              "run_id": 42356950660,
+              "job_id": 128357005184,
+              "conclusion": "failure",
+              "runner_id": 0,
+              "job_steps": 0,
+              "annotations_http_status": 200
+            },
+            {
+              "commit": "990b3f858725966465f4ccf19ce9a9310445a755",
+              "run_id": 42353586340,
+              "job_id": 128346739818,
+              "conclusion": "failure",
+              "runner_id": 0,
+              "job_steps": 0,
+              "annotations_http_status": 200
+            },
+            {
+              "commit": "990b3f858725966465f4ccf19ce9a9310445a755",
+              "run_id": 42353586370,
+              "job_id": 128346739890,
+              "conclusion": "failure",
+              "runner_id": 0,
+              "job_steps": 0,
+              "annotations_http_status": 200
+            }
           ],
           "annotation_count_per_job": 1,
           "root_cause": "GitHub reports that each job did not start because recent account payments failed or the spending limit needs to be increased; the annotation does not distinguish those causes.",
@@ -984,7 +1080,12 @@
           "status": "created",
           "draft": false,
           "prerelease": false,
-          "workflow_run": {"run_id": 42305314132, "attempt": 2, "conclusion": "failure", "job_steps": 0},
+          "workflow_run": {
+            "run_id": 42305314132,
+            "attempt": 2,
+            "conclusion": "failure",
+            "job_steps": 0
+          },
           "manual_fallback": true,
           "url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.14.0",
           "assets": {
@@ -1113,7 +1214,10 @@
       "status": "blocked",
       "blockers": [
         "Real-AWS profile-level revocation positive control remains unverified. The local Fake/Stub API integration passes but does not establish cloud behavior; the earlier REVOCATION_UNCONFIRMED block and later active-subscription 2-to-1 shrink do not prove profile-level revocation.",
-        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources, and the latest read-only inventory and billing calls returned AccessDenied."
+        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources, and the latest read-only inventory and billing calls returned AccessDenied.",
+        "Real-AWS profile-level revocation positive control remains unverified; Fake/Stub tests do not establish AWS behavior.",
+        "No new node was created. Resource-level final cost, real profile revocation, and cloud node/traffic count reconciliation remain unverified.",
+        "The configured default and root account-field fingerprints do not match the authorized account; root inventory cannot establish the authorized account resource count, and X-ray admin session/step-up/CloudAccount remain unavailable."
       ],
       "evidence": [
         {
@@ -1210,9 +1314,23 @@
           "account_ref": "sha256:4a0ef08458dd",
           "root_principal": true,
           "region": "ap-southeast-1",
-          "bundle": {"id": "nano_3_0", "active": true, "monthly_price_usd": 5, "ram_gb": 0.5, "cpu_count": 2},
-          "blueprint": {"id": "ubuntu_24_04", "active": true, "version": "24.04 LTS"},
-          "request_ids": ["a9ff6634-ebf4-4c9b-95df-95e6ad7bf18a", "01d1af93-4f96-4f33-ad1e-13c16992f954", "782fd93c-cc25-495e-af5f-b56c19685db6"],
+          "bundle": {
+            "id": "nano_3_0",
+            "active": true,
+            "monthly_price_usd": 5,
+            "ram_gb": 0.5,
+            "cpu_count": 2
+          },
+          "blueprint": {
+            "id": "ubuntu_24_04",
+            "active": true,
+            "version": "24.04 LTS"
+          },
+          "request_ids": [
+            "a9ff6634-ebf4-4c9b-95df-95e6ad7bf18a",
+            "01d1af93-4f96-4f33-ad1e-13c16992f954",
+            "782fd93c-cc25-495e-af5f-b56c19685db6"
+          ],
           "aws_read_requests": 3,
           "aws_write_requests": 0,
           "test_servers_created": 0,
@@ -1337,6 +1455,255 @@
           "final_bill_confirmed": false,
           "writes_attempted": false,
           "reason": "The read-only AWS CLI recheck was denied; current resource inventory and attributable final cost remain unknown."
+        },
+        {
+          "kind": "aws_cost_explorer_readback",
+          "read_at": "2026-11-10T00:00:58+08:00",
+          "period": {
+            "start": "2026-11-09",
+            "end_exclusive": "2026-11-10"
+          },
+          "service": "Amazon Lightsail",
+          "account_service_total_usd": 0,
+          "resource_attributable": false,
+          "final_bill_confirmed": false,
+          "actual_test_resource_cost_usd": null
+        },
+        {
+          "kind": "renewed_aws_authorization_preflight_blocked",
+          "authorization_ref": "current user message: 90-minute renewal, one us-east-1 Lightsail small_3_0 Ubuntu 24.04 node, additional USD 25 cap",
+          "window_start": "2026-11-10T15:48:17+08:00",
+          "window_end_exclusive": "2026-11-10T17:18:17+08:00",
+          "limits": {
+            "max_nodes": 1,
+            "region": "us-east-1",
+            "plan": "small_3_0",
+            "image": "ubuntu_24_04",
+            "additional_budget_usd": 25,
+            "overall_budget_usd": 1000
+          },
+          "cli_account_ref": "sha256:e9502bcd3047",
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "identity_matches": false,
+          "aws_read_results": {
+            "lightsail_get_instances": "AccessDenied",
+            "lightsail_get_bundles": "AccessDenied",
+            "lightsail_get_blueprints": "AccessDenied",
+            "cost_explorer_get_cost_and_usage": "AccessDenied"
+          },
+          "application_preflight": {
+            "health_ready_http_status": 200,
+            "authenticated_session": false,
+            "system_http_status": 401,
+            "cloud_account_list_http_status": 401,
+            "step_up_verified": false,
+            "validated_cloud_account_readback": false
+          },
+          "current_instance_count": null,
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write",
+          "reason": "AWS caller account does not match the recorded authorization account; AWS inventory/billing reads are denied; the management API has no authenticated admin session, so CloudAccount and step-up readiness cannot be verified. No AWS write, SSH, or bypass was attempted."
+        },
+        {
+          "kind": "renewed_aws_authorization_identity_correction",
+          "supersedes_evidence_kind": "renewed_aws_authorization_preflight_blocked",
+          "timestamp": "2026-11-10T16:18:00+08:00",
+          "authorization_window_end_exclusive": "2026-11-10T17:18:17+08:00",
+          "profile": "root",
+          "sts_exit_code": 0,
+          "cli_account_ref": "sha256:4a0ef08458dd",
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "identity_matches": false,
+          "aws_read_results": {
+            "lightsail_get_instances": "success; us-east-1 count=0 under mismatching profile",
+            "lightsail_get_bundles": "success; small_3_0 USD 12/month, 2 vCPU, 2 GiB",
+            "lightsail_get_blueprints": "success; ubuntu_24_04 24.04 LTS",
+            "cost_explorer_get_cost_and_usage": "not_run_identity_scope_mismatch"
+          },
+          "application_preflight": {
+            "health_ready_http_status": 200,
+            "authenticated_session": false,
+            "cloud_account_list_http_status": 401,
+            "step_up_verified": false,
+            "current_cloud_account_validated_readback": false
+          },
+          "authorized_account_instance_count": null,
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write",
+          "reason": "The renewed authorization is bound to account sha256:94a91b85428b, but the configured default and root profiles return sha256:e9502bcd3047 and sha256:4a0ef08458dd. The browser session is unauthenticated and CloudAccount cannot be read. No cloud writes, SSH, credential changes, or bypass were attempted."
+        },
+        {
+          "kind": "renewed_aws_authorization_profile_and_session_recheck",
+          "timestamp": "2026-11-11T01:11:58+08:00",
+          "authorization_window": {
+            "start": "2026-11-11T00:30:03+08:00",
+            "end_exclusive": "2026-11-11T02:00:03+08:00"
+          },
+          "limits": {
+            "max_nodes": 1,
+            "region": "us-east-1",
+            "plan": "small_3_0",
+            "image": "ubuntu_24_04",
+            "additional_budget_usd": 25,
+            "overall_budget_usd": 1000
+          },
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "configured_profiles": [
+            "default",
+            "root"
+          ],
+          "profile_account_refs": {
+            "default": "sha256:b1746f68f5be",
+            "root": "sha256:4a0ef08458dd"
+          },
+          "selected_default_profile_account_ref": "sha256:e9502bcd3047",
+          "identity_matches": false,
+          "root_region_inventory_count": 0,
+          "root_bundle_catalog": {
+            "bundle_id": "small_3_0",
+            "price_usd_per_month": 12,
+            "cpu_count": 2,
+            "ram_gib": 2
+          },
+          "root_blueprint": {
+            "blueprint_id": "ubuntu_24_04",
+            "version": "24.04 LTS"
+          },
+          "root_cost_explorer": {
+            "period_start": "2026-11-01",
+            "period_end_exclusive": "2026-11-12",
+            "service": "Amazon Lightsail",
+            "account_aggregate_usd": 6.0243037302,
+            "resource_attributable": false,
+            "final_bill_confirmed": false
+          },
+          "application_preflight": {
+            "browser_authenticated": false,
+            "recent_auth_until": null,
+            "cloud_account_http_status": 401,
+            "readiness_http_status": 200
+          },
+          "authorized_account_instance_count": null,
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write",
+          "reason": "No configured profile matches the newly renewed account authorization, and the browser application session is unauthenticated. Other-account inventory/catalog and account-level Cost Explorer values are not evidence for this authorization. No AWS resource, application database, CloudAccount, SSH, or IP write was attempted."
+        },
+        {
+          "kind": "renewed_aws_profile_match_and_app_session_recheck",
+          "timestamp": "2026-11-11T01:58:43+08:00",
+          "authorization_window": {
+            "start": "2026-11-11T00:30:03+08:00",
+            "end_exclusive": "2026-11-11T02:00:03+08:00"
+          },
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "profile": "root",
+          "profile_account_ref": "sha256:94a91b85428b",
+          "identity_matches": true,
+          "region": "us-east-1",
+          "instance_count": 0,
+          "application_preflight": {
+            "ports": [
+              9537,
+              9538,
+              9541
+            ],
+            "session_http_status": 200,
+            "authenticated": false,
+            "mfa_enabled": false,
+            "recent_auth_until": null,
+            "cloud_account_http_status": 401,
+            "readiness_http_status_by_port": {
+              "9537": 503,
+              "9541": 200
+            },
+            "step_up_verified": false
+          },
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write",
+          "reason": "AWS identity matches, but no X-ray session verified admin authentication, recent step-up, or CloudAccount identity; no bypass or cloud write was attempted."
+        },
+        {
+          "kind": "daily_restart_fake_provider_handler_integration",
+          "timestamp": "2026-11-11T01:58:43+08:00",
+          "test_file": "backend/tests/test_node_automation.py",
+          "test_case": "test_daily_restart_handler_reads_new_ip_health_and_republishes_subscription",
+          "provider_boundary": "FakeCloudProvider; no AWS write evidence",
+          "focused_test_exit_code": 0,
+          "automation_file_passed": 33,
+          "backend_tests_passed": 426,
+          "backend_tests_skipped": 2,
+          "aws_writes_attempted": false,
+          "result": "local_fake_passed_real_aws_not_run"
+        },
+        {
+          "kind": "renewed_aws_authorization_current_window_recheck",
+          "timestamp": "2026-11-11T02:30:13+08:00",
+          "authorization_window": {
+            "start": "2026-11-11T02:12:09+08:00",
+            "end_exclusive": "2026-11-11T03:42:09+08:00"
+          },
+          "limits": {
+            "max_nodes": 1,
+            "region": "us-east-1",
+            "plan": "small_3_0",
+            "image": "ubuntu_24_04",
+            "additional_budget_usd": 25,
+            "overall_budget_usd": 1000
+          },
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "profile": "root",
+          "profile_account_ref": "sha256:4a0ef08458dd",
+          "identity_matches": false,
+          "instance_count": null,
+          "application_preflight": {
+            "ports": [
+              9537,
+              9538,
+              9541
+            ],
+            "session_http_status": 200,
+            "authenticated": false,
+            "mfa_enabled": false,
+            "recent_auth_until": null,
+            "cloud_account_http_status": 401,
+            "step_up_verified": false,
+            "browser_login_form_visible": true
+          },
+          "actual_test_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write",
+          "reason": "The canonical Account-field fingerprint of the root profile is sha256:4a0ef08458dd and does not match the authorized sha256:94a91b85428b. Its us-east-1 Lightsail inventory is empty but belongs to the mismatching account; no authenticated X-ray session or CloudAccount readback was available. No cloud write was attempted.",
+          "root_profile_inventory_count": 0,
+          "authorized_account_instance_count": null
+        },
+        {
+          "kind": "renewed_aws_account_field_fingerprint_correction",
+          "timestamp": "2026-11-11T02:45:27+08:00",
+          "supersedes_evidence_kind": "renewed_aws_authorization_current_window_recheck",
+          "fingerprint_algorithm": "SHA-256 of the STS Account field text without CLI stdout terminator",
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "configured_profiles": {
+            "default": "sha256:b1746f68f5be",
+            "root": "sha256:4a0ef08458dd"
+          },
+          "any_profile_matches_authorization": false,
+          "root_us_east_1_lightsail_count": 0,
+          "authorized_account_instance_count": null,
+          "application_session_authenticated": false,
+          "recent_step_up_verified": false,
+          "cloud_account_http_status": 401,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write",
+          "reason": "The earlier fingerprint included the AWS CLI stdout terminator and does not follow the project account-field fingerprint method. Both configured profile account-field fingerprints differ from the authorized fingerprint. The root inventory is for another account; application session/step-up/CloudAccount reads are also unavailable."
         }
       ],
       "commit": null,
@@ -1453,14 +1820,22 @@
           "runner_service": "active",
           "runner_version": "2.338.2",
           "runner_sha256": "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40",
-          "runner_credential_file_modes": ["600", "600"],
+          "runner_credential_file_modes": [
+            "600",
+            "600"
+          ],
           "registration_token_created_and_used": true,
           "registration_token_persisted": false,
           "github_runner_list_http_status": 200,
           "github_runner_total_count": 1,
           "github_runner_status": "online",
           "github_runner_name": "xray-actions-ec2-2x4-20261108-01",
-          "github_runner_labels": ["self-hosted", "Linux", "X64", "xray-trusted-2x4"],
+          "github_runner_labels": [
+            "self-hosted",
+            "Linux",
+            "X64",
+            "xray-trusted-2x4"
+          ],
           "active_ssm_sessions": 0,
           "actual_cost_readback": false,
           "expires_at_tag": "2026-12-08T04:00:00+08:00",
@@ -1485,12 +1860,23 @@
           "exit_code": 0,
           "gates": 19,
           "nonzero_exit_codes": 0,
-          "backend_tests": {"total": 483, "passed": 481, "skipped": 2, "failures": 0, "errors": 0},
+          "backend_tests": {
+            "total": 483,
+            "passed": 481,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
           "frontend_unit_tests": 84,
           "browser_e2e": 8,
           "first_attempt_exit_code": 1,
           "first_attempt_blocker": "Default E2E port 55433 was already occupied by the separate xray-cloud-acceptance stack; that stack was left running.",
-          "isolated_e2e_port_retry": {"backend": 19537, "frontend": 19538, "postgres": 55435, "redis": 56382},
+          "isolated_e2e_port_retry": {
+            "backend": 19537,
+            "frontend": 19538,
+            "postgres": 55435,
+            "redis": 56382
+          },
           "evidence_summary": "/tmp/xray-runner-local-check-20261108/summary.tsv",
           "temporary_auth_state_removed": true,
           "remote_ci_status": "not-run",
@@ -1545,7 +1931,12 @@
           "yaml_parse_exit_code": 0,
           "local_chromium_install_exit_code": 0,
           "browser_e2e_tests_passed": 8,
-          "browser_e2e_ports": [9537, 9538, 9541, 9542],
+          "browser_e2e_ports": [
+            9537,
+            9538,
+            9541,
+            9542
+          ],
           "temporary_auth_and_screenshot_artifacts_removed": true,
           "remote_fix_ci_status": "not-run-pending-push",
           "application_real_cloud_acceptance": "not-run"
@@ -1570,13 +1961,30 @@
           "local_check_exit_code": 0,
           "local_gates": 19,
           "local_nonzero_gates": 0,
-          "backend_tests": {"total": 490, "passed": 488, "skipped": 2, "failures": 0, "errors": 0},
+          "backend_tests": {
+            "total": 490,
+            "passed": 488,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
           "frontend_unit_tests": 84,
           "browser_e2e_tests": 8,
           "initial_e2e_attempt_exit_code": 1,
-          "initial_e2e_conflict_ports": [55433, 56380],
-          "isolated_test_stack_ports": [55435, 56382],
-          "isolated_e2e_ports": [55671, 55672, 55673, 55674],
+          "initial_e2e_conflict_ports": [
+            55433,
+            56380
+          ],
+          "isolated_test_stack_ports": [
+            55435,
+            56382
+          ],
+          "isolated_e2e_ports": [
+            55671,
+            55672,
+            55673,
+            55674
+          ],
           "evidence_summary": "/tmp/xray-gate-local-20261108-03/summary.tsv",
           "temporary_test_auth_state_removed": true,
           "test_containers_removed": true,
@@ -1608,13 +2016,27 @@
               "cause": "The Linux integration test reached apt-get dependency installation on the persistent non-root runner and could not open the apt lock."
             }
           ],
-          "backend_test_summary": {"total": 490, "passed": 487, "failed": 2, "skipped": 1},
+          "backend_test_summary": {
+            "total": 490,
+            "passed": 487,
+            "failed": 2,
+            "skipped": 1
+          },
           "remote_artifact_id": 13594848433,
           "remote_artifact_digest": "sha256:aeae9f5f4bface994f7f22b641ce47dbc340a5c1762af865e819ea9f8d95fbc4",
           "artifact_upload_and_runner_cleanup_passed": true,
           "production_installer_dependency_contract_unchanged": true,
-          "local_installer_tests": {"total": 17, "passed": 14, "skipped": 3, "failures": 0},
-          "local_targeted_tests": {"passed": 1, "skipped": 1, "reason": "macOS host skips Linux-only one-click runtime integration"},
+          "local_installer_tests": {
+            "total": 17,
+            "passed": 14,
+            "skipped": 3,
+            "failures": 0
+          },
+          "local_targeted_tests": {
+            "passed": 1,
+            "skipped": 1,
+            "reason": "macOS host skips Linux-only one-click runtime integration"
+          },
           "local_ruff_exit_code": 0,
           "test_harness_candidate_pending_remote_validation": true,
           "remote_fix_ci_status": "not-run-pending-push",
@@ -1639,9 +2061,16 @@
             "collected": false,
             "reason": "XRAY_TEST_DATABASE_URL was not set; pytest settings correctly refused to run without the dedicated PostgreSQL stack."
           },
-          "registered_isolated_test_stack_ports": [55435, 56382],
+          "registered_isolated_test_stack_ports": [
+            55435,
+            56382
+          ],
           "local_fixed_xray_version": "26.3.27",
-          "local_focused_test": {"exit_code": 0, "passed": 1, "duration_seconds": 6.64},
+          "local_focused_test": {
+            "exit_code": 0,
+            "passed": 1,
+            "duration_seconds": 6.64
+          },
           "test_stack_cleanup_exit_code": 0,
           "named_test_volumes_retained": true,
           "remote_fix_ci_status": "pending-test-commit",
@@ -1810,6 +2239,247 @@
       "region": null,
       "cost": null,
       "residual_resources": []
+    },
+    {
+      "id": "daily-restart-fake-handler-integration-20261111",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "daily_restart_fake_provider_handler_integration",
+          "timestamp": "2026-11-11T01:58:43+08:00",
+          "test_file": "backend/tests/test_node_automation.py",
+          "test_case": "test_daily_restart_handler_reads_new_ip_health_and_republishes_subscription",
+          "provider_boundary": "FakeCloudProvider with isolated PostgreSQL/Redis project xray-daily-restart-20261111",
+          "focused_test_exit_code": 0,
+          "focused_test_passed": 1,
+          "automation_file_exit_code": 0,
+          "automation_file_passed": 33,
+          "backend_test_exit_code": 0,
+          "backend_tests_passed": 426,
+          "backend_tests_skipped": 2,
+          "skip_reason": "fixed Xray binary is not configured",
+          "assertions": [
+            "Daily scheduler submitted stop and next-day start operations for the same ordered node.",
+            "Standard operation handlers read back stopped and running states from Fake provider.",
+            "Start read-after-write observed changed dynamic IPv4 and HEALTHY node state.",
+            "Current subscription revision was replaced and every available encrypted format contained the new IPv4 but not the old IPv4."
+          ],
+          "aws_writes_attempted": false,
+          "runtime_code_changed": false,
+          "version_or_release_created": false,
+          "test_project_containers_stopped": true,
+          "named_volumes_preserved": true
+        },
+        {
+          "kind": "daily_restart_fake_provider_test_rerun",
+          "timestamp": "2026-11-11T02:45:27+08:00",
+          "provider_boundary": "FakeCloudProvider; dedicated xray-daily-restart-20261111 PostgreSQL/Redis",
+          "focused_test_passed": 1,
+          "automation_file_passed": 33,
+          "backend_tests_passed": 426,
+          "backend_tests_skipped": 2,
+          "skip_reason": "fixed Xray binary is not configured",
+          "ruff_exit_code": 0,
+          "acceptance_boundary_secret_skill_json_diff_checks_exit_code": 0,
+          "aws_writes_attempted": false,
+          "result": "local_fake_passed_real_aws_blocked"
+        }
+      ],
+      "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "source_base_commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "candidate_worktree": true,
+      "provider": "FakeCloudProvider",
+      "region": "us-east-1",
+      "cost": 0,
+      "residual_resources": [
+        "Isolated PostgreSQL/Redis named volumes for xray-daily-restart-20261111 are preserved for audit; containers and network were stopped after testing."
+      ]
+    },
+    {
+      "id": "github-ci-v0.14.6-profile-revoke-receipt-bccb61d",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_gates",
+          "run_id": 42776479482,
+          "job_id": 129696045353,
+          "attempt": 1,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+          "acceptance_evidence_uploaded": true,
+          "artifact_id": 13744104394,
+          "artifact_size_bytes": 3165800,
+          "artifact_digest": "sha256:4376bee3ac6cf78043e09746e63f74ceefd36ab067d42629e3ee0d962660f68f",
+          "cleanup_steps_passed": true
+        }
+      ],
+      "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    }
+    ,
+    {
+      "id": "aws-renewed-profile-browser-readback-20261111-03",
+      "environment": "real_cloud",
+      "status": "blocked",
+      "blockers": [
+        "The local AWS CLI execution environment exposes only default/root; canonical account-field fingerprints do not match the authorized account sha256:94a91b85428b.",
+        "Unauthenticated session requests returned authenticated=false and CloudAccount returned HTTP 401; Chrome automation was blocked by an extension UI, so browser authentication and recent step-up were not independently read back.",
+        "Authorized-account resource count and per-resource/final cost remain unknown."
+      ],
+      "evidence": [
+        {
+          "kind": "renewed_profile_and_browser_readback",
+          "timestamp": "2026-11-11T03:01:44+08:00",
+          "authorization_window": {
+            "start": "2026-11-11T03:01:44+08:00",
+            "end_exclusive": "2026-11-11T04:31:44+08:00"
+          },
+          "limits": {
+            "max_nodes": 1,
+            "region": "us-east-1",
+            "plan": "small_3_0",
+            "image": "ubuntu_24_04",
+            "additional_budget_usd": 25,
+            "overall_budget_usd": 1000
+          },
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "configured_profiles": {
+            "default": "sha256:b1746f68f5be",
+            "root": "sha256:4a0ef08458dd"
+          },
+          "aws_profile_environment_set": false,
+          "any_configured_profile_matches": false,
+          "api_session_reads": {
+            "ports": [9537, 9538, 9541],
+            "http_status": 200,
+            "authenticated": false,
+            "mfa_enabled": false,
+            "recent_auth_until": null,
+            "cloud_account_http_status": 401,
+            "request_had_browser_cookie": false
+          },
+          "readiness_http_status": {
+            "9537": 503,
+            "9538": 200,
+            "9541": 200
+          },
+          "chrome_automation_blocked_by_extension_ui": true,
+          "browser_auth_state_independently_verified": false,
+          "recent_step_up_verified": false,
+          "authorized_account_instance_count": null,
+          "per_resource_cost_usd": null,
+          "final_bill_confirmed": false,
+          "writes_attempted": false,
+          "result": "blocked_before_cloud_write"
+        }
+      ],
+      "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "source_base_commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "candidate_worktree": true,
+      "provider": "aws-lightsail",
+      "region": "us-east-1",
+      "cost": null,
+      "cost_status": "authorized account not identified; resource and final cost unverified",
+      "residual_resources": []
+    },
+    {
+      "id": "aws-profile-canonical-fingerprint-reread-20261111-04",
+      "environment": "real_cloud",
+      "status": "blocked",
+      "blockers": [
+        "The canonical SHA-256 of the exact STS Account field does not match the authorized account fingerprint for any configured AWS CLI profile.",
+        "The authorized AWS CLI profile name was not supplied; the browser currently exposes no X-ray application tab with an independently readable authenticated session, recent step-up, or CloudAccount.",
+        "The previous 90-minute authorization window is expired; no cloud write, SSH, deletion, public probe, or cost query was attempted."
+      ],
+      "evidence": [
+        {
+          "kind": "canonical_account_field_fingerprint_reread",
+          "timestamp": "2026-11-11T17:22:41+08:00",
+          "authorization_window_status": "expired",
+          "authorized_account_ref": "sha256:94a91b85428b",
+          "configured_profiles": {
+            "default": "sha256:b1746f68f5be",
+            "root": "sha256:4a0ef08458dd"
+          },
+          "canonical_identity_algorithm": "SHA-256 of exact STS Account field text, excluding CLI output newline",
+          "any_configured_profile_matches": false,
+          "browser_application_tabs": [
+            "about:blank",
+            "Chrome extension documentation",
+            "chrome://whats-new/",
+            "chrome://extensions/sitePermissions/allSites",
+            "chrome://newtab/"
+          ],
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_query_attempted": false,
+          "result": "blocked_before_cloud_write"
+        }
+      ],
+      "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "provider": "aws-lightsail",
+      "region": "us-east-1",
+      "cost": null,
+      "cost_status": "authorized account and resource-level cost unverified",
+      "residual_resources": []
+    },
+    {
+      "id": "usage-sync-retry-lease-local-20261111",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "local_delivery_gates",
+          "timestamp": "2026-11-11T17:48:31+08:00",
+          "run_id": "xray-release-0147-20261111-01",
+          "summary_file": "artifacts/acceptance/0.14.7/final-gates-20261111-release-r2/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.7/final-gates-20261111-release-r2/backend-and-delivery.junit.xml",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "total": 553,
+            "passed": 551,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 88,
+          "browser_e2e": 8,
+          "runtime": {
+            "python": "3.13.17",
+            "node": "22.23.4",
+            "pnpm": "10.33.0",
+            "fixed_xray": "26.3.27"
+          },
+          "initial_attempt": {
+            "artifact_dir": "artifacts/acceptance/0.14.7/final-gates-20261111-release-r1/",
+            "failed_gate": "runtime",
+            "exit_code": 1,
+            "reason": "PATH resolved pnpm 11.25.0 instead of required 10.33.x; no subsequent gates ran"
+          },
+          "result": "passed_local_candidate_worktree; remote_ci_and_real_aws_not_run"
+        }
+      ],
+      "commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "source_base_commit": "bccb61d8104c3231d07da41d227f23d7ec8a1d43",
+      "candidate_worktree": true,
+      "provider": "Fake/Stub providers and isolated local test services",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "The xray-usage-retry-20261111 PostgreSQL/Redis named volumes and port registration 55437/56384 are preserved; its containers and network were stopped."
+      ]
     }
   ]
 }

@@ -7418,3 +7418,355 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `write_summary`: `matrix.json 远端 CI evidence 补充后端 541/1、前端 88 和 E2E 8；progress.md 增加同一精确 SHA 的远端测试计数和唯一 skip 原因。没有改变程序代码、版本、标签、Release 或 AWS 状态。`
 - `time_logic`: `本次仅读取 workflow 时间戳和测试输出；没有业务时间逻辑变化。`
 - `status`: `passed (精确 SHA 远端测试明细与结构化回执、最终 acceptance/boundary/secret/skill/JSON/diff 校验); blocked (真实 AWS profile 撤回正向控制和逐资源最终费用); not-run (新 AWS 写入、SWAS、设备、公网探测、生产部署)。`
+
+### 2026-11-10T16:00:58+08:00 — xray-aws-renewal-20261110-01/001 续期前置阻塞与最终回执
+
+- `event_id`: `xray-aws-renewal-20261110-01/001`
+- `run_id`: `xray-aws-renewal-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, remote_readback, modify, validate, closeout`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/cloud-test-authorization.md、tests/acceptance/matrix.json、docs/progress.md、docs/project-ledger.md；本地只读检查 9541 API、专用/既有监听与 Docker 状态；AWS STS/Lightsail/Cost Explorer 只读前置审查；GitHub Actions run 42776479482`
+- `requested_outcome_and_scope`: `续期 90 分钟的 AWS 测试授权，仅限一台 us-east-1 Lightsail small_3_0 Ubuntu 24.04 节点、额外 USD 25 且用户原总额 USD 1,000 内。先完成远端精确 SHA CI 收尾和云写入前置复核；只在账号、认证、CloudAccount、权限、预算和截止均可验证时经 X-ray 标准流程执行。`
+- `authorization_boundary_and_risk`: `用户续期授权窗口按本机时钟为 [2026-11-10T15:48:17+08:00, 2026-11-10T17:18:17+08:00)。实际预检发现 AWS caller 账号摘要 sha256:e9502bcd3047 与已记录授权账号 sha256:94a91b85428b 不匹配；Lightsail 清单/目录和 Cost Explorer 均 AccessDenied；API 没有已认证管理员会话，CloudAccount 与 step-up 不可验证。因此授权保持未执行，任何云写入、SSH、删除/IP 操作、AWS CLI 绕过和数据库伪造均不在本次可执行范围。当前真实资源数与逐资源费用未知。`
+- `baseline_and_reads`: `2026-11-10T15:48-16:00+08 复读 AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/cloud-test-authorization.md、docs/project-ledger.md、docs/progress.md、tests/acceptance/matrix.json；main、origin/main、HEAD 均为 bccb61d8104c3231d07da41d227f23d7ec8a1d43，起始 tracked worktree clean。保留 10 个既有未跟踪 acceptance evidence 目录。只读检查确认 X-ray API 9541 由本仓库运行，/health/ready=200；认证 session authenticated=false，system 与 CloudAccount API=401。Docker 中 55435/56382 由现存 xray-node-auto-20261109 PostgreSQL/Redis 持有；另有既有 9537 服务；未停止或改动任何服务、容器、端口或卷。AWS 预审代理报告 sts get-caller-identity exit 0；Lightsail GetInstances/GetBundles/GetBlueprints 和 Cost Explorer GetCostAndUsage 均 exit 254/AccessDenied。`
+- `remote_readback`: `GitHub Actions run 42776479482 head_sha 与 main 一致，completed/success；job 129696045353 completed/success，完整门禁、sanitized evidence 上传和 run-specific images/auth state 清理步骤成功。artifact 13744104394，3,165,800 bytes，SHA-256 4376bee3ac6cf78043e09746e63f74ceefd36ab067d42629e3ee0d962660f68f。只据此确认该文档回执提交的 Delivery Gates，不据此推断 AWS 行为。`
+- `write_summary`: `docs/cloud-test-authorization.md 追加 90 分钟授权窗口和前置阻塞说明；tests/acceptance/matrix.json 追加续期 AWS 前置阻塞结构化证据与 bccb61d CI artifact receipt；docs/progress.md 追加阶段记录。没有业务代码、版本、tag、Release、云资源、认证状态或运行时修改。本次未提交；等待前置条件修复后由新任务继续，并遵守当前 main 工作流。`
+- `prewrite_hashes`: `docs/cloud-test-authorization.md=f46e2f2c710f68a97390e89ab92585bc009e131638c4597280a4b7b4cea5de26；tests/acceptance/matrix.json=95587cf46c8eaf0852a38fc617af5bde2ad6e9363044441869ce19d1e5bbefab；docs/progress.md=0310c5c4750aac8b1eccea4d37cb0d4cd62f16c51c7554b1c5fd9311ddb94449；docs/project-ledger.md=a39d2f5d048422e8a757e665bae7918e9724df1750f844194a98531101176489。`
+- `commands_and_exit_codes`: `GitHub run/job/artifact GET readback=success；AWS STS identity=0；Lightsail 3 read calls 与 Cost Explorer read call=254 AccessDenied；curl /health/ready=200；curl /api/v1/auth/session 显示 authenticated=false；curl /api/v1/system=401；curl /api/v1/cloud-accounts/=401。首个误路径 /health 返回 404，改用仓库实际 /health/ready 后通过；一次不影响状态的本地 portctl PATH 查询 exit 127（命令不可用）；一次 rg 对不存在的 frontend/src 与 frontend/app 搜索 exit 2，随后基于已存在路径查询，无文件改动。最终 `python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（145 commits、约 8.80 MB、无泄漏）；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0；Node JSON parse=0；矩阵独立只读复核=通过；最终修改后的 `git diff --check`=0。`
+- `postwrite_hashes`: `cloud-test-authorization.md=f46e2f2c710f68a97390e89ab92585bc009e131638c4597280a4b7b4cea5de26；tests/acceptance/matrix.json=95587cf46c8eaf0852a38fc617af5bde2ad6e9363044441869ce19d1e5bbefab；docs/progress.md=0310c5c4750aac8b1eccea4d37cb0d4cd62f16c51c7554b1c5fd9311ddb94449。ledger 追加本事件后的文件 hash 不记录为自引用。`
+- `time_logic`: `授权按 Asia/Shanghai aware timestamp 记录，截止区间为 [15:48:17,17:18:17)；未运行云操作，未改变业务时钟、池同步、每日重启排序或 TTL。`
+- `rollback_and_reuse`: `本地三份授权/矩阵/进度回执可独立 revert；本地 artifacts/acceptance 下既有 10 个未跟踪目录全部保留，不纳入修改。无云资源创建或残留清理动作。远端 v0.14.6 Release/tag 与已发布应用状态保持不变。`
+- `final_worktree_readback`: `提交前最后一次检查：main...origin/main，无 ahead/behind；仅 docs/cloud-test-authorization.md、docs/progress.md、tests/acceptance/matrix.json 为本轮 tracked 修改；原有 10 个未跟踪 evidence 目录仍在。验证后仅追加此台账事件，未执行提交或推送。`
+- `status`: `passed (精确 SHA CI/readback receipt；矩阵、boundary、secret、skill、JSON、diff 静态验证); blocked (续期云写前置：账号指纹不符、AWS 只读 AccessDenied、管理员会话/step-up/CloudAccount 无法认证；当前资源数及逐资源最终费用未知); not-run (续期节点创建、profile 级真实云撤回正向控制、续期云清理)。无新版本/tag。`
+
+### 2026-11-10T16:26:14+08:00 — xray-aws-renewal-20261110-01/002 身份读回纠正与续期状态
+
+- `event_id`: `xray-aws-renewal-20261110-01/002`
+- `run_id`: `xray-aws-renewal-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `read, correction, modify, validate, closeout`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；本地 9541 health/auth/CloudAccount 只读 API；显式 AWS_PROFILE=root 的 STS/Lightsail 只读 API`
+- `requested_outcome_and_scope`: `继续用户续期的 90 分钟云验收授权，限一台 us-east-1 Lightsail small_3_0 Ubuntu 24.04 节点、额外 USD 25 且总额 USD 1,000 内。续期目标为真实 profile 撤回正向控制和逐资源费用读回；云副作用必须经已认证/step-up 的 X-ray 标准 CloudAccount、scheduler、Operation、幂等、审计及读后写流程。`
+- `authorization_boundary_and_risk`: `窗口 [2026-11-10T15:48:17+08:00, 2026-11-10T17:18:17+08:00)，本次检查时仍有效。授权账号摘要 sha256:94a91b85428b；当前显式 root profile STS 摘要 sha256:4a0ef08458dd，与授权不匹配。未经认证的管理 API 无法读回当前 CloudAccount/step-up。仅在 mismatching account 做成功的只读目录/实例读回，不能据此创建、查询账单或操作资源。禁止 AWS CLI 写入、手工 SSH、替换 CloudAccount 凭据、数据库伪造或任何绕过。`
+- `baseline_and_reads`: `HEAD/main/origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43。保留已有 4 个 tracked 文档/矩阵未提交修改及 artifacts/acceptance 下 10 个未跟踪验收目录；只在授权文件、进度、矩阵追加更正。AWS agent 在 2026-11-10T16:18+08 仅使用 AWS_PROFILE=root 执行 sts get-caller-identity、us-east-1 Lightsail GetInstances/GetBundles/GetBlueprints；STS=0，GetInstances=0 且该 profile 下清单 count=0，GetBundles=0（small_3_0 USD 12/月，2 vCPU/2 GiB），GetBlueprints=0（ubuntu_24_04 / 24.04 LTS）。这些读数都属于身份不匹配的 4a0ef08458dd。Cost Explorer 未查询；授权账号实际实例数、逐资源成本与最终账单未知。X-ray 9541 /health/ready=200；/api/v1/auth/session=200 且 authenticated=false、mfa_enabled=false、recent_auth_until=null；CloudAccount collection=401。没有当前已认证 CloudAccount 读回。`
+- `write_summary`: `追加 docs/cloud-test-authorization.md 身份/权限证据更正，docs/progress.md 本次命令/退出码与状态，tests/acceptance/matrix.json renewed_aws_authorization_identity_correction 证据和当前 blockers；保留旧 /001 与旧矩阵 evidence，不重写历史。无程序代码、数据库、会话、凭据、AWS 资源、版本、tag、Release 或远端提交变更。`
+- `preappend_hashes`: `docs/cloud-test-authorization.md=033d27e2a7fc5a65e7e0fae2c7674fff3f77e9b7d23d346530fc03e036528fb3；docs/progress.md=b366c6e884dadb6083df71374c12da7f44ff14a7214e3e057a4c0ff409d1e3db；tests/acceptance/matrix.json=8ea37e6e2b9ba012957780036a635c21b0e0f0b029196e375b1be944742c3ebd；docs/project-ledger.md=7591170f68e46dc74b5de728f2617058be762e70946487cbbee8857dbe757a09。`
+- `commands_and_exit_codes`: `AWS STS and three Lightsail read-only calls=0; Cost Explorer=not-run due account mismatch; API readiness=HTTP 200; auth session=HTTP 200/authenticated=false; CloudAccount GET=401; no cloud write/SSH/delete/IP change. python3 scripts/validate-acceptance.py=0; bash scripts/check-boundary.sh=0; bash scripts/check-secrets.sh=0 (145 commits, about 8.80 MB scanned, no leaks); backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0; jq empty tests/acceptance/matrix.json=0; git diff --check=0; git status=0, main...origin/main. No program test was rerun because this was a documentation/evidence correction only.`
+- `postwrite_hashes`: `docs/cloud-test-authorization.md=033d27e2a7fc5a65e7e0fae2c7674fff3f77e9b7d23d346530fc03e036528fb3；docs/progress.md=b366c6e884dadb6083df71374c12da7f44ff14a7214e3e057a4c0ff409d1e3db；tests/acceptance/matrix.json=8ea37e6e2b9ba012957780036a635c21b0e0f0b029196e375b1be944742c3ebd。ledger 本事件追加后的 hash 不作自引用。`
+- `time_logic`: `使用 authoritative UTC clock，显示为 Asia/Shanghai；授权边界采用 [start,end)，窗口在本事件读回时尚未结束。没有执行或修改业务定时任务、系统时钟、DST、TTL 或重启排序。`
+- `rollback_and_reuse`: `本轮仅新增文档/验收回执，可用单独 git revert 回退；不回滚 v0.14.6、订阅撤回墓碑、审计记录、云状态和用户已有验收目录。后续只有在管理员提供明确账号范围、正常认证/step-up 成功且 X-ray CloudAccount 与授权摘要一致后，才可在窗口内走标准云验收；窗口过期需重新授权。`
+- `final_worktree_readback`: `追加本事件前 main...origin/main 无 ahead/behind；仅 docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json 为本任务的 tracked 修改；原 10 个未跟踪 evidence 目录保留。`
+- `status`: `passed (只读身份/目录/API 证据和 acceptance/boundary/secret/skill/JSON/diff validators); blocked (root profile 与授权账号不匹配，X-ray session 未认证，当前 CloudAccount/step-up 与逐资源费用未知); not-run (续期 AWS 节点、profile 撤回真实云正向控制、Cost Explorer 和云清理)。无新版本/tag。`
+
+### 2026-11-10T16:37:47+08:00 — xray-pool-delete-fake-integration-20261110-01/000 测试范围定义
+
+- `event_id`: `xray-pool-delete-fake-integration-20261110-01/000`
+- `run_id`: `xray-pool-delete-fake-integration-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `scope, read`
+- `requested_outcome_and_scope`: `补齐池缩容的本地同场景集成证据：schedule_node_pool_sync 创建删除 Operation 后，经标准 operation handler 调用 FakeCloudProvider，确认 provider 缺失读回、NodeResource 释放、节点 quota 归一和幸存订阅继续可用。`
+- `in_scope`: `优先只新增 backend/tests/test_node_automation.py focused integration test；仅当 RED 暴露实际行为缺陷时才对相邻生产逻辑作最小 TDD 修复。使用专用 PostgreSQL/Redis 和 FakeCloudProvider。`
+- `out_of_scope`: `AWS/SWAS/API/SSH/公网调用、credential/CloudAccount/session 操作、任何云资源、生产配置、版本/tag/release/push、其他项目服务和既有用户修改。`
+- `authorization_boundary_and_risk`: `本轮代码/本地测试在用户原任务范围内；所有副作用只发生在 xray_test 专用数据库或 Fake provider。不得接入 AWS provider、不得运行非测试设置。测试数据在 pytest 事务中回滚。`
+- `baseline_and_reads`: `HEAD/main/origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43。工作树原有 docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json 未提交变更及 10 个未跟踪 acceptance 目录均保留。backend/tests/test_node_automation.py 初始 hash=7d41a7b5daa2be97ca335aad634cbde8e7d46a8c1cf74de852989a2511ef3a53，开始时无 diff。现有 scheduler 单测有手动改数据库模拟删除结果；create integration 经 handler/Fake provider；lifecycle test 独立验证 delete absence/quota。`
+- `runtime_and_ports`: `确认 test settings 强制 XRAY_TEST_DATABASE_URL 指向 xray_test；Makefile compose project=xray-test，compose-down 不带 -v。Local Port Manager API GET 确认 55437/56384 已登记给当前 X-ray Gate Test Stack 20261110 且 status=registered、无监听；portctl.py check --project f19638b4485c40409efb67df0a0e7f7e --ports 55437,56384=0。既有 55435/56382 云验收容器保持运行且不触碰。`
+- `rollback_and_reuse`: `新增测试或由 RED 引出的最小代码修复可单独 git revert；不撤销之前文档审计修订，不清理既有证据目录或保留数据卷。可复用命令为 backend/.venv/bin/python -m pytest -q tests/test_node_automation.py -k pool_sync_delete_runs_handler_and_fake_provider。`
+- `prewrite_hashes`: `backend/tests/test_node_automation.py=7d41a7b5daa2be97ca335aad634cbde8e7d46a8c1cf74de852989a2511ef3a53；docs/project-ledger.md=ac90e1f123917ca93d4de2118628ac56d88a65096ba927dc941e18142a0b8d2c。`
+- `status`: `in-progress; no test or source file has been changed yet. AWS renewal remains separately blocked by account/API authentication mismatch.`
+
+### 2026-11-10T16:49:07+08:00 — xray-pool-delete-fake-integration-20261110-01/001 完成缩容同场景集成验证
+
+- `event_id`: `xray-pool-delete-fake-integration-20261110-01/001`
+- `run_id`: `xray-pool-delete-fake-integration-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `modify, validate, cleanup, closeout`
+- `path_scope`: `backend/tests/test_node_automation.py、docs/progress.md、docs/project-ledger.md；专用 xray-test PostgreSQL/Redis 容器、网络及保留卷；既有 xray-node-auto-20261109 容器只读检查`
+- `requested_outcome_and_scope`: `将池缩容 scheduler 选择、标准 node.delete handler、FakeCloudProvider 删除与缺失读回、配额/NodeResource 释放及幸存订阅可用性串成同一条本地集成回归。`
+- `authorization_boundary_and_risk`: `只使用 `XRAY_ENV=test`、独立 xray_test PostgreSQL/Redis 与 FakeCloudProvider。没有 AWS/SWAS/SSH/公网/API 管理会话、凭据、真实节点、版本/tag/Release/push 修改。续期窗口仍在有效期内，但账号摘要 `4a0ef08458dd` 与授权 `94a91b85428b` 不一致，管理 API 未认证；AWS 写入仍 blocked。`
+- `baseline_and_reads`: `HEAD/main/origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43。既有文档/矩阵修改和 10 个 acceptance 未跟踪证据目录均保留。新测试在第一次执行出现 NameError，原因是漏导入 `schedule_node_pool_sync`；同文件相邻测试均从 `apps.nodes.tasks` 函数内导入。测试文件 pre-edit hash=7d41a7b5daa2be97ca335aad634cbde8e7d46a8c1cf74de852989a2511ef3a53；加一行函数内 import 后 hash=dc9f72cfeeb5561dabe2a24bb2849a5aacad1087c290798b4cf43005aa133d18。独立审查确认 fixture 建立两端订阅 fallback，断言覆盖调度选择、handler/provider 删除读回、quota、NodeResource 与幸存 revision。`
+- `commands_and_exit_codes`: `一次 cwd/path 错误的 pytest 启动退出 127；缺少 XRAY_TEST_DATABASE_URL 的安全拒绝退出 1；首次红测 NameError 退出 1；修复后 focused 命令 `backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests/test_node_automation.py -k pool_sync_delete_runs_handler_and_fake_provider -q`，以 XRAY_ENV=test、隔离 DB 55437=1 passed；整文件 `test_node_automation.py`=32 passed；全后端 `backend/tests`（显式 DB 55437、Redis 56384）=425 passed、2 skipped，exit 0、67.60s；skip 原因为未配置固定 Xray binary。`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（145 commits、约 8.80 MB、no leaks）；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0；Node JSON parse=0；`git diff --check`=0。`
+- `write_summary`: `仅在 test_pool_sync_delete_runs_handler_and_fake_provider 增加与本文件惯例一致的 `from apps.nodes.tasks import schedule_node_pool_sync`；生产逻辑未修改。完整后端测试断言 Operation SUCCEEDED、Fake 删除后 absence、Node DELETED 且 consumes_quota=false、NodeResource RELEASED、池剩一节点且 survivor current subscription revision usable。docs/progress.md 增加本阶段结果。未改 acceptance version claim、VERSION、CHANGELOG、version-record、tag、Release 或远端。`
+- `runtime_and_ports`: `测试前确认专用 Compose project xray-test 在登记端口 55437/56384 健康运行，数据卷 xray-test-postgres 与 xray-test-redis 已存在；依 local-port-management 技能，停止服务后保留端口登记。测试后 `docker compose -p xray-test -f deploy/compose/test.yml down`=0，移除本轮容器和网络但没有 `-v`；复查两个命名卷仍存在，既有 xray-node-auto-20261109 PG/Redis 在 55435/56382 仍健康，未触碰。`
+- `prewrite_hashes`: `backend/tests/test_node_automation.py 原始任务前=7d41a7b5daa2be97ca335aad634cbde8e7d46a8c1cf74de852989a2511ef3a53；该文件本次写前=dc9f72cfeeb5561dabe2a24bb2849a5aacad1087c290798b4cf43005aa133d18；docs/progress.md=b366c6e884dadb6083df71374c12da7f44ff14a7214e3e057a4c0ff409d1e3db；docs/project-ledger.md 本事件前=c197514d855a1fd9d4c64a43524e32b5478ef1a4f4161567f324ef1647d1017b。`
+- `time_logic`: `未修改任何业务时间、每日计划、时区或轮转游标。AWS 授权边界仍为 [2026-11-10T15:48:17+08:00,17:18:17+08:00)，检查时尚在窗口内，但账号/CloudAccount 前置条件未满足；未执行云操作。`
+- `rollback_and_reuse`: `本次唯一业务工作区改动是单测 import/test 增量，可独立 revert；测试数据由 pytest 事务回滚。测试服务已停止，数据卷与端口登记保留；既有验收容器与全部 acceptance 证据目录保留。应用版本仍为已发布 v0.14.6；纯测试变更不产生新运行时版本。后续真实云验收须先恢复管理员认证/step-up，核实授权账号与 X-ray CloudAccount 一致并取得逐资源费用读回；授权窗口过期后需重新授权。`
+- `final_worktree_readback`: `本事件落盘前 git status 为 main...origin/main、无 ahead/behind；本轮新增 test_node_automation.py，原已有 docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json 修改及 10 个未跟踪 artifacts/acceptance 目录均保留。未提交、未推送。`
+- `status`: `passed (focused 1、自动化文件 32、后端 425，静态 validators，测试栈清理并保留卷); blocked (真实 AWS profile 撤回正向控制、CloudAccount/管理员 session 和逐资源最终费用); not-run (续期云写入、新运行时版本发布、生产部署)。`
+
+### 2026-11-10T16:52:45+08:00 — xray-pool-delete-fake-integration-20261110-01/002 最终门禁与工作树复核
+
+- `event_id`: `xray-pool-delete-fake-integration-20261110-01/002`
+- `run_id`: `xray-pool-delete-fake-integration-20261110-01`
+- `actor`: `Codex`
+- `event_type`: `validate, closeout`
+- `path_scope`: `backend/tests/test_node_automation.py、docs/progress.md、docs/project-ledger.md、docs/cloud-test-authorization.md、tests/acceptance/matrix.json；测试栈和保留卷状态、工作树状态`
+- `requested_outcome_and_scope`: `在追加本阶段结果后重新执行最终静态/格式门禁，确认可复现状态并如实记录剩余 AWS 身份阻塞。`
+- `authorization_boundary_and_risk`: `本轮无 AWS、SWAS、SSH、公网、CloudAccount、管理员会话或真实订阅操作。续期 AWS 账号身份仍未匹配，所有云写入保持未执行。`
+- `commands_and_exit_codes`: `完整后端 `pytest backend/tests -q`（XRAY_ENV=test、专用 PostgreSQL 55437、Redis 56384）=0，425 passed、2 skipped、67.60s；automation 文件=0，32 passed；focused 缩容集成=0，1 passed。`backend/.venv/bin/python -m ruff` 因当前 venv 未安装模块退出 1；改用仓库约定的 `uvx --from ruff==0.13.1 ruff check backend/tests/test_node_automation.py`=0。`python3 scripts/validate-acceptance.py`=0；boundary=0；secret scan=0（145 commits、约 8.80 MB、无泄漏）；skill validator=0；JSON parse=0；`git diff --check`=0。专用 Compose down=0；测试卷仍在，原验收栈 55435/56382 保持健康。`
+- `final_worktree_readback`: `main...origin/main，无 ahead/behind。tracked 修改为 backend/tests/test_node_automation.py、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；10 个已有 artifacts/acceptance 未跟踪证据目录保留。未提交、未推送。`
+- `release_and_reuse`: `新增内容只有测试覆盖与续期审计回执，没有运行时代码变化，因此不创建无功能差异的 v0.14.7；已发布 v0.14.6/tag/Release 保持不变。真实 profile 撤回正向控制和逐资源最终费用仍未验证。`
+- `status`: `passed (本地 Fake provider 缩容链路及后端全套；Ruff 0.13.1、acceptance、boundary、secret、skill、JSON、diff 门禁); blocked (续期授权账号 `94a91b85428b` 与 root profile `4a0ef08458dd` 不匹配，X-ray API 未认证，CloudAccount/step-up 与逐资源费用不可读); not-run (任何新 AWS 写入、新版本发布、生产部署)。`
+
+### 2026-11-11T01:13:49+08:00 — xray-aws-renewal-20261111-01/001 续期授权 profile 与管理员会话复核
+
+- `event_id`: `xray-aws-renewal-20261111-01/001`
+- `run_id`: `xray-aws-renewal-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `read, modify, validate, closeout`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；Chrome/IAB 本地 9538 登录/session 页面；本地 9541 readiness/session/CloudAccount API；AWS CLI profiles/STS/Lightsail/Cost Explorer 只读`
+- `requested_outcome_and_scope`: `按用户于本轮续期的 90 分钟授权，最多一台 us-east-1 Lightsail small_3_0 Ubuntu 24.04 测试节点，新增费用 USD 25 且总费用 USD 1,000 内，先确认指定 AWS 账号、CloudAccount、管理员 session/step-up、资源和费用读回。目标为最终继续真实撤回正向控制和逐资源成本验收；本次只在前置不满足时记录，不执行写入。`
+- `authorization_boundary_and_risk`: `授权窗口以 [2026-11-11T00:30:03+08:00, 2026-11-11T02:00:03+08:00) 记录。本机 clock 工具返回 2026-11-10T17:13:49Z，准确转换为 Asia/Shanghai 是 2026-11-11T01:13:49+08:00，因此当时仍在用户授权窗口内；没有时钟偏差。配置的 default/root profiles 摘要均与授权账号摘要不符，管理浏览器也无已认证 session，因此未执行任何 AWS 写入、SSH、删除或 IP 操作。`
+- `baseline_and_reads`: `当前分支 main，HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43，VERSION=0.14.6。既有脏树共 5 个 tracked 文件和 10 个 untracked acceptance evidence 目录；本事件仅追加在既有 3 份审计文档、矩阵中的目标范围，没有覆盖或清理用户/前序变更。读取 AGENTS、项目约定、X-ray skill、授权记录、progress、ledger、matrix、节点调度任务与测试。IAB 9538 登录页仍显示管理员表单；同源 session API 明确 authenticated=false、mfa_enabled=false、recent_auth_until=null；CloudAccount GET=401、readiness=200。无认证值、Cookie、Token 被读取或输入。`
+- `aws_readback`: `aws configure list-profiles 仅列出 default/root；各 profile STS 成功摘要分别为 default=b1746f68f5be、root=4a0ef08458dd；无 profile 默认 AWS CLI STS 摘要=e9502bcd3047。均不等于授权摘要 94a91b85428b。显式 root profile 的 Lightsail us-east-1 实例数为 0，small_3_0 目录价 USD 12/月、2 vCPU、2 GiB，Ubuntu 24.04 blueprint 可用。root Cost Explorer 对 2026-11-01 至 2026-11-12 返回 Amazon Lightsail 账号级累计 USD 6.0243037302；账号不匹配且非资源可归因，不能用于授权账号预算判断或最终账单。`
+- `commands_and_exit_codes`: `default/root STS 与 root Lightsail GetInstances/GetBundles/GetBlueprints 与 Cost Explorer=0；本地 `curl` readiness=HTTP 200/session authenticated=false/CloudAccount=401；`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（145 commits、约 8.80 MB、无泄漏）；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0；`jq empty tests/acceptance/matrix.json`=0；`git diff --check`=0。一次中间 parallel shell 构造失败在启动命令前退出，未产生读写；后续拆开的有效命令均如上记录。`
+- `write_summary`: `按 append-only 原则向 cloud-test-authorization.md 增加本续期及身份/费用/session 读回，progress.md 增加本阶段门禁和阻塞，matrix.json 新增独立结构化续期证据并保持 aws-real-cloud=blocked。矩阵 generated_at=2026-11-11T01:13:49+08:00。没有业务源码、VERSION、CHANGELOG、version-record、Release/tag、AWS、CloudAccount、数据库或浏览器认证状态修改。`
+- `prewrite_hashes`: `cloud-test-authorization.md=19108f6a079da7e4e0726c72bd11824425fa7b5d354df33050025cd0a7f6b4d6；progress.md=b8fb10ab7d1aa9c84508a6d26f8013d447fd53d201f57440085b9e68b4142d02；project-ledger.md=9c1a6c4cad8c5f271e12f763e5ef51c355d3b87fb482b4b4e92f11c8cda622cd；matrix.json=ba27bbc0ee17e44ccda163ae75a3edef13892686445f8932c3918cb3ee79a784；test_node_automation.py=dc9f72cfeeb5561dabe2a24bb2849a5aacad1087c290798b4cf43005aa133d18。`
+- `time_logic`: `授权按 Asia/Shanghai aware 时间记录并使用 [start,end) 约定。续期起止为 00:30:03 至 02:00:03+08，UTC 对应 2026-11-10T16:30:03Z 至 18:00:03Z；检查时 clock 返回 17:13:49Z（01:13:49+08），确认仍有效。未改变业务计划/时钟/TTL。`
+- `rollback_and_reuse`: `本次文档和矩阵追加可按单文件差异 revert；未新增资源或需外部回退的副作用。保留 10 个未跟踪验收目录、既有 v0.14.6 和全部云状态。无运行时代码差异，不生成 v0.14.7。后续安全复用入口是先由管理员在保留的 localhost 登录页完成认证和 step-up，再验证 API CloudAccount 和 AWS STS 摘要 94a91b85428b 匹配，并再次确认授权时间窗口；窗口期之外需新授权。`
+- `final_worktree_readback`: `执行 `git status --short --branch` 后仍为 main...origin/main，HEAD 与 origin/main 同为 bccb61d8104c3231d07da41d227f23d7ec8a1d43。tracked dirty 文件为 backend/tests/test_node_automation.py、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；原有 10 个未跟踪 acceptance 目录保留。未提交、未推送、未建新版本/tag。`
+- `status`: `passed (profile/read-only catalog and account-level cost observations、local readiness、acceptance/boundary/secret/skill/JSON/diff gates); blocked (no AWS profile matches authorized account, browser admin session/step-up and CloudAccount unverified, per-resource final cost unknown); not-run (renewal node creation, renewed real profile revocation positive control, production deploy, new release)。
+
+### 2026-11-11T01:17:13+08:00 — xray-aws-renewal-20261111-01/002 最终静态验证与工作树收尾
+
+- `event_id`: `xray-aws-renewal-20261111-01/002`
+- `run_id`: `xray-aws-renewal-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `validate, closeout`
+- `path_scope`: `docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；main/origin refs、VERSION、worktree；Chrome handoff 页面保留状态`
+- `requested_outcome_and_scope`: `对 001 的授权/身份阻塞审计回执完成格式、验收结构、边界和秘密门禁，并记录最终版本/工作树状态。`
+- `commands_and_exit_codes`: `最后一轮 `python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（145 commits、约 8.80 MB、no leaks）；X-ray skill quick validator=0；`jq empty tests/acceptance/matrix.json`=0；`git diff --check`=0。工作树检查=0；HEAD/origin/main refs 读取=0。`
+- `verification_evidence`: `matrix validator valid；boundary check passed；secret scan no leaks；skill valid；JSON 可解析；无 whitespace errors。服务最后读回 readiness=200、session authenticated=false/mfa_enabled=false/recent_auth_until=null、CloudAccount=401。branch main, HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43；VERSION=0.14.6。`
+- `final_worktree_readback`: `tracked dirty files 为 backend/tests/test_node_automation.py、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；10 个既有未跟踪 artifacts/acceptance 目录保留。未提交/推送，未建 tag/release。最终对本 ledger-only append 再执行 git diff --check 和 git status。`
+- `release_and_rollback`: `本轮只有既有测试增量和审计材料，没有运行时代码变化；不创建 v0.14.7。仅新增授权/进度/矩阵/ledger 文档片段可按文件级 diff 回退；保留 v0.14.6、所有云资源状态、撤回墓碑和验收 artifacts。`
+- `status`: `passed (static gates, exact branch/version/worktree readback); blocked (AWS credentials/profile do not match authorized account, admin session/step-up/CloudAccount unavailable, resource-level actual costs unknown); not-run (renewed real AWS node/create-delete/revocation acceptance, new version publication, production deploy)。
+
+### 2026-11-11T01:19:40+08:00 — xray-aws-renewal-20261111-01/003 最终 session/profile 交接状态
+
+- `event_id`: `xray-aws-renewal-20261111-01/003`
+- `run_id`: `xray-aws-renewal-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `read, closeout`
+- `path_scope`: `当前 shell 的 AWS_PROFILE 名称和 AWS_* 环境变量名；clock__curr_time；IAB 登录交接状态`
+- `commands_and_exit_codes`: `shell 只读检查 `AWS_PROFILE` 与 `AWS_` 名称 exit 0：AWS_PROFILE 未设置且没有 AWS_ 环境变量名输出；clock 读数 2026-11-10T17:19:40Z，即 Asia/Shanghai 2026-11-11T01:19:40+08。未读取变量值或凭证。`
+- `result`: `default/root 配置 profile 与授权摘要仍不匹配；浏览器还需管理员在保留登录页完成认证和 step-up。授权记录窗口剩约 40 分钟；在用户后续输入前未执行任何云操作。`
+- `status`: `blocked (授权账号/profile/应用会话前置条件); not-run (new cloud create/delete/restart/revoke/cost-attribution actions)。`
+
+### 2026-11-11T01:30:33+08:00 — xray-daily-restart-handler-integration-20261111-01/000 范围与隔离定义
+
+- `event_id`: `xray-daily-restart-handler-integration-20261111-01/000`
+- `run_id`: `xray-daily-restart-handler-integration-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `scope, read`
+- `path_scope`: `backend/tests/test_node_automation.py；只读 backend/apps/nodes/tasks.py、backend/apps/nodes/lifecycle.py、backend/apps/operations/handlers.py、backend/tests/fakes.py；专用 PostgreSQL/Redis test stack`
+- `requested_outcome_and_scope`: `按只读审计指出的缺口，增加一条串联每日定时排序 stop/start Operation、标准 handler、Fake provider、AWS 动态 IPv4 变化读回、健康检查和当前订阅地址重发布的回归。若测试先红证明生产缺陷，再做最小 TDD 修复。`
+- `authorization_boundary_and_risk`: `仅 FakeCloudProvider 与 xray_test 数据库；不访问 AWS、CloudAccount API、SSH、公网、production 或登录认证。不修改运行时/发布/云状态。`
+- `assumptions`: `按 TDD 先添加集成测试、运行期望失败，再决定是否修改实现。每日轮转时间使用 aware UTC 固定时钟并转换为 Asia/Shanghai；start 必须观测到不同 IPv4、running 状态和 HEALTHY；订阅当前 published revision 必须只包含/更新为新地址。`
+- `baseline_and_reads`: `main HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43；版本 0.14.6。已存在对 scheduler 选择和 lifecycle 局部行为的独立 Fake 测试，但没有每日 scheduler 经 Operation handler 到 Fake provider 的同场景测试。当前 gate 项目 f19638b4485c40409efb67df0a0e7f7e 登记 55437/56384 且无监听；为避免破坏现有保留卷，新测试先在相同登记端口使用独立 Compose project 和独立新命名卷。`
+- `prewrite_hashes`: `backend/tests/test_node_automation.py=dc9f72cfeeb5561dabe2a24bb2849a5aacad1087c290798b4cf43005aa133d18；project-ledger.md=3c3f12299c77b41c181201e5786ac8be0454fdb688cb2ce8fdb757c65f56fa64。`
+- `rollback_and_reuse`: `仅新增测试文件/行可通过对应 diff 撤回；测试库使用事务回滚，测试 Compose 使用独立 project 和命名卷，停止时不删除卷；不触碰 55435/56382 既有验收栈。`
+- `status`: `in-progress; test-first; no production code changes.`
+
+### 2026-11-11T01:58:43+08:00 — xray-daily-restart-handler-integration-20261111-01/001 Fake 集成与授权更正收尾
+
+- `event_id`: `xray-daily-restart-handler-integration-20261111-01/001`
+- `run_id`: `xray-daily-restart-handler-integration-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `read, test, modify, validate, closeout`
+- `path_scope`: `backend/tests/test_node_automation.py；docs/cloud-test-authorization.md、docs/progress.md、tests/acceptance/matrix.json、docs/project-ledger.md；独立测试 Compose project；AWS root STS/Lightsail us-east-1 inventory；X-ray session/CloudAccount 9537/9538/9541`
+- `requested_outcome_and_scope`: `补齐每日 stop/start scheduler 经标准 Operation handler 到 Fake provider 的集成测试，验证新 IPv4、健康探测与订阅重发布，并更正本窗口账号和 session 读回记录。`
+- `authorization_boundary_and_risk`: `AWS 仅用 root profile 只读核验；无 AWS、SSH、CloudAccount 或数据库写入，无认证旁路。测试只用 FakeCloudProvider 和独立 PostgreSQL/Redis project；不读取或记录凭据、Cookie、Token、原始 URI。`
+- `reads_and_decisions`: `AWS_PROFILE=root STS 摘要 94a91b85428b 与续期授权匹配，Lightsail us-east-1 inventory count=0。此前本窗口“无匹配 profile”描述为较早时点历史观察，本事件追加最新更正。9537/9538/9541 session 均 HTTP 200 且 authenticated=false、mfa_enabled=false、recent_auth_until=null；CloudAccount 均 HTTP 401；9537 readiness=503，9541 readiness=200。因此停止在正常认证/step-up/CloudAccount 前置门槛，不执行真实云写。`
+- `commands_and_exit_codes`: `focused integration 最终=0（1 passed）；`test_node_automation.py`=0（33 passed）；完整 `backend/tests`=0（426 passed、2 skipped，固定 Xray binary 未配置）。Ruff 0.13.1、acceptance validator、boundary、secret scan（145 commits/约8.80 MB/no leaks）、X-ray skill validator、JSON parse、diff check 均=0。AWS STS=0；Lightsail inventory=0 个实例；各 API/session 读回如上。测试 Compose down=0。`
+- `write_summary`: `测试新增 `test_daily_restart_handler_reads_new_ip_health_and_republishes_subscription`：定时 scheduler 两日选择同节点 stop/start，标准 handler 读回 stopped/running，启动后 Fake 动态地址更新至 192.0.2.77，健康配置修订通过 accepted/positive_control/fresh_connection，当前订阅 revision 更新；逐个解密实际可用格式并按格式解码，断言新 IP 存在且旧 IP 不存在。cloud-test-authorization.md 追加身份更正和认证阻塞；progress.md 追加 33/426 测试与验证结果；matrix.json 为 local Fake 测试新增 passed 项并将 aws-real-cloud 保持 blocked，记录当前 STS/session 读回。没有生产运行时代码、版本/tag/Release、业务数据库或 AWS 资源修改。`
+- `time_logic`: `授权按 Asia/Shanghai aware 半开区间 [2026-11-11T00:30:03+08:00,2026-11-11T02:00:03+08:00)；本事件机器时钟为 2026-11-10T17:58:43Z，即 2026-11-11T01:58:43+08:00，仍在窗口内。测试 scheduler 使用固定 aware UTC 2026-11-06T20:00:00Z 与 2026-11-07T20:00:00Z 驱动上海本地连续日期；未改业务时钟代码。`
+- `runtime_and_ports`: `测试复用登记端口 55437/56384，但用独立 Compose project xray-daily-restart-20261111 和全新命名卷；执行 `docker compose -p xray-daily-restart-20261111 -f deploy/compose/test.yml down`=0，不使用 `-v`。本 run 容器/网络已停止，卷保留；未触碰原 gate stack、55435/56382 或 9537/9538/9541 服务。`
+- `rollback_and_reuse`: `新增测试和四份审计/矩阵追加可按文件差异回退；保留所有先前 dirty files 与 10 个未跟踪验收目录。没有 runtime 行为变更，正式版本/tag 仍为 v0.14.6，不创建空 v0.14.7。Fake 测试不能复用为 AWS 成功证据；要继续真实验收需管理员在 X-ray 正常登录并完成近期 step-up，之后重新核验 CloudAccount 与 AWS identity，再经标准 API/Operation 执行；授权窗口后须重新授权。`
+- `status`: `passed（本地集成、自动化文件、完整后端及静态门禁）；blocked（当前 session/step-up/CloudAccount，真实 profile 撤回正向控制、真实节点/流量核对和逐资源账单）；not-run（AWS 节点创建、真实云流程、新版本发布/部署）。`
+
+### 2026-11-11T02:30:13+08:00 — xray-aws-renewal-20261111-02/000 新授权范围与只读门槛复核
+
+- `event_id`: `xray-aws-renewal-20261111-02/000`
+- `run_id`: `xray-aws-renewal-20261111-02`
+- `actor`: `Codex`
+- `event_type`: `scope, read, decision`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/cloud-test-authorization.md、docs/project-ledger.md、docs/progress.md、tests/acceptance/matrix.json；AWS root STS/Lightsail us-east-1 清单；本地 X-ray 登录页与 9537/9538/9541 auth/session、CloudAccount GET`
+- `requested_outcome_and_scope`: `续用用户新明确的单节点 AWS 验收授权：一台 us-east-1 Lightsail small_3_0 Ubuntu 24.04、额外 USD 25、总额不超过 USD 1,000；真实云操作须经 X-ray 正常认证、近期 step-up、匹配 CloudAccount、预览/幂等 Operation 与读后写流程。并修复前一轮审计重复字段及验收矩阵重排/元数据误覆盖。`
+- `authorization_boundary_and_risk`: `保守将本轮首个 clock 读数 2026-11-11T02:12:09+08:00 作为授权起点，90 分钟半开窗至 03:42:09+08:00；不沿用此前已过期窗口。只读 AWS 和本地 API；没有 AWS/SWAS 写入、SSH、公网探测、删除、静态 IP、数据库、认证旁路或费用声明。`
+- `reads_and_decisions`: `显式 root profile 的 AWS CLI stdout 指纹按既有含末尾换行方式摘要后为 94a91b85428b，与授权匹配；us-east-1 Lightsail inventory=0。9537/9538/9541 auth/session 均 HTTP 200 authenticated=false、mfa_enabled=false、recent_auth_until=null；CloudAccount GET 均 HTTP 401；浏览器 9538 仍显示登录页。管理员登录/step-up/CloudAccount 未通过当前读回，禁止真实云写。当前套餐和逐资源费用未读回。`
+- `baseline_and_dirty_state`: `main HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43；保留本轮先前测试/审计改动及 10 个未跟踪 acceptance artifact 目录。矩阵从 HEAD 基线重建，只合并已验证新增证据，恢复 aws-real-cloud 原有 metadata 和 blockers。`
+- `planned_commands_and_gates`: `矩阵 JSON/acceptance validator、boundary、secret、skill、focused/backend pytest、Ruff、git diff --check 和最终 status；登录 session 门槛不通过则保持云写 blocked。`
+- `rollback_and_reuse`: `审计与测试增量均可按精确工作树差异回退，不触碰版本/tag/Release、业务代码、数据库、容器卷、现有云资源及未跟踪验收 artifacts。可复用每日 Fake 重启集成，但不能作为真实 AWS 通过证据。`
+- `time_logic`: `保守授权起点依据首个时钟读数 2026-11-11T02:12:09+08:00，半开区间 [02:12:09,03:42:09)；对话消息早于时钟读取，未推定更早的精确秒数。`
+- `status`: `blocked（X-ray session、recent step-up 与 CloudAccount 未认证）；not-run（任何真实云写入、SSH、删除/IP 操作或费用归因）。`
+
+### 2026-11-11T02:30:13+08:00 — xray-aws-renewal-20261111-02/001 审计记录与矩阵基线纠错
+
+- `event_id`: `xray-aws-renewal-20261111-02/001`
+- `run_id`: `xray-aws-renewal-20261111-02`
+- `actor`: `Codex`
+- `event_type`: `modify, validate`
+- `path_scope`: `docs/project-ledger.md、docs/cloud-test-authorization.md、docs/progress.md、tests/acceptance/matrix.json`
+- `operation_and_reason`: `纠正 project-ledger 中 /001 事件出现两条完全相同 status 字段的笔误，并纠正上一轮 matrix.json 整文件重排导致的基线丢失风险；根据 append-only 约定保留 /001 的原文，将重复字段解释标注于本 correction，而不是重写历史。`
+- `write_summary`: `matrix 以 HEAD 恢复原始条目顺序、所有 15 条历史 aws-real-cloud evidence、原 blockers 与 commit/source_base_commit/cost_status 等元数据，只追加本任务的新证据；progress 和 cloud-test-authorization 追加本次窗口阻塞事实。JSON/validator 已运行。`
+- `authorization_boundary_and_risk`: `未更改 AWS、认证 session、CloudAccount、业务数据库、版本/tag/Release；无云写、SSH、删除或 IP 操作。`
+- `commands_and_exit_codes`: `python3 scripts/validate-acceptance.py=0；bash scripts/check-boundary.sh=0；backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager=0。最终验证及回归仍待完成。`
+- `time_logic`: `执行机器 UTC 18:30:13Z，对应 Asia/Shanghai 2026-11-11T02:30:13+08:00；有效窗口 [2026-11-11T02:12:09+08:00,2026-11-11T03:42:09+08:00)。`
+- `rollback_and_reuse`: `只可回退本任务追加的测试/文档/验收证据；保留用户工作、原始 AWS 验收历史、v0.14.6、撤回墓碑、云资源及所有 acceptance artifacts。`
+- `status`: `passed（截至此事件记录的矩阵、boundary 与 skill 验证）；blocked（真实 AWS 仍缺 X-ray 管理员 session/step-up/CloudAccount）；not-run（云写入及新版本发布）。`
+
+
+### 2026-11-11T02:01:30+08:00 — xray-daily-restart-handler-integration-20261111-01/002 授权到期与最终验证
+
+- `event_id`: `xray-daily-restart-handler-integration-20261111-01/002`
+- `run_id`: `xray-daily-restart-handler-integration-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `validate, closeout`
+- `path_scope`: `本 run ledger、authorization、progress、acceptance matrix、测试 diff；隔离 Compose 容器/网络/卷；AWS profile 和 X-ray session 最终只读状态`
+- `authorization_boundary_and_risk`: `用户授权窗口 [2026-11-11T00:30:03+08:00,2026-11-11T02:00:03+08:00) 已过期；不续用授权、不执行云写、SSH、删除或 IP 操作。`
+- `commands_and_exit_codes`: `本机 clock 2026-11-10T18:01:30Z（Asia/Shanghai 2026-11-11T02:01:30+08:00）；过期后只读 session 检查 9537/9538/9541 均仍为 authenticated=false/recent_auth_until=null；`jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0。前述 focused/backend/Ruff/boundary/secret/skill/diff 结果沿用 001 原始退出码记录。`
+- `runtime_and_ports`: `专用 Compose down 已 exit 0；容器与网络停止，卷 `xray-daily-restart-20261111-postgres`、`xray-daily-restart-20261111-redis` 保留。没有移除端口登记或触碰其他项目。`
+- `result_and_limits`: `AWS profile 身份匹配但无标准 X-ray 登录/step-up/CloudAccount，截止前未创建节点；真实 profile 撤回、节点/流量核对、逐资源最终账单、真实 AWS 新 IP/健康/订阅流程以及新版本发布/部署均未完成。没有运行时生产代码修改；版本仍 v0.14.6。`
+- `final_worktree_readback`: `main 分支、HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43；原有脏文件与 10 个未跟踪 acceptance 目录均保留；追加当前测试/审计结果，未提交或推送。回退只针对本轮文件差异，不回滚撤销墓碑、历史审计、保留卷或用户修改。`
+- `status`: `passed（本地 Fake 集成 1、自动化文件 33、全后端 426 passed/2 skipped 及静态门禁）；blocked（真实 AWS 验收条件未满足，授权窗口已过期）；not-run（节点创建、云端生命周期与撤回正向控制、资源账单归因、新版本发布/生产部署）。`
+
+### 2026-11-11T02:45:27+08:00 — xray-aws-renewal-20261111-02/002 指纹算法更正、最终回归与收尾
+
+- `event_id`: `xray-aws-renewal-20261111-02/002`
+- `run_id`: `xray-aws-renewal-20261111-02`
+- `actor`: `Codex`
+- `event_type`: `read, test, modify, validate, closeout`
+- `path_scope`: `backend/tests/test_node_automation.py、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；AWS profile STS/Lightsail 只读；9537/9538/9541 X-ray auth/session 与 CloudAccount；隔离 Compose 项目 xray-daily-restart-20261111`
+- `authorization_boundary_and_risk`: `新授权按首个 clock 读数保守记录为 [2026-11-11T02:12:09+08:00,2026-11-11T03:42:09+08:00)，限制一台 us-east-1 small_3_0 Ubuntu 24.04、额外 USD 25、总额 USD 1,000。窗口内只有 AWS 只读预检；未执行云写、SSH、公网探测、删除、静态 IP、数据库认证写或旁路。`
+- `identity_correction`: `引用并纠正 xray-daily-restart-handler-integration-20261111-01/001 与本 run /000 中的错误指纹匹配结论：以前一次既有授权台账使用的 Account-field SHA-256 规范（不含 AWS CLI 终止换行）计算，default=b1746f68f5be、root=4a0ef08458dd；都不匹配授权 94a91b85428b。命令 stdout 连末尾换行得到的 94a91b85428b 是计算算法错误，不作为账号身份匹配。保留原事件并在此 append-only correction 撤销该结论。root us-east-1 Lightsail count=0，但属非授权账号，授权账号实例数未知。`
+- `authentication_readback`: `端口 9537/9538/9541 auth/session=HTTP 200，authenticated=false、mfa_enabled=false、recent_auth_until=null；CloudAccount GET 均 HTTP 401。9538 浏览器显示登录表单。认证、step-up、CloudAccount 均不满足；AWS writes 保持 blocked。`
+- `commands_and_exit_codes`: `规范 profile fingerprint 只读复核=0；Lightsail inventory read=0（root 账号 0 台）； focused pytest `test_daily_restart_handler_reads_new_ip_health_and_republishes_subscription`=0（1 passed）；`test_node_automation.py`=0（33 passed）；完整 `backend/tests`=0（426 passed、2 skipped，固定 Xray binary 未配置）；Ruff 0.13.1=0；acceptance validator=0；boundary=0；secret scan=0（145 commits/约 8.80 MB/no leaks）；X-ray skill validator=0；JSON parse=0；`git diff --check`=0；专用 Compose down=0（容器/网络停止、数据卷保留）。首次无 XRAY_TEST_DATABASE_URL 的 pytest 初始化退出 1，未收集测试；补齐专用 DSN/Redis 后上述回归通过。`
+- `audit_correction`: `引用 xray-daily-restart-handler-integration-20261111-01/001：该事件文本有两条相同 status 行，属于字段重复笔误，不改变状态结论。引用 xray-daily-restart-handler-integration-20261111-01/002：此前已存在的 02:01:30 关闭事件在本次 02:24/02:30 记录写入时位于其后，造成文件时间顺序不一致；本事件不移动、不重写历史行，明确按事件 timestamp 理解顺序，该布局异常由本 correction 保留说明。`
+- `release_and_limits`: `唯一源码变更是回归测试；runtime、VERSION、CHANGELOG、version-record 均无产品行为修改。继续保持 v0.14.6，不创建无功能差异版本/tag/Release；未提交/推送。AWS 新节点、真实 restart/IP/health/subscription/traffic、profile 撤回正向控制、资源级最终费用与新版本发布均未完成。`
+- `rollback_and_reuse`: `测试和审计增量可对精确工作树差异单独 git revert；专用 PostgreSQL/Redis 容器与网络停止，两个卷保留。保留 10 个既有未跟踪验收目录、既有云和撤回状态、v0.14.6；Fake 结果不可当成 AWS 成功证据。`
+- `time_logic`: `执行机器 UTC 2026-11-10T18:45:27Z，对应 Asia/Shanghai 2026-11-11T02:45:27+08:00。授权半开窗口仍截至 03:42:09+08；全部本地测试时间由固定 aware UTC 样本驱动，无业务时钟/计划修改。`
+- `status`: `passed（focused、automation file、全后端、Ruff、JSON、acceptance、boundary、secret、skill、diff）；blocked（两个 AWS profile 均不匹配、X-ray 登录/step-up/CloudAccount、授权账号资源/费用读回）；not-run（真实 AWS 写入、节点云验收、profile 正向撤回与发布）。`
+
+### 2026-11-11T02:50:11+08:00 — xray-aws-renewal-20261111-02/003 最终收尾门禁与阻塞状态
+
+- `event_id`: `xray-aws-renewal-20261111-02/003`
+- `run_id`: `xray-aws-renewal-20261111-02`
+- `actor`: `Codex`
+- `event_type`: `validate, closeout`
+- `path_scope`: `最终工作树的五个 tracked 文件差异、32 项 acceptance matrix、main/origin 状态、专用 test Compose 项目和保留卷；无云写/认证写`
+- `commands_and_exit_codes`: `focused daily restart integration=0（1 passed）；test_node_automation.py=0（33 passed）；backend/tests=0（426 passed、2 skipped，固定 Xray binary 未配置）；ruff 0.13.1=0；python3 scripts/validate-acceptance.py=0；JSON parse=0；boundary=0；secret scan=0（145 commits/约 8.80 MB/no leaks）；skill validator=0；git diff --check=0；专用 Compose down=0。matrix baseline audit 确认 30 -> 32 项，原 15 条 aws-real-cloud evidence、原 blockers、commit/source_base_commit/cost/cost_status/provider/region/residual metadata 全保留，新增 evidence 仅追加；矩阵 validator=0。`
+- `current_external_state`: `规范 STS Account 字段 SHA-256 前缀：default=b1746f68f5be、root=4a0ef08458dd；均不匹配授权 94a91b85428b。root us-east-1 Lightsail 空清单来自不匹配账号。9537/9538/9541 session 全为未认证且 recent_auth_until=null，CloudAccount 全 401；9538 仍显示登录表单。未执行任何 AWS 写、SSH、删除、IP 操作或费用查询。`
+- `runtime_and_volumes`: `xray-daily-restart-20261111 Compose 容器和网络已 down，命名 PostgreSQL/Redis 卷保留；final inventory 确认没有本项目运行容器且两个卷仍存在。其他项目和 X-ray 服务未停止。`
+- `audit_corrections`: `xray-daily-restart-handler-integration-20261111-01/001 重复 status 属历史排版字段笔误，append-only 更正保留原事件；其 /002 时间较早、但在新 receipt 之前落盘，文件位置保留且按 event timestamp 理解。02:12:09+08 保守起算的新 90 分钟窗口截至 03:42:09+08；新 AWS run 仅证实身份/认证阻塞，不代表产生节点。`
+- `final_worktree_readback`: `branch main，HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43，无 ahead/behind；tracked dirty: backend/tests/test_node_automation.py、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；既有 10 个未跟踪 artifacts/acceptance 目录保留。未提交/推送/发布。版本仍 v0.14.6，未改运行时代码或版本元数据。`
+- `release_and_rollback`: `新增行为覆盖为 Fake 后端测试、无生产逻辑改动；真实 AWS 与用户要求的整体验收未完成，因此不制作或发布新版本。只回退本轮精确测试/审计差异；保留 v0.14.6、历史撤回墓碑、云状态和验收目录。`
+- `time_logic`: `本记录时间 UTC 2026-11-10T18:50:11Z / Asia/Shanghai 2026-11-11T02:50:11+08:00；授权半开区间 [02:12:09,03:42:09)。`
+- `status`: `passed（本地 Fake regression、后端 suite 和静态 gates）；blocked（匹配 AWS profile、X-ray 管理员认证/step-up/CloudAccount、授权账号资源和费用读回未达成；profile-level positive control 未运行）；not-run（真实节点创建/重启/IP/订阅/流量验收和新版本发布）。`
+
+### 2026-11-11T03:01:44+08:00 — xray-aws-renewal-20261111-03/000 用户声明后的重新核验
+
+- `event_id`: `xray-aws-renewal-20261111-03/000`
+- `run_id`: `xray-aws-renewal-20261111-03`
+- `actor`: `Codex`
+- `event_type`: `scope, read, test, decision`
+- `path_scope`: `AGENTS.md、docs/project-conventions.md、skills/xray-manager/SKILL.md、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；AWS profile metadata/STS identity；9537/9538/9541 session/CloudAccount/readiness；Chrome tab inventory/automation result；前端锁定依赖门禁`
+- `requested_outcome_and_scope`: `用户要求继续授权账号 sha256:94a91b85428b，最多一台 us-east-1 small_3_0 Ubuntu 24.04 测试节点，新增费用不超 USD 25、总额不超 USD 1,000，并声明已切 profile、完成管理员登录和 step-up。重新核验真实写入前置；继续此前本地测试/审计工作，不触碰既有 acceptance artifact。`
+- `authorization_boundary_and_risk`: `因消息起始时间为占位符，按收到消息后首个 UTC clock read 2026-11-10T19:01:44Z / Asia-Shanghai 03:01:44 起算 90 分钟，窗口 [03:01:44,04:31:44) +08。只读 AWS 身份和本地服务 API；无 AWS/SWAS 写、SSH、公网探测、删除、静态 IP、认证写、数据库写或费用读取。`
+- `reads_and_decisions`: `AWS_PROFILE/AWS_DEFAULT_PROFILE 均 unset；configure list-profiles 仅 default/root。默认 account-field 摘要 b1746f68f5be、root 4a0ef08458dd，均与授权摘要不符。9537/9538/9541 无浏览器 Cookie 的 session GET=HTTP 200、authenticated=false、mfa_enabled=false、recent_auth_until=null；CloudAccount GET=401。不能以无 Cookie 响应反证用户 Chrome 登录，但也无法验证浏览器 step-up/CloudAccount。Chrome tabs inventory 无 X-ray 标签；打开 Chrome tab automation 报扩展 UI 阻挡，因此未读写浏览器或获取 Cookie。readiness 9537=503、9538/9541=200。用户所称匹配 profile 未在执行环境可见。`
+- `baseline_and_dirty_state`: `main HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43；保留 5 个 tracked dirty files 与 10 个未跟踪 acceptance artifact 目录。`
+- `commands_and_exit_codes`: `AWS default/root Account-field digest probes=0（摘要只回显短前缀）；本地 auth/session curl=0（HTTP 200 unauthenticated）；CloudAccount curl=0（HTTP 401）；readiness probes=0（9537=503，9538/9541=200）；Chrome getState=0，Chrome createBrowserTab returned blocked by extension UI。frontend lint=0；frontend unit=0（88 passed）；frontend typecheck 使用仓库 Corepack pnpm 10.33.0=0；frontend production build=0。后端 focused=0（1 passed）、automation suite=0（33 passed）、backend suite=0（426 passed、2 skipped）沿用本轮前述测试实录。`
+- `write_summary`: `追加本次授权重核于 cloud-test-authorization 与 progress；acceptance matrix 保持原 aws-real-cloud blockers/evidence/metadata 完整并新增独立 blocked item；ledger 追加当前窗口 scope/event。只有文档/验收矩阵增量，无 runtime 代码、版本/tag/Release、认证或云状态改动。`
+- `external_limits`: `当前无法从工具环境识别授权 AWS profile，也不能独立验证浏览器 session、recent step-up、CloudAccount 或授权账号实际资源/费用。用户提供 profile 名称并解除 Chrome 扩展阻挡前，真实 AWS gate blocked。不存在用户授权使用 CLI 绕过 X-ray CloudAccount/Operation 的范围。`
+- `time_logic`: `用户起始字段占位符。首个时钟 2026-11-10T19:01:44Z = 2026-11-11T03:01:44+08:00；90 分钟半开区间 [03:01:44,04:31:44)。`
+- `rollback_and_reuse`: `仅三份文档/验收矩阵更新及既有测试差异；可按本次精确 diff revert。保留所有用户修改、10 个未跟踪验收目录、v0.14.6 与撤回墓碑。不复用浏览器/Cookie/凭据；Fake 测试只作为本地回归。`
+- `status`: `passed（前端 lint/unit/typecheck/build 及此前已记录后端/静态测试）；blocked（授权 AWS 身份、浏览器认证/step-up 和 CloudAccount 缺少可独立读回）；not-run（真实节点创建、IP/健康/订阅/流量/撤回/节点数量与账单核对，新版本发布/生产部署）。`
+
+### 2026-11-11T03:16:50+08:00 — xray-aws-renewal-20261111-03/001 最终静态验证与工作树读回
+
+- `event_id`: `xray-aws-renewal-20261111-03/001`
+- `run_id`: `xray-aws-renewal-20261111-03`
+- `actor`: `Codex`
+- `event_type`: `validate, closeout`
+- `path_scope`: `本 run 追加的 cloud authorization/progress/ledger/matrix 记录与既有测试差异；完整 acceptance matrix；main/origin 与最终工作树；未运行云端写操作`
+- `commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json=0；python3 scripts/validate-acceptance.py=0；bash scripts/check-boundary.sh=0；bash scripts/check-secrets.sh=0（145 commits，约 8.80 MB，无泄漏）；xray-manager skill quick validator=0；git diff --check=0；frontend lint=0；frontend unit=0（88 passed）；Corepack pnpm 10.33.0 frontend typecheck=0；frontend production build=0；focused daily restart integration=0（1 passed）、test_node_automation.py=0（33 passed）、backend/tests=0（426 passed、2 skipped）均依据本轮前述完整测试记录。`
+- `current_external_state`: `当前无匹配 AWS profile 可读；profile 名称需用户确认。session 与 CloudAccount 请求没有浏览器 Cookie，不能证明 Chrome 状态；Chrome 自动化被扩展 UI 阻挡。身份、近期 step-up、CloudAccount 和资源账单未独立验证；未进行任何云写。`
+- `final_worktree_readback`: `main HEAD=origin/main=bccb61d8104c3231d07da41d227f23d7ec8a1d43。tracked dirty 仍为 backend/tests/test_node_automation.py、docs/cloud-test-authorization.md、docs/progress.md、docs/project-ledger.md、tests/acceptance/matrix.json；保留原有 10 个未跟踪 artifacts/acceptance 目录。未提交、未推送、未发布。版本 v0.14.6。矩阵 aws-real-cloud 原有 23 条 evidence 与 blockers 保留，另有独立 blocked 重核项。`
+- `release_and_rollback`: `代码差异只有 Fake-provider 测试，没有 runtime 产品行为修改；不创建无行为变化的新版本/tag/Release。仅回退本任务明确差异；保留发布、撤回 tombstone、云状态和所有验收 artifacts。`
+- `time_logic`: `新授权起点依消息后的首个可读时钟 2026-11-10T19:01:44Z / Asia-Shanghai 03:01:44+08 估算；半开窗口 [03:01:44,04:31:44)。最终复核时钟 2026-11-10T19:16:50Z / 03:16:50+08，窗口内；消息原始起始时间仍为占位符，故使用保守估算。`
+- `status`: `passed（本地前后端验证、验收/边界/秘密/技能/差异静态门禁）；blocked（AWS profile mismatch/current session and step-up/CloudAccount not independently readable, Chrome extension UI prevents browser inspection）；not-run（AWS 节点创建、真实新 IP/健康/订阅/撤回、云端数量/流量、资源级费用和新版本发布）。`
+
+### 2026-11-11 — xray-usage-retry-20261111-01/000 流量采集失败重试范围定义
+
+- `event_id`: `xray-usage-retry-20261111-01/000`
+- `run_id`: `xray-usage-retry-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `scope, read, test`
+- `path_scope`: `backend/apps/subscriptions/tasks.py、backend/apps/nodes/models.py、backend/apps/nodes/migrations/0008_managednode_usage_sync_retry.py、backend/tests/subscriptions/test_node_metering.py；隔离 Compose project xray-usage-retry-20261111，登记端口 55437/56384`
+- `requested_outcome_and_scope`: `保留现有全局用量采集周期，并使失败节点按有界指数退避更早单独重试、成功节点不重复采集；禁用 usage sync 后不执行采集。`
+- `authorization_boundary_and_risk`: `只修改后端逻辑/DB additive migration/测试；测试使用 XRAY_ENV=test、独立 xray_test/Redis、Fake collector 与独立命名卷；不访问 AWS/SWAS/SSH、真实 CloudAccount、生产、订阅公开 URL、认证旁路或用户数据库。没有认证、云端或费用授权续期，云写入不在本 run 内。`
+- `baseline_and_reads`: `main/origin/HEAD=bccb61d8104c3231d07da41d227f23d7ec8a1d43；保留此前五个 tracked dirty 文件及 10 个未跟踪验收目录。错误根因是 refresh_usage_and_limits 在采集前推进全局 last_scheduled_at，捕获采集异常只增加 unavailable 计数而不安排重试；长间隔可使失败节点等待完整周期。Celery Beat 每分钟调用 task，NodeAutomationSetting 的 usage interval 为 1..1440 分钟。端口管理器校验项目 f19638b4485c40409efb67df0a0e7f7e 的 55437/56384=0；它们此前未监听；既有 55435/56382 的其他测试 Compose 完整保留。`
+- `planned_change`: `在 ManagedNode 上添加 retry count 和 due timestamp，新增 additive migration 与索引；采集失败用 1,2,4,8,16,32,60 分钟上限退避，成功清零；非全周期仅采集到期失败节点；usage sync disabled 时跳过采集。`
+- `test_first_evidence`: `首次 focused regression 在旧行为上失败：采集失败后 ManagedNode 没有 usage_sync_retry_count 字段（pytest exit=1），该失败与预期缺少失败重试状态相符。新增禁用状态测试在实现开关保护前失败（实际 collected=1、期望 0），确认禁用情况下已有失败节点会被重试。`
+- `time_logic`: `所有重试时间使用 aware django timezone.now()；半开到期判定 `retry_at <= now`；退避上限 60 分钟；全周期仍按原配置分钟值，失败重试不提前刷新成功节点。`
+- `rollback_and_reuse`: `代码及 migration 可分别 git revert；测试数据库由 pytest 事务回滚。独立 Compose volume `xray-usage-retry-20261111-postgres`、`xray-usage-retry-20261111-redis` 停止后保留；不删除用户工件或旧卷。`
+- `status`: `in-progress（实现与相关后端回归）；真实 AWS 状态/IP/健康/订阅/流量/账单仍由本项目此前的访问门槛阻塞，且本 run 不涉及云写。`
+
+### 2026-11-11T17:43:47+08:00 — xray-release-0147-20261111-01/000 本地门禁和候选发布范围定义
+
+- `event_id`: `xray-release-0147-20261111-01/000`
+- `run_id`: `xray-release-0147-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `scope, read`
+- `requested_outcome_and_scope`: `继续用户明确授权的池数量同步、每日单节点重启、动态 IP/健康/订阅、撤回/节点及流量对账目标；审核本轮流量失败退避/节点采集租约代码及此前池缩容/重启 Fake 集成，重跑 v0.14.7 全部本地门禁，更新验收记录，并在本地/远端 Delivery Gates 成功后提交、推送 main、创建 annotated tag 和 GitHub Release。`
+- `in_scope`: `当前 main 上与本任务相干的应用逻辑、数据库 additive migrations、测试、版本元数据、acceptance matrix、0.14.7 专用 acceptance artifact，以及 docs/project-ledger.md、docs/progress.md、docs/version-record.md、docs/cloud-test-authorization.md。`
+- `out_of_scope`: `任何 AWS/SWAS 写入、SSH、公网探测、资源删除/静态 IP 释放、生产部署/生产发布、认证旁路、X-ray/CloudAccount/数据库凭据写入、旧验收 artifact 清理、旧数据卷删除及其他项目进程/端口操作。`
+- `authorization_boundary_and_risk`: `用户原始任务明确授权测试 AWS 服务器且总预算不超过 USD 1,000，后续明确续期最多一台 us-east-1 Lightsail small_3_0 Ubuntu 24.04、额外 USD 25、90 分钟。本机当前时钟已晚于此前记录的 2026-11-11T03:42:09+08 窗口截止，且最新标准 STS Account-field 摘要为 default=b1746f68f5be/root=4a0ef08458dd，均不匹配授权摘要 94a91b85428b；Chrome/X-ray admin session、近期 step-up、CloudAccount 尚无独立读回。因此本 run 不执行真实云写或费用查询。用户明确要求测试同步发布新版本，范围内 GitHub 发布不等于真实云或生产验收。`
+- `baseline_and_dirty_state`: `main 与 origin/main 均为 bccb61d8104c3231d07da41d227f23d7ec8a1d43，无 ahead/behind；保留现有 tracked 变更、旧 acceptance artifact 目录和 additive migration。工作树包含流量重试/租约实现、每日重启与池缩容集成测试及 0.14.7 元数据。当前容器清单显示 xray-usage-retry-20261111 PostgreSQL/Redis 在本项目 compose 路径运行；Docker project labels 和端口登记对应当前任务，监听 55437/56384。其他项目容器保持不动。`
+- `prewrite_artifacts`: `此前 0.14.7/final-gates-20261111-usage-lease 摘要声明 19 个 gates exit=0，但目录内只存在 summary.tsv 和 JUnit XML，摘要所列逐 gate 日志并未保留。本 run 将采用全新独立目录重新执行完整门禁，避免覆盖旧 evidence。独立审查认为租约 UUID fencing、状态认领时复核、inclusive retry due boundary 和退避封顶无确定性缺陷；真正双数据库 worker 并发尚未模拟。`
+- `planned_commands_and_gates`: `用仓库 Corepack pnpm 10.33.0 运行 scripts/check-local.sh 并写入独立 0.14.7 release gate 目录；核对 JUnit 及全部退出码、迁移、矩阵、边界、秘密、skill、diff；只停止本轮 Compose project 并保留卷。之后仅暂存本项相干文件、提交 main、推送精确提交，读取 Delivery Gates，再按 .github/workflows/release.yml 创建 annotated v0.14.7、运行 GitHub Release 并读回资产。无法由可用权限执行的步骤必须记录具体阻塞。`
+- `time_logic`: `本事件时间采用实际 UTC clock 转 Asia/Shanghai；门禁/Operation 本身不改变业务时间。AWS authorization 使用既定 [start,end) 90 分钟规则且已过期；不得续用。`
+- `rollback_and_reuse`: `未发布前可恢复 v0.14.6 tag 或 git revert 该 0.14.7 源码提交；两项 nodes migration 只做向前兼容，不执行反向迁移。保留审计、Token 撤回墓碑、云端状态、所有旧验收产物和专用命名卷。发布/CI 证据不能重用为 AWS 或生产通过证据。`
+- `status`: `in-progress（门禁复跑、验收记录更新和发布前审查）；blocked（AWS profile identity、X-ray session/step-up/CloudAccount、真实 profile 撤回正向控制及逐资源最终费用）；not-run（真实云验收/生产）。`
+
+### 2026-11-11T17:49:19+08:00 — xray-release-0147-20261111-01/001 本地发布候选门禁通过
+
+- `event_id`: `xray-release-0147-20261111-01/001`
+- `run_id`: `xray-release-0147-20261111-01`
+- `actor`: `Codex`
+- `event_type`: `modify, validate, cleanup`
+- `path_scope`: `本 run 修改的 version/changelog/API/frontend/installer files、backend 流量采集 retry/lease 与 migrations/tests、docs/version-record/progress/cloud-test-authorization/project-ledger、tests/acceptance/matrix.json、artifacts/acceptance/0.14.7/final-gates-20261111-release-r1/r2；项目 Compose project xray-usage-retry-20261111、登记端口 55437/56384 及保留卷`
+- `commands_and_exit_codes`: `首个本地门禁=1 at runtime，因为脚本解析到 pnpm 11.25.0；没有后续 gate。完整 r2 命令使用临时 symlink 到缓存 pnpm.cjs、XRAY_TEST_SERVICES_EXTERNAL=1、POSTGRES/Redis 55437/56384 和既有隔离卷，scripts/check-local.sh=0，19/19 gates exit 0；后端 JUnit 553（551 passed、2 skipped，0 failures/errors），前端 88 passed，Playwright 8 passed；迁移 drift、OpenAPI、Xray 26.3.27、subscription formats、ShellCheck、boundary、Gitleaks、skill、acceptance matrix 全通过；compose down=0；volume inventory 确认 PostgreSQL/Redis 均保留；git diff --check=0；python3 scripts/validate-acceptance.py=0。`
+- `review_findings`: `独立只读代码审查未发现确定性业务缺陷：retry due 用 <=，退避 1/2/4/8/16/32/60 分钟，成功清零，关闭同步不重试；条件认领时重验节点资格，成功/失败状态回写核验 lease UUID，可回收过期 lease。测试未模拟两个独立 PostgreSQL worker 的真实同时竞争；异常 lease_id 非空且 expires_at=NULL 组合不会自动认领，正常路径不会产生。`
+- `write_summary`: `更新 0.14.7 版本索引、progress、cloud authorization 过期状态和 matrix 的独立本地通过行，记录精确 r2 摘要/JUnit及失败尝试。未改 AWS/应用认证/CloudAccount/账单/生产状态；尚未提交、推送、创建 tag 或 Release。`
+- `authorization_boundary_and_risk`: `此前 90 分钟 AWS 窗口已过期；最新 canonical account-field fingerprints default/root 与授权 94a91b85428b 不同，X-ray admin session/recent step-up/CloudAccount 未认证读回。本 run 不执行 AWS/SWAS/SSH/公网/删除/静态 IP/费用动作。原用户请求明确授权测试后发布新版本；发布为 GitHub 源码/安装包交付，不代表云或生产成功。`
+- `time_logic`: `命令时间戳由 UTC date 记录，显示换算到 Asia/Shanghai；AWS authorization 是既定 [start,end) 窗口并已过期；应用重试使用 aware UTC/Django timezone。`
+- `runtime_and_ports`: `容器启动前 Docker labels 证明 project=xray-usage-retry-20261111 且端口 55437/56384 归属本 X-ray gate stack。r2 复用此项目服务；down 后容器/网络停止且卷保留。其他项目容器与 X-ray 服务未修改。`
+- `rollback_and_reuse`: `源码候选可回到 v0.14.6 或 git revert 阶段提交；nodes migration 仅前向兼容，不运行 reverse migration。停止服务不删 xray-usage-retry-20261111-postgres/redis 卷；保留所有历史验收 artifact 和端口登记。Fake/Stub 证据不复用为 AWS/生产通过证据。`
+- `status`: `passed（本地发布候选 19/19 gates、后端/frontend/E2E/static 验收）；blocked（AWS 身份、X-ray session/step-up/CloudAccount、profile-level revoke positive control、资源级最终账单）；in-progress（相干源码提交、push/CI、tag、GitHub Release/资产读回）；not-run（真实云及生产验收）。`
+
+### 2026-11-11T18:01:44+08:00 — xray-release-0147-20261111-01/002 日志忽略状态更正与秘密复核
+
+- `event_id`: `xray-release-0147-20261111-01/002`
+- `run_id`: `xray-release-0147-20261111-01`
+- `event_type`: `correction, validate`
+- `correction`: `/000 的 prewrite_artifacts 曾记载摘要/JUnit 之外逐 gate 日志并未保留。该描述不准确：19 份 r2 `.log` 文件实际存在于 artifacts/acceptance/0.14.7/final-gates-20261111-release-r2，但受 .gitignore:23 的 *.log 规则排除，故普通 rg/status 不显示；r1 runtime.log 和 summary.tsv 也存在。此更正保留旧观察并说明其搜索限制。`
+- `commands_and_exit_codes`: `find artifacts/acceptance/0.14.7/final-gates-20261111-release-r2 -maxdepth 1 -type f -name '*.log'` 共 19 个文件，exit=0；固定 Gitleaks v8.24.3 镜像对 r2 目录运行 detect --no-git --redact=0?（工具默认 100% 脱敏）exit=0，约 102.83 KB，no leaks found。镜像用法帮助确认无 --redact 参数即默认全脱敏；没有回显秘密。`
+- `decision`: `若将这些 .log 纳入版本提交，必须单独审阅并显式 git add -f 精确 r1/r2 路径；不修改全局 ignore 规则。旧 0.14.4/0.14.5/0.14.6/usage-lease artifact 保持未暂存。`
+- `status`: `passed（r2 文件存在和专用 Gitleaks scan）；in-progress（r1/r2 artifact 相干路径暂存与提交前复核）。`
+
+### 2026-11-11T18:02:10+08:00 — xray-release-0147-20261111-01/003 Gitleaks 参数记录修正
+
+- `event_id`: `xray-release-0147-20261111-01/003`
+- `run_id`: `xray-release-0147-20261111-01`
+- `event_type`: `correction`
+- `correction`: `/002 commands_and_exit_codes 中 `--redact=0?` 是未执行参数且属于错误记法。实际命令为固定 Gitleaks 镜像 `detect --no-banner --redact --no-git --source <r2目录> --config /repo/.gitleaks.toml`；按 `gitleaks detect --help`，可选数字省略时默认 100% redact。该定向扫描 exit 0、约 102.83 KB、未发现泄漏。`
+- `status`: `passed（修正后的命令/退出码保持不变）。`
+
+### 2026-11-11T18:05:00+08:00 — xray-release-0147-20261111-01/004 暂存范围与 whitespace 审查
+
+- `event_id`: `xray-release-0147-20261111-01/004`
+- `run_id`: `xray-release-0147-20261111-01`
+- `event_type`: `modify, validate`
+- `path_scope`: `当前 0.14.7 coherent source/version/docs/matrix 和 r1/r2 summary/JUnit staged diff；r2 原始日志留在工作树但未暂存`
+- `commands_and_exit_codes`: `首次 git diff --cached --check 因原始 logs 的工具尾随空格/空行 exit=2；没有修改这些运行日志。git restore --staged -- artifacts/acceptance/0.14.7/final-gates-20261111-release-r2/*.log=0，raw logs 仍存在于工作树。修正后的 git diff --cached --check=0。固定 Gitleaks v8.24.3 对完整 r2 logs 专门 scan=0（约 102.83 KB/no leaks）；对最终 staged diff 执行 protect --staged --redact=0（1 commit/约 242.23 KB/no leaks）。`
+- `commit_scope`: `仅暂存 0.14.7 runtime/migrations/tests/version metadata/审计与 matrix，以及 r1 fail summary、r2 pass summary/JUnit。之前 0.14.4/0.14.5/0.14.6/usage-lease artifact 目录保持未暂存并保留。原始 r2 logs 的订阅格式日志含容器 CLI 尾随空格，不适合作为 Git patch；它们留在本地可按 summary 对应读取，不纳入版本提交。`
+- `status`: `passed（精确 diff whitespace/secret scan）；in-progress（源码提交、push 和远端 CI）。`

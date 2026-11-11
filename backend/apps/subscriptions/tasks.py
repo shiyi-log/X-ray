@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from celery import shared_task
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from apps.identity.models import NodeAutomationSetting
@@ -13,6 +14,35 @@ from apps.operations.services import OperationService
 
 from .models import AccessProfile, NodeCredential
 from .policy import quota_state
+
+USAGE_SYNC_LEASE_MINUTES = 5
+
+
+def _claim_usage_sync_node(node_id, now, *, retry_only):
+    lease_id = uuid4()
+    eligible = ManagedNode.objects.filter(
+        pk=node_id,
+        provisioning_state="READY",
+        desired_state="PRESENT",
+        security_state="OPEN",
+        external_id__gt="",
+    ).filter(Q(usage_sync_lease_id__isnull=True) | Q(usage_sync_lease_expires_at__lte=now))
+    if retry_only:
+        eligible = eligible.filter(
+            Q(usage_sync_retry_at__lte=now)
+            | Q(usage_sync_lease_id__isnull=False, usage_sync_lease_expires_at__lte=now)
+        )
+    claimed = eligible.update(
+        usage_sync_lease_id=lease_id,
+        usage_sync_lease_expires_at=now + timedelta(minutes=USAGE_SYNC_LEASE_MINUTES),
+    )
+    if not claimed:
+        return None
+    node = (
+        ManagedNode.objects.select_related("cloud_account", "cloud_credential_version")
+        .get(pk=node_id, usage_sync_lease_id=lease_id)
+    )
+    return lease_id, node
 
 
 def enforce_limits():
@@ -78,15 +108,59 @@ def refresh_usage_and_limits():
             setting.save(update_fields=["usage_sync_last_scheduled_at", "updated_at"])
 
     result = {"collected": 0, "unavailable": 0}
+    retry_only = not due
     if due:
-        for node in ManagedNode.objects.filter(
-            provisioning_state="READY", desired_state="PRESENT", security_state="OPEN"
-        ):
+        eligible = ManagedNode.objects.filter(
+            provisioning_state="READY",
+            desired_state="PRESENT",
+            security_state="OPEN",
+            external_id__gt="",
+        ).order_by("pk")
+        nodes = list(eligible)
+        due_node_ids = {node.pk for node in nodes}
+    else:
+        due_node_ids = set(
+            ManagedNode.objects.filter(
+                Q(usage_sync_retry_at__lte=now)
+                | Q(usage_sync_lease_id__isnull=False, usage_sync_lease_expires_at__lte=now),
+                provisioning_state="READY",
+                desired_state="PRESENT",
+                security_state="OPEN",
+                external_id__gt="",
+            ).values_list("pk", flat=True)
+        )
+        nodes = list(
+            ManagedNode.objects.filter(pk__in=due_node_ids).order_by("pk")
+        )
+    if setting.usage_sync_enabled and (due or due_node_ids):
+        for candidate in nodes:
+            claimed_at = timezone.now()
+            claim = _claim_usage_sync_node(
+                candidate.pk, claimed_at, retry_only=retry_only
+            )
+            if claim is None:
+                continue
+            lease_id, node = claim
             try:
                 collect_node(node)
                 result["collected"] += 1
+                ManagedNode.objects.filter(pk=node.pk, usage_sync_lease_id=lease_id).update(
+                    usage_sync_retry_count=0,
+                    usage_sync_retry_at=None,
+                    usage_sync_lease_id=None,
+                    usage_sync_lease_expires_at=None,
+                )
             except Exception:
                 result["unavailable"] += 1
+                retry_count = min(node.usage_sync_retry_count + 1, 7)
+                retry_minutes = min(2 ** (retry_count - 1), 60)
+                retry_at = timezone.now() + timedelta(minutes=retry_minutes)
+                ManagedNode.objects.filter(pk=node.pk, usage_sync_lease_id=lease_id).update(
+                    usage_sync_retry_count=retry_count,
+                    usage_sync_retry_at=retry_at,
+                    usage_sync_lease_id=None,
+                    usage_sync_lease_expires_at=None,
+                )
     result["enforcement_operations"] = len(enforce_limits())
     result["at"] = now.isoformat()
     return result

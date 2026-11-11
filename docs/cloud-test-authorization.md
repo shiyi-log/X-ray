@@ -186,3 +186,200 @@ AWS CLI 只读预检（2026-11-09 21:28+08）：`sts get-caller-identity` 仅保
 - 池定时同步创建标准删除 Operation `3dfd0491-097b-49ec-9200-504bc50994a3`，状态 `SUCCEEDED`。provider 读回 `CONFIRMED_ABSENT`，`cloud_absence_confirmed=true`、`quota_released=true`；节点 `DELETED` 且不再占配额，`NodeResource` 为 `RELEASED`；池 quota/used 为 `0/0`，outbox 待投递数为 0。
 - 两份订阅的 expected/assigned/ready/published 均为 `0/0/0/0`，`mismatch=false`。没有保留本轮 AWS 节点或静态 IP、磁盘、快照；专用 PostgreSQL/Redis 及命名卷继续保留作审计。
 - 本条记录依据本轮终态读回摘要整理，Operation/provider 调用的精确完成时间未随摘要保留；记录时间不是云操作时间。逐资源最终账单仍未确认，账号级 Cost Explorer 汇总不能作为其替代。
+
+## 2026-11-10T15:48:17+08:00 — profile 撤回验收续期与前置阻塞
+
+用户于当前对话明确续期 90 分钟，范围限一台 `us-east-1` Lightsail `small_3_0`
+Ubuntu 24.04 测试节点、额外预算上限 USD 25，继续计入总预算 USD 1,000。
+窗口为 `[2026-11-10T15:48:17+08:00, 2026-11-10T17:18:17+08:00)`。
+此续期不扩大到其他账号、既有资源、区域或套餐，也不豁免 X-ray 管理平台认证、
+step-up、CloudAccount 身份匹配及读后写证据要求。
+
+只读预检于 2026-11-10 15:49 至 15:54+08 执行后，本授权保持有效但**未进入云写阶段**：
+
+- AWS CLI `sts get-caller-identity` 成功，但当前 caller account 摘要
+  `sha256:e9502bcd3047` 与本授权既有账号摘要 `sha256:94a91b85428b` 不匹配。
+- Lightsail `GetInstances`、`GetBundles`、`GetBlueprints` 与 Cost Explorer
+  `GetCostAndUsage` 均返回 `AccessDenied`（CLI exit 254）；当前实例数量、资源归属与
+  逐资源最终费用未知。
+- 本地 API `127.0.0.1:9541/health/ready` 返回 HTTP 200，但认证 session 显示
+  `authenticated=false`；系统和 CloudAccount 管理 API 在无 session 下分别返回
+  HTTP 401。管理员认证、step-up 和当前 CloudAccount 无法验证。
+- 未创建或修改 AWS 资源；未执行 AWS/SSH 写入、删除或 IP 操作。不得通过 AWS CLI、
+  手工 SSH、数据库写入或其它方式绕过 X-ray 标准流程。
+
+因此本次续期授权**被账号归属不匹配、AWS 只读 AccessDenied、管理 API 未认证三项前置
+条件共同阻塞**。在账号摘要由管理员核实并恢复授权账号读取权限、且标准管理员会话、
+step-up 与已验证 CloudAccount API 读回成功之前，不得创建该节点。窗口到期后本次
+续期自动失效；当前资源清单和最终账单仍未知，不能宣称已清理或费用为零。
+
+## 2026-11-10T16:23:42+08:00 — 续期账号/CloudAccount 身份核对更正
+
+本节追加更正上节及 `xray-aws-renewal-20261110-01/001` 的当前身份/权限读回；保留旧记录。
+当前续期窗口仍有效至 `2026-11-10T17:18:17+08:00`，但新读回没有解除身份前置条件：
+
+- 2026-11-10 16:18+08，显式 `AWS_PROFILE=root` 的 STS 成功（exit 0），账号摘要为
+  `sha256:4a0ef08458dd`，与本续期授权记录要求的 `sha256:94a91b85428b` 不一致。
+  上节提到的 `sha256:e9502bcd3047` 是 default profile，不代表显式 root profile。
+- 同一 root profile 对 `us-east-1` Lightsail 的 `GetInstances`、`GetBundles`、
+  `GetBlueprints` 均成功（exit 0）：该 profile 当前实例清单计数为 0；`small_3_0`
+  目录价为 USD 12/月、2 vCPU/2 GiB；`ubuntu_24_04` blueprint 为 24.04 LTS。
+  这些读数来自与本次授权不匹配的账号，不能作为授权账号的资源清单或费用证据。
+- 未对不匹配账号查询 Cost Explorer。该续期授权账号的实例数、单资源费用与最终账单
+  仍未知；不以账号级汇总或其他账号的价格目录替代。
+- `127.0.0.1:9541/health/ready` 为 HTTP 200；当前 auth session 为
+  `authenticated=false`，CloudAccount collection 为 HTTP 401。没有管理员 session，
+  因此当前 CloudAccount、step-up 和账号验证状态未能读回。此前文档中的
+  CloudAccount 摘要 `sha256:4a0ef08458dd` 仅作历史身份线索，不能代替当前 API 验证。
+- 没有创建/修改 AWS 资源，没有 AWS 写入、SSH、删除、IP 操作、Cost Explorer 查询、
+  CloudAccount 凭据更换或数据库写入。不得直接 AWS CLI 写入或替换 CloudAccount 绕过流程。
+
+当前结论仍为**续期有效但云写入被阻塞**：授权账号摘要 `94a91b85428b` 与显式 root
+profile `4a0ef08458dd` 不符，且管理 API 未认证。恢复标准管理员认证/step-up 并使当前
+已验证 CloudAccount 与授权账号一致之前，不创建测试节点。若无法在截止前解除阻塞，
+窗口于 `2026-11-10T17:18:17+08:00` 自动失效；逐资源最终费用保持未知。
+
+## 2026-11-11T00:30:03+08:00 — 测试节点验收授权续期与匹配复核
+
+用户于 2026-11-11 00:30:03+08 明确续期 90 分钟：最多一台 `us-east-1`
+Lightsail `small_3_0` Ubuntu 24.04 测试节点，新增费用上限 USD 25，累计任务费用
+仍不得超过 USD 1,000。有效窗口为 `[2026-11-11T00:30:03+08:00,
+2026-11-11T02:00:03+08:00)`。用户声明本机已切换匹配 profile，管理员登录及
+step-up 已完成；这些声明需要当前 STS/API 读回支持后才可执行云写入。
+
+2026-11-11 00:56 至 01:09+08 的只读复核结果：
+
+- `aws configure list-profiles` 仅列出 `default`、`root`。两者 STS 成功，但账号摘要
+  分别为 `b1746f68f5be`、`4a0ef08458dd`，都不匹配授权摘要 `94a91b85428b`；
+  没有发现所称匹配 profile。
+- 显式 `AWS_PROFILE=root` 的 `us-east-1` Lightsail 清单为 0；`small_3_0` 目录价
+  USD 12/月、2 vCPU/2 GiB，`ubuntu_24_04` 为 Ubuntu 24.04 LTS。上述读数属于摘要
+  `4a0ef08458dd` 的非授权账号，不代表授权账号的资源目录或资源状态。
+- `root` profile 对 2026-11-01 至 2026-11-12 的 Amazon Lightsail Cost Explorer
+  月内累计只读金额为 USD 6.0243037302。此值是整个账号且 profile 身份不匹配，
+  不能归因本测试、证明预算余额或确认最终账单；授权账号的资源级费用仍未知。
+- 浏览器页面 `http://127.0.0.1:9538` 的认证 session 明确返回
+  `authenticated=false`、`recent_auth_until=null`。CloudAccount API 无有效会话时为
+  HTTP 401；当前管理员登录、step-up 和应用 CloudAccount 账号匹配均未验证。登录页
+  已保留为 handoff，未读取或代输认证值。API readiness 为 HTTP 200。
+- 未对任何 profile 执行写操作、SSH、实例删除或 IP 操作；未查询授权账号账单，未改
+  CloudAccount 凭据或数据库，没有创建测试节点。
+
+因此续期窗口当前尚未结束，但**云写入在授权窗口内被 profile 账号不匹配和应用未
+认证共同阻塞**。只有匹配账号的 STS/资源与费用只读读回、浏览器认证/step-up 以及
+应用 CloudAccount 校验都成功后，才能经 X-ray 标准预览、幂等 Operation 与读后写链路
+执行限定的一台测试节点；窗口于 `2026-11-11T02:00:03+08:00` 到期，之后必须重新授权。
+
+## 2026-11-11T01:52:57+08:00 — 匹配 profile 更正及本地测试收尾
+
+本节追加更正上节的 AWS profile 身份读回，并记录本地回归结果；不删除或覆盖前述
+历史观察。授权窗口为 [2026-11-11T00:30:03+08:00, 2026-11-11T02:00:03+08:00)，
+按本机 UTC 时钟 2026-11-10T17:52:57Z 换算为上海时间 2026-11-11T01:52:57+08:00，
+此记录时间仍在窗口内。
+
+- AWS_PROFILE=root 的 STS 账号摘要为 94a91b85428b，与本次授权账号摘要一致；
+  AWS_PROFILE=root aws lightsail get-instances --region us-east-1 返回实例数 0。
+  未尝试创建或修改资源。small_3_0 价格目录与账号级账单尚未重新核实，不据此声称
+  预算余额或最终费用。
+- 只读检查本机 X-ray session：端口 9537、9538、9541 的
+  /api/v1/auth/session 均为 HTTP 200，但都返回 authenticated=false、
+  mfa_enabled=false、recent_auth_until=null；三个实例的 CloudAccount collection
+  均返回 HTTP 401。9537 /health/ready 返回 503；9541 /health/ready 为 HTTP 200。
+  未读取或输入管理员密码、TOTP、Cookie、Token，也未启用测试旁路。
+- 没有可验证的管理员 session/近期 step-up/CloudAccount，因此不经 AWS CLI 或直接
+  数据库绕过 X-ray 标准流程执行真实云写入。真实 profile 级撤回正向控制、节点数量、
+  流量和逐资源最终账单本轮均未运行；AWS 总体验收保持 blocked。
+- 新增自动化集成回归 test_daily_restart_handler_reads_new_ip_health_and_republishes_subscription，
+  使用 Fake provider 和独立 PostgreSQL/Redis project，串联每日 stop/start scheduler、
+  标准 Operation handler、动态 IP 更新、健康探测，以及可用订阅格式的新地址发布。
+  聚焦用例 1 passed；自动化测试文件 33 passed；全后端 426 passed、2 skipped（固定
+  Xray binary 未配置）。Ruff、验收矩阵、边界、秘密、技能、JSON 和 diff 门禁均通过。
+- 此次没有运行时代码修改，版本仍为 v0.14.6；不为测试/审计增量创建新版本、tag
+  或 Release。真实 AWS 验收和相应新版本发布未完成。
+
+## 2026-11-11T02:00:42+08:00 — 本次续期授权窗口结束
+
+按执行机器实际 UTC 时钟 2026-11-10T18:00:42Z（上海时间 2026-11-11T02:00:42+08:00），
+本次 90 分钟 AWS 测试节点授权已到半开区间终点并过期。窗口内未创建任何 AWS 节点，
+未执行 AWS 写入、SSH、删除、IP 操作或真实 profile 撤回。AWS profile 身份匹配，
+但本机 X-ray 管理 session/step-up/CloudAccount 前置条件没有通过；之后任何真实云动作
+需重新取得用户授权并重新验证管理员身份与费用边界。逐资源最终费用、真实节点/流量核对
+及撤回正向控制仍为未知/未运行。
+
+## 2026-11-11T02:30:13+08:00 — 新 90 分钟授权与认证前置阻塞复核
+
+用户在当前对话再次明确授权：最多一台 `us-east-1` Lightsail `small_3_0` Ubuntu 24.04
+测试节点，额外费用上限 USD 25，总费用仍不超过 USD 1,000。为避免沿用此前已过期
+窗口，本次保守以用户授权消息后的首次机器时钟读数 `2026-11-11T02:12:09+08:00` 为
+窗口起点，有效半开区间 `[2026-11-11T02:12:09+08:00, 2026-11-11T03:42:09+08:00)`。
+
+只读复核于 02:12–02:13+08 完成：
+
+- 显式 `AWS_PROFILE=root` 的 STS account stdout（含 CLI 终止换行）按既有
+  `shasum -a 256` 流程生成的摘要前缀为 `94a91b85428b`，与本次授权摘要匹配；
+  对同一 account 文本去除换行后计算得到 `4a0ef08458dd`，该值不是本项目既有授权
+  指纹格式。`us-east-1` Lightsail `GetInstances` 返回 0 台。未发出云写请求。
+- `127.0.0.1:9538/login?redirect=/overview` 仍显示管理员登录表单。端口 9537、
+  9538、9541 的 auth/session 均 HTTP 200、`authenticated=false`、
+  `mfa_enabled=false`、`recent_auth_until=null`；各 CloudAccount collection 均 HTTP 401。
+  因此管理员登录、step-up 和 X-ray CloudAccount 匹配均未通过当前 API 读回。
+- 未读取、输入或保存认证秘密；未使用认证旁路。未创建 AWS 资源，未执行 AWS 写、SSH、
+  删除、静态 IP 操作或费用查询；套餐目录、逐资源费用和最终账单尚未核实。
+
+结论：本授权窗口有效，但真实验收仍在 X-ray 认证/CloudAccount 门槛前阻塞；AWS profile
+匹配不足以开始写入。管理员完成正常登录和近期 step-up 后，还需重新读回已验证
+CloudAccount、AWS 账号、实例清单与费用边界，再经标准预览、幂等 Operation 和读后写
+流程继续。若这些门槛未在窗口结束前通过，本授权自动失效，不执行云写。
+
+## 2026-11-11T17:49:19+08:00 — 授权过期后的发布候选只读状态
+
+此事件在前述续期窗口 [2026-11-11T02:12:09+08:00,2026-11-11T03:42:09+08:00) 之外记录。未沿用云测试授权，未执行 AWS/SWAS 写入、SSH、公网探测、删除、静态 IP、认证/数据库写入或费用查询。最新可用的 canonical SHA-256(精确 STS Account 字段文本)指纹为 default=sha256:b1746f68f5be、root=sha256:4a0ef08458dd，均不等于授权摘要 sha256:94a91b85428b；X-ray 管理员 session、recent step-up 与 CloudAccount 当前无新的已认证浏览器/API 读回。故 AWS 资源数、逐资源成本及最终账单未知，完整真实云验收保持 blocked/not-run。用户原请求中的 GitHub 版本发布授权仍可用于非生产交付，不能将代码发布表述为 AWS 验收或生产部署。
+
+本轮 candidate worktree 完整本地门禁记录于 artifacts/acceptance/0.14.7/final-gates-20261111-release-r2/summary.tsv：19/19 gates exit 0；后端 JUnit 553（551 passed、2 skipped），前端 88 passed、Playwright 8 passed；两项跳过需可丢弃 Linux/systemd 主机。初次路径选择了 pnpm 11.25.0，runtime gate exit 1，未运行后续检查；改用缓存中的 Corepack pnpm 10.33.0 后完整通过。隔离 xray-usage-retry-20261111 容器和网络已停止，PostgreSQL/Redis 命名卷保留。该证据仅是本地 Fake/Stub/容器验证；尚无本版本源码提交、远端 CI、tag 或 Release 读回。
+
+### 身份指纹算法追加更正 — 2026-11-11T02:45:27+08:00
+
+上节对比 STS CLI stdout 整行（包含终止换行）得到的 `94a91b85428b` 与历史授权指纹
+算法不一致，故上节“root 身份匹配”的结论撤销。项目历史记录明确按 STS `Account` 字段
+文本本身计算 SHA-256 前缀；不包含 CLI 输出换行。按同一规范重查当前所有 profile：
+`default=sha256:b1746f68f5be`、`root=sha256:4a0ef08458dd`，都不匹配授权账号
+`sha256:94a91b85428b`。命令输出行的摘要与账号字段的摘要不是同一个 fingerprint，
+此处保留是为了说明先前误判来源，不得用作身份匹配证据。
+
+`root` profile 的 Lightsail `us-east-1` 清单仍为 0，但该 profile 不是授权账号，不能确认
+授权账号的实例数量。当前管理员登录页仍在，9537/9538/9541 session 未认证且
+CloudAccount=401；无管理员、step-up、CloudAccount 和 AWS 账号的共同校验。没有尝试云写、
+SSH、删除、IP 操作或费用读取。当前 AWS 验收保持 `blocked`，授权窗口虽记录至
+`03:42:09+08`，任何云写均须先解决上述阻塞并在该半开窗口内重新验证所有前置条件。
+
+## 2026-11-11T03:01:44+08:00 — 用户声明 profile/step-up 已就绪后的重新核验
+
+用户声明继续使用授权账号 `94a91b85428b`、本机已切换匹配 profile、X-ray 管理员登录
+与 step-up 已完成，并续用最多一台 `us-east-1 small_3_0 Ubuntu 24.04` 节点、额外
+USD 25、总额不超过 USD 1,000 的 90 分钟授权。消息中的起始时间仍为占位符；按本次
+收到说明后的首个实际 UTC 时钟读数 `2026-11-10T19:01:44Z` 保守起算，窗口记录为
+`[2026-11-11T03:01:44+08:00, 2026-11-11T04:31:44+08:00)`。
+
+本轮只读核验结果：
+
+- 工具执行环境中 `AWS_PROFILE`、`AWS_DEFAULT_PROFILE` 均未设置；`aws configure
+  list-profiles` 只列出 `default` 与 `root`。按项目既定 SHA-256(精确 STS Account
+  字段文本) 算法，默认身份摘要为 `b1746f68f5be`，显式 `root` 为
+  `4a0ef08458dd`，均不匹配授权账号 `94a91b85428b`。用户所称匹配 profile 未在
+  本次工具环境中识别；不读取/显示凭据。
+- 端口 9537、9538、9541 的无凭据 HTTP GET `/api/v1/auth/session` 均返回 200，
+  body 字段为 `authenticated=false`、`mfa_enabled=false`、`recent_auth_until=null`；
+  无凭据 CloudAccount GET 均为 HTTP 401。这些是无浏览器 Cookie 请求，不能据此推断
+  Chrome 中的已登录状态。Chrome 标签枚举未发现 X-ray 标签；打开 Chrome X-ray 页时，
+  自动化接口报告另一个扩展 UI 正阻挡控制。未查看或操作该扩展 UI，也未访问/提取
+  Cookie、管理员密码、TOTP 或 CloudAccount 凭据。step-up 与 CloudAccount 身份目前
+  无法从浏览器或 API 独立读回。
+- 9538、9541 readiness 均 HTTP 200；9537 readiness 为 HTTP 503。AWS 当前授权账号
+  的实例数、套餐价格、资源级费用和最终账单未能读回。未执行 AWS 写入、SSH、删除、
+  IP 操作、Cost Explorer 查询、认证写或数据库写。
+
+因此即使用户声明登录和 step-up 完成，当前执行环境仍不能独立证明匹配 AWS 身份及
+CloudAccount。90 分钟窗口内不绕过标准 X-ray 流程执行云写入；需先关闭 Chrome 扩展
+阻挡并告知匹配 profile 名称，再由正常浏览器/API 读回 session、recent step-up、
+CloudAccount 账号摘要，并再次确认该 profile 的 AWS 身份和费用边界。未完成时窗口
+到期自动失效。

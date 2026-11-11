@@ -514,6 +514,95 @@ def test_pool_sync_allows_oldest_delete_when_subscription_has_another_endpoint(
 
 
 @pytest.mark.django_db
+def test_pool_sync_delete_runs_handler_and_fake_provider(prepared_node, monkeypatch):
+    from apps.nodes.lifecycle import NodeLifecycle
+    from apps.nodes.tasks import schedule_node_pool_sync
+    from apps.operations import handlers
+    from providers.base import AccountRef
+
+    from .fakes import FakeCloudProvider
+
+    oldest, _create_operation = prepared_node
+    _ready_node(oldest)
+    survivor = _sibling(oldest, "pool-sync-survivor")
+    subscription = _publish_subscription_on_nodes(
+        "pool-sync-delete-integration", [oldest, survivor]
+    )
+    ManagedNode.objects.filter(pk=oldest.pk).update(
+        created_at=timezone.now() - timedelta(days=2)
+    )
+    set_allocations(oldest.pool_id, [{"region": oldest.region, "quota": 1}])
+    NodeAutomationSetting.objects.create(pool_sync_enabled=True)
+
+    scheduled = schedule_node_pool_sync()
+
+    assert scheduled["deleted"] == 1
+    deletion = Operation.objects.get(kind="node.delete")
+    assert deletion.target_id == oldest.pk
+
+    providers = {}
+
+    def build_provider(node, authorizer):
+        provider = providers.get(node.pk)
+        if provider is None:
+            account = AccountRef(
+                node.cloud_account_id,
+                node.cloud_account.provider,
+                node.cloud_account.external_account_id,
+                node.cloud_credential_version.version,
+            )
+            provider = FakeCloudProvider(account, node.region, authorizer=authorizer)
+            provider.instances[node.external_id] = provider._instance(
+                node.external_id,
+                {
+                    "xray-manager": "true",
+                    "xray-node": str(node.pk),
+                    "xray-operation": str(node.operation_key),
+                },
+            )
+            providers[node.pk] = provider
+        else:
+            provider.authorizer = authorizer
+        return provider
+
+    lifecycle = NodeLifecycle(provider_factory=build_provider)
+    monkeypatch.setattr(handlers, "NodeLifecycle", lambda: lifecycle)
+
+    outcome = handlers.handle_operation(str(deletion.pk))
+
+    oldest.refresh_from_db()
+    survivor.refresh_from_db()
+    deletion.refresh_from_db()
+    assert outcome["status"] == "SUCCEEDED"
+    assert deletion.status == "SUCCEEDED"
+    assert providers[oldest.pk].deleted is True
+    assert oldest.external_id not in providers[oldest.pk].instances
+    assert deletion.steps.filter(
+        name="cloud.delete.read_after_write", status="CONFIRMED_ABSENT"
+    ).exists()
+    assert oldest.desired_state == "DELETED"
+    assert oldest.provisioning_state == "DELETED"
+    assert oldest.consumes_quota is False
+    assert survivor.consumes_quota is True
+    assert ManagedNode.objects.filter(
+        pool=oldest.pool,
+        region=oldest.region,
+        consumes_quota=True,
+    ).count() == 1
+    resource = NodeResource.objects.get(
+        node=oldest, kind="instance", external_id=oldest.external_id
+    )
+    assert resource.cost_status == "RELEASED"
+    assert resource.released_at is not None
+    subscription.refresh_from_db()
+    assert subscription.current_revision.usable is True
+    assert {
+        version["node_id"]
+        for version in subscription.current_revision.node_versions.values()
+    } == {str(survivor.pk)}
+
+
+@pytest.mark.django_db
 def test_automated_delete_rechecks_subscription_fallback_before_cloud_write(prepared_node):
     from apps.identity.models import NodeAutomationSetting
     from apps.nodes.automation import validate_automated_delete
@@ -832,6 +921,133 @@ def test_daily_restart_uses_stop_start_phases_and_advances_after_start_success(
     assert next_day["scheduled"] == 1
     assert next_stop.kind == "node.stop"
     assert next_stop.target_id == younger.pk
+
+
+@pytest.mark.django_db
+def test_daily_restart_handler_reads_new_ip_health_and_republishes_subscription(
+    prepared_node, monkeypatch
+):
+    import base64
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.lifecycle import NodeLifecycle
+    from apps.nodes.tasks import schedule_daily_node_restart
+    from apps.operations import handlers
+    from apps.subscriptions.publishing import decrypt_payload
+    from providers.base import AccountRef, Address
+
+    from .fakes import FakeCloudProvider
+
+    node, _create_operation = prepared_node
+    _ready_node(node)
+    _rebootable_node(node)
+    subscription = _publish_subscription_on_nodes("daily-restart-handler", [node])
+    old_ip = "192.0.2.10"
+    new_ip = "192.0.2.77"
+    node.refresh_from_db()
+    previous_revision = subscription.current_revision
+    assert old_ip in base64.b64decode(
+        decrypt_payload(previous_revision, "shadowrocket")
+    ).decode()
+
+    NodeAutomationSetting.objects.create(daily_restart_enabled=True)
+    monkeypatch.setattr("apps.nodes.probes.configured_health_probe", lambda: lambda _node: {})
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 6, 20, 0, tzinfo=UTC),
+    )
+    stop_schedule = schedule_daily_node_restart()
+    stop = Operation.objects.get(pk=stop_schedule["operation_id"])
+    assert stop.kind == "node.stop"
+
+    providers = {}
+
+    def build_provider(candidate, authorizer):
+        provider = providers.get(candidate.pk)
+        if provider is None:
+            account = AccountRef(
+                candidate.cloud_account_id,
+                candidate.cloud_account.provider,
+                candidate.cloud_account.external_account_id,
+                candidate.cloud_credential_version.version,
+            )
+            provider = FakeCloudProvider(account, candidate.region, authorizer=authorizer)
+            tags = {
+                "xray-manager": "true",
+                "xray-node": str(candidate.pk),
+                "xray-operation": str(candidate.operation_key),
+            }
+            provider.instances[candidate.external_id] = provider._instance(
+                candidate.external_id, tags
+            )
+            providers[candidate.pk] = provider
+        else:
+            provider.authorizer = authorizer
+        return provider
+
+    lifecycle = NodeLifecycle(
+        provider_factory=build_provider,
+        health_probe=lambda _node: {
+            "accepted": True,
+            "positive_control": True,
+            "fresh_connection": True,
+        },
+    )
+    monkeypatch.setattr(handlers, "NodeLifecycle", lambda: lifecycle)
+
+    stopped = handlers.handle_operation(str(stop.pk))
+    assert stopped["status"] == "SUCCEEDED"
+    node.refresh_from_db()
+    assert node.raw_cloud_state.casefold() == "stopped"
+    providers[node.pk].addresses_after_lifecycle_write = (
+        Address(new_ip, 4, "dynamic", node.external_id),
+    )
+
+    monkeypatch.setattr(
+        "apps.nodes.automation.timezone.now",
+        lambda: datetime(2026, 11, 7, 20, 0, tzinfo=UTC),
+    )
+    start_schedule = schedule_daily_node_restart()
+    start = Operation.objects.get(pk=start_schedule["operation_id"])
+    assert start.kind == "node.start"
+    assert start.target_id == node.pk
+    started = handlers.handle_operation(str(start.pk))
+
+    node.refresh_from_db()
+    start.refresh_from_db()
+    subscription.refresh_from_db()
+    revision = subscription.current_revision
+    steps = {step.name: step for step in start.steps.all()}
+    assert started["status"] == "SUCCEEDED"
+    assert node.raw_cloud_state.casefold() == "running"
+    assert node.health_state == "HEALTHY"
+    assert node.addresses == [
+        {
+            "value": new_ip,
+            "family": 4,
+            "kind": "dynamic",
+            "resource_id": node.external_id,
+        }
+    ]
+    assert steps["cloud.start.read_after_write"].evidence["addresses_changed"] is True
+    assert revision.usable is True
+    assert revision.pk != previous_revision.pk
+    config_revision = node.config_revisions.get(generation=node.applied_generation)
+    assert config_revision.probe_result["app_health_passed"] is True
+    assert config_revision.probe_result["accepted"] is True
+    assert config_revision.probe_result["positive_control"] is True
+    assert config_revision.probe_result["fresh_connection"] is True
+    assert steps["cloud.start.read_after_write"].evidence["subscriptions_published"] == 1
+    assert "shadowrocket" in revision.payloads
+    for payload_format in revision.payloads:
+        payload = decrypt_payload(revision, payload_format)
+        published_payload = (
+            base64.b64decode(payload).decode()
+            if payload_format in {"shadowrocket", "v2ray"}
+            else payload.decode()
+        )
+        assert new_ip in published_payload
+        assert old_ip not in published_payload
 
 
 @pytest.mark.django_db

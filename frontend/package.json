@@ -1,6 +1,6 @@
 {
   "name": "xray-manager-frontend",
-  "version": "0.14.6",
+  "version": "0.14.7",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.33.0",

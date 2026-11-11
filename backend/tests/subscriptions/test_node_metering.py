@@ -172,3 +172,313 @@ def test_periodic_usage_collection_keeps_legacy_enabled_default(ready_node, monk
     assert collected == [ready_node.pk]
     assert result["collected"] == 1
     assert NodeAutomationSetting.objects.get(singleton_key=1).usage_sync_enabled is True
+
+
+@pytest.mark.django_db
+def test_periodic_usage_retries_only_failed_node_before_next_full_interval(
+    ready_node, monkeypatch
+):
+    from datetime import UTC, datetime, timedelta
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.nodes.quota import reserve_node
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    successful = reserve_node(
+        ready_node.pool_id,
+        account_id=ready_node.cloud_account_id,
+        region=ready_node.region,
+        plan_id=ready_node.plan_id,
+        image_id=ready_node.image_id,
+        operation_key=uuid4(),
+    )
+    successful.external_id = "successful-instance"
+    successful.provisioning_state = "READY"
+    successful.save(update_fields=["external_id", "provisioning_state", "updated_at"])
+    NodeAutomationSetting.objects.create(
+        usage_sync_enabled=True, usage_sync_interval_minutes=10
+    )
+    now = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    monkeypatch.setattr(tasks.timezone, "now", lambda: now)
+    calls = []
+    failed_once = False
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+
+    def collect(node):
+        nonlocal failed_once
+        calls.append(node.pk)
+        if node.pk == ready_node.pk and not failed_once:
+            failed_once = True
+            raise RuntimeError("temporary collector outage")
+
+    monkeypatch.setattr("apps.subscriptions.metering.collect_node", collect)
+    first = tasks.refresh_usage_and_limits()
+
+    assert first["unavailable"] == 1
+    assert set(calls) == {ready_node.pk, successful.pk}
+    ready_node.refresh_from_db()
+    successful.refresh_from_db()
+    assert ready_node.usage_sync_retry_count == 1
+    assert ready_node.usage_sync_retry_at == now + timedelta(minutes=1)
+    assert successful.usage_sync_retry_at is None
+
+    calls.clear()
+    monkeypatch.setattr(tasks.timezone, "now", lambda: now + timedelta(minutes=1))
+    from apps.nodes.models import ManagedNode
+
+    assert ManagedNode.objects.filter(
+        pk=ready_node.pk, usage_sync_retry_at__lte=now + timedelta(minutes=1)
+    ).exists()
+    retry = tasks.refresh_usage_and_limits()
+
+    assert retry["collected"] == 1
+    assert retry["unavailable"] == 0
+    assert calls == [ready_node.pk]
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_retry_count == 0
+    assert ready_node.usage_sync_retry_at is None
+
+
+@pytest.mark.django_db
+def test_periodic_usage_does_not_retry_when_sync_is_disabled(ready_node, monkeypatch):
+    from datetime import UTC, datetime
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.usage_sync_retry_count = 1
+    ready_node.usage_sync_retry_at = datetime(2026, 11, 6, 0, 59, tzinfo=UTC)
+    ready_node.save(update_fields=["usage_sync_retry_count", "usage_sync_retry_at", "updated_at"])
+    NodeAutomationSetting.objects.create(
+        usage_sync_enabled=False,
+        usage_sync_interval_minutes=10,
+        usage_sync_last_scheduled_at=datetime(2026, 11, 6, 0, 0, tzinfo=UTC),
+    )
+    monkeypatch.setattr(
+        tasks.timezone,
+        "now",
+        lambda: datetime(2026, 11, 6, 1, 0, tzinfo=UTC),
+    )
+    calls = []
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node",
+        lambda node: calls.append(node.pk),
+    )
+
+    result = tasks.refresh_usage_and_limits()
+
+    assert result["collected"] == 0
+    assert calls == []
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_retry_count == 1
+    assert ready_node.usage_sync_retry_at == datetime(2026, 11, 6, 0, 59, tzinfo=UTC)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("minutes_after_retry_due,expected_calls", [(0, 1), (-1, 0)])
+def test_periodic_usage_retry_uses_inclusive_due_boundary(
+    ready_node, monkeypatch, minutes_after_retry_due, expected_calls
+):
+    from datetime import UTC, datetime, timedelta
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    retry_at = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    ready_node.usage_sync_retry_count = 1
+    ready_node.usage_sync_retry_at = retry_at
+    ready_node.save(update_fields=["usage_sync_retry_count", "usage_sync_retry_at", "updated_at"])
+    NodeAutomationSetting.objects.create(
+        usage_sync_enabled=True,
+        usage_sync_interval_minutes=10,
+        usage_sync_last_scheduled_at=retry_at,
+    )
+    monkeypatch.setattr(
+        tasks.timezone,
+        "now",
+        lambda: retry_at + timedelta(minutes=minutes_after_retry_due),
+    )
+    calls = []
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node", lambda node: calls.append(node.pk)
+    )
+
+    result = tasks.refresh_usage_and_limits()
+
+    assert len(calls) == expected_calls
+    assert result["collected"] == expected_calls
+
+
+@pytest.mark.django_db
+def test_periodic_usage_backoff_caps_at_sixty_minutes(ready_node, monkeypatch):
+    from datetime import UTC, datetime, timedelta
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    NodeAutomationSetting.objects.create(usage_sync_enabled=True, usage_sync_interval_minutes=1440)
+    start = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node",
+        lambda _node: (_ for _ in ()).throw(RuntimeError("temporary outage")),
+    )
+
+    now = start
+    for attempt in range(1, 9):
+        monkeypatch.setattr(tasks.timezone, "now", lambda now=now: now)
+        result = tasks.refresh_usage_and_limits()
+        assert result["unavailable"] == 1
+        ready_node.refresh_from_db()
+        assert ready_node.usage_sync_retry_count == min(attempt, 7)
+        assert ready_node.usage_sync_retry_at == now + timedelta(
+            minutes=min(2 ** (min(attempt, 7) - 1), 60)
+        )
+        now = ready_node.usage_sync_retry_at
+
+
+@pytest.mark.django_db
+def test_periodic_usage_reclaims_expired_collection_lease_before_full_interval(
+    ready_node, monkeypatch
+):
+    from datetime import UTC, datetime, timedelta
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    now = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    ready_node.usage_sync_lease_id = uuid4()
+    ready_node.usage_sync_lease_expires_at = now
+    ready_node.save(
+        update_fields=[
+            "usage_sync_lease_id",
+            "usage_sync_lease_expires_at",
+            "updated_at",
+        ]
+    )
+    NodeAutomationSetting.objects.create(
+        usage_sync_enabled=True,
+        usage_sync_interval_minutes=60,
+        usage_sync_last_scheduled_at=now - timedelta(minutes=1),
+    )
+    monkeypatch.setattr(tasks.timezone, "now", lambda: now)
+    calls = []
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node", lambda node: calls.append(node.pk)
+    )
+
+    result = tasks.refresh_usage_and_limits()
+
+    assert calls == [ready_node.pk]
+    assert result["collected"] == 1
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_lease_id is None
+    assert ready_node.usage_sync_lease_expires_at is None
+
+
+@pytest.mark.django_db
+def test_periodic_usage_stale_worker_cannot_clear_replacement_lease(ready_node, monkeypatch):
+    from datetime import UTC, datetime, timedelta
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    now = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    replacement_lease = uuid4()
+    NodeAutomationSetting.objects.create(usage_sync_enabled=True)
+    monkeypatch.setattr(tasks.timezone, "now", lambda: now)
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+
+    def collect(_node):
+        from apps.nodes.models import ManagedNode
+
+        ManagedNode.objects.filter(pk=ready_node.pk).update(
+            usage_sync_lease_id=replacement_lease,
+            usage_sync_lease_expires_at=now + timedelta(minutes=tasks.USAGE_SYNC_LEASE_MINUTES),
+            usage_sync_retry_count=4,
+        )
+
+    monkeypatch.setattr("apps.subscriptions.metering.collect_node", collect)
+    result = tasks.refresh_usage_and_limits()
+
+    assert result["collected"] == 1
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_lease_id == replacement_lease
+    assert ready_node.usage_sync_retry_count == 4
+
+
+@pytest.mark.django_db
+def test_periodic_usage_sets_retry_delay_from_collection_failure_time(ready_node, monkeypatch):
+    from datetime import UTC, datetime, timedelta
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    ready_node.external_id = "ready-instance"
+    ready_node.save(update_fields=["external_id", "updated_at"])
+    started_at = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    failed_at = started_at + timedelta(minutes=3)
+    NodeAutomationSetting.objects.create(usage_sync_enabled=True)
+    clock = [started_at]
+    monkeypatch.setattr(tasks.timezone, "now", lambda: clock[0])
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+
+    def collect(_node):
+        clock[0] = failed_at
+        raise RuntimeError("temporary outage")
+
+    monkeypatch.setattr("apps.subscriptions.metering.collect_node", collect)
+    result = tasks.refresh_usage_and_limits()
+
+    assert result["unavailable"] == 1
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_retry_at == failed_at + timedelta(minutes=1)
+    assert ready_node.usage_sync_lease_expires_at is None
+
+
+@pytest.mark.django_db
+def test_periodic_usage_skips_node_with_active_collection_lease(ready_node, monkeypatch):
+    from datetime import UTC, datetime, timedelta
+    from uuid import uuid4
+
+    from apps.identity.models import NodeAutomationSetting
+    from apps.subscriptions import tasks
+
+    now = datetime(2026, 11, 6, 1, 0, tzinfo=UTC)
+    lease_id = uuid4()
+    ready_node.usage_sync_lease_id = lease_id
+    ready_node.usage_sync_lease_expires_at = now + timedelta(minutes=1)
+    ready_node.save(
+        update_fields=[
+            "usage_sync_lease_id",
+            "usage_sync_lease_expires_at",
+            "updated_at",
+        ]
+    )
+    NodeAutomationSetting.objects.create(usage_sync_enabled=True)
+    monkeypatch.setattr(tasks.timezone, "now", lambda: now)
+    calls = []
+    monkeypatch.setattr(tasks, "enforce_limits", lambda: [])
+    monkeypatch.setattr(
+        "apps.subscriptions.metering.collect_node", lambda node: calls.append(node.pk)
+    )
+
+    result = tasks.refresh_usage_and_limits()
+
+    assert calls == []
+    assert result["collected"] == 0
+    ready_node.refresh_from_db()
+    assert ready_node.usage_sync_lease_id == lease_id

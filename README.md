@@ -11,6 +11,8 @@ step-up，未绑定时重新验证密码，已绑定时验证密码与 TOTP。�
 
 ## 当前状态
 
+2026-11-11：`0.14.7` 增加流量采集失败的有界退避和每节点数据库租约，避免多 worker 重复采集，并补齐租约过期恢复与旧 worker fencing 回归；池缩容及每日动态 IP/健康/订阅 handler 有 Fake provider 集成测试。实际 AWS 验收仍需匹配 profile、正常 X-ray 登录/step-up/CloudAccount 和资源级费用读回，当前保持 blocked/not-run。
+
 2026-11-10：`0.14.6` 候选修复了节点池缩容删除遇到已撤销 Token 时的无意义重新发布；撤回时间、不可变墓碑与安全事件不匹配或仍有活动 Token 时继续失败关闭。修复已通过新的授权 AWS 测试运行：池 `1→0` 删除 Operation `3dfd0491-097b-49ec-9200-504bc50994a3` 成功，provider 确认缺失、配额与资源账本释放，池和订阅节点计数均为零。授权范围内的双节点测试此前已覆盖补齐、按 `(created_at, pk)` 每日重启一台、动态 IPv4/健康/IP 刷新、订阅签发/发布/撤回和流量统计。`0.14.6` 本地全门禁通过；profile 级节点撤回正向控制尚未确认，AWS 逐资源最终账单未知，SWAS、真机、独立公网探测和生产未运行；状态详见 `docs/progress.md` 与 `tests/acceptance/matrix.json`。
 
 `v0.14.5` 的 annotated 标签指向 `e38b48b`，GitHub Release `439611923` 已发布且资产摘要与 `SHA256SUMS` 已核对。`0.14.6` 发布候选的本地门禁已通过，新的 AWS 运行已验证修复后的节点池删除；profile 级节点撤回正向控制和逐资源最终账单仍待确认。尚未执行 SWAS、独立 SSH 登录或 Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS 或生产部署。本地 Compose、Fake/Stub、镜像、提交、标签和 GitHub Release 都不代表生产部署。
