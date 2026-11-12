@@ -8075,3 +8075,22 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - verification_boundary: This verifies the audit receipt commit only; it is not evidence of AWS identity, node lifecycle, profile-level subscription revocation, IP/health/traffic reconciliation, cost, or production acceptance. No AWS/SSH/cost operation occurred.
 - time_logic: tool clock UTC `2026-11-12T18:54:02Z` / Asia/Shanghai `2026-11-13T02:54:02+08:00`; no business time changes.
 - status_and_rollback: passed (exact SHA remote Delivery Gates and artifact readback); real AWS remains blocked and was not-run. Revert only this documentation follow-up if required; preserve the v0.14.8 release/tag and cloud/security state.
+
+## 2026-11-13T03:09:31+08:00 - 6ab1496 回执 CI 完成
+
+- run_id: `xray-v0148-release-receipt-correction-20261113-0227`.
+- path_scope: 只读核验提交 `6ab1496ef4b463922456c85cdde22b07365660e6` 对应的 GitHub Delivery Gates run、job steps 和 artifacts；随后追加本台账、进度、版本索引和验收矩阵。
+- command_or_tool: GitHub Actions GET run `43284986716` jobs/artifacts；`jq` 读取 matrix 条目及 JSON 结构；`date -Iseconds`。
+- remote_result: run `43284986716`、job `131415886469` completed/success；返回的全部步骤 success，包括完整本地交付门禁、上传脱敏验收 evidence、移除 run-specific images/browser authentication state 和停止测试容器。Artifact `13974618516` / `xray-acceptance-43284986716-1`，3,014,874 bytes，digest `sha256:ee53687fdca89506b4d230568deac68734d055fd319514e4ca4044f1e0ca5e89`，expires `2026-11-26T19:08:51Z`；run head SHA 与 `6ab1496` 匹配。先前轮询显示 in_progress、artifact 空，属于中间状态，现由最终读回更正。
+- authorization_and_boundary: 本次只读 GitHub CI 与文档记录，无 AWS/SSH/账单请求，无云资源更改；匹配 AWS CLI profile 仍无法配置，旧授权窗口已过期，真实云验收继续 blocked/not-run，不推断当前节点数或费用。
+- time_logic: 执行机时间 `2026-11-13T03:09:31+08:00`（UTC `2026-11-12T19:09:31Z`）；没有业务时间规则变化。
+- writes_and_rollback: 只增补本 CI 回执到四份审计文件，不改应用代码、版本/tag/Release、云端或安全状态；本次审计提交可单独 `git revert`。保留 13 个既存未跟踪 `artifacts/acceptance/*` 目录。
+- verification_and_status: GitHub 精确提交 CI 读回 passed；本地 JSON/acceptance/boundary/secret/skill/diff validators 于提交前运行并记录准确退出码。AWS lifecycle、动态 IP/健康/订阅、profile 撤回正向控制、节点/流量计数与逐资源费用仍 blocked/not-run；整体用户目标未完成，保持 active。
+
+## 2026-11-13T03:10:03+08:00 - 6ab1496 CI 回执记录的最终本地验证
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `path_scope`: 对刚追加的 `docs/project-ledger.md`、`docs/progress.md`、`docs/version-record.md`、`tests/acceptance/matrix.json` 执行静态验收；仅这些四个 tracked 文件属于本次变更。
+- `commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0 (`acceptance matrix valid`)；`bash scripts/check-boundary.sh`=0 (`boundary check passed`)；`bash scripts/check-secrets.sh`=0 (157 commits / about 9.26 MB scanned, no leaks)；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0 (`Skill is valid!`)；`git diff --check`=0；`git status --short --branch`=0。
+- `status_and_rollback`: 仅四个预期审计文件被修改；原有 13 个未跟踪 `artifacts/acceptance/*` 目录全部保留。没有源码、版本、tag、Release、云状态、数据库或凭据变更。只 revert 这次审计收据提交即可回退文件。
+- `acceptance_boundary`: 该 CI 回执为 passed；真实 AWS profile 仍无法配置且先前 90 分钟授权窗口已过期，云创建/删除/重启、IP/健康/订阅撤回、云端节点和流量对账、逐资源费用保持 blocked/not-run；本轮无 AWS/SSH/账单请求。整体目标仍未完成。
