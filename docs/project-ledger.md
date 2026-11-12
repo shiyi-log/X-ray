@@ -8130,6 +8130,26 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `time_logic`: 机器时间 `2026-11-13T03:47:01+08:00` / UTC `2026-11-12T19:47:01Z`；没有业务时间逻辑变化。
 - `status`: 678ff10 CI passed；真实 AWS 仍因 profile 不匹配/授权窗口过期而 blocked/not-run；总体目标 active。
 
+## 2026-11-13T03:52:42+08:00 - 完整后端与交付 pytest 回归
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `scope`: 对当前工作树 `main@678ff1073f2b921e3dbae73c572c6b08da648d3d` 运行整个 `backend/tests` 与 `tests`，覆盖完整后端、安装器、部署、恢复和交付测试；不改代码或测试，不做 AWS/SSH/费用/生产操作。
+- `environment`: 与此前聚焦回归相同，复用 portctl 登记并绑定 X-ray 的专用测试 DB/Redis `55435/56382`，固定本地 Xray `26.3.27`。从 PostgreSQL 容器内部取得测试连接配置，仅在内存中构造 pytest 环境变量，不显示或持久化连接值。测试前后容器保持 running/healthy；无服务启动或停止。
+- `command_and_result`: `backend/.venv/bin/pytest -c backend/pyproject.toml backend/tests tests -q`，exit `0`；`576 passed, 5 skipped, 0 failed`，`114.82s`。跳过原因：恢复 drill/镜像验证需要单独指定构建镜像；one-click 和 systemd service 集成要求可丢弃 Linux/systemd 主机。
+- `evidence_boundary`: 使用 Fake/Stub providers 和本地测试基础设施；测试覆盖地址池、每日重启、IP/健康与订阅刷新、库存对账及流量采集的本地行为，不是 AWS 实机或部署验收。
+- `writes_and_rollback`: 仅追加验收矩阵、进度和本台账，不改代码/VERSION/tag/Release 或数据库数据；保留现存测试栈、命名卷与全部未跟踪 acceptance artifact。文档证据提交可单独 revert。
+- `status`: 全后端/交付本地 suite passed；AWS profile 仍不匹配授权摘要且窗口过期，真实 lifecycle、profile 级撤回正向控制、云节点/流量计数、IP/health 与逐资源费用 blocked/not-run；生产 not-run；整体目标 active。
+
+## 2026-11-13T03:56:04+08:00 - AWS profile 无法配置与静态审计复核
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `path_scope`: 复核当前仅三份审计文件的差异；用户确认暂时无法配置 AWS profile。运行 JSON、验收矩阵、边界、秘密、X-ray skill 和 diff 静态校验；只读查看 Actions run `43293998859` 的 job 状态。
+- `authorization_and_boundary`: AWS 测试节点仍限一台 `us-east-1 small_3_0 Ubuntu 24.04`，额外上限 USD 25、总额 USD 1,000；但 90 分钟授权窗口已过期，当前 profile 与 CloudAccount 身份不能匹配。未进行 AWS/SSH/费用 API 请求或资源写入，不读取 PEM。
+- `commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（160 commits / 9.28 MB 扫描，无泄漏）；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0；`git diff --check`=0。
+- `ci_readback`: Actions run `43293998859` 对应 head `9e85c8e2fb6bad1f1c27b1d0176582ac9c0803c4`，job `131447314261` 在 `2026-11-13T03:56:04+08:00` 仍为 `in_progress`；前 10 步成功，第 11 步完整 Delivery Gates 正在运行，尚无 artifact。此为中间读回，不记为 CI passed。
+- `writes_and_rollback`: 仅追加台账、进度和验收证据；保留所有 13 个原有未跟踪 `artifacts/acceptance/*` 目录。没有源码、版本、tag/Release、DB、云资源、凭据或运行进程变化；仅回退后续审计文档提交即可撤销。
+- `status`: 静态审计 passed；已推送提交的 CI 尚 in-progress；真实 AWS 生命周期、重启后的动态 IP/运行状态/订阅、profile 撤回正向控制、云端节点/流量核对及逐资源费用 blocked/not-run；生产 not-run。整体目标保持 active。
+
 ## 2026-11-13T03:48:03+08:00 - 本地回归及 CI 回执最终验证
 
 - `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.

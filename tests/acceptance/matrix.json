@@ -3324,6 +3324,44 @@
       "region": null,
       "cost": null,
       "residual_resources": []
+    },
+    {
+      "id": "local-full-backend-regression-20261113-current",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "full_backend_and_delivery_pytest",
+          "timestamp": "2026-11-13T03:52:42+08:00",
+          "source_commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
+          "test_roots": ["backend/tests", "tests"],
+          "pytest_exit_code": 0,
+          "tests_passed": 576,
+          "tests_skipped": 5,
+          "tests_failed": 0,
+          "duration_seconds": 114.82,
+          "skip_reasons": [
+            "real recovery drill requires XRAY_BACKUP_TEST_IMAGE",
+            "built-image tests require XRAY_BACKEND_TEST_IMAGE and XRAY_FRONTEND_TEST_IMAGE",
+            "one-click integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "database": "dedicated xray-goal-20261112 PostgreSQL on registered port 55435",
+          "redis": "dedicated xray-goal-20261112 Redis on registered port 56382",
+          "containers_after": "running healthy; pre-existing services retained",
+          "fixed_xray_binary": "runtime/xray/v26.3.27/xray",
+          "provider_boundary": "Fake/Stub providers and local tests only; no AWS or SSH",
+          "aws_requests": 0,
+          "cost_queries": 0
+        }
+      ],
+      "commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
+      "provider": "Fake/Stub providers and isolated local PostgreSQL/Redis",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "The xray-goal-20261112 PostgreSQL/Redis test containers remained running and healthy on registered ports 55435/56382; no test services were started or stopped."
+      ]
     }
   ]
 }
