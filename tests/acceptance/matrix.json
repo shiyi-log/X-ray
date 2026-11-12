@@ -2523,7 +2523,37 @@
       "region": null,
       "cost": null,
       "residual_resources": []
-    }
+    },
+      {
+        "id": "github-ci-v0.14.8-release-receipt-correction",
+        "environment": "ci",
+        "status": "passed",
+        "evidence": [
+          {
+            "kind": "github_actions_delivery_run",
+            "timestamp": "2026-11-13T02:52:07+08:00",
+            "run_id": 43281889283,
+            "job_id": 131405030145,
+            "workflow": "X-ray delivery gates",
+            "event": "push",
+            "conclusion": "success",
+            "commit": "29c88c5a2c7e8cdf934aad99214bbfbef268d188",
+            "all_steps_success": true,
+            "artifact": {
+              "id": 13973492829,
+              "name": "xray-acceptance-43281889283-1",
+              "size_in_bytes": 2984352,
+              "digest": "sha256:3d57f96a523a55302927b1ceb036c9a0f285746f4f8099d7bd1b34b9deb0d164",
+              "expires_at": "2026-11-26T18:50:31Z"
+            }
+          }
+        ],
+        "commit": "29c88c5a2c7e8cdf934aad99214bbfbef268d188",
+        "provider": "github-actions",
+        "region": null,
+        "cost": null,
+        "residual_resources": []
+      }
     ,
     {
       "id": "usage-sync-lease-concurrency-local-20261111",
