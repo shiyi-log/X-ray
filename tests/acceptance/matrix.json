@@ -3251,6 +3251,79 @@
       "region": null,
       "cost": null,
       "residual_resources": []
+    },
+    {
+      "id": "local-automation-focused-regression-20261113",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "focused_node_subscription_automation_pytest",
+          "timestamp": "2026-11-13T03:41:50+08:00",
+          "source_commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
+          "test_paths": [
+            "backend/tests/test_node_automation.py",
+            "backend/tests/test_node_pool_scheduler_integration.py",
+            "backend/tests/test_node_status_scheduler.py",
+            "backend/tests/test_cloud_inventory_audit.py",
+            "backend/tests/subscriptions/test_node_metering.py",
+            "backend/tests/subscriptions/test_revocation_runtime.py",
+            "backend/tests/subscriptions/test_publishing.py",
+            "backend/tests/subscriptions/test_revocation.py",
+            "backend/tests/test_safe_controls.py"
+          ],
+          "pytest_exit_code": 0,
+          "tests_passed": 137,
+          "tests_failed": 0,
+          "duration_seconds": 24.98,
+          "database": "dedicated xray-goal-20261112 PostgreSQL on registered port 55435",
+          "redis": "dedicated xray-goal-20261112 Redis on registered port 56382",
+          "containers_before_and_after": "running healthy; not started or stopped in this test",
+          "fixed_xray_binary": "runtime/xray/v26.3.27/xray",
+          "provider_boundary": "Fake/Stub and local integration only; no AWS or SSH",
+          "aws_requests": 0,
+          "cost_queries": 0
+        }
+      ],
+      "commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
+      "provider": "Fake/Stub providers and isolated local PostgreSQL/Redis",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "The pre-existing xray-goal-20261112 PostgreSQL/Redis containers remain running and healthy on registered ports 55435/56382; named volumes preserved."
+      ]
+    },
+    {
+      "id": "github-ci-v0.14.8-audit-receipt-678ff10",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "timestamp": "2026-11-13T03:47:01+08:00",
+          "run_id": 43290976024,
+          "job_id": 131436809476,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
+          "all_steps_success": true,
+          "step_endpoint_returned_count": 20,
+          "artifact": {
+            "id": 13978181356,
+            "name": "xray-acceptance-43290976024-1",
+            "size_in_bytes": 3026140,
+            "digest": "sha256:703de2eda39a11e0b4b0d07f73b0a201222c13e293c11015f205274f8838b8dd",
+            "expires_at": "2026-11-26T19:43:45Z"
+          },
+          "source": "GitHub Actions run, job, steps, and artifact REST readback; head SHA matches recorded commit"
+        }
+      ],
+      "commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
     }
   ]
 }

@@ -8109,3 +8109,30 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
 - `verification_commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0 (158 commits, about 9.26 MB, no leaks)；skill quick validator=0；`git diff --check`=0；`git status --short --branch`=0。
 - `final_status_and_rollback`: 只有四份预期审计文件修改；13 个原有未跟踪 acceptance 目录保留。无代码/版本/tag/Release/云状态变更。只 revert 之后形成的文档提交可回退本次审计追加。AWS 完整验收仍 `blocked/not-run`，整体目标未完成。
+
+## 2026-11-13T03:41:50+08:00 - v0.14.8 节点及订阅聚焦回归复测
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `requested_outcome_and_scope`: 在先前完整本地门禁后，重新运行地址池短缺补齐/超额缩容、每日按序单节点重启、重启后动态 IP/健康/订阅刷新、定时状态/IP、AWS 库存计数审计、流量采集与订阅发布/撤回测试。只运行只读代码审查和本地 pytest；不修改应用源码或测试，不执行真实 AWS、SSH、费用或生产操作。
+- `authorization_and_boundary`: 原 90 分钟 AWS 窗口已过期；最新 AWS profile 只读 STS 指纹 `default=b1746f68f5be`、`root=4a0ef08458dd` 不匹配授权账号摘要 `94a91b85428b`，故真实云操作维持 blocked/not-run。本地使用已登记 `X-ray Gate Test Stack 20261108` 项目的测试端口 55435/56382，确认归属目录是本仓库；端口管理器指出端口正在监听，随后由 `docker ps/inspect` 确认其为现存、健康的 `xray-goal-20261112` 专用 PostgreSQL/Redis 栈。复用它们而不启动/停止/迁移/清库，不接触 55433/56380 Cloud Acceptance 栈或 55437/56384 dashboard 栈。固定 Xray 二进制为 `runtime/xray/v26.3.27/xray`。
+- `reads_and_commands`: 读取 AGENTS.md、项目约定、X-ray skill、台账、`backend/apps/nodes/tasks.py`、自动化/inventory 服务、订阅 metering/tasks、Celery Beat 注册、相关 9 个 pytest 文件及 acceptance matrix。`aws configure list-profiles` 与显式 `aws sts get-caller-identity --query Account` 仅输出脱敏摘要。先前向 portctl 传入空格分隔端口的只读 check 因 CLI 参数格式 exit 2；用逗号格式重试返回“端口已在监听”exit 1，没有调用 portctl run 或改变登记。安全 Python launcher 从本项目 PostgreSQL 容器内部环境变量读取数据库连接配置并仅在进程内组装 URL，未回显、持久化或放入报告；pytest 运行 `backend/tests/test_node_automation.py`、`test_node_pool_scheduler_integration.py`、`test_node_status_scheduler.py`、`test_cloud_inventory_audit.py`、`subscriptions/test_node_metering.py`、`test_revocation_runtime.py`、`test_publishing.py`、`test_revocation.py`、`test_safe_controls.py`。
+- `test_result`: pytest exit `0`; `137 passed`, `0 failed`, `24.98s`。容器测试前后均为 running/healthy；无服务启动/停止，无 AWS/SSH/费用请求。测试在当前 `main@678ff1073f2b921e3dbae73c572c6b08da648d3d` 工作树运行，本次不是代码变更，未新增业务实现。
+- `evidence_boundary`: 使用 Fake/Stub provider、专用 PostgreSQL/Redis 和固定本地 Xray，只证明本地路径及集成行为；不构成 AWS 地址池创建/删除、云端重启后的真实 IP/状态、AWS profile 订阅撤回、云端节点/流量对账或费用证据。
+- `writes_and_rollback`: 仅追加 `tests/acceptance/matrix.json`、`docs/progress.md`、本台账中的本地聚焦回归证据；不触碰代码、版本/tag/Release、数据库内容、AWS、凭据或用户进程。可单独 revert 后续审计提交；保留全部 13 个未跟踪 acceptance 目录以及现存测试栈/卷。
+- `next_status`: 本地回归 passed；匹配 AWS principal 与 X-ray CloudAccount 不可用，真实云 lifecycle、profile-level revocation positive control、IP/health、云节点/流量对账、逐资源费用 blocked/not-run；生产 not-run。整体用户目标仍 active。
+
+## 2026-11-13T03:47:01+08:00 - 678ff10 Delivery Gates 完成
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `scope`: 只读 GitHub Actions run `43290976024`、job `131436809476`、job steps 和 artifact，核验精确提交 `678ff1073f2b921e3dbae73c572c6b08da648d3d`。
+- `result`: run/job completed/success；job steps API 返回 20 步，全部 completed/success。Artifact `13978181356` / `xray-acceptance-43290976024-1`，3,026,140 bytes，digest `sha256:703de2eda39a11e0b4b0d07f73b0a201222c13e293c11015f205274f8838b8dd`，有效至 `2026-11-26T19:43:45Z`；run head SHA 与提交匹配。
+- `boundary`: 此 CI 验证 `678ff10` 文档回执，不代表 AWS/生产验收。当前本地 137 项 Fake/Stub 回归的结果仅为本地证据。无 AWS/SSH/费用请求。
+- `time_logic`: 机器时间 `2026-11-13T03:47:01+08:00` / UTC `2026-11-12T19:47:01Z`；没有业务时间逻辑变化。
+- `status`: 678ff10 CI passed；真实 AWS 仍因 profile 不匹配/授权窗口过期而 blocked/not-run；总体目标 active。
+
+## 2026-11-13T03:48:03+08:00 - 本地回归及 CI 回执最终验证
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0 (`acceptance matrix valid`)；`bash scripts/check-boundary.sh`=0 (`boundary check passed`)；`bash scripts/check-secrets.sh`=0 (159 commits / about 9.27 MB, no leaks)；skill validator=0 (`Skill is valid!`)；`git diff --check`=0；`git status --short --branch`=0。
+- `final_status`: 本轮三份预期审计文件 `docs/project-ledger.md`、`docs/progress.md`、`tests/acceptance/matrix.json` 被修改；13 个原有未跟踪 acceptance artifact 目录原样保留。无源码、VERSION/tag/Release、云资源、DB 数据或凭据变更。回退仅需 revert 后续文档审计提交。
+- `acceptance_boundary`: 本地聚焦 suite 137 passed；`678ff10` 精确 SHA CI run 43290976024 passed 且上传 artifact。AWS profile 和 CloudAccount 仍不能匹配授权账号，先前 90 分钟窗口过期；云端生命周期、真实订阅撤回、IP/健康、AWS 节点/流量计数及逐资源费用 blocked/not-run；本轮 AWS/SSH/费用请求为 0。整体目标保持 active。
