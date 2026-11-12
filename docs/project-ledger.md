@@ -8094,3 +8094,18 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0 (`acceptance matrix valid`)；`bash scripts/check-boundary.sh`=0 (`boundary check passed`)；`bash scripts/check-secrets.sh`=0 (157 commits / about 9.26 MB scanned, no leaks)；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0 (`Skill is valid!`)；`git diff --check`=0；`git status --short --branch`=0。
 - `status_and_rollback`: 仅四个预期审计文件被修改；原有 13 个未跟踪 `artifacts/acceptance/*` 目录全部保留。没有源码、版本、tag、Release、云状态、数据库或凭据变更。只 revert 这次审计收据提交即可回退文件。
 - `acceptance_boundary`: 该 CI 回执为 passed；真实 AWS profile 仍无法配置且先前 90 分钟授权窗口已过期，云创建/删除/重启、IP/健康/订阅撤回、云端节点和流量对账、逐资源费用保持 blocked/not-run；本轮无 AWS/SSH/账单请求。整体目标仍未完成。
+
+## 2026-11-13T03:29:14+08:00 - fb18b17 审计提交 CI 回执
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `scope`: 只读 GitHub Delivery Gates run/job/artifact 读回，然后把结果追加到本台账、进度、版本索引及验收矩阵；不修改运行时代码、VERSION/tag/Release、云资源、数据库或凭据。
+- `evidence`: `fb18b17ac8ec6af2d5ef2101640c80f813c7efdb` 的 run `43288393181`、job `131427792836` completed/success；artifact `13976388205` / `xray-acceptance-43288393181-1`，3,058,304 bytes，digest `sha256:5fa932f50b84f9f0f3f61c89f313158a80fb02d0c4ab8c5e053909c8c1e59b53`。run head SHA 匹配提交。
+- `verification_boundary`: 这是审计文档提交的 CI 通过证据；不能替代 AWS 节点生命周期、重启后 IP/状态、订阅发布/撤回、数量/流量及逐资源费用验收。profile 仍不能匹配授权账号，原 90 分钟窗口已过期；本次无 AWS、SSH、费用请求。
+- `time_logic`: 机器时钟 `2026-11-13T03:29:14+08:00` / UTC `2026-11-12T19:29:14Z`；没有业务时间规则变化。
+- `rollback_and_status`: 本次只调整四份审计文件，可以只 revert 审计提交；既存 13 个未跟踪 acceptance 目录保留。AWS lifecycle/订阅/计数/流量/成本 `blocked/not-run`，整体目标仍未完成。
+
+## 2026-11-13T03:30:03+08:00 - CI 回执文档验证
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `verification_commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0 (158 commits, about 9.26 MB, no leaks)；skill quick validator=0；`git diff --check`=0；`git status --short --branch`=0。
+- `final_status_and_rollback`: 只有四份预期审计文件修改；13 个原有未跟踪 acceptance 目录保留。无代码/版本/tag/Release/云状态变更。只 revert 之后形成的文档提交可回退本次审计追加。AWS 完整验收仍 `blocked/not-run`，整体目标未完成。

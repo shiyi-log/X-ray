@@ -3221,6 +3221,36 @@
       "region": null,
       "cost": null,
       "residual_resources": []
+    },
+    {
+      "id": "github-ci-v0.14.8-audit-receipt-fb18b17",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "timestamp": "2026-11-13T03:29:14+08:00",
+          "run_id": 43288393181,
+          "job_id": 131427792836,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "fb18b17ac8ec6af2d5ef2101640c80f813c7efdb",
+          "all_steps_success": true,
+          "artifact": {
+            "id": 13976388205,
+            "name": "xray-acceptance-43288393181-1",
+            "size_in_bytes": 3058304,
+            "digest": "sha256:5fa932f50b84f9f0f3f61c89f313158a80fb02d0c4ab8c5e053909c8c1e59b53"
+          },
+          "source": "GitHub Actions run, job, and artifact REST readback; head SHA matches this audit commit"
+        }
+      ],
+      "commit": "fb18b17ac8ec6af2d5ef2101640c80f813c7efdb",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
     }
   ]
 }
