@@ -8036,3 +8036,12 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `local_verification`: 本轮文档修改前后 `jq empty tests/acceptance/matrix.json`、`python3 scripts/validate-acceptance.py`、`bash scripts/check-boundary.sh`、`bash scripts/check-secrets.sh`、skill validator、`git diff --check` 均 exit `0`；前次本地 r2 证据为 19/19 gates、JUnit 581（579 passed、2 skipped）、前端 88、Playwright 8。
 - `cloud_boundary`: 当前 `default/root` 账号摘要仍为 `b1746f68f5be/4a0ef08458dd`，均不匹配授权 `94a91b85428b`；X-ray CloudAccount 未绑定匹配 principal 且 disabled。真实 AWS 节点创建/删除/重启、动态 IP/运行态、订阅撤回正向控制、节点/流量对账、逐资源费用和生产均 `blocked/not-run`；本轮 AWS 写入与费用为 `0`。
 - `final_status_and_rollback`: 当前分支 `main`，HEAD `ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9`，tag 已推送；工作树仅保留既有未跟踪 `artifacts/acceptance/*` 目录和待推送的本次三份审计文档差异，未清理。版本代码回退使用 `git revert ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9` 或回到 `v0.14.7`；不反向迁移、不恢复 Token tombstone、凭据、安全事件或云状态。
+
+## 2026-11-13T00:31:00+08:00 — 收尾提交远端门禁与 Release 读回
+
+- `run_id`: `xray-v0148-final-receipt-ci-20261113-0031`.
+- `receipt_commit`: 文档收尾提交 `21357a35f1bec3f950a553e7dc2b69c15145e75a` 已推送 `origin/main`；其 Delivery Gates run `43257038717` / job `131317931066` 于 `2026-11-12T16:30:21Z` 完成 `success`，27 个步骤全部成功。
+- `receipt_artifact`: artifact `13961958564` / `xray-acceptance-43257038717-1`，2,966,572 bytes，digest `sha256:58d394fc810b46a2dcf5b069ae5d70e2d225202bf045f12df433c74a5e0de955`，保留至 `2026-11-26T16:29:59Z`。
+- `tag_readback`: `origin/main` 为 `21357a35f1bec3f950a553e7dc2b69c15145e75a`；`v0.14.8` tag object `a6879bfc87f4482c72277f097c0d77d7be2ac0ad`，peeled 到已通过最终版本门禁的 `ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9`。
+- `release_readback`: `GET /repos/shiyi-log/X-ray/releases/tags/v0.14.8` 返回 HTTP 404；GitHub Release 尚未创建。当前本机 `gh` 不可用，连接工具没有可执行的 release workflow dispatch/write 能力，因此不将 tag 误报为 Release。
+- `final_workspace_and_boundary`: 最后一次审计提交前 `git diff --check`、acceptance、boundary、secret、skill validators 均为 `0`；AWS profile/CloudAccount 仍不匹配授权摘要 `94a91b85428b`，真实 AWS 生命周期、IP/状态、订阅撤回、节点/流量对账、费用和生产均 `blocked/not-run`，本轮 AWS 写入/费用为 `0`。既有未跟踪 acceptance artifacts 保留，不清理。
