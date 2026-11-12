@@ -3007,7 +3007,7 @@
     {
       "id": "local-delivery-gates-0.14.8-candidate-20261112",
       "environment": "local",
-      "status": "not-run",
+      "status": "passed",
       "evidence": [
         {
           "kind": "full_local_delivery_gate_summary",
@@ -3055,15 +3055,15 @@
           "aws_writes_attempted": false,
           "ssh_attempted": false,
           "cost_query_attempted": false,
-          "remote_exact_commit_ci": "not-run; candidate not committed or pushed",
+          "remote_exact_commit_ci": "pending for exact commit b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c after push",
           "github_release": "not-run; annotated tag and Release not created",
           "real_aws_acceptance": "blocked; configured profiles and X-ray CloudAccount do not match authorized account 94a91b85428b; user reports unable to configure matching profile",
-          "result": "local gates passed for candidate worktree; the version-bound matrix row remains not-run until an exact commit SHA is available; external AWS acceptance and remote publication remain distinct outstanding gates"
+          "result": "local gates passed for source commit b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c; external AWS acceptance and remote publication remain distinct outstanding gates"
         }
       ],
-      "commit": null,
-      "source_base_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
-      "candidate_worktree": true,
+      "commit": "b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c",
+      "source_base_commit": "b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c",
+      "candidate_worktree": false,
       "provider": "Fake/Stub providers and isolated local PostgreSQL/Redis",
       "region": null,
       "cost": 0,
