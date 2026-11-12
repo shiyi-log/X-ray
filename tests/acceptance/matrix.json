@@ -1866,6 +1866,29 @@
         "cost_queries_attempted": false,
         "pem_contents_read": false,
         "result": "blocked_before_cloud_write; profile identities and application session still do not match the authorization prerequisites"
+      },
+      {
+        "kind": "authorization_profile_unavailable_user_confirmation_20261113",
+        "timestamp": "2026-11-13T02:27:00+08:00",
+        "authorized_account_digest": "94a91b85428b",
+        "last_verified_profile_digests": {
+          "default": "b1746f68f5be",
+          "root": "4a0ef08458dd"
+        },
+        "last_verified_xray_cloud_account": {
+          "digest": "b1746f68f5be",
+          "enabled": false
+        },
+        "user_reports_matching_profile_configuration_unavailable": true,
+        "authorization_window_reused": false,
+        "aws_resource_reads_attempted_this_event": false,
+        "aws_writes_attempted_this_event": false,
+        "ssh_attempted_this_event": false,
+        "cost_queries_attempted_this_event": false,
+        "pem_contents_read": false,
+        "authorized_account_resource_count": null,
+        "authorized_account_resource_cost_usd": null,
+        "result": "blocked; no new AWS request was made, and no current authorized-account resource inventory or cost was established"
         }
       ],
       "commit": null,
@@ -3057,9 +3080,9 @@
           "cost_query_attempted": false,
           "remote_exact_commit_ci": "passed: run 43253704305, job 131306144155, head ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9, all 27 steps success",
           "remote_artifact": {"id": 13961503065, "name": "xray-acceptance-43253704305-1", "size_in_bytes": 3004233, "digest": "sha256:cad3f341d60c75cdf739c631d7d1e97f31aaa2602103242d0e5709110c02c504", "expires_at": "2026-11-26T16:12:06Z"},
-          "github_release": "not-run; annotated tag and Release not created",
+          "github_release": "original candidate record was stale; publication was later completed and is recorded in github-release-v0.14.8",
           "real_aws_acceptance": "blocked; configured profiles and X-ray CloudAccount do not match authorized account 94a91b85428b; user reports unable to configure matching profile",
-          "result": "local gates passed for source commit b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c; external AWS acceptance and remote publication remain distinct outstanding gates"
+          "result": "local gates passed for source commit b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c; the candidate record was historical, remote tag and GitHub Release were subsequently published, and real AWS acceptance remains a distinct blocked gate"
         }
       ],
       "commit": "b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c",
@@ -3071,6 +3094,72 @@
       "residual_resources": [
         "The registered xray-goal-20261112 PostgreSQL/Redis containers remain running on 55435/56382; their named volumes are preserved. E2E temporary services stopped and ports 55671-55674 are free."
       ]
+    },
+    {
+      "id": "github-release-v0.14.8",
+      "environment": "release",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "published_release_workflow_and_asset_readback",
+          "timestamp": "2026-11-13T02:24:07+08:00",
+          "release_id": 443342829,
+          "release_url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.14.8",
+          "published_at": "2026-11-12T18:18:42Z",
+          "draft": false,
+          "prerelease": false,
+          "workflow": "发布 X-ray 版本",
+          "workflow_run": 43278431924,
+          "workflow_job": 131392980533,
+          "workflow_conclusion": "success",
+          "workflow_steps_all_success": true,
+          "tag": "v0.14.8",
+          "tag_commit": "ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9",
+          "release_dispatch_head_commit": "be95f501adb7b6504caa6393913b79f1785af9ef",
+          "assets": {
+            "SHA256SUMS": "fdc0807469e5889f46183a03aa39341e824fe0b5deb9e5a275e4fba608ae51c9",
+            "xray-installer-0.14.8-manifest.json": "cbb173d1fbb37a387a4ab2c763c370c35b797762328f581fe98bba70d0ed8e38",
+            "xray-installer-0.14.8.tar.gz": "b540cc55cc11ad986d3290fb9b3b5cd27c72a4a6ade4c505ea9e5f75c07c6bd9"
+          },
+          "asset_sha256sums_contents_verified": true,
+          "source": "GitHub Release REST readback and previously streamed asset/SHA256SUMS verification"
+        }
+      ],
+      "commit": "ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "github-ci-v0.14.8-final-receipt",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "timestamp": "2026-11-13T02:24:07+08:00",
+          "run_id": 43259720986,
+          "job_id": 131327425269,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "be95f501adb7b6504caa6393913b79f1785af9ef",
+          "all_steps_success": true,
+          "artifact": {
+            "id": 13962269772,
+            "name": "xray-acceptance-43259720986-1",
+            "size_in_bytes": 3194538,
+            "digest": "sha256:c09b7790a7b453d4cc4d478937217ae259fdd83921b2cd6659e5073dbde40431",
+            "expires_at": "2026-11-26T16:44:34Z"
+          }
+        }
+      ],
+      "commit": "be95f501adb7b6504caa6393913b79f1785af9ef",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
     }
   ]
 }
