@@ -100,11 +100,24 @@ class AwsLightsailProvider:
             response = self.lightsail.get_regions(includeAvailabilityZones=False)
         except Exception as exc:
             raise map_provider_error(self.provider, exc, write_started=False) from exc
-        return tuple(
-            Region(str(item.get("name") or ""), str(item.get("name") or ""))
-            for item in response.get("regions", [])
-            if item.get("name")
-        )
+        values = response.get("regions") if isinstance(response, dict) else None
+        if not isinstance(values, list) or any(not isinstance(item, dict) for item in values):
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "AWS 区域清单响应格式无效",
+                status_code=502,
+            )
+        ids = [item.get("name") for item in values]
+        if (
+            any(not isinstance(region_id, str) or not region_id for region_id in ids)
+            or len(set(ids)) != len(ids)
+        ):
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "AWS 区域清单包含无效或重复区域标识",
+                status_code=502,
+            )
+        return tuple(Region(region_id, region_id) for region_id in ids)
 
     def list_plans(self, region: str) -> tuple[Plan, ...]:
         if region != self.region:
@@ -187,6 +200,85 @@ class AwsLightsailProvider:
             tags=tags,
             observed_at=datetime.now(UTC),
         )
+
+    def list_instances(self, region: str) -> tuple[Instance, ...]:
+        if region != self.region:
+            raise DomainError("REGION_MISMATCH", "适配器已绑定其他区域", status_code=400)
+        instances = []
+        seen_instance_ids = set()
+        token = None
+        seen_tokens = set()
+        while True:
+            kwargs = {"pageToken": token} if token else {}
+            try:
+                response = self.lightsail.get_instances(**kwargs)
+            except Exception as exc:
+                raise map_provider_error(self.provider, exc, write_started=False) from exc
+            page = response.get("instances") if isinstance(response, dict) else None
+            if not isinstance(page, list):
+                raise DomainError(
+                    "CLOUD_INVENTORY_RESPONSE_INVALID",
+                    "AWS 实例清单响应格式无效",
+                    status_code=502,
+                )
+            for item in page:
+                if not isinstance(item, dict):
+                    raise DomainError(
+                        "CLOUD_INVENTORY_RESPONSE_INVALID",
+                        "AWS 实例清单响应格式无效",
+                        status_code=502,
+                    )
+                instance_id = str(item.get("name") or item.get("instanceName") or "")
+                if not instance_id or instance_id in seen_instance_ids:
+                    raise DomainError(
+                        "CLOUD_INVENTORY_RESPONSE_INVALID",
+                        "AWS 实例清单包含无效或重复实例标识",
+                        status_code=502,
+                    )
+                seen_instance_ids.add(instance_id)
+                tags = item.get("tags", [])
+                ipv6 = item.get("ipv6Addresses", [])
+                if (
+                    not isinstance(tags, list)
+                    or any(not isinstance(tag, dict) for tag in tags)
+                    or not isinstance(ipv6, list)
+                    or any(not isinstance(address, str) for address in ipv6)
+                ):
+                    raise DomainError(
+                        "CLOUD_INVENTORY_RESPONSE_INVALID",
+                        "AWS 实例清单响应格式无效",
+                        status_code=502,
+                    )
+                try:
+                    instances.append(self._map_instance(item))
+                except Exception as exc:
+                    raise DomainError(
+                        "CLOUD_INVENTORY_RESPONSE_INVALID",
+                        "AWS 实例清单响应格式无效",
+                        status_code=502,
+                    ) from exc
+            token = response.get("nextPageToken")
+            if token is None:
+                return tuple(instances)
+            if not isinstance(token, str) or not token:
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "AWS 实例清单分页标记无效",
+                    status_code=502,
+                )
+            if token in seen_tokens:
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "AWS 实例清单分页标记重复",
+                    status_code=502,
+                )
+            if len(seen_tokens) >= 9999:
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "AWS 实例清单分页超出安全上限",
+                    status_code=502,
+                )
+            seen_tokens.add(token)
 
     def find_instance_by_request(
         self, request: CreateRequest, operation_key: str

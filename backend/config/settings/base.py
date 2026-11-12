@@ -125,7 +125,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE": "X-ray Manager API",
     "DESCRIPTION": "Private administrator API. Secrets are write-only or delivered once.",
-    "VERSION": "0.14.7",
+    "VERSION": "0.14.8",
     "SERVE_INCLUDE_SCHEMA": False,
     "POSTPROCESSING_HOOKS": ["config.openapi.inject_contract"],
 }
@@ -170,5 +170,9 @@ CELERY_BEAT_SCHEDULE = {
     },
     "node-daily-restart-scheduler": {
         "task": "apps.nodes.tasks.schedule_daily_node_restart", "schedule": 60.0,
+    },
+    "cloud-instance-inventory-audit": {
+        "task": "apps.nodes.tasks.audit_cloud_instance_inventory",
+        "schedule": 86400.0,
     },
 }

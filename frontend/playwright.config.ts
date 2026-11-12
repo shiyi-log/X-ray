@@ -6,7 +6,7 @@ import { resolveE2ePorts } from './scripts/e2e-ports.mjs';
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const acceptanceRoot =
   process.env.XRAY_ACCEPTANCE_ARTIFACT_DIR ??
-  path.join(repositoryRoot, 'artifacts', 'acceptance', '0.14.7');
+  path.join(repositoryRoot, 'artifacts', 'acceptance', '0.14.8');
 const authState =
   process.env.XRAY_PLAYWRIGHT_AUTH_STATE ??
   path.join(import.meta.dirname, '.playwright', 'admin.json');

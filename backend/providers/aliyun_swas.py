@@ -87,8 +87,11 @@ class AliyunSwasProvider:
     @staticmethod
     def _body(response: Any) -> Any:
         if isinstance(response, dict):
-            return response.get("body", response)
-        return getattr(response, "body", response)
+            body = response.get("body", response)
+        else:
+            body = getattr(response, "body", response)
+        to_map = getattr(body, "to_map", None)
+        return to_map() if callable(to_map) else body
 
     def validate_credentials(self) -> AccountIdentity:
         try:
@@ -124,12 +127,48 @@ class AliyunSwasProvider:
             raise map_provider_error(self.provider, exc, write_started=False) from exc
 
     def list_regions(self) -> tuple[Region, ...]:
-        body = self._read("list_regions")
-        values = body.get("regions", body.get("Regions", [])) if isinstance(body, dict) else []
+        try:
+            from alibabacloud_swas_open20200601.models import ListRegionsRequest
+
+            body = self._body(self.swas.list_regions(ListRegionsRequest()))
+        except Exception as exc:
+            raise map_provider_error(self.provider, exc, write_started=False) from exc
+        if not isinstance(body, dict) or not any(key in body for key in ("regions", "Regions")):
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "SWAS 区域清单响应格式无效",
+                status_code=502,
+            )
+        values = body.get("regions", body.get("Regions", []))
+        if not isinstance(values, list) or any(not isinstance(item, dict) for item in values):
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "SWAS 区域清单响应格式无效",
+                status_code=502,
+            )
+        if any(not (item.get("region_id") or item.get("RegionId")) for item in values):
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "SWAS 区域清单缺少区域标识",
+                status_code=502,
+            )
+        region_ids = [item.get("region_id") or item.get("RegionId") for item in values]
+        if len(set(region_ids)) != len(region_ids):
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "SWAS 区域清单包含重复区域标识",
+                status_code=502,
+            )
         return tuple(
             Region(
                 str(item.get("region_id") or item.get("RegionId")),
-                str(item.get("name") or item.get("RegionName") or item.get("RegionId")),
+                str(
+                    item.get("local_name")
+                    or item.get("LocalName")
+                    or item.get("name")
+                    or item.get("RegionName")
+                    or item.get("RegionId")
+                ),
             )
             for item in values
         )
@@ -171,35 +210,155 @@ class AliyunSwasProvider:
     def _map_instance(self, item: dict[str, Any]) -> Instance:
         resource_id = str(item.get("instance_id") or item.get("InstanceId") or "")
         addresses = []
-        address = item.get("public_ip") or item.get("PublicIpAddress")
+        address = (
+            item.get("public_ip")
+            or item.get("public_ip_address")
+            or item.get("PublicIpAddress")
+        )
         if address:
             addresses.append(Address(str(address), 4, "dynamic", resource_id))
         ref = ResourceRef(self.account, self.region, resource_id)
-        tags = (
-            {str(k): str(v) for k, v in (item.get("tags") or {}).items()}
-            if isinstance(item.get("tags"), dict)
-            else {}
-        )
+        raw_tags = item.get("tags", item.get("Tags", []))
+        if isinstance(raw_tags, dict):
+            tags = {str(key): str(value) for key, value in raw_tags.items()}
+        elif isinstance(raw_tags, list) and all(isinstance(tag, dict) for tag in raw_tags):
+            tags = {
+                str(tag.get("key") or tag.get("Key")): str(
+                    tag.get("value") or tag.get("Value") or ""
+                )
+                for tag in raw_tags
+                if tag.get("key") or tag.get("Key")
+            }
+        else:
+            raise ValueError("invalid SWAS instance tags")
         return Instance(
             ref,
-            str(item.get("name") or item.get("InstanceName") or resource_id),
-            str(item.get("state") or item.get("Status") or "UNKNOWN"),
-            str(item.get("Status") or item.get("state") or "UNKNOWN"),
+            str(
+                item.get("name")
+                or item.get("instance_name")
+                or item.get("InstanceName")
+                or resource_id
+            ),
+            str(item.get("state") or item.get("status") or item.get("Status") or "UNKNOWN"),
+            str(item.get("Status") or item.get("status") or item.get("state") or "UNKNOWN"),
             tuple(addresses),
             tags,
             datetime.now(UTC),
         )
 
+    def list_instances(self, region: str) -> tuple[Instance, ...]:
+        if region != self.region:
+            raise DomainError("REGION_MISMATCH", "适配器已绑定其他区域", status_code=400)
+        values = []
+        page_number = 1
+        seen_ids = set()
+        total_count = None
+        while True:
+            try:
+                from alibabacloud_swas_open20200601.models import ListInstancesRequest
+
+                response = self.swas.list_instances(
+                    ListInstancesRequest(
+                        region_id=region,
+                        page_number=page_number,
+                        page_size=100,
+                    )
+                )
+                body = self._body(response)
+            except Exception as exc:
+                raise map_provider_error(self.provider, exc, write_started=False) from exc
+            if not isinstance(body, dict):
+                raise DomainError(
+                    "CLOUD_INVENTORY_RESPONSE_INVALID",
+                    "SWAS 实例清单响应格式无效",
+                    status_code=502,
+                )
+            if (
+                ("instances" not in body and "Instances" not in body)
+                or ("total_count" not in body and "TotalCount" not in body)
+            ):
+                raise DomainError(
+                    "CLOUD_INVENTORY_RESPONSE_INVALID",
+                    "SWAS 实例清单响应格式无效",
+                    status_code=502,
+                )
+            page_items = body.get("instances", body.get("Instances", []))
+            if not isinstance(page_items, list) or any(
+                not isinstance(item, dict) for item in page_items
+            ):
+                raise DomainError(
+                    "CLOUD_INVENTORY_RESPONSE_INVALID",
+                    "SWAS 实例清单响应格式无效",
+                    status_code=502,
+                )
+            count = body.get("total_count", body.get("TotalCount"))
+            valid_count = isinstance(count, int) and not isinstance(count, bool)
+            if isinstance(count, str) and count.isdecimal():
+                count = int(count)
+                valid_count = True
+            if not valid_count:
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "SWAS 实例清单总数无效",
+                    status_code=502,
+                )
+            if count < 0 or (total_count is not None and count != total_count):
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "SWAS 实例清单总数不一致",
+                    status_code=502,
+                )
+            total_count = count
+            if not page_items and total_count is not None and len(values) < total_count:
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "SWAS 实例清单分页提前结束",
+                    status_code=502,
+                )
+            if not page_items:
+                break
+            for item in page_items:
+                instance_id = str(item.get("instance_id") or item.get("InstanceId") or "")
+                if not instance_id or instance_id in seen_ids:
+                    raise DomainError(
+                        "CLOUD_INVENTORY_RESPONSE_INVALID",
+                        "SWAS 实例清单包含无效或重复实例标识",
+                        status_code=502,
+                    )
+                seen_ids.add(instance_id)
+            values.extend(page_items)
+            if total_count is not None and len(values) >= total_count:
+                if len(values) != total_count:
+                    raise DomainError(
+                        "CLOUD_INVENTORY_PAGINATION_INVALID",
+                        "SWAS 实例清单超过报告总数",
+                        status_code=502,
+                    )
+                break
+            if page_number >= 10000:
+                raise DomainError(
+                    "CLOUD_INVENTORY_PAGINATION_INVALID",
+                    "SWAS 实例清单分页超出安全上限",
+                    status_code=502,
+                )
+            page_number += 1
+        try:
+            return tuple(self._map_instance(item) for item in values)
+        except Exception as exc:
+            raise DomainError(
+                "CLOUD_INVENTORY_RESPONSE_INVALID",
+                "SWAS 实例清单响应格式无效",
+                status_code=502,
+            ) from exc
+
     def find_instance_by_request(
         self, request: CreateRequest, operation_key: str
     ) -> tuple[Instance, ...]:
-        body = self._read("list_instances", region_id=self.region)
-        values = body.get("instances", body.get("Instances", [])) if isinstance(body, dict) else []
         return tuple(
-            self._map_instance(item)
-            for item in values
-            if str(item.get("name") or item.get("InstanceName") or "") == request.name
-            and str((item.get("tags") or {}).get("xray-operation", "")) == operation_key
+            instance
+            for instance in self.list_instances(self.region)
+            if instance.name == request.name
+            and instance.tags.get("xray-operation") == operation_key
         )
 
     def get_instance(self, resource: ResourceRef) -> Instance:

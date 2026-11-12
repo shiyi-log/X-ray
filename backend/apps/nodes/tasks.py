@@ -726,3 +726,68 @@ def schedule_daily_node_restart():
         "phase": "stop",
         "at": now.isoformat(),
     }
+
+
+@shared_task
+def audit_cloud_instance_inventory():
+    """Daily read-only account inventory reconciliation; no cloud mutations."""
+    from apps.audit.services import AuditService
+    from apps.cloud_accounts.models import CloudAccount
+    from apps.identity.gate_settings import provider_identity_network_setting
+    from apps.nodes.inventory import reconcile_cloud_account_inventory
+
+    if not provider_identity_network_setting()["enabled"]:
+        return {"audited": 0, "blocked": 0, "disabled": True}
+
+    audited = blocked = 0
+    for account in CloudAccount.objects.filter(enabled=True).order_by("pk"):
+        try:
+            result = reconcile_cloud_account_inventory(account)
+        except DomainError as exc:
+            result = {
+                "account_id": str(account.pk),
+                "provider": account.provider,
+                "complete": False,
+                "error_code": exc.code,
+                "checked_regions": [],
+                "complete_regions": [],
+                "failed_regions": [],
+                "managed_node_count": None,
+                "cloud_instance_count": None,
+                "node_count_reconciled": False,
+                "untracked_cloud_instances": [],
+                "missing_managed_instances": [],
+                "automatic_actions": [],
+            }
+        except Exception:
+            result = {
+                "account_id": str(account.pk),
+                "provider": account.provider,
+                "complete": False,
+                "error_code": "CLOUD_INVENTORY_READ_FAILED",
+                "checked_regions": [],
+                "complete_regions": [],
+                "failed_regions": [],
+                "managed_node_count": None,
+                "cloud_instance_count": None,
+                "node_count_reconciled": False,
+                "untracked_cloud_instances": [],
+                "missing_managed_instances": [],
+                "automatic_actions": [],
+            }
+        AuditService.append(
+            action="node.cloud_inventory.reconcile",
+            target_type="CloudAccount",
+            target_id=account.pk,
+            result=(
+                "SUCCEEDED"
+                if result["complete"] and result.get("node_count_reconciled", False)
+                else "PARTIAL"
+            ),
+            metadata=result,
+        )
+        audited += 1
+        blocked += int(
+            not result["complete"] or not result.get("node_count_reconciled", False)
+        )
+    return {"audited": audited, "blocked": blocked, "disabled": False}

@@ -41,6 +41,7 @@ class ReadOnlyProviderProxy:
         "list_regions",
         "list_plans",
         "list_images",
+        "list_instances",
         "find_instance_by_request",
         "get_instance",
         "get_public_ip",

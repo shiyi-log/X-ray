@@ -381,3 +381,183 @@ def test_get_firewall_reads_ipv4_ipv6_and_provider_alias_fields():
         (6, "cidr", "2001:db8::/64"),
         (4, "provider_alias", "lightsail-connect"),
     ]
+
+
+def test_list_instances_reads_every_page_for_bound_region():
+    ref = account()
+    lightsail = Mock()
+    lightsail.get_instances.side_effect = [
+        {
+            "instances": [
+                {"name": "managed-1", "state": {"name": "running"}, "tags": []}
+            ],
+            "nextPageToken": "page-2",
+        },
+        {
+            "instances": [
+                {
+                    "name": "untracked-1",
+                    "state": {"name": "stopped"},
+                    "publicIpAddress": "203.0.113.12",
+                    "tags": [{"key": "owner", "value": "manual"}],
+                }
+            ],
+            "nextPageToken": None,
+        },
+    ]
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    instances = provider.list_instances("us-east-1")
+
+    assert [instance.ref.resource_id for instance in instances] == ["managed-1", "untracked-1"]
+    assert instances[1].state == "stopped"
+    assert instances[1].tags == {"owner": "manual"}
+    assert [call.kwargs for call in lightsail.get_instances.call_args_list] == [
+        {},
+        {"pageToken": "page-2"},
+    ]
+
+
+def test_list_instances_rejects_other_region():
+    ref = account()
+    lightsail = Mock()
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    with pytest.raises(DomainError) as caught:
+        provider.list_instances("us-west-2")
+
+    assert caught.value.code == "REGION_MISMATCH"
+    lightsail.get_instances.assert_not_called()
+
+
+def test_list_regions_rejects_malformed_or_duplicate_regions():
+    ref = account()
+    lightsail = Mock()
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    lightsail.get_regions.return_value = {
+        "regions": [{"name": "us-east-1"}, {"name": ""}]
+    }
+    with pytest.raises(DomainError) as caught:
+        provider.list_regions()
+    assert caught.value.code == "CLOUD_INVENTORY_RESPONSE_INVALID"
+
+    lightsail.get_regions.return_value = {
+        "regions": [{"name": "us-east-1"}, {"name": "us-east-1"}]
+    }
+    with pytest.raises(DomainError) as caught:
+        provider.list_regions()
+    assert caught.value.code == "CLOUD_INVENTORY_RESPONSE_INVALID"
+
+
+def test_list_instances_fails_if_a_later_page_cannot_be_read():
+    ref = account()
+    lightsail = Mock()
+    lightsail.get_instances.side_effect = [
+        {"instances": [{"name": "first-page", "tags": []}], "nextPageToken": "page-2"},
+        ClientError(
+            {"Error": {"Code": "ServiceException", "Message": "unavailable"}},
+            "GetInstances",
+        ),
+    ]
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    with pytest.raises(DomainError):
+        provider.list_instances("us-east-1")
+
+
+def test_list_instances_rejects_malformed_pages_and_duplicate_ids():
+    ref = account()
+    lightsail = Mock()
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    lightsail.get_instances.return_value = {"instances": None}
+    with pytest.raises(DomainError) as caught:
+        provider.list_instances("us-east-1")
+    assert caught.value.code == "CLOUD_INVENTORY_RESPONSE_INVALID"
+
+    lightsail.get_instances.return_value = {
+        "instances": [{"name": "bad-tags", "tags": None}]
+    }
+    with pytest.raises(DomainError) as caught:
+        provider.list_instances("us-east-1")
+    assert caught.value.code == "CLOUD_INVENTORY_RESPONSE_INVALID"
+
+    lightsail.get_instances.side_effect = [
+        {"instances": [{"name": "duplicate", "tags": []}], "nextPageToken": "p2"},
+        {"instances": [{"name": "duplicate", "tags": []}]},
+    ]
+    with pytest.raises(DomainError) as caught:
+        provider.list_instances("us-east-1")
+    assert caught.value.code == "CLOUD_INVENTORY_RESPONSE_INVALID"
+
+
+def test_list_instances_rejects_repeated_page_token():
+    ref = account()
+    lightsail = Mock()
+    lightsail.get_instances.side_effect = [
+        {"instances": [], "nextPageToken": "same"},
+        {"instances": [], "nextPageToken": "same"},
+    ]
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+        authorizer=DenyWrites(),
+    )
+
+    with pytest.raises(DomainError) as caught:
+        provider.list_instances("us-east-1")
+    assert caught.value.code == "CLOUD_INVENTORY_PAGINATION_INVALID"
+
+
+@pytest.mark.parametrize("invalid_token", [0, False, [], {}])
+def test_list_instances_rejects_non_string_continuation_tokens(invalid_token):
+    ref = account()
+    lightsail = Mock()
+    lightsail.get_instances.return_value = {
+        "instances": [],
+        "nextPageToken": invalid_token,
+    }
+    provider = AwsLightsailProvider(
+        ref,
+        "us-east-1",
+        lightsail_client=lightsail,
+        sts_client=Mock(),
+    )
+
+    with pytest.raises(DomainError) as caught:
+        provider.list_instances("us-east-1")
+
+    assert caught.value.code == "CLOUD_INVENTORY_PAGINATION_INVALID"

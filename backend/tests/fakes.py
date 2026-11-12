@@ -71,6 +71,11 @@ class FakeCloudProvider:
             and instance.tags.get("xray-operation") == operation_key
         )
 
+    def list_instances(self, region):
+        if region != self.region:
+            raise DomainError("REGION_MISMATCH", "region mismatch", status_code=400)
+        return tuple(self.instances.values())
+
     def create_instance(self, request, *, permit):
         self.authorizer.assert_allowed(
             permit, action="create", account=self.account, resource_id=None

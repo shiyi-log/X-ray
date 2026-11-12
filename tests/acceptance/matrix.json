@@ -1,6 +1,6 @@
 {
-  "version": "0.14.7",
-  "generated_at": "2026-11-11T21:31:43+08:00",
+  "version": "0.14.8",
+  "generated_at": "2026-11-12T23:11:10+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1704,6 +1704,168 @@
           "writes_attempted": false,
           "result": "blocked_before_cloud_write",
           "reason": "The earlier fingerprint included the AWS CLI stdout terminator and does not follow the project account-field fingerprint method. Both configured profile account-field fingerprints differ from the authorized fingerprint. The root inventory is for another account; application session/step-up/CloudAccount reads are also unavailable."
+      },
+      {
+        "kind": "current_local_auth_and_cloud_account_readback",
+        "timestamp": "2026-11-12T15:37:46+08:00",
+        "source_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+        "application": "isolated local X-ray instance on loopback 9541; frontend 9542 returned HTTP 200",
+        "standard_password_login_http": 200,
+        "session_authenticated": true,
+        "mfa_enabled": false,
+        "step_up_verified": true,
+        "cloud_account_readback_http": 200,
+        "cloud_account_count": 1,
+        "cloud_account": {
+          "provider": "aws_lightsail",
+          "external_account_digest": "b1746f68f5be",
+          "enabled": false,
+          "validated": true
+        },
+        "root_profile_account_digest": "4a0ef08458dd",
+        "cloud_account_matches_authorized_profile": false,
+        "logout_completed": true,
+        "writes_attempted": false,
+        "ssh_attempted": false,
+        "cost_query_attempted": false,
+        "result": "blocked_before_cloud_resource_operations; configured CloudAccount identity differs from authorized AWS profile and is disabled"
+      },
+      {
+        "kind": "current_canonical_aws_identity_and_inventory_readback",
+        "timestamp": "2026-11-12T15:45:57+08:00",
+        "profile": "root",
+        "canonical_fingerprint_method": "SHA-256 of the decoded STS Account field text",
+        "configured_profile_account_digests": {
+          "default": "b1746f68f5be",
+          "root": "4a0ef08458dd"
+        },
+        "authorized_account_digest": "94a91b85428b",
+        "profile_matches_authorized_account": false,
+        "lightsail_region": "us-east-1",
+        "instance_count": 0,
+        "instance_states": {},
+        "aws_writes_attempted": false,
+        "ssh_attempted": false,
+        "cost_query_attempted": false,
+        "authorization_window_current": false,
+        "result": "read_only_inventory_for_mismatched_profile; not evidence for authorized-account resources or costs"
+      },
+      {
+        "kind": "renewed_aws_authorization_profile_and_account_preflight",
+        "timestamp": "2026-11-12T17:13:26+08:00",
+        "authorization": {
+          "requested_window_minutes": 90,
+          "additional_budget_usd": 25,
+          "overall_budget_usd": 1000,
+          "max_nodes": 1,
+          "region": "us-east-1",
+          "plan": "small_3_0",
+          "image": "ubuntu_24_04",
+          "reply_received_in_current_turn": true,
+          "exact_message_start_timestamp_available": false
+        },
+        "authorized_account_digest": "94a91b85428b",
+        "configured_profiles": {
+          "default": "b1746f68f5be",
+          "root": "4a0ef08458dd"
+        },
+        "matching_profile_available": false,
+        "xray_local_auth": {
+          "login_http_status": 200,
+          "session_authenticated": true,
+          "step_up_verified": true,
+          "cloud_account_http_status": 200,
+          "cloud_account_digest": "b1746f68f5be",
+          "cloud_account_enabled": false,
+          "logout_completed": true
+        },
+        "aws_console_session": "logged_out",
+        "aws_resource_reads_attempted": false,
+        "aws_writes_attempted": false,
+        "ssh_attempted": false,
+        "cost_queries_attempted": false,
+        "result": "blocked_before_aws_resource_operations; no configured AWS profile matches the authorized identity and the X-ray CloudAccount is disabled and mismatched"
+      },
+      {
+        "kind": "updated_goal_local_aws_cli_authorization_window",
+        "timestamp": "2026-11-12T17:17:50+08:00",
+        "authorization_window": {
+          "start": "2026-11-12T17:17:50+08:00",
+          "end_exclusive": "2026-11-12T18:47:50+08:00",
+          "boundary": "[start,end)",
+          "duration_minutes": 90
+        },
+        "limits": {
+          "max_nodes": 1,
+          "region": "us-east-1",
+          "plan": "small_3_0",
+          "image": "ubuntu_24_04",
+          "additional_budget_usd": 25,
+          "overall_budget_usd": 1000
+        },
+        "authorized_account_digest": "94a91b85428b",
+        "local_aws_cli_profiles": {
+          "default": "b1746f68f5be",
+          "root": "4a0ef08458dd"
+        },
+        "matching_profile_available": false,
+        "xray_cloud_account_digest": "b1746f68f5be",
+        "xray_cloud_account_enabled": false,
+        "aws_console_session": "logged_out",
+        "profile_name_supplied": false,
+        "aws_resource_reads_attempted": false,
+        "aws_writes_attempted": false,
+        "ssh_attempted": false,
+        "cost_queries_attempted": false,
+        "credential_or_pem_contents_read": false,
+        "result": "blocked_before_aws_resource_operations; user authorized one-node local-CLI acceptance window, but no matching AWS profile or X-ray CloudAccount is available"
+      },
+      {
+        "kind": "authorization_prerequisite_reread_20261112T1732",
+        "checked_at": "2026-11-12T09:32:24Z",
+        "authorized_account_digest": "94a91b85428b",
+        "configured_profile_count": 2,
+        "canonical_account_field_digests": {
+          "default": "b1746f68f5be",
+          "root": "4a0ef08458dd"
+        },
+        "matching_profile_available": false,
+        "xray_local_api_port": 9541,
+        "xray_local_ui_port": 9542,
+        "xray_api_health_http": 200,
+        "xray_ui_http": 200,
+        "xray_auth_session_endpoint_http": 200,
+        "xray_admin_session_authenticated": false,
+        "xray_cloud_accounts_http": 401,
+        "aws_console_session": "logged_out",
+        "aws_resource_reads_attempted": false,
+        "aws_writes_attempted": false,
+        "ssh_attempted": false,
+        "cost_queries_attempted": false,
+        "pem_contents_read": false,
+        "result": "blocked_before_cloud_write; neither local AWS profile matches the authorized account, the X-ray API has no authenticated session, and AWS Console is logged out"
+      },
+      {
+        "kind": "authorization_prerequisite_reread_20261112T1758",
+        "checked_at": "2026-11-12T09:52:47Z",
+        "authorized_account_digest": "94a91b85428b",
+        "configured_profiles_checked": 2,
+        "canonical_account_field_digests": {
+          "default": "b1746f68f5be",
+          "root": "4a0ef08458dd"
+        },
+        "matching_profile_available": false,
+        "xray_api_health_http": 200,
+        "xray_ui_http": 200,
+        "xray_auth_session_endpoint_http": 200,
+        "xray_admin_session_authenticated": false,
+        "xray_cloud_accounts_http": 401,
+        "aws_resource_reads_attempted": false,
+        "aws_writes_attempted": false,
+        "ssh_attempted": false,
+        "cost_queries_attempted": false,
+        "pem_contents_read": false,
+        "result": "blocked_before_cloud_write; profile identities and application session still do not match the authorization prerequisites"
         }
       ],
       "commit": null,
@@ -1752,7 +1914,23 @@
       "id": "production-release",
       "environment": "production",
       "status": "blocked",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "deployment_request_preflight",
+          "checked_at": "2026-11-12T20:31:45+08:00",
+          "run_id": "xray-production-deploy-3-0-199-99-20261112-01",
+          "target_host": "3.0.199.99",
+          "target_read_or_write_attempted": false,
+          "release_version": "0.14.7",
+          "blockers": [
+            "no SSH user or authorized access method identified",
+            "no admin domain or management CIDR allowlist provided; production admin requires TLS and restricted access",
+            "no immutable backend, frontend, or backup-tools image digests/registry access configured",
+            "production secret files, TLS certificates, encrypted backup destination, and host Docker Compose readiness are unverified"
+          ],
+          "result": "blocked before SSH, host probing, image publication, or production mutation"
+        }
+      ],
       "commit": null,
       "provider": null,
       "region": null,
@@ -2661,6 +2839,237 @@
       "cost": null,
       "cost_status": "authorized account and resource-level cost unverified",
       "residual_resources": []
+    },
+    {
+      "id": "local-automation-subscription-regression-20261111",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "focused_local_regression",
+          "timestamp": "2026-11-11T22:09:04+08:00",
+          "source_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+          "provider_boundary": "Fake/Stub providers and isolated PostgreSQL/Redis test stack",
+          "commands": [
+            "XRAY_ENV=test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests/test_node_automation.py backend/tests/test_node_pool_scheduler_integration.py backend/tests/test_node_status_scheduler.py backend/tests/subscriptions/test_node_metering.py -q",
+            "XRAY_ENV=test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests/test_safe_controls.py backend/tests/subscriptions/test_tokens.py backend/tests/subscriptions/test_publishing.py backend/tests/subscriptions/test_public_read.py backend/tests/subscriptions/test_node_reconciliation.py backend/tests/subscriptions/test_revocation_runtime.py -q"
+          ],
+          "results": [
+            {
+              "exit_code": 0,
+              "passed": 59,
+              "skipped": 0
+            },
+            {
+              "exit_code": 0,
+              "passed": 84,
+              "skipped": 2,
+              "skip_reason": "fixed Xray binary is not configured"
+            }
+          ],
+          "asserted_areas": [
+            "pool quota deficit/excess scheduling and standard Fake provider handlers",
+            "daily stop/start rotation, changed IPv4 readback, health and subscription republish",
+            "node status refresh scheduler and usage metering with database lease",
+            "subscription issue/publish/revoke API behavior, token tombstones, GET/HEAD 410 and node counts"
+          ],
+          "aws_writes_attempted": false,
+          "test_services": {
+            "compose_project": "xray-usage-retry-20261111",
+            "database_port": 55437,
+            "redis_port": 56384,
+            "containers_and_network_stopped": true,
+            "named_volumes_preserved": true
+          },
+          "real_aws_acceptance": "blocked; no AWS writes or SSH attempted"
+        }
+      ],
+      "commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+      "source_base_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+      "candidate_worktree": true,
+      "provider": "Fake/Stub providers and isolated local test services",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Dedicated PostgreSQL/Redis named volumes xray-usage-retry-20261111-postgres and xray-usage-retry-20261111-redis are preserved; project containers and network stopped; ports remain registered."
+      ]
+    },
+    {
+      "id": "local-full-backend-fixed-xray-20261112",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "full_backend_fixed_binary_regression",
+          "timestamp": "2026-11-12T13:41:32+08:00",
+          "source_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+          "candidate_worktree": true,
+          "provider_boundary": "Fake/Stub cloud providers and isolated PostgreSQL/Redis; fixed local Xray 26.3.27 runtime probes",
+          "command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray XRAY_REQUIRE_FIXED_BINARY=1 backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests -q",
+          "result": {
+            "exit_code": 0,
+            "passed": 438,
+            "skipped": 0,
+            "duration_seconds": 89.40
+          },
+          "additional_focused_result": {
+            "exit_code": 0,
+            "passed": 77,
+            "skipped": 0,
+            "areas": [
+              "oldest-first pool shrink across due cycles",
+              "revoked subscription tombstone behavior during automated delete",
+              "active subscription fallback required before deletion",
+              "fixed Xray Shadowsocks revocation probe and positive control",
+              "fixed Xray blackhole timeout remains unknown"
+            ]
+          },
+          "fixed_xray": {
+            "version": "26.3.27",
+            "path": "runtime/xray/v26.3.27/xray",
+            "version_check_exit_code": 0
+          },
+          "services": {
+            "compose_project": "xray-goal-20261112",
+            "database_port": 55435,
+            "redis_port": 56382,
+            "containers_and_network_stopped_after_test": true,
+            "named_volumes_preserved": true
+          },
+          "aws_writes_attempted": false,
+          "real_aws_acceptance": "blocked; no matching authorized profile or application CloudAccount was verified",
+          "rerun_20261112T1752_plus0800": {
+            "focused_command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray XRAY_REQUIRE_FIXED_BINARY=1 backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests/test_node_automation.py backend/tests/test_node_pool_scheduler_integration.py backend/tests/test_node_status_scheduler.py backend/tests/subscriptions/test_node_metering.py backend/tests/subscriptions/test_revocation_runtime.py -q",
+            "focused_result": {"exit_code": 0, "passed": 77, "skipped": 0, "duration_seconds": 21.98},
+            "full_backend_command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray XRAY_REQUIRE_FIXED_BINARY=1 backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests -q",
+            "full_backend_result": {"exit_code": 0, "passed": 438, "skipped": 0, "duration_seconds": 88.70},
+            "fixed_xray_version_check_exit_code": 0,
+            "isolated_compose_up_exit_code": 0,
+            "isolated_compose_down_exit_code": 0,
+            "project": "xray-goal-20261112",
+            "ports": [55435, 56382],
+            "containers_and_network_stopped": true,
+            "named_volumes_preserved": true,
+            "aws_cloud_acceptance": "blocked; Fake/Stub and local Xray are not AWS evidence"
+          }
+        }
+      ],
+      "commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+      "source_base_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+      "provider": "Fake/Stub providers plus local fixed Xray runtime",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Dedicated PostgreSQL/Redis containers and network stopped after regression; named volumes xray-goal-20261112-postgres and xray-goal-20261112-redis are preserved and ports remain registered."
+      ]
+    },
+    {
+      "id": "local-audit-final-gates-20261112",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "documentation_and_boundary_validation",
+          "timestamp": "2026-11-12T15:52:08+08:00",
+          "source_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+          "commands": {
+            "jq_empty": 0,
+            "acceptance_validator": 0,
+            "boundary_check": 0,
+            "secret_scan": 0,
+            "skill_validator": 0,
+            "git_diff_check": 0
+          },
+          "secret_scan_scope": "150 commits, 9.08 MB; no leaks found",
+          "runtime_readback": {
+            "api_readiness_http": 200,
+            "frontend_login_http": 200,
+            "full_backend_compose_containers_stopped": true,
+            "full_backend_compose_network_stopped": true,
+            "named_volumes_preserved": [
+              "xray-goal-20261112-postgres",
+              "xray-goal-20261112-redis"
+            ]
+          },
+          "runtime_source_changes": false,
+          "version": "0.14.7",
+          "new_release_created": false
+        }
+      ],
+      "commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+      "provider": "local validation tools and isolated X-ray test services",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "The X-ray test API/frontend remain available on managed loopback ports 9541/9542. Dedicated full-backend test data volumes are retained."
+      ]
+    },
+    {
+      "id": "local-delivery-gates-0.14.8-candidate-20261112",
+      "environment": "local",
+      "status": "not-run",
+      "evidence": [
+        {
+          "kind": "full_local_delivery_gate_summary",
+          "timestamp": "2026-11-12T23:10:29+08:00",
+          "source_base_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+          "candidate_worktree": true,
+          "version": "0.14.8",
+          "summary_file": "artifacts/acceptance/0.14.8/final-gates-20261112-r2/summary.tsv",
+          "junit_file": "artifacts/acceptance/0.14.8/final-gates-20261112-r2/backend-and-delivery.junit.xml",
+          "commands": {
+            "delivery_gates": "scripts/check-local.sh with pnpm 10.33.0 and dedicated services",
+            "exit_code": 0,
+            "gate_count": 19,
+            "nonzero_gate_count": 0,
+            "backend_tests": {
+              "total": 581,
+              "passed": 579,
+              "skipped": 2,
+              "failures": 0,
+              "errors": 0
+            },
+            "frontend_unit_tests": 88,
+            "browser_e2e": 8,
+            "acceptance_validator": 0,
+            "boundary_check": 0,
+            "secret_scan": 0,
+            "skill_validator": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "e2e_ports": [55671, 55672, 55673, 55674],
+          "e2e_temporary_services_stopped": true,
+          "dedicated_full_backend_stack": {
+            "project": "xray-goal-20261112",
+            "ports": [55435, 56382],
+            "containers_remain_running": true,
+            "volumes_preserved": true
+          },
+          "initial_attempts": [
+            "r1 runtime gate exited 1 because global pnpm 11.25.0 did not satisfy required 10.33.x",
+            "r1 frontend-e2e gate exited 1 because existing X-ray Cloud Acceptance occupied default port 55433; that stack was preserved"
+          ],
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_query_attempted": false,
+          "remote_exact_commit_ci": "not-run; candidate not committed or pushed",
+          "github_release": "not-run; annotated tag and Release not created",
+          "real_aws_acceptance": "blocked; configured profiles and X-ray CloudAccount do not match authorized account 94a91b85428b; user reports unable to configure matching profile",
+          "result": "local gates passed for candidate worktree; the version-bound matrix row remains not-run until an exact commit SHA is available; external AWS acceptance and remote publication remain distinct outstanding gates"
+        }
+      ],
+      "commit": null,
+      "source_base_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+      "candidate_worktree": true,
+      "provider": "Fake/Stub providers and isolated local PostgreSQL/Redis",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "The registered xray-goal-20261112 PostgreSQL/Redis containers remain running on 55435/56382; their named volumes are preserved. E2E temporary services stopped and ports 55671-55674 are free."
+      ]
     }
   ]
 }
