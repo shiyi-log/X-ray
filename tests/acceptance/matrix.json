@@ -3055,8 +3055,8 @@
           "aws_writes_attempted": false,
           "ssh_attempted": false,
           "cost_query_attempted": false,
-          "remote_exact_commit_ci": "passed: run 43249411023, job 131290787832, head fe4ed2150a904bddcff4b0b49c535cfcae96df42, all 27 steps success",
-          "remote_artifact": {"id": 13961335454, "name": "xray-acceptance-43249411023-1", "size_in_bytes": 3192720, "expires_at": "2026-11-26T15:54:22Z"},
+          "remote_exact_commit_ci": "passed: run 43253704305, job 131306144155, head ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9, all 27 steps success",
+          "remote_artifact": {"id": 13961503065, "name": "xray-acceptance-43253704305-1", "size_in_bytes": 3004233, "digest": "sha256:cad3f341d60c75cdf739c631d7d1e97f31aaa2602103242d0e5709110c02c504", "expires_at": "2026-11-26T16:12:06Z"},
           "github_release": "not-run; annotated tag and Release not created",
           "real_aws_acceptance": "blocked; configured profiles and X-ray CloudAccount do not match authorized account 94a91b85428b; user reports unable to configure matching profile",
           "result": "local gates passed for source commit b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c; external AWS acceptance and remote publication remain distinct outstanding gates"

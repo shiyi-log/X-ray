@@ -8026,3 +8026,13 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `time_logic`: Machine clock at event definition UTC `2026-11-12T15:11:10Z` / `Asia/Shanghai` `2026-11-12T23:11:10+08:00`; 90-minute authorization uses half-open `[start,end)` and has expired. No business time logic changed in this verification step.
 - `rollback_and_reuse`: Two import-only test edits can be reverted independently; the existing 0.14.8 application candidate can be reverted from its eventual release commit to `v0.14.7`. Keep the E2E port registration and named volumes; do not delete test data or restore any revoked/cloud/security state. Reuse `r2` evidence only for the current candidate worktree; after a coherent release commit is made, run remote Delivery Gates for that exact SHA.
 - `status`: local 0.14.8 delivery gates `passed`; AWS account lifecycle, real subscription profile revocation, cloud node/IP/health/traffic counts and resource-level cost `blocked/not-run`; remote exact-commit CI and GitHub Release `not-run`; production `not-run`.
+
+## 2026-11-13T00:16:19+08:00 — v0.14.8 远端门禁、标签与收尾
+
+- `run_id`: `xray-v0148-release-closeout-20261113-0016`.
+- `scope_and_writes`: 仅更新 `docs/progress.md`、`docs/version-record.md`、`tests/acceptance/matrix.json` 和本台账；不修改运行时代码，不读取 PEM/凭据，不触碰 AWS、SSH、费用或生产。
+- `remote_delivery`: 最终提交 `ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9` 的 GitHub Actions run `43253704305`、job `131306144155` 于 `2026-11-12T16:12:28Z` 完成 `success`；27 个步骤全部 success；artifact `13961503065` / `xray-acceptance-43253704305-1`，3,004,233 bytes，digest `sha256:cad3f341d60c75cdf739c631d7d1e97f31aaa2602103242d0e5709110c02c504`，保留至 `2026-11-26T16:12:06Z`。
+- `tag_and_release`: 创建并推送 annotated tag `v0.14.8`，tag object `a6879bfc87f4482c72277f097c0d77d7be2ac0ad`，peeled commit `ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9`；`origin/main` 与该提交一致。GitHub Release 尚未创建：本机 `gh` 不可用，当前连接未提供 release workflow dispatch/write 能力；不得将 tag 说成 Release。
+- `local_verification`: 本轮文档修改前后 `jq empty tests/acceptance/matrix.json`、`python3 scripts/validate-acceptance.py`、`bash scripts/check-boundary.sh`、`bash scripts/check-secrets.sh`、skill validator、`git diff --check` 均 exit `0`；前次本地 r2 证据为 19/19 gates、JUnit 581（579 passed、2 skipped）、前端 88、Playwright 8。
+- `cloud_boundary`: 当前 `default/root` 账号摘要仍为 `b1746f68f5be/4a0ef08458dd`，均不匹配授权 `94a91b85428b`；X-ray CloudAccount 未绑定匹配 principal 且 disabled。真实 AWS 节点创建/删除/重启、动态 IP/运行态、订阅撤回正向控制、节点/流量对账、逐资源费用和生产均 `blocked/not-run`；本轮 AWS 写入与费用为 `0`。
+- `final_status_and_rollback`: 当前分支 `main`，HEAD `ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9`，tag 已推送；工作树仅保留既有未跟踪 `artifacts/acceptance/*` 目录和待推送的本次三份审计文档差异，未清理。版本代码回退使用 `git revert ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9` 或回到 `v0.14.7`；不反向迁移、不恢复 Token tombstone、凭据、安全事件或云状态。
