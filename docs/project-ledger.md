@@ -8150,6 +8150,17 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `writes_and_rollback`: 仅追加台账、进度和验收证据；保留所有 13 个原有未跟踪 `artifacts/acceptance/*` 目录。没有源码、版本、tag/Release、DB、云资源、凭据或运行进程变化；仅回退后续审计文档提交即可撤销。
 - `status`: 静态审计 passed；已推送提交的 CI 尚 in-progress；真实 AWS 生命周期、重启后的动态 IP/运行状态/订阅、profile 撤回正向控制、云端节点/流量核对及逐资源费用 blocked/not-run；生产 not-run。整体目标保持 active。
 
+## 2026-11-13T04:15:15+08:00 - 审计回执 CI 终态与取消 run 更正
+
+- `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
+- `scope`: 只读核验 GitHub Actions run/job/steps/artifact，并把最终结果追加至项目进度和验收矩阵；核对远端 `main` 已包含精确 SHA `5430cc19bccd420dd3ec3db22d94454f6dcf092f`。
+- `ci_receipt`: run `43295960598` / job `131454622451` completed/success；Actions jobs endpoint 返回 27 个步骤，所有实际运行步骤 completed/success，包括完整 Delivery Gates、上传证据和清理。Artifact `13979637941` / `xray-acceptance-43295960598-1`，3,009,807 bytes，digest `sha256:f6c1dab6dc92d3214bb63b396b8db01a7e067ede8f132dfe3e96e0f78b99b583`，到期 `2026-11-26T20:13:57Z`；artifact head SHA 与本地/远端 main 一致。
+- `cancelled_run_correction`: 较早 run `43293998859` 对应 `9e85c8e2fb6bad1f1c27b1d0176582ac9c0803c4`，于 `2026-11-12T20:01:17Z` 终态为 cancelled；第 11 步完整交付门禁取消，步骤 12–13 上传与清理成功，artifact `13978183956` 已留存。它不是通过证据；由上述后续 `5430cc1` 精确 SHA 成功 run 完整验证替代。
+- `verification_boundary`: CI 只验证本地完整 Delivery Gates 与当前审计提交，不是 AWS 实机或生产验收。用户确认暂时无法配置 AWS CLI profile；授权窗口过期，未进行 AWS/SSH/费用 API 操作，资源与费用仍未知。
+- `time_logic`: 执行机时间 `2026-11-13T04:15:15+08:00` / UTC `2026-11-12T20:15:15Z`；没有业务时间规则变化。
+- `writes_and_rollback`: 只追加 `docs/project-ledger.md`、`docs/progress.md`、`tests/acceptance/matrix.json`；不改源码/VERSION/tag/Release、数据库、云、凭据或进程。保留全部 13 个既有未跟踪 acceptance artifact。只 revert 本次后续审计提交可回退。
+- `status`: 本地 focused pytest `137 passed`、全后端/交付 pytest `576 passed, 5 skipped`，本次静态门禁全 `0`；精确 SHA `5430cc1` 远端 CI passed；真实 AWS lifecycle、重启后 IP/状态/订阅、profile 撤回、节点/流量对账及逐资源费用 blocked/not-run；生产 not-run；总体目标仍 active。
+
 ## 2026-11-13T03:48:03+08:00 - 本地回归及 CI 回执最终验证
 
 - `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.

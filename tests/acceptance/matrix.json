@@ -3362,6 +3362,39 @@
       "residual_resources": [
         "The xray-goal-20261112 PostgreSQL/Redis test containers remained running and healthy on registered ports 55435/56382; no test services were started or stopped."
       ]
+    },
+    {
+      "id": "github-ci-v0.14.8-audit-receipt-5430cc1",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "timestamp": "2026-11-13T04:15:15+08:00",
+          "run_id": 43295960598,
+          "job_id": 131454622451,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "5430cc19bccd420dd3ec3db22d94454f6dcf092f",
+          "all_steps_success": true,
+          "step_endpoint_returned_count": 27,
+          "artifact": {
+            "id": 13979637941,
+            "name": "xray-acceptance-43295960598-1",
+            "size_in_bytes": 3009807,
+            "digest": "sha256:f6c1dab6dc92d3214bb63b396b8db01a7e067ede8f132dfe3e96e0f78b99b583",
+            "expires_at": "2026-11-26T20:13:57Z"
+          },
+          "source": "GitHub Actions run, job, all steps, and artifact REST readback; artifact head SHA matches local and remote main",
+          "supersedes_cancelled_run": 43293998859
+        }
+      ],
+      "commit": "5430cc19bccd420dd3ec3db22d94454f6dcf092f",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
     }
   ]
 }
