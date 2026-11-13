@@ -8392,3 +8392,31 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - 本轮新增diff与新回执独立Gitleaks stdin扫描34911bytes，exit0/no leaks；不扫描或持久化秘密。历史扫描165commits exit0；整旧文件4个既有误报已单独披露，未加忽略规则。matrix再次exit0，boundary0，skill0，diffcheck0。
 - 最终status main与origin/main同步，五份相干审计文件modified，本轮0.14.10回执目录和两张升级截图untracked；全部已独立核对。准备仅stage这些路径，cached diffcheck与stat复核后提交、普通pushmain；不修改v0.14.10 immutable标签或既有业务源码。
 - acceptance: 前端在线升级与0.14.9→0.14.10真实生产升级passed；发布/CI/资源清理passed；逐资源最终账单unknown仍blocked，Linux一次性systemd测试skip、真机/SWAS未运行，不宣称整体全部外部门禁完成。rollback_ref: 归档提交可git revert；运行回退沿用root历史digest/config并保留撤销/安全/云状态。
+
+
+## 2026-11-14T04:34:50.518564+08:00 - 完整目标审计与旧验收索引修正范围
+
+- 前一goal turn为progress：完成发布/线上跨版本升级、fresh健康读回、独立审阅与13文件归档提交793590224db0b1014510764970ac78333c74f0da，push0，最后status干净/tag仍指向8f54917。当前继续完整goal，没有缩小成功标准。
+- read/scope: 重读当前status/log、台账、授权记录、release-checklist、NodeResource/生产Compose/runner与安全AWS/GitHub helper；独立代理审计任务逐项要求/source/tests/matrix。核心功能/发布/升级均有证据，但最终资源费用仍unknown，不标complete。
+- 发现release-checklist顶部仍称v0.13.0当前、补池仅PROVISIONED/生产blocked；matrix通用github-ci/SSH/Google/delete行也未同步新生产事实。本轮仅修正这些索引、追加费用回执/进度/台账；保留历史失败，不改业务、版本或tag。rollback为revert审计提交，不影响生产与撤销状态。
+- CI: 正常GitHub只读API HTTP200确认7935902的run43502118991正在in_progress，live handle存在；委派只读跟踪，不新触发或重启。
+- cost reads: 现有安全脚本exit0仍无resourcegroups。UTC2026-11-13至14的Lightsail RESOURCE_ID名称维度检索HTTP200/requestf198ac62-22ac-4fad-8e16-149f366904ca/匹配0，无分页；精确service+name费用查询HTTP200/requestde2d291e-429d-4816-aa33-38bb714319cf/groups0，Estimated=true。费用unknown，不能归零，也不能据空组断言纯计费延迟。
+- Botocore官方API模型只读确认GetCostEstimate不会对已删除资源生成estimate，因此不调用该无效替代；准备有界只读核对可用Lightsail账单维度与历史任务资源归属，不做AWS写、SSH或EC2运行。AWS写窗口已过期。一次误写api.py路径rgexit2为只读定位失败，改读真实serializers/models后exit0。
+
+
+## 2026-11-14T04:42:48.017188+08:00 - 完整目标审计结果与费用标识纠正
+
+- independent audit: goal_completion_audit逐项核对pool缺额创建/超额删除、每日排序单台重启/IP健康订阅写回、订阅创建/正控撤回、数量/状态/流量、Shadowrocket格式/Google、分配保存、正式发布和UI跨版本升级，对应source/tests/productionreceipt齐全。真机不是用户“小火箭订阅”的同义要求；仍披露未运行，不能冒充。唯一Linux/systemd skip不改为passed。
+- index writes: release-checklist新增0.14.10当前结果、旧0.13.0标历史；matrix通用github-ci/remote-ssh/Google/delete行补充精确scope和新证据、历史来源保留。仅索引/回执/台账/进度，无代码、版本、tag或生产运行修改。
+- archive CI: 精确793590224db0b1014510764970ac78333c74f0da run43502118991/job132150331670于2026-11-14T04:38:14+08完成success，19门禁全0，666passed1skip/前端97/E2E8。artifact14075202170/2339693bytes，实际ZIP=GitHub digest3f85aa10c0e3152af8f5e2b27b05dfd4f75a221dde4cf0ab5106d4865fd0c98d；安全回执独立核验exit0，复制archive-ci-receipt.json。
+- cost correction: 先前按实例名称过滤RESOURCE_ID的空组不足以证明费用延迟。实际GetDimensionValues返回10个Lightsail Instance ARN：ap-east-1一项/ap-southeast-1九项、us-east-1零项，无分页。UTC11月13日数据仍Estimated=true；不得从无us-east-1记录断言零费用。CloudTrail按资源名lookup0，但按CreateInstances找到唯一匹配03:28:29+08事件269fa67e-5924-400d-89e4-dc154043fbe4/requestbf5de364-9b01-40e7-a3da-d1c4c61a1aea，创建响应无instance ARN；三条GetInstance事件匹配名称但read responseElements为空。当前无法严格映射账单ARN，费用继续unknown。所有只读调用exit0，仅保存请求ID/脱敏形状/计数，不输出账号或raw事件。
+- budget context: 11月1至14账号所有服务MTD估算USD157.2679793801，Estimated=true/non-attributable/nonfinal，不能替代本任务实际成本。已知历史EC2 runner describe_instances精确ID返回0；旧Lightsail runner xray-actions-2x4-20261108-01 running/medium_3_0，原授权保留范围外未改未删。用户禁EC2继续生效；本轮EC2仅只读查询历史状态，没有运行/创建/写入。
+- gates/limits: billing-readback.json归档请求ID和身份摘要；没有新AWS写、资源创建或SSH。费用实质缺口需AWS提供该已删节点可归因账单/ARN或其他权威凭证，不通过替换成套餐价/账号估算消除。当前goal不complete；本轮为progress（查明错误计费标识、获得provider事件/维度证据并修正当前索引）。
+- rollback/reuse: 仅git revert审计提交；正式v0.14.10/source8f54917和生产digest不变，历史安全云状态不回退。后续复用已归档请求与UTC时段，只读核对实际账单，不重新创建节点试账。
+
+
+## 2026-11-14T04:43:39.400779+08:00 - 完整审计索引静态验证收尾
+
+- matrix/boundary/skill/diff均exit0；billing receipt invariants0（授权摘要匹配、无写、final_bill_confirmed=false、us-east-1候选0）；本轮新增diff及新回执24915bytes Gitleaks noleaks/exit0。相干范围四份docs/matrix加archive-CI与billing两份安全回执，无源码/版本/tag/运行秘密。
+- git status main与origin同步且只有上述差异。按用户既有发布授权暂存六个精确路径，cachedcheck/stat后普通commit/push；这是审计索引修正，不重新发布版本或触发云写。该审计提交的远端CI尚未运行，不能套用7935902的精确SHA结论。
+- goal仍active，未达到complete；本轮获得新计费维度/事件/历史资源状态证据并完成陈旧索引修正，属于progress。唯一实质收尾限制为可归因最终资源账单，后续仅在provider数据改变时只读核对。回退仅revert本审计记录，不改生产0.14.10或已撤销/释放状态。

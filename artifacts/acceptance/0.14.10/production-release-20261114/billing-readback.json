@@ -1,0 +1,167 @@
+{
+  "checked_at": "2026-11-13T20:34:02.598827+00:00",
+  "account_fingerprint": "4a0ef08458dd",
+  "time_period_utc": {
+    "Start": "2026-11-13",
+    "End": "2026-11-14"
+  },
+  "resource_ref": "redacted-single-lightsail-test-node",
+  "writes_attempted": false,
+  "resource_cost_status": "unknown",
+  "final_bill_confirmed": false,
+  "resource_dimension_query": {
+    "http_status": 200,
+    "request_id": "f198ac62-22ac-4fad-8e16-149f366904ca",
+    "matching_values_count": 0,
+    "pagination_present": false
+  },
+  "resource_cost_query": {
+    "http_status": 200,
+    "request_id": "de2d291e-429d-4816-aa33-38bb714319cf",
+    "resource_group_count": 0,
+    "estimated_flags": [
+      true
+    ],
+    "pagination_present": false
+  },
+  "all_lightsail_resource_dimension_query": {
+    "http_status": 200,
+    "request_id": "f5136b65-f673-47ff-b0ee-b4712b2655c4",
+    "available_values_count": 10,
+    "matching_test_resource_count": 0,
+    "pagination_present": false
+  },
+  "account_month_to_date_estimate": {
+    "http_status": 200,
+    "request_id": "00f5bcbb-e6ed-4670-9710-7957356d518a",
+    "all_services_amount": "157.2679793801",
+    "units": [
+      "USD"
+    ],
+    "estimated_flags": [
+      true
+    ],
+    "resource_attributable": false,
+    "final_bill_confirmed": false
+  },
+  "latest_checked_at": "2026-11-13T20:35:37.143669+00:00",
+  "cloudtrail_resource_name_lookup": {
+    "http_status": 200,
+    "request_id": "abb0f771-8865-46cf-9148-3a603647e980",
+    "event_count": 0,
+    "pagination_present": false,
+    "events": []
+  },
+  "resource_identity_correction": "Cost Explorer RESOURCE_ID values use Lightsail Instance ARNs; name-filtered empty groups alone do not establish billing delay.",
+  "cloudtrail_create_event_lookup": {
+    "http_status": 200,
+    "request_id": "87cde500-bbef-47ae-b026-ab91534aef65",
+    "returned_event_count": 1,
+    "matching_event_count": 1,
+    "pagination_present": false,
+    "events": [
+      {
+        "event_name": "CreateInstances",
+        "timestamp": "2026-11-14T03:28:29+08:00",
+        "event_id": "269fa67e-5924-400d-89e4-dc154043fbe4",
+        "request_id": "bf5de364-9b01-40e7-a3da-d1c4c61a1aea",
+        "resource_entries": 0
+      }
+    ],
+    "instance_arn_match_count": 0
+  },
+  "cloudtrail_instance_read_lookup": {
+    "http_status": 200,
+    "request_id": "786c0a6d-f4f9-462d-a197-b03cc1831a0c",
+    "returned_count": 3,
+    "matching_count": 3,
+    "pagination_present": false,
+    "instance_arn_count": 0,
+    "events": [
+      {
+        "id": "584efce4-2552-4659-b97f-ad1194ce5e95",
+        "request_id": "8ad91285-2317-4fbb-b253-228343d76cff",
+        "response_present": false,
+        "instance_arn_present": false
+      },
+      {
+        "id": "a87d9d73-084a-4040-b19d-347469663c8f",
+        "request_id": "4432eddd-2f2d-4329-9cf7-667a4d46c9b0",
+        "response_present": false,
+        "instance_arn_present": false
+      }
+    ]
+  },
+  "candidate_billing_arn_metadata": {
+    "request_id": "791367e6-78a8-400d-a1ff-464d383083e1",
+    "us_east_1_candidates": [],
+    "attribution_confirmed": false,
+    "reason": "Billing dimension returns Instance ARN but no confirmed name-to-ARN mapping; CloudTrail create/read events do not retain instance ARN. Do not treat unrelated or unproven ARN charges as this test cost."
+  },
+  "historical_runner_readback": {
+    "writes_attempted": false,
+    "scope": "Read only known historical task runner resources; no current EC2 execution or modification.",
+    "historical_ec2_runner": {
+      "request_id": "45373def-919f-4260-bed5-bad6863106b4",
+      "found_count": 0,
+      "states": []
+    },
+    "historical_lightsail_runner": {
+      "request_id": "91bf38b0-095e-433f-8c99-dafeb698fd8e",
+      "state": "running",
+      "bundle": "medium_3_0"
+    }
+  },
+  "dimension_service_region_summary": [
+    {
+      "service": "lightsail",
+      "region": "ap-east-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    },
+    {
+      "service": "lightsail",
+      "region": "ap-southeast-1",
+      "resource_kind": "Instance"
+    }
+  ]
+}

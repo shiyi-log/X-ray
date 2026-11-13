@@ -1,8 +1,35 @@
-# v0.13.0 交付与发布检查表
+# 交付与发布检查表
+
+## v0.14.10 当前状态（2026-11-14）
+
+本节是当前发布索引；下方各旧版本条目仅描述当时的运行结果。精确源码为
+`8f54917c0504ce3764897f44dae70818cc8aa75d`，当前证据见
+`artifacts/acceptance/0.14.10/production-release-20261114/` 和验收矩阵。
+
+- [x] 版本元数据、OpenAPI、安装器默认版本、CHANGELOG 与发布索引一致。
+- [x] 精确源码 Delivery Gates run `43497335886` 成功：19 项门禁 exit 0，后端/交付 666 passed、1 skipped，前端 97 passed，浏览器 E2E 8 passed。
+- [x] annotated `v0.14.10` 和正式 Release `444685736` 已发布；三项资产独立下载的 SHA-256、GitHub digest、SHA256SUMS 和包内外 manifest 均一致。
+- [x] 授权生产主机已使用不可变镜像上线 0.14.10，管理入口、公开订阅域名与严格验证的 TLS 可用，证书续期 dry-run 和 renewal wrapper 成功。
+- [x] 前端「系统设置 → 版本更新 → 在线升级」真实完成 0.14.9 → 0.14.10；近期身份验证、提交、备份/排空/迁移/健康检查、重连与刷新后会话保持均有证据，任务 `SUCCEEDED / COMPLETE`。
+- [x] 分配保存、桌面三列/手机单列、刷新持久化通过；生产 allocation 表的最小 DELETE 权限有实际角色回归。
+- [x] 一台授权 Lightsail 节点自动补齐至 READY/HEALTHY，计划停止后启动、新 IP/状态/健康/订阅写回、流量采集、数量核对、A profile 撤回/B 正向控制及自动缩容删除通过；最终测试资源、配额与订阅节点计数均为零。
+- [x] 四种支持格式含 Shadowrocket 均可读取且新地址匹配；通过节点访问 Google 的 TLS 校验和 HTTP 200 已验证，读取结果为部分响应，不作完整下载或 iOS 真机声明。
+- [x] 加密备份独立离机保存，解密/校验/pg_restore 列表验证成功，隔离恢复确认 MAINTENANCE；回退只切换历史镜像/config，不恢复已撤销、安全或云状态。
+- [ ] 逐资源最终账单尚未提供可归因金额，保持 unknown；不把空费用组或账号估算解释为资源最终费用。
+- [ ] `test_dynamic_service_user_can_read_root_only_configuration` 需要一次性 Linux/systemd 主机，当前 CI 明确跳过，未声称该项通过。
+- [ ] SWAS 与 Shadowrocket iOS 真机未运行；这些证据不由 Lightsail/订阅格式验收替代。
+
+应用回退依据 root 升级历史 `013dcb3b-6c04-417d-b081-30677a7df144.env`
+中的上一组 0.14.9 镜像/config；源码使用 `git revert`。AWS 写窗口已于
+`2026-11-14T03:59:00+08:00` 截止，不得沿用该窗口新建或变更云资源。
+
+---
+
+## v0.13.0 历史交付记录
 
 本版本增加地址池配额自动对齐、每日轮转重启、定时状态/IP/流量同步及订阅节点数量核对。自动创建仅完成云实例预留；安装、SSH 信任、健康确认和首次订阅发布尚未打通。真实 AWS/SWAS、SSH、生产 TLS、生产切换、设备验收和云端端到端流程按验收矩阵保持阻塞或未运行。
 
-## v0.13.0 当前状态
+## v0.13.0 当时状态
 
 - [x] `VERSION`、后端/前端包、OpenAPI、验收矩阵和安装器标签更新为 `0.13.0`。
 - [x] 最新工作树的 19 项本地 delivery gate 均 exit 0；`artifacts/acceptance/0.13.0/final-gates-2/summary.tsv` 与 JUnit 记录后端 `417 passed, 2 skipped`（419 tests，0 failures，0 errors）、前端 `82 passed`、浏览器断言 `8 passed`。旧 `artifacts/acceptance/0.13.0/gates/` 的 `402 passed, 2 skipped` 仅保留为历史候选证据，不与本轮计数混用。
