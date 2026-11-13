@@ -1,0 +1,33 @@
+{
+  "account_fingerprint": "4a0ef08458dd",
+  "writes_attempted": false,
+  "cur": {
+    "http_status": 200,
+    "request_id": "7aa0b62c-b889-4196-a20c-f1f6be9cfcde",
+    "configured_reports": 0,
+    "reports_with_resources": 0,
+    "pagination_present": false
+  },
+  "bcm-data-exports": {
+    "http_status": 200,
+    "request_id": "d73cb1b8-0d0d-4ab0-8cf1-a4aed5ec24ff",
+    "configured_reports": 0,
+    "pagination_present": false
+  },
+  "cost_allocation_tags": {
+    "error_code": "AccessDeniedException"
+  },
+  "checked_at": "2026-11-13T20:48:27.576634+00:00",
+  "initial_cur_request_correction": "Initial MaxResults100 rejected by provider; botocore documented maximum5; corrected read succeeded or error retained below.",
+  "direct_node_tag_cost": {
+    "http_status": 200,
+    "request_id": "32520152-752c-420a-9ca7-dbe3d986c4a9",
+    "group_count": 0,
+    "estimated_flags": [
+      true
+    ],
+    "pagination_present": false,
+    "cost_status": "unknown",
+    "final_bill_confirmed": false
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "run_id": 43504273062,
+  "status": "completed",
+  "conclusion": "success",
+  "head_sha": "5009e0948d2a87fe06b22a5cadf98155a3a11884",
+  "updated_at": "2026-11-13T20:50:55Z",
+  "html_url": "https://github.com/shiyi-log/X-ray/actions/runs/43504273062",
+  "jobs": [
+    {
+      "id": 132157716158,
+      "status": "completed",
+      "conclusion": "success",
+      "completed_at": "2026-11-13T20:50:54Z",
+      "active": [],
+      "failed": []
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 14075692932,
+      "name": "xray-acceptance-43504273062-1",
+      "size_in_bytes": 2344152,
+      "digest": "sha256:a1b9a66b008cc61508f5f0a5246a5a3bb38f9b79598dbd6a35605919b2a09df8",
+      "expired": false
+    }
+  ],
+  "backend_tests": {
+    "tests": 667,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "passed": 666
+  },
+  "skipped_tests": [
+    {
+      "name": "test_dynamic_service_user_can_read_root_only_configuration",
+      "classname": "installer.test_service.SystemdCredentialTest",
+      "reason": "requires an explicitly selected disposable Linux systemd host"
+    }
+  ],
+  "gates": [
+    {
+      "gate": "runtime",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:45:05Z",
+      "finished_at": "2026-11-13T20:45:06Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/runtime.log"
+    },
+    {
+      "gate": "compose-config",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:45:06Z",
+      "finished_at": "2026-11-13T20:46:08Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/compose-config.log"
+    },
+    {
+      "gate": "django-check",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:46:08Z",
+      "finished_at": "2026-11-13T20:46:12Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/django-check.log"
+    },
+    {
+      "gate": "migration-drift",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:46:12Z",
+      "finished_at": "2026-11-13T20:46:13Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/migration-drift.log"
+    },
+    {
+      "gate": "ruff",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:46:13Z",
+      "finished_at": "2026-11-13T20:46:13Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/ruff.log"
+    },
+    {
+      "gate": "backend-tests",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:46:13Z",
+      "finished_at": "2026-11-13T20:48:44Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/backend-tests.log"
+    },
+    {
+      "gate": "openapi-determinism",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:48:44Z",
+      "finished_at": "2026-11-13T20:48:46Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/openapi-determinism.log"
+    },
+    {
+      "gate": "fixed-xray",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:48:46Z",
+      "finished_at": "2026-11-13T20:48:46Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/fixed-xray.log"
+    },
+    {
+      "gate": "subscription-formats",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:48:46Z",
+      "finished_at": "2026-11-13T20:48:50Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/subscription-formats.log"
+    },
+    {
+      "gate": "frontend-typecheck",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:48:50Z",
+      "finished_at": "2026-11-13T20:49:03Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/frontend-typecheck.log"
+    },
+    {
+      "gate": "frontend-lint",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:49:03Z",
+      "finished_at": "2026-11-13T20:49:05Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/frontend-lint.log"
+    },
+    {
+      "gate": "frontend-unit",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:49:05Z",
+      "finished_at": "2026-11-13T20:49:34Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/frontend-unit.log"
+    },
+    {
+      "gate": "frontend-build",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:49:34Z",
+      "finished_at": "2026-11-13T20:49:52Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/frontend-build.log"
+    },
+    {
+      "gate": "frontend-e2e",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:49:52Z",
+      "finished_at": "2026-11-13T20:50:35Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/frontend-e2e.log"
+    },
+    {
+      "gate": "shellcheck",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:50:35Z",
+      "finished_at": "2026-11-13T20:50:38Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/shellcheck.log"
+    },
+    {
+      "gate": "boundary",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:50:38Z",
+      "finished_at": "2026-11-13T20:50:39Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/boundary.log"
+    },
+    {
+      "gate": "secrets",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:50:39Z",
+      "finished_at": "2026-11-13T20:50:46Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/secrets.log"
+    },
+    {
+      "gate": "skill",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:50:46Z",
+      "finished_at": "2026-11-13T20:50:46Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/skill.log"
+    },
+    {
+      "gate": "acceptance-matrix",
+      "exit_code": "0",
+      "started_at": "2026-11-13T20:50:46Z",
+      "finished_at": "2026-11-13T20:50:46Z",
+      "log": "artifacts/acceptance/ci-43504273062-1/acceptance-matrix.log"
+    }
+  ],
+  "frontend_unit_summary": [
+    "Test Files  19 passed (19)",
+    "Tests  97 passed (97)"
+  ],
+  "frontend_e2e_summary": [
+    "8 passed (42.4s)"
+  ],
+  "artifact_zip_sha256": "a1b9a66b008cc61508f5f0a5246a5a3bb38f9b79598dbd6a35605919b2a09df8"
+}
