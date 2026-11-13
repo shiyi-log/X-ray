@@ -1,6 +1,6 @@
 {
-  "version": "0.14.8",
-  "generated_at": "2026-11-12T23:11:10+08:00",
+  "version": "0.14.9",
+  "generated_at": "2026-11-14T02:42:55+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1704,191 +1704,191 @@
           "writes_attempted": false,
           "result": "blocked_before_cloud_write",
           "reason": "The earlier fingerprint included the AWS CLI stdout terminator and does not follow the project account-field fingerprint method. Both configured profile account-field fingerprints differ from the authorized fingerprint. The root inventory is for another account; application session/step-up/CloudAccount reads are also unavailable."
-      },
-      {
-        "kind": "current_local_auth_and_cloud_account_readback",
-        "timestamp": "2026-11-12T15:37:46+08:00",
-        "source_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
-        "application": "isolated local X-ray instance on loopback 9541; frontend 9542 returned HTTP 200",
-        "standard_password_login_http": 200,
-        "session_authenticated": true,
-        "mfa_enabled": false,
-        "step_up_verified": true,
-        "cloud_account_readback_http": 200,
-        "cloud_account_count": 1,
-        "cloud_account": {
-          "provider": "aws_lightsail",
-          "external_account_digest": "b1746f68f5be",
-          "enabled": false,
-          "validated": true
         },
-        "root_profile_account_digest": "4a0ef08458dd",
-        "cloud_account_matches_authorized_profile": false,
-        "logout_completed": true,
-        "writes_attempted": false,
-        "ssh_attempted": false,
-        "cost_query_attempted": false,
-        "result": "blocked_before_cloud_resource_operations; configured CloudAccount identity differs from authorized AWS profile and is disabled"
-      },
-      {
-        "kind": "current_canonical_aws_identity_and_inventory_readback",
-        "timestamp": "2026-11-12T15:45:57+08:00",
-        "profile": "root",
-        "canonical_fingerprint_method": "SHA-256 of the decoded STS Account field text",
-        "configured_profile_account_digests": {
-          "default": "b1746f68f5be",
-          "root": "4a0ef08458dd"
-        },
-        "authorized_account_digest": "94a91b85428b",
-        "profile_matches_authorized_account": false,
-        "lightsail_region": "us-east-1",
-        "instance_count": 0,
-        "instance_states": {},
-        "aws_writes_attempted": false,
-        "ssh_attempted": false,
-        "cost_query_attempted": false,
-        "authorization_window_current": false,
-        "result": "read_only_inventory_for_mismatched_profile; not evidence for authorized-account resources or costs"
-      },
-      {
-        "kind": "renewed_aws_authorization_profile_and_account_preflight",
-        "timestamp": "2026-11-12T17:13:26+08:00",
-        "authorization": {
-          "requested_window_minutes": 90,
-          "additional_budget_usd": 25,
-          "overall_budget_usd": 1000,
-          "max_nodes": 1,
-          "region": "us-east-1",
-          "plan": "small_3_0",
-          "image": "ubuntu_24_04",
-          "reply_received_in_current_turn": true,
-          "exact_message_start_timestamp_available": false
-        },
-        "authorized_account_digest": "94a91b85428b",
-        "configured_profiles": {
-          "default": "b1746f68f5be",
-          "root": "4a0ef08458dd"
-        },
-        "matching_profile_available": false,
-        "xray_local_auth": {
-          "login_http_status": 200,
+        {
+          "kind": "current_local_auth_and_cloud_account_readback",
+          "timestamp": "2026-11-12T15:37:46+08:00",
+          "source_commit": "de85b104295c51a8efbb65172dbc11d8f376f4bb",
+          "application": "isolated local X-ray instance on loopback 9541; frontend 9542 returned HTTP 200",
+          "standard_password_login_http": 200,
           "session_authenticated": true,
+          "mfa_enabled": false,
           "step_up_verified": true,
-          "cloud_account_http_status": 200,
-          "cloud_account_digest": "b1746f68f5be",
-          "cloud_account_enabled": false,
-          "logout_completed": true
+          "cloud_account_readback_http": 200,
+          "cloud_account_count": 1,
+          "cloud_account": {
+            "provider": "aws_lightsail",
+            "external_account_digest": "b1746f68f5be",
+            "enabled": false,
+            "validated": true
+          },
+          "root_profile_account_digest": "4a0ef08458dd",
+          "cloud_account_matches_authorized_profile": false,
+          "logout_completed": true,
+          "writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_query_attempted": false,
+          "result": "blocked_before_cloud_resource_operations; configured CloudAccount identity differs from authorized AWS profile and is disabled"
         },
-        "aws_console_session": "logged_out",
-        "aws_resource_reads_attempted": false,
-        "aws_writes_attempted": false,
-        "ssh_attempted": false,
-        "cost_queries_attempted": false,
-        "result": "blocked_before_aws_resource_operations; no configured AWS profile matches the authorized identity and the X-ray CloudAccount is disabled and mismatched"
-      },
-      {
-        "kind": "updated_goal_local_aws_cli_authorization_window",
-        "timestamp": "2026-11-12T17:17:50+08:00",
-        "authorization_window": {
-          "start": "2026-11-12T17:17:50+08:00",
-          "end_exclusive": "2026-11-12T18:47:50+08:00",
-          "boundary": "[start,end)",
-          "duration_minutes": 90
+        {
+          "kind": "current_canonical_aws_identity_and_inventory_readback",
+          "timestamp": "2026-11-12T15:45:57+08:00",
+          "profile": "root",
+          "canonical_fingerprint_method": "SHA-256 of the decoded STS Account field text",
+          "configured_profile_account_digests": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "authorized_account_digest": "94a91b85428b",
+          "profile_matches_authorized_account": false,
+          "lightsail_region": "us-east-1",
+          "instance_count": 0,
+          "instance_states": {},
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_query_attempted": false,
+          "authorization_window_current": false,
+          "result": "read_only_inventory_for_mismatched_profile; not evidence for authorized-account resources or costs"
         },
-        "limits": {
-          "max_nodes": 1,
-          "region": "us-east-1",
-          "plan": "small_3_0",
-          "image": "ubuntu_24_04",
-          "additional_budget_usd": 25,
-          "overall_budget_usd": 1000
+        {
+          "kind": "renewed_aws_authorization_profile_and_account_preflight",
+          "timestamp": "2026-11-12T17:13:26+08:00",
+          "authorization": {
+            "requested_window_minutes": 90,
+            "additional_budget_usd": 25,
+            "overall_budget_usd": 1000,
+            "max_nodes": 1,
+            "region": "us-east-1",
+            "plan": "small_3_0",
+            "image": "ubuntu_24_04",
+            "reply_received_in_current_turn": true,
+            "exact_message_start_timestamp_available": false
+          },
+          "authorized_account_digest": "94a91b85428b",
+          "configured_profiles": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "matching_profile_available": false,
+          "xray_local_auth": {
+            "login_http_status": 200,
+            "session_authenticated": true,
+            "step_up_verified": true,
+            "cloud_account_http_status": 200,
+            "cloud_account_digest": "b1746f68f5be",
+            "cloud_account_enabled": false,
+            "logout_completed": true
+          },
+          "aws_console_session": "logged_out",
+          "aws_resource_reads_attempted": false,
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_queries_attempted": false,
+          "result": "blocked_before_aws_resource_operations; no configured AWS profile matches the authorized identity and the X-ray CloudAccount is disabled and mismatched"
         },
-        "authorized_account_digest": "94a91b85428b",
-        "local_aws_cli_profiles": {
-          "default": "b1746f68f5be",
-          "root": "4a0ef08458dd"
+        {
+          "kind": "updated_goal_local_aws_cli_authorization_window",
+          "timestamp": "2026-11-12T17:17:50+08:00",
+          "authorization_window": {
+            "start": "2026-11-12T17:17:50+08:00",
+            "end_exclusive": "2026-11-12T18:47:50+08:00",
+            "boundary": "[start,end)",
+            "duration_minutes": 90
+          },
+          "limits": {
+            "max_nodes": 1,
+            "region": "us-east-1",
+            "plan": "small_3_0",
+            "image": "ubuntu_24_04",
+            "additional_budget_usd": 25,
+            "overall_budget_usd": 1000
+          },
+          "authorized_account_digest": "94a91b85428b",
+          "local_aws_cli_profiles": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "matching_profile_available": false,
+          "xray_cloud_account_digest": "b1746f68f5be",
+          "xray_cloud_account_enabled": false,
+          "aws_console_session": "logged_out",
+          "profile_name_supplied": false,
+          "aws_resource_reads_attempted": false,
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_queries_attempted": false,
+          "credential_or_pem_contents_read": false,
+          "result": "blocked_before_aws_resource_operations; user authorized one-node local-CLI acceptance window, but no matching AWS profile or X-ray CloudAccount is available"
         },
-        "matching_profile_available": false,
-        "xray_cloud_account_digest": "b1746f68f5be",
-        "xray_cloud_account_enabled": false,
-        "aws_console_session": "logged_out",
-        "profile_name_supplied": false,
-        "aws_resource_reads_attempted": false,
-        "aws_writes_attempted": false,
-        "ssh_attempted": false,
-        "cost_queries_attempted": false,
-        "credential_or_pem_contents_read": false,
-        "result": "blocked_before_aws_resource_operations; user authorized one-node local-CLI acceptance window, but no matching AWS profile or X-ray CloudAccount is available"
-      },
-      {
-        "kind": "authorization_prerequisite_reread_20261112T1732",
-        "checked_at": "2026-11-12T09:32:24Z",
-        "authorized_account_digest": "94a91b85428b",
-        "configured_profile_count": 2,
-        "canonical_account_field_digests": {
-          "default": "b1746f68f5be",
-          "root": "4a0ef08458dd"
+        {
+          "kind": "authorization_prerequisite_reread_20261112T1732",
+          "checked_at": "2026-11-12T09:32:24Z",
+          "authorized_account_digest": "94a91b85428b",
+          "configured_profile_count": 2,
+          "canonical_account_field_digests": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "matching_profile_available": false,
+          "xray_local_api_port": 9541,
+          "xray_local_ui_port": 9542,
+          "xray_api_health_http": 200,
+          "xray_ui_http": 200,
+          "xray_auth_session_endpoint_http": 200,
+          "xray_admin_session_authenticated": false,
+          "xray_cloud_accounts_http": 401,
+          "aws_console_session": "logged_out",
+          "aws_resource_reads_attempted": false,
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_queries_attempted": false,
+          "pem_contents_read": false,
+          "result": "blocked_before_cloud_write; neither local AWS profile matches the authorized account, the X-ray API has no authenticated session, and AWS Console is logged out"
         },
-        "matching_profile_available": false,
-        "xray_local_api_port": 9541,
-        "xray_local_ui_port": 9542,
-        "xray_api_health_http": 200,
-        "xray_ui_http": 200,
-        "xray_auth_session_endpoint_http": 200,
-        "xray_admin_session_authenticated": false,
-        "xray_cloud_accounts_http": 401,
-        "aws_console_session": "logged_out",
-        "aws_resource_reads_attempted": false,
-        "aws_writes_attempted": false,
-        "ssh_attempted": false,
-        "cost_queries_attempted": false,
-        "pem_contents_read": false,
-        "result": "blocked_before_cloud_write; neither local AWS profile matches the authorized account, the X-ray API has no authenticated session, and AWS Console is logged out"
-      },
-      {
-        "kind": "authorization_prerequisite_reread_20261112T1758",
-        "checked_at": "2026-11-12T09:52:47Z",
-        "authorized_account_digest": "94a91b85428b",
-        "configured_profiles_checked": 2,
-        "canonical_account_field_digests": {
-          "default": "b1746f68f5be",
-          "root": "4a0ef08458dd"
+        {
+          "kind": "authorization_prerequisite_reread_20261112T1758",
+          "checked_at": "2026-11-12T09:52:47Z",
+          "authorized_account_digest": "94a91b85428b",
+          "configured_profiles_checked": 2,
+          "canonical_account_field_digests": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "matching_profile_available": false,
+          "xray_api_health_http": 200,
+          "xray_ui_http": 200,
+          "xray_auth_session_endpoint_http": 200,
+          "xray_admin_session_authenticated": false,
+          "xray_cloud_accounts_http": 401,
+          "aws_resource_reads_attempted": false,
+          "aws_writes_attempted": false,
+          "ssh_attempted": false,
+          "cost_queries_attempted": false,
+          "pem_contents_read": false,
+          "result": "blocked_before_cloud_write; profile identities and application session still do not match the authorization prerequisites"
         },
-        "matching_profile_available": false,
-        "xray_api_health_http": 200,
-        "xray_ui_http": 200,
-        "xray_auth_session_endpoint_http": 200,
-        "xray_admin_session_authenticated": false,
-        "xray_cloud_accounts_http": 401,
-        "aws_resource_reads_attempted": false,
-        "aws_writes_attempted": false,
-        "ssh_attempted": false,
-        "cost_queries_attempted": false,
-        "pem_contents_read": false,
-        "result": "blocked_before_cloud_write; profile identities and application session still do not match the authorization prerequisites"
-      },
-      {
-        "kind": "authorization_profile_unavailable_user_confirmation_20261113",
-        "timestamp": "2026-11-13T02:27:00+08:00",
-        "authorized_account_digest": "94a91b85428b",
-        "last_verified_profile_digests": {
-          "default": "b1746f68f5be",
-          "root": "4a0ef08458dd"
-        },
-        "last_verified_xray_cloud_account": {
-          "digest": "b1746f68f5be",
-          "enabled": false
-        },
-        "user_reports_matching_profile_configuration_unavailable": true,
-        "authorization_window_reused": false,
-        "aws_resource_reads_attempted_this_event": false,
-        "aws_writes_attempted_this_event": false,
-        "ssh_attempted_this_event": false,
-        "cost_queries_attempted_this_event": false,
-        "pem_contents_read": false,
-        "authorized_account_resource_count": null,
-        "authorized_account_resource_cost_usd": null,
-        "result": "blocked; no new AWS request was made, and no current authorized-account resource inventory or cost was established"
+        {
+          "kind": "authorization_profile_unavailable_user_confirmation_20261113",
+          "timestamp": "2026-11-13T02:27:00+08:00",
+          "authorized_account_digest": "94a91b85428b",
+          "last_verified_profile_digests": {
+            "default": "b1746f68f5be",
+            "root": "4a0ef08458dd"
+          },
+          "last_verified_xray_cloud_account": {
+            "digest": "b1746f68f5be",
+            "enabled": false
+          },
+          "user_reports_matching_profile_configuration_unavailable": true,
+          "authorization_window_reused": false,
+          "aws_resource_reads_attempted_this_event": false,
+          "aws_writes_attempted_this_event": false,
+          "ssh_attempted_this_event": false,
+          "cost_queries_attempted_this_event": false,
+          "pem_contents_read": false,
+          "authorized_account_resource_count": null,
+          "authorized_account_resource_cost_usd": null,
+          "result": "blocked; no new AWS request was made, and no current authorized-account resource inventory or cost was established"
         }
       ],
       "commit": null,
@@ -1952,6 +1952,37 @@
             "production secret files, TLS certificates, encrypted backup destination, and host Docker Compose readiness are unverified"
           ],
           "result": "blocked before SSH, host probing, image publication, or production mutation"
+        },
+        {
+          "kind": "production_candidate_preflight",
+          "checked_at": "2026-11-13T23:30:34+08:00",
+          "run_id": "xray-v0148-online-candidate-20261113",
+          "source_commit": "fcc872309126f7a9ee83b7b5d12b8c48bb52581e",
+          "release_version": "0.14.8",
+          "target_host": "3.0.199.99",
+          "target_read_or_write_attempted": false,
+          "local_candidate_build": "passed; local images are not registry artifacts and have no deployable registry digest",
+          "local_image_ids": {
+            "backend": "sha256:7943f0a2a0c752a50f505a5c8cc0d71d63c03c82ec60e108d987e3f28c0c75fc",
+            "frontend": "sha256:eb5fd749e196dd2a052904941afb9e9b7ba725e220a0cc32c435ce8221fd4224",
+            "backup_tools": "sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1"
+          },
+          "platform": "linux/amd64",
+          "checks": {
+            "backend_test_settings_import": "passed with test-only placeholder DSN; no database connection",
+            "frontend_nginx_config_and_static_entry": "passed",
+            "backup_tools_binaries": "passed: PostgreSQL client 17.6, age 1.2.1, jq 1.8.1",
+            "production_compose_config": "passed with example placeholders only",
+            "source_matches_v0_14_8_tag": true
+          },
+          "blockers": [
+            "no confirmed production SSH user or access method",
+            "no production admin domain, management CIDR allowlist, or TLS evidence",
+            "no registry namespace or push authorization and no immutable backend/frontend/backup-tools registry digests",
+            "production secret files and encrypted backup plus restore evidence are unverified",
+            "target Docker/Compose readiness has not been verified"
+          ],
+          "result": "local candidate checks passed; production remains blocked; no registry, SSH, AWS, host, or production operation was attempted"
         }
       ],
       "commit": null,
@@ -2524,37 +2555,36 @@
       "cost": null,
       "residual_resources": []
     },
-      {
-        "id": "github-ci-v0.14.8-release-receipt-correction",
-        "environment": "ci",
-        "status": "passed",
-        "evidence": [
-          {
-            "kind": "github_actions_delivery_run",
-            "timestamp": "2026-11-13T02:52:07+08:00",
-            "run_id": 43281889283,
-            "job_id": 131405030145,
-            "workflow": "X-ray delivery gates",
-            "event": "push",
-            "conclusion": "success",
-            "commit": "29c88c5a2c7e8cdf934aad99214bbfbef268d188",
-            "all_steps_success": true,
-            "artifact": {
-              "id": 13973492829,
-              "name": "xray-acceptance-43281889283-1",
-              "size_in_bytes": 2984352,
-              "digest": "sha256:3d57f96a523a55302927b1ceb036c9a0f285746f4f8099d7bd1b34b9deb0d164",
-              "expires_at": "2026-11-26T18:50:31Z"
-            }
+    {
+      "id": "github-ci-v0.14.8-release-receipt-correction",
+      "environment": "ci",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions_delivery_run",
+          "timestamp": "2026-11-13T02:52:07+08:00",
+          "run_id": 43281889283,
+          "job_id": 131405030145,
+          "workflow": "X-ray delivery gates",
+          "event": "push",
+          "conclusion": "success",
+          "commit": "29c88c5a2c7e8cdf934aad99214bbfbef268d188",
+          "all_steps_success": true,
+          "artifact": {
+            "id": 13973492829,
+            "name": "xray-acceptance-43281889283-1",
+            "size_in_bytes": 2984352,
+            "digest": "sha256:3d57f96a523a55302927b1ceb036c9a0f285746f4f8099d7bd1b34b9deb0d164",
+            "expires_at": "2026-11-26T18:50:31Z"
           }
-        ],
-        "commit": "29c88c5a2c7e8cdf934aad99214bbfbef268d188",
-        "provider": "github-actions",
-        "region": null,
-        "cost": null,
-        "residual_resources": []
-      }
-    ,
+        }
+      ],
+      "commit": "29c88c5a2c7e8cdf934aad99214bbfbef268d188",
+      "provider": "github-actions",
+      "region": null,
+      "cost": null,
+      "residual_resources": []
+    },
     {
       "id": "usage-sync-lease-concurrency-local-20261111",
       "environment": "local",
@@ -2654,7 +2684,11 @@
           "aws_profile_environment_set": false,
           "any_configured_profile_matches": false,
           "api_session_reads": {
-            "ports": [9537, 9538, 9541],
+            "ports": [
+              9537,
+              9538,
+              9541
+            ],
             "http_status": 200,
             "authenticated": false,
             "mfa_enabled": false,
@@ -2777,8 +2811,7 @@
       "residual_resources": [
         "The xray-usage-retry-20261111 PostgreSQL/Redis named volumes and port registration 55437/56384 are preserved; its containers and network were stopped."
       ]
-    }
-    ,
+    },
     {
       "id": "github-ci-v0.14.7-cfd9abe3",
       "environment": "ci",
@@ -2875,7 +2908,11 @@
             "root": "4a0ef08458dd"
           },
           "any_profile_matches_authorized_account": false,
-          "xray_application_ports": [9537, 9538, 9541],
+          "xray_application_ports": [
+            9537,
+            9538,
+            9541
+          ],
           "xray_application_ports_listening": false,
           "xray_admin_session_verified": false,
           "step_up_verified": false,
@@ -2963,7 +3000,7 @@
             "exit_code": 0,
             "passed": 438,
             "skipped": 0,
-            "duration_seconds": 89.40
+            "duration_seconds": 89.4
           },
           "additional_focused_result": {
             "exit_code": 0,
@@ -2993,14 +3030,27 @@
           "real_aws_acceptance": "blocked; no matching authorized profile or application CloudAccount was verified",
           "rerun_20261112T1752_plus0800": {
             "focused_command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray XRAY_REQUIRE_FIXED_BINARY=1 backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests/test_node_automation.py backend/tests/test_node_pool_scheduler_integration.py backend/tests/test_node_status_scheduler.py backend/tests/subscriptions/test_node_metering.py backend/tests/subscriptions/test_revocation_runtime.py -q",
-            "focused_result": {"exit_code": 0, "passed": 77, "skipped": 0, "duration_seconds": 21.98},
+            "focused_result": {
+              "exit_code": 0,
+              "passed": 77,
+              "skipped": 0,
+              "duration_seconds": 21.98
+            },
             "full_backend_command": "XRAY_ENV=test DJANGO_SETTINGS_MODULE=config.settings.test XRAY_TEST_DATABASE_URL=<redacted dedicated test DSN> XRAY_REDIS_URL=<redacted dedicated Redis URL> XRAY_TEST_BINARY=runtime/xray/v26.3.27/xray XRAY_REQUIRE_FIXED_BINARY=1 backend/.venv/bin/python -m pytest -c backend/pyproject.toml backend/tests -q",
-            "full_backend_result": {"exit_code": 0, "passed": 438, "skipped": 0, "duration_seconds": 88.70},
+            "full_backend_result": {
+              "exit_code": 0,
+              "passed": 438,
+              "skipped": 0,
+              "duration_seconds": 88.7
+            },
             "fixed_xray_version_check_exit_code": 0,
             "isolated_compose_up_exit_code": 0,
             "isolated_compose_down_exit_code": 0,
             "project": "xray-goal-20261112",
-            "ports": [55435, 56382],
+            "ports": [
+              55435,
+              56382
+            ],
             "containers_and_network_stopped": true,
             "named_volumes_preserved": true,
             "aws_cloud_acceptance": "blocked; Fake/Stub and local Xray are not AWS evidence"
@@ -3093,11 +3143,19 @@
             "one-click runtime integration requires a disposable Linux host",
             "service integration requires an explicitly selected disposable Linux systemd host"
           ],
-          "e2e_ports": [55671, 55672, 55673, 55674],
+          "e2e_ports": [
+            55671,
+            55672,
+            55673,
+            55674
+          ],
           "e2e_temporary_services_stopped": true,
           "dedicated_full_backend_stack": {
             "project": "xray-goal-20261112",
-            "ports": [55435, 56382],
+            "ports": [
+              55435,
+              56382
+            ],
             "containers_remain_running": true,
             "volumes_preserved": true
           },
@@ -3109,7 +3167,13 @@
           "ssh_attempted": false,
           "cost_query_attempted": false,
           "remote_exact_commit_ci": "passed: run 43253704305, job 131306144155, head ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9, all 27 steps success",
-          "remote_artifact": {"id": 13961503065, "name": "xray-acceptance-43253704305-1", "size_in_bytes": 3004233, "digest": "sha256:cad3f341d60c75cdf739c631d7d1e97f31aaa2602103242d0e5709110c02c504", "expires_at": "2026-11-26T16:12:06Z"},
+          "remote_artifact": {
+            "id": 13961503065,
+            "name": "xray-acceptance-43253704305-1",
+            "size_in_bytes": 3004233,
+            "digest": "sha256:cad3f341d60c75cdf739c631d7d1e97f31aaa2602103242d0e5709110c02c504",
+            "expires_at": "2026-11-26T16:12:06Z"
+          },
           "github_release": "original candidate record was stale; publication was later completed and is recorded in github-release-v0.14.8",
           "real_aws_acceptance": "blocked; configured profiles and X-ray CloudAccount do not match authorized account 94a91b85428b; user reports unable to configure matching profile",
           "result": "local gates passed for source commit b1905bc16dd4b7f7f5be2f7193834c8ab3d7828c; the candidate record was historical, remote tag and GitHub Release were subsequently published, and real AWS acceptance remains a distinct blocked gate"
@@ -3334,7 +3398,10 @@
           "kind": "full_backend_and_delivery_pytest",
           "timestamp": "2026-11-13T03:52:42+08:00",
           "source_commit": "678ff1073f2b921e3dbae73c572c6b08da648d3d",
-          "test_roots": ["backend/tests", "tests"],
+          "test_roots": [
+            "backend/tests",
+            "tests"
+          ],
           "pytest_exit_code": 0,
           "tests_passed": 576,
           "tests_skipped": 5,
@@ -3361,6 +3428,43 @@
       "cost": 0,
       "residual_resources": [
         "The xray-goal-20261112 PostgreSQL/Redis test containers remained running and healthy on registered ports 55435/56382; no test services were started or stopped."
+      ]
+    },
+    {
+      "id": "local-production-candidate-0.14.8-amd64",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "local_container_candidate_smoke",
+          "timestamp": "2026-11-13T23:30:34+08:00",
+          "run_id": "xray-v0148-online-candidate-20261113",
+          "source_commit": "fcc872309126f7a9ee83b7b5d12b8c48bb52581e",
+          "release_version": "0.14.8",
+          "platform": "linux/amd64",
+          "local_image_ids": {
+            "backend": "sha256:7943f0a2a0c752a50f505a5c8cc0d71d63c03c82ec60e108d987e3f28c0c75fc",
+            "frontend": "sha256:eb5fd749e196dd2a052904941afb9e9b7ba725e220a0cc32c435ce8221fd4224",
+            "backup_tools": "sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1"
+          },
+          "checks": {
+            "backend_test_settings_import": "passed with test-only placeholder DSN; no database connection",
+            "frontend_nginx_config_and_static_entry": "passed",
+            "backup_tools_binaries": "passed: PostgreSQL client 17.6, age 1.2.1, jq 1.8.1",
+            "production_compose_config": "passed with example placeholders only",
+            "source_matches_v0_14_8_tag": true
+          },
+          "registry_push_attempted": false,
+          "production_attempted": false,
+          "cost_usd": 0
+        }
+      ],
+      "commit": "fcc872309126f7a9ee83b7b5d12b8c48bb52581e",
+      "provider": "local Docker/OrbStack",
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "Three linux/amd64 candidate images remain in the local Docker image store."
       ]
     },
     {
@@ -3394,6 +3498,33 @@
       "provider": "github-actions",
       "region": null,
       "cost": null,
+      "residual_resources": []
+    },
+    {
+      "id": "local-production-fixes-0.14.9",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "local_regression",
+          "timestamp": "2026-11-14T02:42:55+08:00",
+          "source_state": "main working tree before release commit",
+          "backend_passed": 607,
+          "backend_skipped": 2,
+          "frontend_passed": 89,
+          "static_exit_codes": 0,
+          "backup_verification_exit": 0,
+          "isolated_restore_exit": 0,
+          "limitations": "Linux installer skips; production upgrade and real Lightsail lifecycle not claimed by this row"
+        }
+      ],
+      "commit": "fcc872309126f7a9ee83b7b5d12b8c48bb52581e",
+      "provider": "local",
+      "region": "local",
+      "cost": {
+        "amount": 0,
+        "currency": "USD"
+      },
       "residual_resources": []
     }
   ]

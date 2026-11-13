@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -50,7 +49,7 @@ def test_proxy_overwrites_forwarded_identity_and_public_path_does_not_log_token(
         assert "proxy_set_header X-Forwarded-For $remote_addr;" in content
         assert "proxy_set_header X-Forwarded-Proto https;" in content
     assert "access_log off;" in subscription
-    assert "location ~ ^/s/[A-Za-z0-9_-]{43}$" in subscription
+    assert 'location ~ "^/s/[A-Za-z0-9_-]{43}$"' in subscription
     assert "/api/" not in subscription
 
 

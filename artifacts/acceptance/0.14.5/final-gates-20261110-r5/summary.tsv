@@ -1,0 +1,2 @@
+gate	exit_code	started_at	finished_at	log
+runtime	1	2026-11-09T20:11:35Z	2026-11-09T20:11:35Z	artifacts/acceptance/0.14.5/final-gates-20261110-r5/runtime.log

@@ -1,0 +1,20 @@
+[Unit]
+Description=Run prepared X-ray online upgrades
+After=docker.service
+Requires=docker.service
+ConditionPathExists=/var/lib/xray/upgrade/catalog.json
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+UMask=0077
+ExecStart=/usr/bin/python3 /opt/xray/deploy/upgrade/runner.py
+TimeoutStartSec=30min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/xray /etc/xray /opt/xray /run/docker.sock
+StandardOutput=null
+StandardError=null

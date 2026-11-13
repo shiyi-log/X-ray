@@ -52,10 +52,20 @@ SELECT format(
 FROM pg_tables
 WHERE schemaname = 'public'
   AND tablename = ANY (ARRAY[
+    'identity_nodeautomationsetting',
+    'operations_actionpreview',
     'operations_operation',
     'operations_operationstep',
     'operations_outboxevent',
     'nodes_managednode',
+    'nodes_nodeprotocol',
+    'nodes_noderesource',
+    'nodes_nodeconfigrevision',
+    'nodes_hostkeyrecord',
+    'subscriptions_accessprofile',
+    'subscriptions_usagecheckpoint',
+    'subscriptions_subscriptionrevision',
+    'subscriptions_publicationbatch',
     'subscriptions_revocationnodestate',
     'subscriptions_nodecredential',
     'subscriptions_revocationtombstone',
@@ -71,16 +81,53 @@ FROM pg_tables
 WHERE schemaname = 'public'
   AND tablename IN (
     'identity_superadmin',
+    'identity_provideridentitynetworksetting',
+    'nodes_nodepool',
+    'nodes_nodepoolregionallocation',
     'cloud_accounts_cloudaccount',
     'cloud_accounts_cloudcredentialversion'
   ) \gexec
+
+-- Django's SELECT FOR UPDATE requires UPDATE privilege on a table column.
+-- Keep policy and credential fields read-only while allowing worker row locks.
+SELECT format('GRANT UPDATE (id) ON TABLE %I.%I TO xray_worker', schemaname, tablename)
+FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename IN (
+    'nodes_nodepool',
+    'nodes_nodepoolregionallocation',
+    'cloud_accounts_cloudaccount',
+    'cloud_accounts_cloudcredentialversion'
+  ) \gexec
+
+SELECT format('GRANT INSERT ON TABLE %I.%I TO xray_worker', schemaname, tablename)
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'nodes_nodepoolregionallocation' \gexec
 
 SELECT format('GRANT SELECT, UPDATE ON TABLE %I.%I TO xray_worker', schemaname, tablename)
 FROM pg_tables
 WHERE schemaname = 'public' AND tablename = 'identity_nodestatussyncsetting' \gexec
 
-GRANT SELECT, INSERT ON TABLE audit_auditevent TO xray_worker;
-GRANT USAGE, SELECT ON SEQUENCE audit_auditevent_id_seq TO xray_worker;
+SELECT format(
+    'GRANT SELECT, INSERT ON TABLE %I.%I TO xray_worker', schemaname, tablename
+)
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'audit_auditevent' \gexec
+
+SELECT format(
+    'GRANT USAGE, SELECT ON SEQUENCE %I.%I TO xray_worker', schemaname, sequencename
+)
+FROM pg_sequences
+WHERE schemaname = 'public'
+  AND sequencename IN (
+    'audit_auditevent_id_seq',
+    'identity_nodeautomationsetting_id_seq',
+    'nodes_hostkeyrecord_id_seq',
+    'nodes_nodeconfigrevision_id_seq',
+    'operations_operationstep_id_seq',
+    'subscriptions_securityeventoutbox_id_seq',
+    'subscriptions_usagecheckpoint_id_seq'
+  ) \gexec
 
 SELECT format(
     'GRANT SELECT, INSERT, UPDATE ON TABLE %I.%I TO xray_outbox',

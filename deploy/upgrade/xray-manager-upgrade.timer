@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the X-ray online upgrade request queue
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=15s
+AccuracySec=1s
+Persistent=true
+Unit=xray-manager-upgrade.service
+
+[Install]
+WantedBy=timers.target

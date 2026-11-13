@@ -11,7 +11,6 @@ from pathlib import Path
 import pytest
 import yaml
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -35,11 +34,18 @@ def test_compose_isolates_data_services_and_subscription_secrets(environment):
     assert "ports" not in services["redis"]
     assert "ports" not in services["admin-api"]
     assert "ports" not in services["subscription-api"]
-    subscription_secrets = set(services["subscription-api"].get("secrets", []))
-    assert subscription_secrets == {
+    subscription_secrets = {
+        secret["source"] if isinstance(secret, dict) else secret
+        for secret in services["subscription-api"].get("secrets", [])
+    }
+    expected = {
         "subscription_master_key",
         "subscription_db_password",
     }
+    if environment == "production":
+        expected.add("subscription_django_secret_key")
+    assert subscription_secrets == expected
+    assert "django_secret_key" not in subscription_secrets
     assert "control_master_key" not in subscription_secrets
     assert "cloud_credentials" not in subscription_secrets
     assert "control_master_key" in services["admin-api"]["secrets"]

@@ -277,3 +277,24 @@ def test_provider_input_gate_defaults_closed_outside_local_test(monkeypatch, set
         "enabled": False,
         "source": "ENVIRONMENT",
     }
+
+
+@pytest.mark.django_db
+def test_disabled_production_gate_directs_admin_to_system_setting(monkeypatch, settings):
+    from providers import registry
+
+    settings.XRAY_ENV = "production"
+    monkeypatch.delenv("XRAY_ENABLE_PROVIDER_NETWORK", raising=False)
+    credentials = SecretInput(
+        "aws_lightsail", {"access_key_id": "fake", "secret_access_key": "fake"}
+    )
+
+    with pytest.raises(DomainError) as denied:
+        registry.provider_for_input(credentials, "us-east-1")
+
+    assert denied.value.code == "CLOUD_NETWORK_DISABLED"
+    assert denied.value.status_code == 503
+    assert denied.value.retryable is False
+    assert "云身份校验联网已关闭" in denied.value.message
+    assert "系统设置" in denied.value.message
+    assert "本地环境" not in denied.value.message

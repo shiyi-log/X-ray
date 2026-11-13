@@ -5,7 +5,6 @@ import stat
 import subprocess
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 PREFLIGHT = ROOT / "deploy/scripts/preflight.sh"
 EXAMPLE = ROOT / "deploy/compose/config.example.env"
@@ -14,6 +13,7 @@ EXAMPLE = ROOT / "deploy/compose/config.example.env"
 def _preflight_fixture(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
     secret_keys = {
         "XRAY_DJANGO_SECRET_KEY_FILE",
+        "XRAY_SUBSCRIPTION_DJANGO_SECRET_KEY_FILE",
         "XRAY_CONTROL_MASTER_KEY_FILE",
         "XRAY_SUBSCRIPTION_MASTER_KEY_FILE",
         "XRAY_OWNER_DB_PASSWORD_FILE",
@@ -116,6 +116,20 @@ def test_preflight_rejects_world_readable_secret(tmp_path):
     result = _run_preflight(config, tmp_path)
     assert result.returncode != 0
     assert "must not be readable by other users" in result.stderr
+
+
+def test_preflight_rejects_missing_subscription_signing_key(tmp_path):
+    config, _files = _preflight_fixture(tmp_path)
+    config.write_text(
+        "\n".join(
+            line for line in config.read_text().splitlines()
+            if not line.startswith("XRAY_SUBSCRIPTION_DJANGO_SECRET_KEY_FILE=")
+        ) + "\n",
+        encoding="utf-8",
+    )
+    result = _run_preflight(config, tmp_path)
+    assert result.returncode != 0
+    assert "XRAY_SUBSCRIPTION_DJANGO_SECRET_KEY_FILE" in result.stderr
 
 
 def test_rollback_is_application_only_and_release_checks_migration_compatibility():

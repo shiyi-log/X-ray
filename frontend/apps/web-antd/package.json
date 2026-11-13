@@ -1,6 +1,6 @@
 {
   "name": "@xray/web-antd",
-  "version": "0.14.8",
+  "version": "0.14.9",
   "private": true,
   "type": "module",
   "scripts": {

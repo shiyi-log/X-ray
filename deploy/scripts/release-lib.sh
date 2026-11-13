@@ -70,11 +70,11 @@ wait_for_worker_drain() {
     return 0
   fi
 
-  compose exec -T worker celery -A config.celery:app control cancel_consumer celery \
+  compose exec -T worker xray-entrypoint celery -A config.celery:app control cancel_consumer celery \
     >/dev/null
   started_at=$(date +%s)
   while :; do
-    active_json=$(compose exec -T worker celery -A config.celery:app inspect active \
+    active_json=$(compose exec -T worker xray-entrypoint celery -A config.celery:app inspect active \
       --json 2>/dev/null || true)
     if printf '%s' "$active_json" | python3 -c '
 import json, sys

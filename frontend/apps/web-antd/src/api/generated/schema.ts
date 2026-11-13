@@ -598,6 +598,22 @@ export interface paths {
         readonly patch: operations["system_partial_update"];
         readonly trace?: never;
     };
+    readonly "/api/v1/system/upgrade/": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get: operations["system_upgrade_retrieve"];
+        readonly put?: never;
+        readonly post: operations["system_upgrade_create"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1095,6 +1111,11 @@ export interface components {
             readonly provider_identity_network_enabled?: boolean;
             readonly usage_sync_enabled?: boolean;
             readonly usage_sync_interval_minutes?: number;
+        };
+        readonly SystemUpgradeRequest: {
+            /** @enum {string} */
+            readonly confirmation: "确认在线升级";
+            readonly version: string;
         };
         readonly TotpConfirmedSession: components["schemas"]["AdminSession"] & {
             readonly recovery_codes?: readonly string[];
@@ -3535,6 +3556,115 @@ export interface operations {
             };
             /** @description Authentication required */
             readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly system_upgrade_retrieve: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description OK */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GenericObject"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            readonly 409: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    readonly system_upgrade_create: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header: {
+                readonly "Idempotency-Key": string;
+            };
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["SystemUpgradeRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description OK */
+            readonly 202: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["GenericObject"];
+                };
+            };
+            /** @description Invalid request */
+            readonly 400: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Authentication required */
+            readonly 401: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Fresh step-up required */
+            readonly 403: {
                 headers: {
                     readonly [name: string]: unknown;
                 };

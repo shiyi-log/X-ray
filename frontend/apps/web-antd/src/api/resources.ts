@@ -94,6 +94,22 @@ export type SystemInfo = components['schemas']['SystemInfo'] & {
     source: NodeAutomationSettingSource;
   };
 };
+export interface SystemUpgradeJob {
+  id: string;
+  version: string;
+  status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
+  phase: string;
+  error_code: string | null;
+  created_at: string;
+  updated_at: string;
+}
+export interface SystemUpgradeInfo {
+  current_version: string;
+  available: boolean;
+  reason: string | null;
+  candidates: { version: string; published_at: string; notes: string }[];
+  jobs: SystemUpgradeJob[];
+}
 export type ActionPreview = components['schemas']['ActionPreview'];
 export type SecretDelivery = components['schemas']['SecretDelivery'];
 
@@ -192,6 +208,12 @@ const json = (method: string, body?: unknown, headers?: HeadersInit): RequestIni
 export const resourcesApi = {
   overview: () => apiRequest<Overview>('/api/v1/overview'),
   system: () => apiRequest<SystemInfo>('/api/v1/system'),
+  systemUpgrade: () => apiRequest<SystemUpgradeInfo>('/api/v1/system/upgrade/'),
+  startSystemUpgrade: (payload: { version: string; confirmation: string }, idempotencyKey: string) =>
+    apiRequest<SystemUpgradeJob>(
+      '/api/v1/system/upgrade/',
+      json('POST', payload, { 'Idempotency-Key': idempotencyKey }),
+    ),
   updateSystem: (payload: {
     provider_identity_network_enabled?: boolean;
     node_status_sync_enabled?: boolean;

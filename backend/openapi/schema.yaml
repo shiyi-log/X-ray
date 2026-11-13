@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: X-ray Manager API
-  version: 0.14.8
+  version: 0.14.9
   description: Private administrator API. Secrets are write-only or delivered once.
 paths:
   /api/v1/auth/session:
@@ -1809,6 +1809,84 @@ paths:
         schema:
           type: string
           format: uuid
+  /api/v1/system/upgrade/:
+    get:
+      operationId: system_upgrade_retrieve
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericObject'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+    post:
+      operationId: system_upgrade_create
+      responses:
+        '202':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericObject'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Fresh step-up required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+      - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemUpgradeRequest'
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
 components:
   securitySchemes:
     cookieAuth:
@@ -3013,6 +3091,20 @@ components:
     GenericObject:
       type: object
       additionalProperties: true
+    SystemUpgradeRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - version
+      - confirmation
+      properties:
+        version:
+          type: string
+          pattern: ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$
+        confirmation:
+          type: string
+          enum:
+          - 确认在线升级
     PaginatedCloudAccountList:
       type: object
       required:

@@ -6,14 +6,44 @@ from pathlib import Path
 
 import pytest
 
-
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_backend_image_contains_the_release_version():
+    image = os.getenv("XRAY_BACKEND_TEST_IMAGE")
+    if not image:
+        pytest.skip("backend image required for version gate")
+    result = subprocess.run(
+        ["docker", "run", "--rm", "--network", "none", "--read-only", image,
+         "python", "-c", "from pathlib import Path; print(Path('/app/VERSION').read_text().strip())"],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == (ROOT / "VERSION").read_text().strip()
+
+
+@pytest.mark.parametrize(
+    ("command", "output_prefix"),
+    [("gunicorn", "gunicorn (version "), ("celery", "5.")],
+)
+def test_backend_console_scripts_execute_from_the_runtime_environment(command, output_prefix):
+    image = os.getenv("XRAY_BACKEND_TEST_IMAGE")
+    if not image:
+        pytest.skip("XRAY_BACKEND_TEST_IMAGE is required for the console-script gate")
+    result = subprocess.run(
+        ["docker", "run", "--rm", "--network", "none", "--read-only", image, command, "--version"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.startswith(output_prefix), result.stdout
 
 
 @pytest.mark.parametrize(
     ("dockerfile", "allowed_copy_roots"),
     [
-        ("deploy/docker/backend.Dockerfile", ("backend/", "installer/", "deploy/scripts/")),
+        ("deploy/docker/backend.Dockerfile", ("backend/", "installer/", "deploy/scripts/", "VERSION")),
         ("deploy/docker/frontend.Dockerfile", ("frontend/", "deploy/nginx/")),
     ],
 )

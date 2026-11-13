@@ -132,7 +132,7 @@ def provider_for_input(credentials: SecretInput, region: str) -> CloudReader:
     if not provider_identity_network_setting()["enabled"]:
         raise DomainError(
             "CLOUD_NETWORK_DISABLED",
-            "本地环境默认禁止云网络调用",
+            "云身份校验联网已关闭，请在系统设置中开启",
             retryable=False,
             status_code=503,
         )

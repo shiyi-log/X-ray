@@ -1,0 +1,429 @@
+{
+  "config": {
+    "configFile": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/playwright.config.ts",
+    "rootDir": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/tests/e2e/global-setup.ts",
+    "globalTeardown": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/tests/e2e/global-teardown.ts",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.9/final-online-20261114/playwright-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.9/final-online-20261114/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "setup",
+        "name": "setup",
+        "testDir": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/auth\\.setup\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.9/final-online-20261114/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "desktop-chromium",
+        "name": "desktop-chromium",
+        "testDir": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/tests/e2e",
+        "testIgnore": [
+          "/auth\\.setup\\.ts/",
+          "/mobile\\.spec\\.ts/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.9/final-online-20261114/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile-chromium",
+        "name": "mobile-chromium",
+        "testDir": "/Users/shiyi/Documents/ChatGPT/x-ray/frontend/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/mobile\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "auth.setup.ts",
+      "file": "auth.setup.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "使用真实密码与 TOTP 建立服务器会话",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "setup",
+              "projectName": "setup",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2036,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:29.484Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "17e3fe6f4d9d8bd79c6b-4d1de8789f0184b089f5",
+          "file": "auth.setup.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "full-flow.spec.ts",
+      "file": "full-flow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "管理员从会话恢复完成一次性交付与部分撤销全流程",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 90000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-chromium",
+              "projectName": "desktop-chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7125,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "buffer": "Y29tcGxldGVkIGU3YjcwMzA3LTJmM2UtNDU0YS1iYzBjLWFiNWFhODgxODdhYyBhcyBwYXJ0aWFsCg=="
+                    }
+                  ],
+                  "stderr": [
+                    {
+                      "buffer": ""
+                    }
+                  ],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:32.099Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0366a69751fb3136692b-4d0ded0a553f5538ecab",
+          "file": "full-flow.spec.ts",
+          "line": 15,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "resources.spec.ts",
+      "file": "resources.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "刷新恢复会话、真实空状态与固定 Operation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-chromium",
+              "projectName": "desktop-chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2002,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:39.326Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c5a9a91e1b9b058112b5-643b5b9906a4c3e7dc40",
+          "file": "resources.spec.ts",
+          "line": 7,
+          "column": 1
+        },
+        {
+          "title": "真实网络失败显示错误且不伪造系统数据",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-chromium",
+              "projectName": "desktop-chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1017,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:41.333Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c5a9a91e1b9b058112b5-b31766e847f808550201",
+          "file": "resources.spec.ts",
+          "line": 26,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "revocation.spec.ts",
+      "file": "revocation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "一次性交付在关闭后从 DOM 清除",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-chromium",
+              "projectName": "desktop-chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1569,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:42.359Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "436948ff84328aef5bc7-e4f93ad26d62ef70ccbf",
+          "file": "revocation.spec.ts",
+          "line": 5,
+          "column": 1
+        },
+        {
+          "title": "单个 Token 可独立撤销并保留在 Token 历史中",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-chromium",
+              "projectName": "desktop-chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1680,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:43.932Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "436948ff84328aef5bc7-82b2ce3396a3fa24e34d",
+          "file": "revocation.spec.ts",
+          "line": 21,
+          "column": 1
+        },
+        {
+          "title": "危险确认后的 partial result 不宣称全部凭据失效",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "desktop-chromium",
+              "projectName": "desktop-chromium",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2543,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "buffer": "Y29tcGxldGVkIGQzMzI0NDY1LTY3ZjQtNGEzNi1iMjA4LTFjNjg4YTczMmMyNCBhcyBwYXJ0aWFsCg=="
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:45.616Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "436948ff84328aef5bc7-0c63fe8277677419885a",
+          "file": "revocation.spec.ts",
+          "line": 42,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "mobile.spec.ts",
+      "file": "mobile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "移动端导航与表格不挤压关键操作",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "mobile-chromium",
+              "projectName": "mobile-chromium",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1385,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-13T18:58:48.505Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e79c838550b25e92508e-b27648b83ca6be8fa721",
+          "file": "mobile.spec.ts",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-13T18:58:23.334Z",
+    "duration": 27345.533,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

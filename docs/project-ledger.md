@@ -8161,9 +8161,147 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - `writes_and_rollback`: 只追加 `docs/project-ledger.md`、`docs/progress.md`、`tests/acceptance/matrix.json`；不改源码/VERSION/tag/Release、数据库、云、凭据或进程。保留全部 13 个既有未跟踪 acceptance artifact。只 revert 本次后续审计提交可回退。
 - `status`: 本地 focused pytest `137 passed`、全后端/交付 pytest `576 passed, 5 skipped`，本次静态门禁全 `0`；精确 SHA `5430cc1` 远端 CI passed；真实 AWS lifecycle、重启后 IP/状态/订阅、profile 撤回、节点/流量对账及逐资源费用 blocked/not-run；生产 not-run；总体目标仍 active。
 
+## 2026-11-13T23:14:13+08:00 - v0.14.8 Linux/amd64 生产候选构建定义
+
+- `run_id`: `xray-v0148-online-candidate-20261113`.
+- `requested_outcome`: 按用户“构建线上版本，在线上验收”先准备可检查的 v0.14.8 生产容器候选；本机已有三类 v0.14.8 镜像经 inspect 确认均为 `linux/arm64`，故本次拟在当前代码/Release 基线上构建 `linux/amd64` backend、frontend、backup-tools 候选，做容器与版本元数据检查，不推 Registry。
+- `path_scope`: 读取仓库 Dockerfiles、生产/staging Compose、发布/预检文档、配置模板、现存本地镜像元数据及工作树；允许的写入仅为追加本 ledger、progress 和 acceptance evidence。禁止改 runtime 源码/VERSION/tag/Release、读取密钥或 PEM 内容、接触 AWS、SSH、线上主机、注册表凭据、生产数据库或用户进程。
+- `deployment_target_and_gaps`: 依据先前预检，目标 host 3.0.199.99 仍缺已确认 SSH 访问、管理域名与 CIDR/TLS、服务器侧全部秘密、加密备份与离机恢复材料、目标 Docker/Compose 就绪读回。v0.14.8 Release 只有安装器/manifest/checksum，不含 backend/frontend/backup-tools 镜像 digest；当前仓库配置模板的域名、registry 和 digest 是 `.invalid`/占位值。
+- `authorization_boundary`: 当前用户请求授权构建与线上验收意图，但没有提供本次可用的主机访问方式/安全域名和 CIDR、registry namespace/推送权限、线上秘密与备份准备读回。此前 AWS 90 分钟单节点测试窗口已过期；目标 AWS profile 曾不匹配，X-ray CloudAccount 未验证。本 event 不延用该授权做任何云写入或 SSH。
+- `risks_and_rollback`: 构建使用现有 Docker/BuildKit，不启动/停止其他服务；候选镜像只保留在本机、不发布且不用于线上。保留 tag 可供检查；若之后必须移除，仅按逐个精确 repo tag/image ID 确认，不做 prune。文档证据只需 revert 对应审计提交；不存在数据库、云或生产回滚。
+- `status_at_definition`: online build is a local amd64 candidate only; production deployment and production acceptance remain blocked pending registry and complete host/security/backup inputs plus applicable current authorization.
+
 ## 2026-11-13T03:48:03+08:00 - 本地回归及 CI 回执最终验证
 
 - `run_id`: `xray-v0148-release-receipt-correction-20261113-0227`.
 - `commands_and_exit_codes`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0 (`acceptance matrix valid`)；`bash scripts/check-boundary.sh`=0 (`boundary check passed`)；`bash scripts/check-secrets.sh`=0 (159 commits / about 9.27 MB, no leaks)；skill validator=0 (`Skill is valid!`)；`git diff --check`=0；`git status --short --branch`=0。
 - `final_status`: 本轮三份预期审计文件 `docs/project-ledger.md`、`docs/progress.md`、`tests/acceptance/matrix.json` 被修改；13 个原有未跟踪 acceptance artifact 目录原样保留。无源码、VERSION/tag/Release、云资源、DB 数据或凭据变更。回退仅需 revert 后续文档审计提交。
 - `acceptance_boundary`: 本地聚焦 suite 137 passed；`678ff10` 精确 SHA CI run 43290976024 passed 且上传 artifact。AWS profile 和 CloudAccount 仍不能匹配授权账号，先前 90 分钟窗口过期；云端生命周期、真实订阅撤回、IP/健康、AWS 节点/流量计数及逐资源费用 blocked/not-run；本轮 AWS/SSH/费用请求为 0。整体目标保持 active。
+
+## 2026-11-13T23:30:34+08:00 - v0.14.8 Linux/amd64 候选镜像烟测与生产预检
+
+- `run_id`: `xray-v0148-online-candidate-20261113`.
+- `requested_outcome`: 延续用户“构建线上版本，在线上验收”，对 v0.14.8 做本地 Linux/amd64 production image candidate 检查，并尽可能完成真实生产验收准备。
+- `baseline_and_worktree`: 分支 `main`，HEAD `fcc872309126f7a9ee83b7b5d12b8c48bb52581e`，版本 `0.14.8`；运行 `git diff --exit-code v0.14.8 -- backend frontend deploy/docker`，exit `0`，证明候选运行时代码与 `v0.14.8` tag 一致。开始时已有对本 ledger 的 10 行未提交追加及 13 个未跟踪 acceptance artifact 目录；全部保留。此前的候选构建镜像元数据经本轮 `docker image inspect` 新鲜读回：
+  - backend `xray-manager-backend:0.14.8-candidate-amd64`，`linux/amd64`，本地 image ID `sha256:7943f0a2a0c752a50f505a5c8cc0d71d63c03c82ec60e108d987e3f28c0c75fc`；
+  - frontend `xray-manager-frontend:0.14.8-candidate-amd64`，`linux/amd64`，本地 image ID `sha256:eb5fd749e196dd2a052904941afb9e9b7ba725e220a0cc32c435ce8221fd4224`；
+  - backup-tools `xray-manager-backup-tools:0.14.8-candidate-amd64`，`linux/amd64`，本地 image ID `sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1`。
+- `path_scope_and_reads`: 读取 `AGENTS.md`、规范、X-ray skill、ledger/progress、验收矩阵、生产 deployment/release 文档与 `deploy/compose` 配置模板；检查三类候选镜像、运行中 Docker 容器列表和生产版本差异。候选镜像未推 registry；此前 AWS 90 分钟窗口已过期且 profile/CloudAccount 不匹配，禁止延伸为云写或 SSH。
+- `commands_and_exit_codes`: backend 首次用 test settings 导入时缺少 `XRAY_TEST_DATABASE_URL`，按仓库测试配置 fail-fast，exit `1`；检查 `backend/config/settings/test.py` 确认只需解析数据库名称，随后用仅作设置解析的 test-only DSN、`XRAY_ENV=test`，容器导入 Django `5.2.17`/test settings，exit `0`，未建立数据库连接。Frontend 容器 `nginx -t` 与静态入口检查 exit `0`；backup-tools `pg_dump 17.6`、`age 1.2.1`、`jq 1.8.1` exit `0`；使用 `deploy/compose/config.example.env` 的 production Compose `config --quiet` exit `0`；候选源与 `v0.14.8` tag 对照 exit `0`；镜像 ID/OS/architecture inspect exit `0`。第一次 Docker 镜像清单格式模板尝试因引用不存在 formatter 字段 exit `1`，随后精确 `docker image inspect --format` 正确读回三个镜像。平台提示本机 ARM64 仿真运行 AMD64；通过的检查是容器烟测，不是原生 AMD64 主机验收。
+- `deployment_preflight`: 生产目标仍为 `3.0.199.99`。阻塞项：未确认 SSH 用户/访问方式；未提供生产管理域名、限制 CIDR 与 TLS 证书证据；没有 registry namespace/推送授权，也没有推送后三类 registry `@sha256:` 不可变 digest；生产 secret 文件和加密备份、恢复证据未核验；目标 Docker/Compose 状态未检查。production Compose 校验仅使用 `.invalid`/示例占位值，不构成部署配置。三类本地 image ID 与未来 registry manifest digest 不可互换。
+- `authorization_boundary`: 用户的当前请求授权构建与线上验收目标；但无生产主机访问方式、registry 推送授权/namespace、安全域名和 CIDR、生产 secret/backup 准备读回。此前测试用 AWS 账号曾不匹配授权 `94a91b85428b`，90 分钟测试窗口过期。本轮没有 Registry push、AWS/费用请求、SSH、生产主机读取或写入。未读取 PEM 或其他秘密。
+- `writes_and_rollback`: 本轮只追加 `docs/project-ledger.md`、`docs/progress.md`、`tests/acceptance/matrix.json`；不改源代码、`VERSION`、tag/Release、数据库、容器/网络进程或云资源。候选镜像留在本地镜像库。现存 Docker 容器列表检查为只读，其他项目容器未被触碰。只需回退本轮三份文档差异；不删除候选镜像，也不做 prune。
+- `time_logic`: 使用机器时钟 `2026-11-13T23:30:34+08:00` / `2026-11-13T15:30:34Z`；无业务时间逻辑变化。
+- `acceptance_and_status`: 本地容器候选检查 passed；生产 release gate 保持 `blocked`；Registry、SSH、目标主机、生产部署及线上验收 `not-run`。完整阻塞项和本地 image ID 写入 `tests/acceptance/matrix.json`，progress 对应行记录本轮命令退出码。整体目标未完成。
+- `final_verification_and_reuse`: 待运行 `jq empty tests/acceptance/matrix.json`、acceptance/boundary/secret/X-ray skill/diff validators、最终 `git status` 与变更范围复核，并将确切退出码追加到本 ledger。以后满足主机/仓库/安全与授权输入时，可以复用本地候选，但必须 push 后记录三个 registry `@sha256:` digest，再按 `docs/release.md` 运行备份/迁移/worker drain/发布/健康检查流程，随后完成线上读回。
+
+## 2026-11-13T23:30:34+08:00 - v0.14.8 候选构建审计静态门禁结果
+
+- `run_id`: `xray-v0148-online-candidate-20261113`.
+- `review_reuse`: 并行只读审查三个 Dockerfile、仓库根 `.dockerignore` 与项目 `ensure_image` 构建 helper。固定 digest base images；context 为仓库根目录；`.dockerignore` 排除 `.env`、secret、PEM/key、数据库、备份、runtime、artifacts 等输入。因为已存在的候选镜像是在本轮创建且运行时代码对照 `v0.14.8` tag exit `0`，本次按审查意见复用，不重复构建。AMD64 镜像冒烟由 ARM64 本机仿真执行，不声称原生 AMD64 主机验证。
+- `matrix_update`: 更新 `tests/acceptance/matrix.json` 的 `generated_at` 为执行机 `2026-11-13T23:30:34+08:00`；新增 local candidate 证据和 production preflight 附加证据。production 状态仍 `blocked`，新增 local candidate 状态 `passed`。
+- `final_static_commands`: `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（162 commits、约 9.29 MB，无泄漏）；`backend/.venv/bin/python scripts/vendor/skill-quick-validate.py skills/xray-manager`=0；`git diff --check`=0；matrix state readback 显示 `production-release=blocked`、`local-production-candidate-0.14.8-amd64=passed`。
+- `final_scope`: tracked 文档差异为三份目标审计文件；原有 13 个未跟踪 `artifacts/acceptance/*` 目录保留。当前 main 与 origin/main 相同；无 commit/push、源代码/版本/tag/Release、Docker 容器、数据库、AWS、Registry 或生产主机变更。
+- `status_and_limits`: 本地 Linux/amd64 容器候选检查和仓库静态门禁 passed；生产仍缺已确认 SSH 访问、域名/CIDR/TLS、Registry push 授权及 registry digests、服务器秘密与加密备份/恢复证据、目标 Docker/Compose readiness。线上发布/验收未运行，任务未完成。
+- `rollback_and_next_step`: 文档审计差异可独立 revert；候选镜像留在本地。恢复外部发布前需补齐上述非秘密配置/访问方式与授权准备读回，再按 `docs/release.md` 完成生产预检和发布；不要把本地 image ID 用作 registry digest。
+
+## 2026-11-13T23:38:01+08:00 - 线上候选工作区收尾校验
+
+- `run_id`: `xray-v0148-online-candidate-20261113`.
+- `commands_and_exit_codes`: 最终写入后的 `jq empty tests/acceptance/matrix.json`=0；`python3 scripts/validate-acceptance.py`=0；`bash scripts/check-boundary.sh`=0；`bash scripts/check-secrets.sh`=0（162 commits、约 9.29 MB、no leaks）；X-ray skill validator=0；`git diff --check`=0。矩阵读回 `production-release=blocked`、本地 amd64 候选=`passed`。
+- `final_status`: `git status --short --branch`=0；分支 `main`、HEAD `fcc872309126f7a9ee83b7b5d12b8c48bb52581e` 与 `origin/main` 对齐。tracked 差异只为 `docs/progress.md`、`docs/project-ledger.md`、`tests/acceptance/matrix.json`；13 个既有验收 artifact 目录保留。Docker 候选镜像 inspect=0；没有候选容器或新进程残留，既有其他项目容器均保留。
+- `status`: 本地 v0.14.8 Linux/amd64 镜像候选烟测及文档门禁 passed；Registry push、SSH、生产目标读取/写入、部署和线上验收均未运行且仍 blocked；工作整体未完成。
+- `rollback_ref`: 仅回退本次审计文档差异即可撤销文件变更；不要清理用户 artifacts、已有镜像或其他项目容器。
+
+## 2026-11-14T01:18:45+08:00 - 指定线上主机、Lightsail 限定与 DNS 接入（续跑补记）
+
+- `run_id`: `xray-v0148-online-deployment-20261114`.
+- `requested_outcome`: 按用户明确授权通过指定 PEM SSH 连接 `admin@3.0.199.9`，部署隔离 X-ray 线上版本、初始化唯一管理员并验收正常登录及在线升级；通过 DNS 项目新增独立 ai163.cc 子域名，禁止使用 1213.cc；任何新应用/验收服务器只允许 Lightsail，禁止 EC2。
+- `scope_and_exclusions`: 允许目标主机上的独立 /opt/xray、/etc/xray、/var/lib/xray 部署与专属 Docker 资源、TLS/DNS、当前 CI runner 路由和 focused 测试、审计文件；保留现有 Nginx、fuwu、MySQL、PostgreSQL、Redis、端口和全部 13 个既有未跟踪 acceptance 目录。禁止读取秘密内容、其他项目数据库/运行凭据、archive/Shop。此前 AWS 测试窗口已过期；本次主机部署授权不扩展为创建云服务器。
+- `reads_and_existing_actions`: 续跑前已读 AGENTS、项目约定、X-ray skill、部署/发布/预检/初始化实现与当前 diff。先前 SSH 连接 shiyi/ubuntu/debian 认证失败、admin 成功；PEM 原0644被SSH拒绝，已精确收紧0600，未读密钥；ED25519指纹与旧DNS部署记录匹配后写入本机known_hosts，后续StrictHostKeyChecking=yes。主机只读证据：Debian12 x86_64、Docker29.9.1、Compose5.6.0；sudo docker ps空、compose ls空；79G磁盘约57G可用，内存3.8Gi约2.6Gi可用；/www/server/nginx占80/888、fuwu loopback8088、已有PG/Redis/MySQL，443无listener，未发现X-ray。未停止或重启现有服务；一次只读命令落盘/tmp/xray-docker-info-readout，已精确unlink并确认不存在。
+- `ec2_audit_and_change`: runtime provider已有boto3 Lightsail create_instances，无EC2创建；历史EC2 Actions runner仍在旧CI/Release路由。本工作树将两workflow运行器改ubuntu-24.04以切断该路由，是实施选择，不等同用户指定CI品牌；未查询/修改/删除历史EC2。tests/deploy/test_runner_workflows.py先修改断言后RED 9failed/6passed，再改workflow GREEN15passed；首次缺test DSN启动exit1，补test-only设置后正确运行，未连DB。workflow未commit/push，远端尚无新运行证据。
+- `dns_unknown_write_and_readback`: 现有Chrome DNS页面选择ai163.cc，提交一次A *.xray=3.0.199.9 TTL600后Failed to fetch，未重复POST，结果曾unknown。后续本机已有DNS项目loopback8088 API GET /api/domains/ai163.cc/records=200、11records，精确过滤*.xray/admin.xray/sub.xray均无结果。下一步使用该已授权项目API只新增admin.xray和sub.xray精确A记录，逐次读回与权威DNS查询，保留现有记录。
+- `deployment_plan_and_risks`: 计划新域名admin.xray.ai163.cc与sub.xray.ai163.cc；管理端private bind/SSH tunnel，公网仅订阅入口；本地amd64候选已验证但仅imageID，必须真实pushRegistry取得manifestdigests。可评估目标机loopback隔离registry避免外部凭据；服务器秘密只在服务器侧生成并按权限注入，不回显；TLS使用已授权域名、不覆盖旧80站点；备份/迁移/worker-drain按release脚本。
+- `rollback_ref`: 源/流程改动可revert相干提交；DNS仅删除本轮精确新增记录；远端仅移除本项目部署/网关配置并恢复前一组镜像，保留数据/撤销/安全事件，不drop用户库、不prune、不删除旧服务。生产尚未部署，未有生产成功证据。
+- `time_logic`: 执行机Asia/Shanghai aware时钟；本轮仅部署流程不改业务时间；DNS TTL600秒；HTTP写不自动重试，先读回判断不确定结果；仍按[start,end)处理既有AWS窗口。
+- `status`: SSH主机就绪读回passed；DNS新记录尚未创建；生产发布/登录/升级not-run，整体未完成。
+
+## 2026-11-14T01:37:06+08:00 - DNS/TLS/私有 Registry 读回及生产配置缺口修复
+
+- run_id: xray-v0148-online-deployment-20261114.
+- DNS: 本机既有DNS项目API新增A admin.xray、sub.xray，均POST201并GET读回3.0.199.9/TTL600。旧wildcard写入未重试；其他记录保留。目标机getent=3.0.199.9；本机dig返回198.18代理合成地址，不作为权威DNS证据。
+- 远端: 新建隔离/opt/xray、/etc/xray、/var/lib/xray路径。443/8443/15000先确认空闲；官方registry3.1.2固定amd64摘要52b489ad8e6f40d1a676702e3ce398ec796ce38f08fbb786e1f324baa12d84b8，xray-registry仅127.0.0.1:15000、删除API禁用；首次curl reset exit56，后续inspect running且/v2/200确认为启动时序，未重建。
+- 镜像: 三类amd64镜像docker save/gzip经SSH流式传输/load exit0；逐类push完成。初始HEAD仅接受Docker v2但镜像为OCI而404，未重推；Accept含OCI后GET Docker-Content-Digest和digest pull/inspect exit0。backend=sha256:7943f0a2a0c752a50f505a5c8cc0d71d63c03c82ec60e108d987e3f28c0c75fc；frontend=sha256:eb5fd749e196dd2a052904941afb9e9b7ba725e220a0cc32c435ce8221fd4224；backup-tools=sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1。本Docker OCI store以manifest作imageId，同值并非以ID伪造digest；已有真实Registry证据，receipt远端/etc/xray/image-receipt.json。
+- TLS: 新增/www/server/panel/vhost/nginx/xray-acme.conf仅新两域名80 ACME，旧站点配置未改；nginx -t成功后reload exit0（本轮首次授权共享nginx重载）。固定certbot amd64 sha256:5dbea7ae94694954c98489a7d46430180d1b3adbfee278a893c07c95e138cb4a webroot签发exit0，SAN两新域名、到期2027-02-11；私钥只在服务器受限目录、不回显。续期timer待配置和测试。
+- 配置: 仅传git tracked deploy/installer/VERSION到/opt/xray，无.env/PEM/凭据/artifacts。服务器secrets生成signing、两主密钥、五DB密码，0400/0440、受限属主，无secret读回；cloud-credentials为空对象，明确无真实云凭据。TLS给gateway UID101只读。新空库snapshot sequence0/events空，无安全历史；迁移后正式export替换。age私钥服务器生成不回显；初始空库backup临时owner，迁移后改专用只读角色。管理loopback8443、CIDR172.16.0.0/12用于Docker桥接隧道源，不开放公网管理。
+- 测试: runner去重复参数后fresh12passed exit0。配置代理RED3failed，修工作目录后beat signing RED，再补配置；workerRED1failed/1passed；最终4focused passed、全部deploy53passed、Ruff/diff0。修worker/beat工作目录、beat signing/DB/依赖、CSRF8443、admin health头。SQL代理真实PG空库RED表不存在exit1，条件grant后1passed，deploy54passed、Ruff/diff0；均networknone，无生产库操作。
+- 未完: 严格200健康检查、admin/worker egress、worker drain重载entrypoint由代理修复；远端须重同步。应用尚未启动，线上登录/升级not-run。
+- 记忆: 按用户要求向ad_hoc note追加更正：目标.9已明确、SSH不证明Lightsail身份、hostedCI为实施选择、DNS项目和禁止1213.cc；无秘密。时间用Asia/Shanghai aware机器时钟，DNS600秒、POST不重试。
+- 回退: 精确新增DNS/ACME vhost/X-ray独立资源可撤；旧服务/DB及13artifact保留，应用回退前组digest、不恢复撤销安全历史。
+
+## 2026-11-14T01:51:39+08:00 - 首发数据库门禁与额外真实启动缺口
+
+- run_id: xray-v0148-online-deployment-20261114。用户重新激活目标并要求线上验收，仍遵守No EC2和指定目标部署边界。
+- 代理验证: health/egress RED7failed→7passed；所有deploy61passed/1skip（缺PG镜像）；worker-drain真实exec生产秘密RED1failed→1passed，deploy62passed/Ruff/sh-n/diff0；subscription独立signing挂载RED启动缺signing→8focusedpassed/deploy64passed，preflight/example/secret清单同步；tmpfs YAML未引号flow列表被拆项，真实Docker RED2failed→2passed/deploy66passed，修bootstrap/redis两处加引号。全部networknone/local，不是生产证据。
+- 远端配置: 生成独立订阅signing文件并加config路径；初次preflight TLS路径模板指向secrets而实际在tls，exit1后按元数据纠正，preflight0。第一次compose up报nosuid非绝对挂载路径exit1，无应用启动；上述tmpfs修复同步后PG/Redis Healthy exit0。未改已有主机服务。
+- 首发脚本: release.sh 0.14.8通过preflight、初始空库加密备份、迁移前bootstrap、完整迁移、迁移后roles refresh和migrate-check；备份目录/var/lib/xray/offsite-staging/xray-0.14.8-20261113T174526Z-1。随后admin/sub容器exit127/restarting/unhealthy，gateway未启动，release退出1；只读截取安全错误行确定gunicorn:not found，不输出秘密/完整异常。已精确compose stop admin-api subscription-api（0），保留PG/Redis/frontend、未清数据。
+- 根因及修复: builder venv脚本shebang=/build/backend/.venv/bin/python，但runtime=/app/backend/.venv；backend_venv_fix真实旧镜像RED2failed/exit127，将builder/workdir绝对路径统一/app/backend，重新构建linux/amd64 0.14.9-candidate imageID68fee780d843afb441f2ebc4e78cb0ef76be95e8c48a609b7bc7e884f3b791f7；命令启动2passed、deploy68passed/Ruff/diff0。尚未push此候选。
+- 恢复私钥: 最初服务器生成age身份后，经SSH捕获到本机专属0700恢复目录/0600文件，不回显，确认写入fsync后精确unlink远端恢复私钥。线上只保留public recipient，符合不把恢复私钥放控制机；本机材料不提交，不记密钥内容。
+- 管理隧道: 读共享端口登记后portctl check dcd1571c890e4144a825b9f403ddcaaf/9543=0，受管启动本仓库SSH隧道127.0.0.1:9543→远端loopback8443，PID/会话由portctl管理（session8451），不占未登记端口。尚无gateway，隧道不代表业务可用。
+- AWS只读: 当前default/root STS成功但账号摘要仍b1746f68f5be/4a0ef08458dd，不匹配此前授权94a91b85428b；未执行任何AWS写入、云实例创建/删除、费用请求。新目标激活不改变身份匹配要求。
+- 版本: 0.14.9代理更新16活动版本文件与Changelog/version索引，uv lock offline check0，安装器focused3passed/1skip，boundary/diff0；未commit/push/tag；版本索引线上CI字段pending。准备正确启动的v0.14.8源码+venv启动修复基线，再真实升级0.14.9；必须明确基线非原tag原样镜像。
+- 状态: 生产PG/Redis和迁移passed；API/登录/升级failed或not-run，不能当上线。回退仅精确X-ray应用，保留数据库安全事件、现有服务及原artifacts。此轮所有JS/shell组装SyntaxError均发生在执行前，无远端写；已改raw模板或chr(10)避免多层换行转义。
+
+## 2026-11-14T02:16:31+08:00 - 生产浏览器登录和网关、worker 权限验收
+
+- run_id: xray-v0148-online-deployment-20261114。
+- 基线镜像: git archive v0.14.8@ae5b3afe3f6d32c47a906ccf7c385701f9a53fe9加唯一Dockerfile venv启动修复，临时0700context /var/folders/4b/w4g_mbd10f30q4q0phg13fwm0000gn/T/xray-v0148-launchfix-3kusxm5t，248文件核对仅Dockerfile变更，hash6f94a04acf12d468afd1719887d877268f8309f46b96cd54eb5a59abb753aad3。build/gunicorn23.0.0/celery5.5.3/projectversion0.14.8/shebang/diff均0。远端push+manifest读回backend基线sha256:41df4388a7367c4be677da1839cdca22e5c62bafa7bd2eabb1176e0bf6506a8e。非原tag原样镜像。
+- 正式基线release: release.sh0.14.8以新digest完成preflight、备份xray-0.14.8-20261113T175423Z-1、迁移plan/nochange、roles刷新、check、API/frontend/gateway启动和worker/beat/outbox启动，exit0。随后真实HTTPS却reset；gateway运行不证明入口可用。
+- 网关根因: logs确定envsubstconf.d不可写，官方entrypoint仍启动空nginx。代理真实TLS RED进一步发现正则花括号需引号和subscription health头缺失；修tmpfsUID101/GID101/mode0750、quotedregex、health头、TLS严格200健康。非HTTP4daemon禁用错误继承的HTTP探针，不冒称任务健康；真实TLS允许200/拒绝403及43字符订阅路径测试；deploy75passed/Ruff/Compose/diff0。远端同步并force-recreate gateway exit0，实际HTTPS login200和证书校验通过。
+- worker权限: 线上日志明确permission denied identity_nodeautomationsetting。代理真实PG/production-role RED复现后补白名单表/序列与UPDATE(id)支持FOR UPDATE，禁止改管理员/云凭据/账号enabled/池quota及审计安全DELETE。真实任务reservation/status/bootstrap/dailyrestart/meter17/29bytes/publish/IP变更/failclosed均通过，deploy75passed0；远端roles同步后database-bootstrap0。无云provider写。
+- 管理员: 通过原有交互bootstrap_superadmin，PTY依次username/两次隐藏密码；exit0、createdtrue。随机密码只写macOS钥匙串service xray-production:admin.xray.ai163.cc/account xrayadmin；未输出、参数传递或持久文件。正常浏览器以钥匙串进程内取值登录：session200/authenticatedtrue、system200、reload保持true、stepup200；__Host-xray_session Secure/HttpOnly/SameSiteStrict。没有保存cookie/storageState；截图仅登录后的overview无秘密。
+- 浏览器与端口: 原9543隧道之外，通过portctl/API确认8443空闲无owner，登记X-ray Production SSH Tunnel 20261114/project5a5e4058d805424a93a8bbd24ea5b0de/本仓库后受管SSH转发8443；local-port-manager按原登记55669受管启动。Chrome隔离内存context hostresolver仅admin新域名到本机隧道，TLS正常校验。Playwright CLI默认chromium缺新版binary，改现有chrome后页面snapshot；秘密输入要求不用CLI参数，随后独立Playwright脚本内存取keychain填UI并等待升级，不读其他browser session。
+- 本地全回归: 新专用PG/Redis按Gate登记55435/56382受管up Healthy（xray-online-local-20261114），保留其他项目。全pytest598passed/2skip/1failed（旧regex source断言未适配引号，随后代理已更新）；最终全套待重跑。frontend88passed；最初pnpm11.25环境拒绝，corepack10.33直接filter typecheck+exec eslint均0。没有全局安装或升级依赖。
+- 额外日志修复: 在任何真实订阅token访问前，真实Gunicorn fixture RED证明subscription默认accesslog会记录bearer路径；改仅method/status/bytes，focused1passed0，无真实token进入日志。版本页面unknown根因镜像未COPY VERSION；新增容器RED FileNotFoundError，已加精确COPY VERSION并重建0.14.9生产候选，待GREEN。
+- TLS维护: 精确新增/opt/xray/ops/renew-certificates.sh和systemd xray-manager-certificate-renew.service/timer，只本项目certbot目录；sh-n/systemd-analyze verify/enable-now均0，03/15:20+随机30m、Persistent，dryrun及reload待验。
+- 当前: 密码登录/stepup/会话刷新生产passed；版本显示unknown待修；真实升级、订阅正向创建/撤回、AWS生命周期及费用仍未完成。0.14.9前端已build/push manifest91656ebec11f115fef9f75a7298cab69b46babadfbd50ec67da6369eee969182（0），backend新候选仍在构建。回退仅应用digest，不恢复已撤销历史。
+
+## 2026-11-14T02:23:25+08:00 - 线上云身份校验开关与升级续作
+
+- run_id: xray-v0148-online-deployment-20261114。用户截图admin.xray.ai163.cc:8443/cloud-accounts显示CLOUD_NETWORK_DISABLED；读取gate_settings/registry/system API与UI后确认生产默认关闭、可由已认证管理员数据库设置覆盖。按现有部署初始化授权通过正常登录/CSRF PATCH启用仅身份校验联网；不改变云写preview/step-up/账号边界，不创建任何云资源。截图无云凭据。
+- 范围: 线上system设置、生产0.14.9镜像/compose升级、日志脱敏和VERSION容器验证；新增准确错误提示focused测试由cloud_gate_message代理处理，默认fail-closed不变。读取backup/export/roles/release流程以准备真实备份；既有13组artifacts及其他项目保留。回退: system开关PATCH false、应用切回launchfix0.14.8digest，不回滚撤销/安全数据。
+- 当前: main脏树，未commit/tag/push。新生产backend build0，9容器测试passed/1frontend-image缺环境skip；backend image load0/push0，manifest27be1cf9dea6cb4cac9241717f1c4fbd79feaaabfb838c84140aa692354aa5a0；须待最终文案补丁重建后选最终digest。前端91656e候选。
+- 代理任务: runtime_role_audit followup收到空payload，未执行；新spawn cloud_gate_message处理focused文案。工具JS语法失败均执行前，无远端影响。
+
+## 2026-11-14T02:33:23+08:00 - Authorized online account and allocation-save priority
+
+- User explicitly approved the newly added online Lightsail account fingerprint 4a0ef08458dd, CloudAccount e478fe0b-8e7f-4316-8441-d4becc0c4ef1. Cloud writes limited to us-east-1, at most one small_3_0 Ubuntu24.04 test node, extra USD25 and overall USD1000, no EC2. Authorization starts with preceding user confirmation; conservative deadline 2026-11-14T03:59:00+08:00; no writes at or after deadline. Current API inventory: zero managed nodes and pools. No cloud writes yet.
+- User prioritized server-allocation save. Read editor/index/tests/resources/quota and observed save exists only after long region list in modal body. Delegated focused interaction-first fix; preserve quota API and unrelated work. Production browser geometry and save/reload acceptance required. Rollback only application digest/config; no database history restoration.
+- Latest local full regression: 605 passed, 2 Linux-only skips, exit0 in 161.76s, JUnit /tmp/xray-0149-final-tests.xml. Locked Ruff0.13.1 passes after one test import fix; newer local Ruff rule drift not adopted. Production backup role xray_backup with pg_read_all_data created without printing credential; pgpass0600; verified security snapshot exported at sequence0. Backend final image build/load/push0 digest198783a02e6d7ad8ceebf80772079780b7e2c6b6cf7d1abe404e2be878cdd8ff; manifest receipt pending.
+
+## 2026-11-14T02:42:55+08:00 - Allocation layout, final regression and pre-upgrade backup
+
+- User prioritized allocation save and then requested three per row plus release/online upgrade. NodePoolAllocationEditor.vue now has footer submit linked to form, cancel, saving protection and viewport-limited scrolling; focused RED2failed then frontend89passed, typecheck0/lint0/diff0. Desktop3/mid2/mobile1 layout and 1100px max-constrained modal added as reversible presentation change; final89passed/typecheck/lint0/build0. Real browser before screenshot confirms original save was below viewport; exact button locator needs whitespace-aware regex because AntD renders Chinese spacing.
+- Subscription origin Compose regression RED2failed then2passed; deploy79passed; complete backend/delivery607passed2Linux-onlyskips exit0, /tmp/xray-0149-subscription-base-regression.xml. No schema migrations. Static Django/drift/OpenAPI dual generation/types/Compose/Ruff0.13.1/ShellCheck/boundary/skill/historysecret/newlinessecret/diff all0. Matrix version was changed to0.14.9 and validation0 after agent stale0.14.8 report. Four whole-ledger historical Gitleaks false positives verified existing in HEAD, not new secrets; new lines scan0.
+- Backup: isolated read-only xray_backup DB role/password configured in process, no credential output. Real export sequence0; first tools backup failed due UID10001 mode600 snapshot unreadable by userns-root, precise root chown+0600 then backup0 at /var/lib/xray/offsite-staging/xray-0.14.8-20261113T183630Z-1. Encrypted dump+manifest copied securely to local0700 recovery directory/0600 files; age decrypt checksum+pg_restore-list verification0. Restored into network-none tmpfs PostgreSQL, explicitly MAINTENANCE, readback admin1/account1/nodes0; cleanup exact container0. Production database not restored or rolled back. This is independently held local encrypted backup, not immutable object storage.
+- Final images: backend198783a02e6d7ad8ceebf80772079780b7e2c6b6cf7d1abe404e2be878cdd8ff (build/load/push0), frontend layout fb908aba399a537afdb84d08746ccacb35e1697481138658e4f7fe09a21f2b60 (build/load0/push pending). Prior frontend892022 candidate excludes three-column layout and is not selected. Registry manifest GET/digest pull required before upgrade. Rollback backend launchfix41df4388a7367c4be677da1839cdca22e5c62bafa7bd2eabb1176e0bf6506a8e/frontendeb5fd749e196dd2a052904941afb9e9b7ba725e220a0cc32c435ce8221fd4224, preserving all security/cloud history.
+
+## 2026-11-14T02:50:27+08:00 - Online upgrade entry scope
+
+- User requested a real frontend online-upgrade entry. Read system UI/resources/admin endpoint/production release+preflight+backup/OpenAPI. No existing web upgrade API; delegated three independent TDD tasks: authenticated file queue API, frontend system upgrade card, privileged host runner/timer. API remains without Docker socket; root-owned local release catalog/validated immutable images, recent step-up, CSRF, UUID idempotency, one active job, backup/migrate/drain/check and sanitized results. Local release bundles are staged by operator, not arbitrary browser-supplied URL/commands. No database rollback or secret exposure. Rollback previous image config only, otherwise explicit failure.
+- Before this addition: release review found Nginx subscription error-log token paths; fixture RED2failed then2passed/full609passed2Linux-onlyskips/Ruff/boundary/diff0. Remote deploy sync included fixed subscription error_log, three-column frontend manifestfb908aba and backend198783a; GET manifests200/digestpull0/preflight0. Config previous snapshot /etc/xray/config.before-0.14.9.env; actual service upgrade not yet executed. Final source/feature additions require new backend/frontend builds.
+- Read-only Lightsail preflight using matching root profile: account fingerprint4a0ef08458dd, us-east-1 baseline0 instances, active small_3_0 USD12monthly/2GB, active ubuntu_24_04 blueprint. No AWS writes/cost yet. AWS CLI public catalog output stored only /tmp; no credentials. Browser form login via Enter returned200/authenticatedtrue; path sampled before async navigation /login, no failure assumed.
+
+## 2026-11-14T03:03:45+08:00 - Allocation production receipt and upgrade continuation
+
+- Reused xray-v0149-online run; read current AGENTS/conventions/skill, ledger tail, current diff, upgrade API/runner/UI/tests and release workflow before continuation. Scope is frontend online-upgrade entry and working authenticated queue/host executor, production deployment and browser verification. Existing no-EC2, USD25/one Lightsail/03:59 AWS boundary retained; no new AWS write yet. Rollback to previous immutable images/config, preserving database/security/cloud history.
+- Production release.sh 0.14.9 completed exit0 using backend198783a02e6d7ad8ceebf80772079780b7e2c6b6cf7d1abe404e2be878cdd8ff/frontendfb908aba399a537afdb84d08746ccacb35e1697481138658e4f7fe09a21f2b60; API system readback200/version0.14.9. These images do not contain the later online-upgrade feature.
+- Real Chrome normal password login passed, desktop allocation grid3 and save within viewport true; saved us-east-1 quota1 with allow_create=false (no cloud creation), reload API200/one allocation/quota1/used0 confirmed; mobile390px grid1 and save visible true. Browser script exit0; screenshots output/playwright/production-allocation-three-columns.png and production-allocation-mobile.png. Local dedicated E2E8passed and cleanup exit0; historical console warnings retained, not claimed clean.
+- Online-upgrade frontend implements candidate selection, stable UUID retry, sanitized phase/result, 3s reconnect and matching-job polling; API and root executor delegated independently with read-only integration reviewer. New final frontend image build and focused runner/schema/frontend tests started. Request TTL90min with >= expiry invalid; aware timestamps required, no browser arbitrary commands or image URLs. Source main remains uncommitted; prior artifacts preserved.
+
+## 2026-11-14T03:10:01+08:00 - Upgrade integration corrections and verification
+
+- Backend TDD25passed and full backend490passed exit0; frontend97passed/typecheck-direct0/lint0, new amd64 images built0. root runner isolated tests initially16passed, then real actor_id=1 fixture plus publication lock reproducer12failed/5passed (expected RED): UUID assumption rejected real integer admin IDs and reading link2 publication raced API. Runner now validates positive integer actor, reads under shared requests/queue.lock, releases lock before long upgrade; focused23passed exit0.
+- Reviewer also reproduced expired valid request producing empty result version and poisoning API availability. Runner now retains structurally validated request before validating aware TTL, keeping version on expiry/future skew failure; focused expiry assertions pass. No cloud writes.
+- Compose mount TDD1failed1passed then2passed (network/mount8passed), root catalog/results mount read-only plus requests write-only authority; create_host_path false; releases/history root0700. A concurrent deploy run observed12failures in runner during its RED phase, superseded only by subsequent stable full run (in progress). Static Ruff0.13.1/boundary/matrix/diff0. Typecheck wrapper initially exited1 because nested pnpm resolved11.25; direct locked pnpm app vue-tsc exit0 and Docker build typecheck0, no lock/global tool mutation.
+- Production source tar of44 explicit deploy/installer/VERSION files installed under /opt/xray and queue dirs created with documented ownership. No service switch yet. Images saved to SSH docker-load in progress. Removed only run-owned /tmp/xray-0149-e2e-auth/admin.json after E2E exit0; source did not contain cookies. Source/manifest/catalog deployment remains trusted operator action under existing production authorization; backup+previous digest retained.

@@ -54,7 +54,7 @@ describe('node pool region allocation', () => {
       expect(SUPPORTED_REGIONS.every((region) => dialog.text().includes(region))).toBe(true);
       expect(dialog.text()).not.toContain('名称');
       expect((dialog.get('[aria-label="允许创建服务器"]').element as HTMLButtonElement).getAttribute('aria-checked')).toBe('false');
-      await dialog.get('form').trigger('submit');
+      await dialog.get('.ant-modal-footer button.ant-btn-primary').trigger('click');
       await vi.waitFor(() => expect(updatePool).toHaveBeenCalledTimes(1));
       expect(updatePool).toHaveBeenCalledWith('pool-1', {
         allocations: [
@@ -100,7 +100,7 @@ describe('node pool region allocation', () => {
       );
       await dialog.get('[aria-label="ap-southeast-1额度"]').setValue('3');
       await dialog.get('[aria-label="允许创建服务器"]').trigger('click');
-      await dialog.get('form').trigger('submit');
+      await dialog.get('.ant-modal-footer button.ant-btn-primary').trigger('click');
       await vi.waitFor(() => expect(createPool).toHaveBeenCalledTimes(1));
       expect(createPool).toHaveBeenCalledWith({
         allocations: [
@@ -112,6 +112,51 @@ describe('node pool region allocation', () => {
         allow_create: false,
       });
       expect(updatePool).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps the draft after a failed save and reloads saved values after retry', async () => {
+    const initialPool: NodePool = {
+      id: 'pool-1', name: 'IP', region: 'us-east-1', quota: 1,
+      allow_create: false, used: 0, available: 1,
+      regions: ['us-east-1'],
+      allocations: [{ region: 'us-east-1', quota: 1, used: 0, available: 1 }],
+    };
+    const savedPool: NodePool = {
+      ...initialPool, quota: 2, available: 2,
+      allocations: [{ region: 'us-east-1', quota: 2, used: 0, available: 2 }],
+    };
+    const pools = vi.spyOn(resourcesApi, 'nodePools')
+      .mockResolvedValueOnce({ items: [initialPool], total: 1, page: 1, page_size: 20 })
+      .mockResolvedValue({ items: [savedPool], total: 1, page: 1, page_size: 20 });
+    const updatePool = vi.spyOn(resourcesApi, 'updateNodePool')
+      .mockRejectedValueOnce(new Error('暂时无法保存'))
+      .mockResolvedValue(savedPool);
+    const wrapper = mount(NodePools, {
+      attachTo: document.body,
+      global: { stubs: { transition: false, 'transition-group': false } },
+    });
+
+    try {
+      await flushPromises();
+      await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
+      await flushPromises();
+      let dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
+      await dialog.get('[aria-label="us-east-1额度"]').setValue('2');
+      await dialog.get('.ant-modal-footer button.ant-btn-primary').trigger('click');
+      await vi.waitFor(() => expect(dialog.text()).toContain('暂时无法保存'));
+      expect((dialog.get('[aria-label="us-east-1额度"]').element as HTMLInputElement).value).toBe('2');
+      expect(pools).toHaveBeenCalledTimes(1);
+      await dialog.get('.ant-modal-footer button.ant-btn-primary').trigger('click');
+      await vi.waitFor(() => expect(pools).toHaveBeenCalledTimes(2));
+      expect(updatePool).toHaveBeenCalledTimes(2);
+      await wrapper.findAll('button').find((item) => item.text() === '地区分配')!.trigger('click');
+      await flushPromises();
+      dialog = new DOMWrapper(document.querySelector('[role="dialog"]')!);
+      expect(dialog.text()).not.toContain('暂时无法保存');
+      expect((dialog.get('[aria-label="us-east-1额度"]').element as HTMLInputElement).value).toBe('2');
     } finally {
       wrapper.unmount();
     }

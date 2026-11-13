@@ -11,12 +11,6 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[2]
-TRUSTED_LABELS = ["self-hosted", "Linux", "X64", "xray-trusted-2x4"]
-CI_RUNNER_EXPRESSION = (
-    "${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && "
-    'fromJSON(\'["self-hosted","Linux","X64","xray-trusted-2x4"]\') || '
-    "'ubuntu-24.04' }}"
-)
 RELEASE_JOB_EXPRESSION = (
     "${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}"
 )
@@ -43,24 +37,8 @@ def _render(value: str, **context) -> str:
     )
 
 
-@pytest.mark.parametrize(
-    ("event", "ref", "expected"),
-    [
-        ("push", "refs/heads/main", TRUSTED_LABELS),
-        ("push", "refs/heads/codex/xray-manager", "ubuntu-24.04"),
-        ("pull_request", "refs/pull/12/merge", "ubuntu-24.04"),
-        ("pull_request", "refs/heads/main", "ubuntu-24.04"),
-    ],
-)
-def test_ci_routes_only_main_push_to_the_trusted_runner(event, ref, expected):
-    actual = " ".join(_job("ci.yml", "verify")["runs-on"].split())
-    assert actual == CI_RUNNER_EXPRESSION
-    routed_runner = (
-        TRUSTED_LABELS
-        if event == "push" and ref == "refs/heads/main"
-        else "ubuntu-24.04"
-    )
-    assert routed_runner == expected
+def test_ci_uses_github_hosted_runner_for_all_events():
+    assert _job("ci.yml", "verify")["runs-on"] == "ubuntu-24.04"
 
 
 @pytest.mark.parametrize(
@@ -80,7 +58,7 @@ def test_release_job_accepts_only_dispatch_from_main(event, ref, allowed):
     job = _job("release.yml", "release")
     assert set(document["on"]) == {"workflow_dispatch"}
     assert document["on"]["workflow_dispatch"]["inputs"]["tag"]["required"] == "true"
-    assert job["runs-on"] == TRUSTED_LABELS
+    assert job["runs-on"] == "ubuntu-24.04"
     assert " ".join(job.get("if", "").split()) == RELEASE_JOB_EXPRESSION
     eligible = event == "workflow_dispatch" and ref == "refs/heads/main"
     assert eligible is allowed

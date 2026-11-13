@@ -3,7 +3,7 @@ FROM ${PYTHON_IMAGE} AS builder
 
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
 RUN pip install --no-cache-dir uv==0.11.28
-WORKDIR /build/backend
+WORKDIR /app/backend
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
@@ -14,9 +14,10 @@ RUN apt-get update \
     && groupadd --gid 10001 xray \
     && useradd --uid 10001 --gid 10001 --home-dir /app --create-home --shell /usr/sbin/nologin xray
 WORKDIR /app
-COPY --from=builder /build/backend/.venv /app/backend/.venv
+COPY --from=builder /app/backend/.venv /app/backend/.venv
 COPY backend/ /app/backend/
 COPY installer/ /app/installer/
+COPY VERSION /app/VERSION
 COPY deploy/scripts/container-entrypoint.sh /usr/local/bin/xray-entrypoint
 COPY deploy/scripts/run-outbox.sh /usr/local/bin/xray-outbox
 COPY deploy/scripts/run-security-outbox.sh /usr/local/bin/xray-security-outbox

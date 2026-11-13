@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { reactive, ref, useId, watch } from 'vue';
 import { Alert, Button, Form, InputNumber, Modal, Space, Switch } from 'ant-design-vue';
 
 import { regionLabel, resourcesApi, SUPPORTED_REGIONS, type NodePool } from '@/api/resources';
@@ -11,6 +11,7 @@ const emit = defineEmits<{
 }>();
 
 const FormItem = Form.Item;
+const formId = useId();
 interface AllocationDraft {
   region: string;
   quota: number;
@@ -87,8 +88,19 @@ async function save() {
 </script>
 
 <template>
-  <Modal :open="props.open" title="地区分配" :footer="null" @cancel="emit('update:open', false)">
-    <Form :model="form" layout="vertical" @finish="save">
+  <Modal
+    :open="props.open"
+    title="地区分配"
+    :width="1100"
+    :style="{ maxWidth: 'calc(100vw - 32px)' }"
+    centered
+    :body-style="{ maxHeight: 'calc(100dvh - 220px)', overflowY: 'auto' }"
+    :closable="!saving"
+    :mask-closable="!saving"
+    :keyboard="!saving"
+    @cancel="emit('update:open', false)"
+  >
+    <Form :id="formId" :model="form" layout="vertical" @finish="save">
       <Alert v-if="error" class="mb-4" :message="error" type="error" show-icon />
       <FormItem label="地区额度" required>
         <a
@@ -97,9 +109,9 @@ async function save() {
           target="_blank"
           rel="noreferrer"
         >AWS Lightsail 支持地区</a>
-        <div class="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-x-3 gap-y-2">
-          <template v-for="allocation in form.allocations" :key="allocation.region">
-            <span>{{ regionLabel(allocation.region) }}{{ allocation.historical ? '（历史地区）' : '' }}</span>
+        <div class="allocation-grid">
+          <div v-for="allocation in form.allocations" :key="allocation.region" class="allocation-item">
+            <span class="min-w-0">{{ regionLabel(allocation.region) }}{{ allocation.historical ? '（历史地区）' : '' }}</span>
             <InputNumber
               v-model:value="allocation.quota"
               :min="0"
@@ -107,7 +119,7 @@ async function save() {
               class="w-full"
               :aria-label="`${allocation.region}额度`"
             />
-          </template>
+          </div>
         </div>
       </FormItem>
       <FormItem label="允许创建服务器">
@@ -128,9 +140,39 @@ async function save() {
         show-icon
         message="关闭后，服务端会拒绝新的服务器创建；现有服务器不受影响。"
       />
-      <Button type="primary" html-type="submit" :loading="saving" block>
+    </Form>
+    <template #footer>
+      <Button :disabled="saving" @click="emit('update:open', false)">取消</Button>
+      <Button type="primary" html-type="submit" :form="formId" :loading="saving">
         {{ saving ? '保存中' : '保存' }}
       </Button>
-    </Form>
+    </template>
   </Modal>
 </template>
+
+<style scoped>
+.allocation-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+
+.allocation-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .allocation-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .allocation-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+</style>

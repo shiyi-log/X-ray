@@ -29,5 +29,6 @@ urlpatterns = [
     path("api/v1/audit-events/", include("apps.audit.urls")),
     path("api/v1/overview", overview, name="overview"),
     path("api/v1/system", system, name="system"),
+    path("api/v1/system/upgrade/", include("apps.identity.upgrade_urls")),
     path("", include("apps.subscriptions.urls")),
 ]

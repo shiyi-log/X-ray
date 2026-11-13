@@ -732,6 +732,18 @@ def inject_contract(result: dict, generator, request, public) -> dict:
                 },
             },
             "GenericObject": {"type": "object", "additionalProperties": True},
+            "SystemUpgradeRequest": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["version", "confirmation"],
+                "properties": {
+                    "version": {
+                        "type": "string",
+                        "pattern": r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$",
+                    },
+                    "confirmation": {"type": "string", "enum": ["确认在线升级"]},
+                },
+            },
             "PaginatedCloudAccountList": _page_schema("CloudAccount"),
             "PaginatedNodePoolList": _page_schema("NodePool"),
             "PaginatedManagedNodeList": _page_schema("ManagedNode"),
@@ -1094,6 +1106,16 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             },
         }
     )
+    paths["/api/v1/system/upgrade/"] = {
+        "get": _operation("system_upgrade_retrieve", response="GenericObject"),
+        "post": _operation(
+            "system_upgrade_create",
+            request="SystemUpgradeRequest",
+            response="GenericObject",
+            status="202",
+            extra_responses={"403": _response("ApiError", "Fresh step-up required")},
+        ),
+    }
     idempotency = {
         "name": "Idempotency-Key",
         "in": "header",
@@ -1107,6 +1129,7 @@ def inject_contract(result: dict, generator, request, public) -> dict:
             or path == "/api/v1/nodes/"
             or "/api/v1/nodes/{node_id}/refresh/" in path
             or "/api/v1/nodes/{node_id}/actions/" in path
+            or path == "/api/v1/system/upgrade/"
         ):
             for method, operation in methods.items():
                 if method in {"post", "patch"}:

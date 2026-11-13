@@ -11,6 +11,8 @@ step-up，未绑定时重新验证密码，已绑定时验证密码与 TOTP。�
 
 ## 当前状态
 
+2026-11-14：0.14.9 候选修复生产首次初始化、正常登录、定时调度和在线升级配置；线上部署及完整验收正在进行，以项目台账和验收矩阵的最终读回为准。AWS 新节点仅允许 Lightsail，禁止 EC2。
+
 2026-11-12：0.14.8 增加 Lightsail/SWAS 全分页只读库存核对和每日云账号审计，差异只记审计、不自动删云资源；本地 19 项交付门禁通过。真实 AWS profile 与 CloudAccount 仍未匹配授权账号，AWS 生命周期、撤回正向控制和逐资源费用保持 blocked/not-run。
 
 2026-11-11：`0.14.7` 增加流量采集失败的有界退避和每节点数据库租约，避免多 worker 重复采集，并补齐租约过期恢复与旧 worker fencing 回归；池缩容及每日动态 IP/健康/订阅 handler 有 Fake provider 集成测试。实际 AWS 验收仍需匹配 profile、正常 X-ray 登录/step-up/CloudAccount 和资源级费用读回，当前保持 blocked/not-run。

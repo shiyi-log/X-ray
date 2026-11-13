@@ -16,7 +16,8 @@ x-backend: &backend
     XRAY_DATABASE_NAME: ${XRAY_DATABASE_NAME:-xray}
     XRAY_REDIS_URL: redis://redis:6379/0
     XRAY_ALLOWED_HOSTS: ${XRAY_ADMIN_HOST}
-    XRAY_CSRF_TRUSTED_ORIGINS: https://${XRAY_ADMIN_HOST}
+    XRAY_PUBLIC_SUBSCRIPTION_BASE_URL: https://${XRAY_SUBSCRIPTION_HOST}
+    XRAY_CSRF_TRUSTED_ORIGINS: https://${XRAY_ADMIN_HOST},https://${XRAY_ADMIN_HOST}:8443
     XRAY_SESSION_COOKIE_SECURE: "true"
     XRAY_CSRF_COOKIE_SECURE: "true"
 
@@ -60,7 +61,7 @@ services:
     volumes:
       - ../postgres/roles.sql:/opt/xray/roles.sql:ro
       - ../scripts/bootstrap-roles.sh:/opt/xray/bootstrap-roles.sh:ro
-    tmpfs: [/tmp:rw,noexec,nosuid,size=16m]
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=16m"]
     entrypoint: [/opt/xray/bootstrap-roles.sh]
     networks: [data]
     depends_on:
@@ -74,7 +75,7 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     command: [redis-server, --save, "", --appendonly, "no"]
-    tmpfs: [/data:rw,noexec,nosuid,size=64m]
+    tmpfs: ["/data:rw,noexec,nosuid,size=64m"]
     networks: [queue]
     healthcheck:
       test: [CMD, redis-cli, ping]
@@ -90,8 +91,30 @@ services:
       DJANGO_SETTINGS_MODULE: config.settings.production
       XRAY_DATABASE_USER: xray_admin_api
       XRAY_DATABASE_PASSWORD_FILE: /run/secrets/admin_db_password
+      XRAY_UPGRADE_ROOT: /var/lib/xray/upgrade
     secrets: [django_secret_key, control_master_key, subscription_master_key, admin_db_password]
-    networks: [control, data, queue]
+    volumes:
+      # Catalog/results are host-owned; keep history/releases root-only (0700).
+      - type: bind
+        source: /var/lib/xray/upgrade
+        target: /var/lib/xray/upgrade
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /var/lib/xray/upgrade/requests
+        target: /var/lib/xray/upgrade/requests
+        bind: {create_host_path: false}
+    networks: [control, data, queue, egress]
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          curl --fail --silent --output /dev/null --write-out '%{http_code}'
+          --header 'Host: ${XRAY_ADMIN_HOST}' --header 'X-Forwarded-Proto: https'
+          http://127.0.0.1:8000/health/live | grep -qx 200
+      interval: 30s
+      timeout: 3s
+      retries: 3
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -113,7 +136,7 @@ services:
 
   subscription-api:
     <<: *backend
-    command: [gunicorn, --chdir, /app/backend, --bind, "0.0.0.0:8000", --workers, "2", --access-logfile, "-", config.wsgi:application]
+    command: [gunicorn, --chdir, /app/backend, --bind, "0.0.0.0:8000", --workers, "2", --access-logfile, "-", --access-logformat, "%(m)s %(s)s %(b)s", config.wsgi:application]
     environment:
       <<: *backend_environment
       DJANGO_SETTINGS_MODULE: config.settings.subscription
@@ -121,40 +144,64 @@ services:
       XRAY_CSRF_TRUSTED_ORIGINS: ""
       XRAY_DATABASE_USER: xray_subscription_reader
       XRAY_DATABASE_PASSWORD_FILE: /run/secrets/subscription_db_password
-    secrets: [subscription_master_key, subscription_db_password]
+    secrets:
+      - source: subscription_django_secret_key
+        target: django_secret_key
+      - subscription_master_key
+      - subscription_db_password
     networks: [public-app, data]
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          curl --fail --silent --output /dev/null --write-out '%{http_code}'
+          --header 'Host: ${XRAY_SUBSCRIPTION_HOST}' --header 'X-Forwarded-Proto: https'
+          http://127.0.0.1:8000/health/live | grep -qx 200
+      interval: 30s
+      timeout: 3s
+      retries: 3
     depends_on:
       postgres: {condition: service_healthy}
 
   worker:
     <<: *backend
+    working_dir: /app/backend
     command: [celery, -A, config.celery:app, worker, --loglevel=INFO, --concurrency=2]
+    # This daemon has no HTTP listener; verify task readiness separately.
+    healthcheck: {disable: true}
     environment:
       <<: *backend_environment
       DJANGO_SETTINGS_MODULE: config.settings.production
       XRAY_DATABASE_USER: xray_worker
       XRAY_DATABASE_PASSWORD_FILE: /run/secrets/worker_db_password
     secrets: [django_secret_key, control_master_key, subscription_master_key, worker_db_password, cloud_credentials]
-    networks: [data, queue]
+    networks: [data, queue, egress]
     depends_on:
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
 
   beat:
     <<: *backend
+    working_dir: /app/backend
     command: [celery, -A, config.celery:app, beat, --loglevel=INFO, --schedule=/tmp/celerybeat-schedule]
+    healthcheck: {disable: true}
     environment:
       <<: *backend_environment
       DJANGO_SETTINGS_MODULE: config.settings.production
+      XRAY_DATABASE_USER: xray_worker
+      XRAY_DATABASE_PASSWORD_FILE: /run/secrets/worker_db_password
+    secrets: [django_secret_key, worker_db_password]
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m
-    networks: [queue]
+    networks: [data, queue]
     depends_on:
+      postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
 
   outbox-dispatcher:
     <<: *backend
     command: [xray-outbox]
+    healthcheck: {disable: true}
     environment:
       <<: *backend_environment
       DJANGO_SETTINGS_MODULE: config.settings.production
@@ -169,6 +216,7 @@ services:
   security-ledger-dispatcher:
     <<: *backend
     command: [xray-security-outbox]
+    healthcheck: {disable: true}
     environment:
       <<: *backend_environment
       DJANGO_SETTINGS_MODULE: config.settings.production
@@ -218,7 +266,18 @@ services:
       - /tmp:rw,noexec,nosuid,size=32m
       - /var/cache/nginx:rw,noexec,nosuid,size=16m
       - /var/run:rw,noexec,nosuid,size=4m
-      - /etc/nginx/conf.d:rw,noexec,nosuid,size=4m
+      - /etc/nginx/conf.d:rw,noexec,nosuid,size=4m,uid=101,gid=101,mode=0750
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          curl --fail --silent --output /dev/null --write-out '%{http_code}'
+          --cacert /run/secrets/subscription_tls_cert --noproxy '*'
+          --resolve ${XRAY_SUBSCRIPTION_HOST}:9443:127.0.0.1
+          https://${XRAY_SUBSCRIPTION_HOST}:9443/health/live | grep -qx 200
+      interval: 30s
+      timeout: 3s
+      retries: 3
     networks: [edge, control, public-app]
     depends_on:
       admin-api: {condition: service_healthy}
@@ -227,6 +286,7 @@ services:
 
 networks:
   edge: {}
+  egress: {}
   control: {internal: true}
   public-app: {internal: true}
   data: {internal: true}
@@ -237,6 +297,7 @@ volumes:
 
 secrets:
   django_secret_key: {file: "${XRAY_DJANGO_SECRET_KEY_FILE}"}
+  subscription_django_secret_key: {file: "${XRAY_SUBSCRIPTION_DJANGO_SECRET_KEY_FILE}"}
   control_master_key: {file: "${XRAY_CONTROL_MASTER_KEY_FILE}"}
   subscription_master_key: {file: "${XRAY_SUBSCRIPTION_MASTER_KEY_FILE}"}
   owner_db_password: {file: "${XRAY_OWNER_DB_PASSWORD_FILE}"}

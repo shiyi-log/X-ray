@@ -1,0 +1,6 @@
+gate	exit_code	started_at	finished_at	log
+runtime	0	2026-11-12T14:37:19Z	2026-11-12T14:37:20Z	artifacts/acceptance/0.14.8/node-inventory-20261112-gates/runtime.log
+compose-config	0	2026-11-12T14:37:20Z	2026-11-12T14:52:45Z	artifacts/acceptance/0.14.8/node-inventory-20261112-gates/compose-config.log
+django-check	0	2026-11-12T14:52:45Z	2026-11-12T14:52:46Z	artifacts/acceptance/0.14.8/node-inventory-20261112-gates/django-check.log
+migration-drift	0	2026-11-12T14:52:46Z	2026-11-12T14:52:46Z	artifacts/acceptance/0.14.8/node-inventory-20261112-gates/migration-drift.log
+ruff	1	2026-11-12T14:52:46Z	2026-11-12T14:52:46Z	artifacts/acceptance/0.14.8/node-inventory-20261112-gates/ruff.log
