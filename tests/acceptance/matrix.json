@@ -1,6 +1,6 @@
 {
-  "version": "0.14.9",
-  "generated_at": "2026-11-14T03:28:54+08:00",
+  "version": "0.14.10",
+  "generated_at": "2026-11-14T03:57:44.408003+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -3553,6 +3553,41 @@
         "amount": 0,
         "currency": "USD"
       },
+      "residual_resources": []
+    },
+    {
+      "id": "aws-lightsail-production-lifecycle-20261114",
+      "environment": "real_cloud",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "real_cloud_operation",
+          "authorization_ref": "user-approved fresh online account4a0ef08458dd one Lightsail90min until2026-11-14T03:59+08 extraUSD25 totalUSD1000",
+          "provider_request_id": "0bc380cf-7836-4bdc-a67e-7524400df638",
+          "resource_ref": "redacted-single-us-east-1-lightsail-test-node",
+          "region": "us-east-1",
+          "operation_id": "3f85154a-dc57-4f48-97dc-4bad2311af31",
+          "timestamp": "2026-11-14T03:51:16.721350+08:00",
+          "probe_results": [
+            "cloud absence confirmed by operation and separate matched CLI inventory",
+            "profile revocation positive_controls1/rejected_old_credentials1 plus A410/BGoogle200",
+            "final quota0/used0/NodeResourceRELEASED/subscriptioncounts0/noinflight/automationoff",
+            "resource CE cost query no groups; costunknown"
+          ]
+        },
+        "Normal production account identity fingerprint4a0ef08458dd; authorized one us-east-1 small_3_0 ubuntu_24_04; create/bootstrap READY HEALTHY running generations1=1",
+        "Daily stop5fdc669a/start6c43b2fb SUCCEEDED; IPv4changed3.238.189.149->44.222.250.61; Shadowrocket addresses match",
+        "Four supported formats200; TLS-verified proxied Google200; response transport partial, not full download",
+        "A force revokee6361be2 SUCCEEDED/VERIFIED_REVOKED generation2, positive_controls1/rejected_old_credentials1; A GETHEAD410, B positive Google200",
+        "B token revoke200/GETHEAD410; refresh retry then cancelCANCELLED to remove pending publication reconciliation; pool quota0 automatic delete3f85154a SUCCEEDED/CONFIRMED_ABSENT",
+        "CLI authorized identityus-east-1 inventory0; nodeDELETED/noquota, NodeResourceRELEASED19:51:16Z,poolused0,both subscriptions counts0",
+        "All four automation switches disabled,allow_createfalse,no nonterminaloperations; finaltraffic101608bytes"
+      ],
+      "commit": "5f8db9fdf23346c51d722b9dc68fafb9860cb79a",
+      "provider": "aws-lightsail",
+      "region": "us-east-1",
+      "cost": null,
+      "cost_status": "unknown:CE resource query returned no groups, not zero",
       "residual_resources": []
     }
   ]

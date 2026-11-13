@@ -337,7 +337,13 @@ class Publisher:
                         SecurityBarrier.assert_open(purpose="public_read")
                         cls._publish_locked(subscription)
                     published += 1
-                except Exception:
+                except Exception as exc:
+                    if (
+                        isinstance(exc, DomainError)
+                        and exc.code == "SUBSCRIPTION_TOKEN_INACTIVE"
+                        and cls._has_confirmed_current_token_revocation(subscription)
+                    ):
+                        continue
                     failed += 1
             return {"published": published, "failed": failed}
 

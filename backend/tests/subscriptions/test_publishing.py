@@ -196,3 +196,80 @@ def test_address_refresh_keeps_stale_ip_unusable_if_new_revision_cannot_be_publi
     assert result == {"published": 0, "failed": 1}
     assert old_revision.usable is False
     assert subscription.current_revision_id == old_revision.pk
+
+
+@pytest.mark.django_db
+def test_address_refresh_skips_confirmed_revoked_token_without_reviving_payload(
+    publishable_subscription,
+):
+    from apps.subscriptions.publishing import Publisher
+    from apps.subscriptions.tokens import TokenGone, TokenService
+
+    issued, subscription, node, _credential = publishable_subscription
+    old_revision = Publisher.publish(subscription.pk)
+    token = subscription.token_history.get(token_epoch=subscription.token_epoch)
+    TokenService.revoke_token(subscription.pk, token.pk)
+    node.addresses = [{"value": "198.51.100.77", "family": 4, "kind": "dynamic"}]
+    node.save(update_fields=["addresses", "updated_at"])
+
+    result = Publisher.refresh_node_address(node.pk)
+
+    old_revision.refresh_from_db()
+    subscription.refresh_from_db()
+    assert result == {"published": 0, "failed": 0}
+    assert old_revision.usable is False
+    assert subscription.current_revision_id == old_revision.pk
+    assert subscription.revisions.count() == 1
+    with pytest.raises(TokenGone):
+        TokenService.resolve(issued.raw_token)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "missing_evidence",
+    ["tombstone", "source_event_id", "source_sequence", "revoked_at", "active_token"],
+)
+def test_address_refresh_keeps_unconfirmed_token_revocation_failed_closed(
+    publishable_subscription,
+    missing_evidence,
+):
+    from datetime import timedelta
+
+    from apps.subscriptions.models import RevocationTombstone, SubscriptionToken
+    from apps.subscriptions.publishing import Publisher
+    from apps.subscriptions.tokens import TokenService
+
+    _issued, subscription, node, _credential = publishable_subscription
+    old_revision = Publisher.publish(subscription.pk)
+    token = subscription.token_history.get(token_epoch=subscription.token_epoch)
+    TokenService.revoke_token(subscription.pk, token.pk)
+    token.refresh_from_db()
+    if missing_evidence == "tombstone":
+        # Corrupt only this isolated fixture; real tombstones are permanent.
+        RevocationTombstone.objects.filter(token_digest=token.token_digest).delete()
+    elif missing_evidence == "source_event_id":
+        RevocationTombstone.objects.filter(token_digest=token.token_digest).update(
+            source_event_id=""
+        )
+    elif missing_evidence == "source_sequence":
+        RevocationTombstone.objects.filter(token_digest=token.token_digest).update(
+            source_sequence=None
+        )
+    elif missing_evidence == "revoked_at":
+        SubscriptionToken.objects.filter(pk=token.pk).update(
+            revoked_at=token.revoked_at + timedelta(seconds=1)
+        )
+    else:
+        SubscriptionToken.objects.create(
+            subscription=subscription,
+            token_digest="f" * 64,
+            token_epoch=subscription.token_epoch + 1,
+            status="ACTIVE",
+        )
+
+    result = Publisher.refresh_node_address(node.pk)
+
+    old_revision.refresh_from_db()
+    assert result == {"published": 0, "failed": 1}
+    assert old_revision.usable is False
+    assert subscription.revisions.count() == 1

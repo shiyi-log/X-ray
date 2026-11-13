@@ -372,3 +372,5 @@ P6 的最终统一门禁在源代码候选 `924cd3d9741bc66bfee2cd72ec89752f3d0e
 | 2026-11-14T03:28:54+08:00 | 0.14.9 线上分配与前端在线升级 | main@50c85c3；完整本地652passed8skip并补跑23passed0skip；前端97passed；真实Chrome登录/stepup/提交202/升级SUCCEEDED/刷新会话；release0、gateway健康、systemdverify0 | passed：生产分配保存、三列与在线升级同版本重部署；in-progress：GitHub修订门禁/标签资产与完整Lightsail生命周期；仅两项一次性Linux本地门禁未运行 | 前组不可变digest/config；不恢复历史数据库或撤销状态 |
 
 | 2026-11-14 | v0.14.9 收尾：分配保存权限与 CI Compose2 | 已有地区保存、最小权限和角色门禁 | main@50c85c3 + scoped follow-up | 六 deploy suites、真实 database-bootstrap、正常API更新 | 35passed0skip exit0；生产bootstrap0/PATCH200 | allocation仅DELETE，保护历史仍不可删除；在线升级真实UI任务SUCCEEDED/COMPLETE | passed focused/production allocation and same-version upgrade; release/cloud lifecycle in progress | v0.14.8 or prior config/digests; preserve security/cloud history |
+
+| 2026-11-14 | 0.14.10最终修复与跨版本升级 | 保留已执行0.14.9快照，补齐撤销token刷新边界 | 5f8db9f后候选 | publishing/lifecycle RED→GREEN58项；版本/schema门禁 | agent58passed/schema0/lock0；root复核进行中 | 真实Lightsail生命周期和清理passed，CE资源费用unknown；0.14.10发布/跨版本升级pending | in progress | 生产0.14.9 digest/config，安全云历史不回退 |

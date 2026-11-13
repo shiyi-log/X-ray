@@ -20,7 +20,7 @@ if [[ -n "$source_path" && -f "$source_path" ]]; then
 fi
 
 repository=${XRAY_INSTALLER_REPOSITORY:-shiyi-log/X-ray}
-ref=${XRAY_INSTALLER_REF:-v0.14.9}
+ref=${XRAY_INSTALLER_REF:-v0.14.10}
 raw_base=${XRAY_INSTALLER_RAW_BASE_URL:-https://raw.githubusercontent.com/${repository}/${ref}}
 
 fail() {
