@@ -26,6 +26,7 @@ jobs:
       XRAY_BACKEND_TEST_IMAGE: xray-manager-backend:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
       XRAY_FRONTEND_TEST_IMAGE: xray-manager-frontend:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
       XRAY_BACKUP_TEST_IMAGE: xray-manager-backup-tools:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      XRAY_POSTGRES_TEST_IMAGE: postgres:17.6-alpine
       XRAY_ACCEPTANCE_ARTIFACT_DIR: ${{ github.workspace }}/artifacts/acceptance/ci-${{ github.run_id }}-${{ github.run_attempt }}
       XRAY_SKILL_VALIDATOR: scripts/vendor/skill-quick-validate.py
     services:

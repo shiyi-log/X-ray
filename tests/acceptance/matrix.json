@@ -1,6 +1,6 @@
 {
   "version": "0.14.9",
-  "generated_at": "2026-11-14T02:42:55+08:00",
+  "generated_at": "2026-11-14T03:28:54+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1936,7 +1936,7 @@
     {
       "id": "production-release",
       "environment": "production",
-      "status": "blocked",
+      "status": "passed",
       "evidence": [
         {
           "kind": "deployment_request_preflight",
@@ -1983,13 +1983,41 @@
             "target Docker/Compose readiness has not been verified"
           ],
           "result": "local candidate checks passed; production remains blocked; no registry, SSH, AWS, host, or production operation was attempted"
+        },
+        {
+          "kind": "production_release",
+          "timestamp": "2026-11-14T03:28:54+08:00",
+          "server_ref": "redacted-authorized-lightsail-production-host",
+          "tls_evidence": "LE HTTPS SAN admin.xray.ai163.cc and sub.xray.ai163.cc verified with strict trust; renewal timer active, dry-run not yet completed",
+          "restore_evidence": "Encrypted pre-upgrade backup independently held locally, age/checksum/pg_restore verification exit0 and isolated network-none tmpfs PostgreSQL restore exit0; MAINTENANCE confirmed. No live database restore.",
+          "image_digests": {
+            "backend": "sha256:1659380c29d362f275adf7b70a33a228209005fdcdf9df5ae7c4708e00c6e6bb",
+            "frontend": "sha256:a589ae6b00e7fccbbfc16182805d92fa415004524e64db669d6ab75ec9071885",
+            "backup_tools": "sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1"
+          },
+          "release_version": "0.14.9",
+          "browser_receipt": "artifacts/acceptance/0.14.9/production-online-upgrade-20261114/receipt.json",
+          "job_id": "9c85e3e6-c216-41ac-933a-53e028b54caa",
+          "checks": [
+            "Normal UI login200, step-up required before upgrade, step-up200, UI submit202",
+            "Root runner exported security snapshot, backed up, drained, migrated/check no changes, deployed and checked health",
+            "Job SUCCEEDED/COMPLETE; API current_version0.14.9; browser refresh session retained",
+            "Desktop allocation3 columns and mobile1 column; footer save in viewport and reload persisted quota1/allow_create=false"
+          ],
+          "limitations": [
+            "Same-version redeployment tests full path, not cross-version API compatibility",
+            "Three browser warnings observed; no clean-console claim",
+            "Full new Lightsail lifecycle acceptance remains separate and in progress"
+          ]
         }
       ],
-      "commit": null,
+      "commit": "50c85c357e34834ec31aa4d99c32fcd5f48574a2",
       "provider": null,
       "region": null,
       "cost": null,
-      "residual_resources": []
+      "residual_resources": [
+        "Dedicated xray-production stack, private image registry and root upgrade timer on authorized host retained."
+      ]
     },
     {
       "id": "self-hosted-runner-2026-11-08",

@@ -38,7 +38,11 @@ def test_upgrade_api_can_write_requests_but_cannot_change_catalog_or_results():
     assert {
         target for target, item in mounts.items() if not item.get("read_only", False)
     } == {UPGRADE_ROOT + "/requests"}
-    assert all(item["bind"]["create_host_path"] is False for item in mounts.values())
+    # Compose v2 omits false defaults in its rendered JSON; v5 preserves them.
+    assert all(
+        item.get("bind", {}).get("create_host_path", False) is False
+        for item in mounts.values()
+    )
 
 
 def test_upgrade_queue_is_private_to_admin_api_without_host_control_mounts():

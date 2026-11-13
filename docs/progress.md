@@ -368,3 +368,7 @@ P6 的最终统一门禁在源代码候选 `924cd3d9741bc66bfee2cd72ec89752f3d0e
 | 2026-11-14T01:37:06+08:00 | xray-v0148-online-deployment-20261114 | .9 SSH/readiness、两DNS A POST201+GET、TLS证书、私有Registry push/manifest/pull passed；生产配置RED/GREEN、deploy54passed/ruff/diff0 | 应用/登录/升级not-run；首发和升级补充修复及备份待完成；main@fcc8723脏树，无新tag；回退隔离X-ray资源/前组digest，保留安全历史 |
 
 | 2026-11-14T02:42:55+08:00 | 0.14.9 分配保存与生产升级候选 | 后端/交付607 passed、2 Linux-only skips，前端89 passed，type/lint/build/static均0；备份加密验证及隔离恢复0 | 当前main脏树，annotated v0.14.9尚待创建；生产升级和三列/保存刷新待读回，AWS验收尚无资源写入 | 回退前组已验证镜像，不恢复撤销/安全历史 |
+
+| 2026-11-14T03:28:54+08:00 | 0.14.9 线上分配与前端在线升级 | main@50c85c3；完整本地652passed8skip并补跑23passed0skip；前端97passed；真实Chrome登录/stepup/提交202/升级SUCCEEDED/刷新会话；release0、gateway健康、systemdverify0 | passed：生产分配保存、三列与在线升级同版本重部署；in-progress：GitHub修订门禁/标签资产与完整Lightsail生命周期；仅两项一次性Linux本地门禁未运行 | 前组不可变digest/config；不恢复历史数据库或撤销状态 |
+
+| 2026-11-14 | v0.14.9 收尾：分配保存权限与 CI Compose2 | 已有地区保存、最小权限和角色门禁 | main@50c85c3 + scoped follow-up | 六 deploy suites、真实 database-bootstrap、正常API更新 | 35passed0skip exit0；生产bootstrap0/PATCH200 | allocation仅DELETE，保护历史仍不可删除；在线升级真实UI任务SUCCEEDED/COMPLETE | passed focused/production allocation and same-version upgrade; release/cloud lifecycle in progress | v0.14.8 or prior config/digests; preserve security/cloud history |

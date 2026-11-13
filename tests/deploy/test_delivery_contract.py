@@ -368,6 +368,7 @@ def test_ci_uses_dedicated_services_and_the_same_local_gate():
     assert "/xray_test" in env["XRAY_TEST_DATABASE_URL"]
     assert ":55432" in env["XRAY_TEST_DATABASE_URL"]
     assert ":56379/0" in env["XRAY_REDIS_URL"]
+    assert env["XRAY_POSTGRES_TEST_IMAGE"] == job["services"]["postgres"]["image"]
     commands = "\n".join(step.get("run", "") for step in job["steps"])
     assert "./scripts/check-local.sh" in commands
     assert "scripts/validate-acceptance.py" in commands

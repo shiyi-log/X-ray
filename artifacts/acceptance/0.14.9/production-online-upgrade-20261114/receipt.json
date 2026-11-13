@@ -1,0 +1,14 @@
+{
+  "job": {
+    "id": "9c85e3e6-c216-41ac-933a-53e028b54caa",
+    "version": "0.14.9",
+    "status": "SUCCEEDED",
+    "phase": "COMPLETE",
+    "error_code": null,
+    "created_at": "2026-11-13T19:19:38.806947+00:00",
+    "updated_at": "2026-11-13T19:24:17.796265+00:00"
+  },
+  "api_status": 200,
+  "current_version": "0.14.9",
+  "warnings": 3
+}
