@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-11-14T04:25:03.747878+08:00",
+  "source_commit": "8f54917c0504ce3764897f44dae70818cc8aa75d",
+  "api_http": 200,
+  "current_version": "0.14.10",
+  "job_id": "013dcb3b-6c04-417d-b081-30677a7df144",
+  "job_status": "SUCCEEDED",
+  "job_phase": "COMPLETE",
+  "healthy_services": [
+    "admin-api",
+    "subscription-api",
+    "frontend",
+    "gateway",
+    "postgres",
+    "redis"
+  ],
+  "running_services": [
+    "worker",
+    "beat",
+    "outbox-dispatcher",
+    "security-ledger-dispatcher"
+  ],
+  "timers_active": [
+    "xray-manager-upgrade.timer",
+    "xray-manager-certificate-renew.timer"
+  ],
+  "verification_exit_codes": {
+    "authenticated_api": 0,
+    "pinned_ssh_service_readback": 0
+  },
+  "cloud_writes_this_check": false,
+  "cost_status": "unknown"
+}

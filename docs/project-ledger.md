@@ -8350,3 +8350,45 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - Root updates matrix version0.14.10, version/progress release index and current evidence. Docker backend/frontend linuxamd64 builds started from reviewed current source; no archive/secret inputs per .dockerignore. Candidate image IDs must become actual registry digests before trusted catalog insertion. Rollback to existing0.14.9images and config; no database reversal.
 
 - Root corrected focused suite path and dedicated fixture DSN:58passed/53.06s exit0, JUnit /tmp/xray-refresh-final.xml. Initial matrix validator rejected missing structured production evidence on a cloud row; corrected environment to real_cloud with actual provider request0bc380cf-7836-4bdc-a67e-7524400df638, redacted resource and operation/timestamp/probes. No gate weakened.
+
+
+## 2026-11-14T04:24:03.314210+08:00 - 0.14.10 最终交付归档范围
+
+- run_id: xray-v01410-production-final-20261114; 当前 main@8f54917c0504ce3764897f44dae70818cc8aa75d，工作树仅新增本轮0.14.10安全回执和升级截图。重读AGENTS、canonical conventions、X-ray skill及acceptance/versioning references、verification skill、README/version/progress、台账尾部、matrix、release.sh和正常认证客户端。使用exec/rg/Python只读，不读取Shop/archive或秘密。
+- outcome/scope: 归档已完成的前端在线升级入口、真实0.14.9→0.14.10升级、精确SHA CI/Release和云生命周期证据；仅README、版本/进度/台账、验收matrix、安全receipt和已审阅截图。无业务代码或版本/tag变化，不重跑已通过升级，不新增AWS写。
+- authorization: 用户已明确发布/线上升级、SSH目标3.0.199.9及Lightsail验收；AWS写窗口截止03:59+08已过，所有云资源写入和清理均在此前完成。本轮只读API/SSH健康核验与文档提交推送在已授权范围。
+- risk/rollback: 费用无资源账单组，保持unknown；Google证据为TLS/HTTP200部分响应，不能称完整下载；一次性Linux/systemd测试仍skip。归档可git revert，运行回退用0.14.9历史digest/config；不恢复已撤销Token、安全或云状态。
+- fresh verification: 正常登录/step-up客户端只输出脱敏GET，/api/v1/system/upgrade/ HTTP200，current_version0.14.10、job013dcb3b-6c04-417d-b081-30677a7df144 SUCCEEDED/COMPLETE；命令exit0。pinned SSH docker ps显示admin-api/subscription-api/frontend/gateway/postgres/redis healthy，worker/beat/outbox/security-ledger-dispatcher running，两个systemd timer active，/opt/xray/VERSION0.14.10，exit0。不回显Cookie、密码或订阅。
+- read limitations: 首次JSON检查脚本Python换行转义SyntaxError(exit1)在执行前失败；随后正确JSON检查exit0。一次zsh不存在glob/两次错误路径和一次regex转义导致只读搜索失败，随后rg --files定位真实路径；无文件或远端写入。
+- independent review: final_evidence_audit只读核对回执与入口8项测试；两张截图空密码输入、无token/cookie/key/URI，排队图当前0.14.9目标0.14.10，成功图当前0.14.10。
+- time_logic/reuse: aware ISO-8601，Asia/Shanghai +08与UTC保留；AWS窗口[start,end)，当前>=end无新云写。复用现有正常认证、可信root发布、加密备份和回执格式；下一步仅文档静态/秘密检查、相干提交推送。
+
+
+## 2026-11-14T04:25:49.351883+08:00 - v0.14.10 发布、跨版本升级与验收最终证据
+
+- build/deploy: linux/amd64 backend/frontend构建、docker save→pinned SSH load、private registry push均exit0；OCI manifest GET200和Docker-Content-Digest精确匹配，digestpull0。最终backend sha256:c6b69cd45d3f4a03b0b333aab6caf544fca93d9a9281329013136288258e6437，frontend sha256:bc6d4091860310fef532316346bddebae9ae6cd45346123d3e5069f59ecc600d，backup-tools sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1。
+- trusted snapshot: /var/lib/xray/upgrade/releases/0.14.10/manifest.json和source/deploy,installer,VERSION来自精确8f54917 git archive，root拥有、无group/other写；只在CI绿后加入catalog。已执行0.14.9快照保留。升级后canonical /opt/xray/deploy,/installer,/VERSION同步0.14.10 exit0，不触碰ops/secrets/历史目录。
+- exact CI: 8f54917c0504ce3764897f44dae70818cc8aa75d对应run43497335886/job132133782388 completed/success；19项gate全0，后端666passed/1skipped/0failures，前端97passed，E2E8passed。唯一skip test_dynamic_service_user_can_read_root_only_configuration需显式一次性Linux/systemd主机；不能转为passed。artifact14072452435，2165036bytes，独立下载ZIP SHA256=GitHub digest1776aeae9c26de4c2efa0c2d7898d779b655fc95d6d89b5714ba272be51a89f7。
+- release: annotated tag v0.14.10 object10530fc2d641279721ac364266cfee9798515e25准确peeled到8f54917；Release444685736非草稿/非预发布，2026-11-13T20:08:39Z发布。workflow43498766084/job132138714720 success；三项独立下载实际SHA与GitHub/SHA256SUMS一致：tar8c13f631b9563192bfde08e5b702b0ebf897cfc94ca109638ed94ba953dc9ee0，manifeste1791cb939c3a1ddb80392e9b0a36c549cbc08df1cb933474d9ef25a3998300e，SHA256SUMSd61c14a5e19c7af01cda06e16bdb132afea459335775d46b6dd3793baab1b7ab；包内外manifest及VERSION/commit匹配。0.14.9保留内部候选，不补造公开tag。
+- real UI: Chrome正常密码login200，系统设置→版本更新→在线升级，候选0.14.10。无近期stepup提交403与中文指引；本页正常密码stepup200后提交202，job013dcb3b-6c04-417d-b081-30677a7df144最终SUCCEEDED/COMPLETE，完成时间2026-11-13T20:13:54.775282Z。current_version0.14.10，刷新session保留，UI脚本exit0；3条consolewarning保持记录。queued/success截图经独立审阅无秘密。
+- post-upgrade worker: 新版Publisher.refresh_node_address对已删除验收节点返回published0/failed0；每日循环仅一组node.stop/start且均SUCCEEDED；pending_operations0，instance资源RELEASED。命令exit0；没有伪造DB或新增AWS写。
+- backup: 升级前/var/lib/xray/offsite-staging/xray-0.14.10-20261113T200921Z-1独立复制到本机受控recovery目录，目录0700/dump.age+manifest0600。只读network-none/tmpfs backup-tools解密、双hash、pg_restorelist exit0；已有隔离PG恢复/MAINTENANCE验证0。备份非immutable对象存储；不做生产数据库历史恢复、不复活撤销状态。
+- TLS: 双域LE有效至2027-02-11；证书renew timer enabled/active，Certbot renew dry-run真实exit0，/opt/xray/ops/renew-certificates.sh实际执行0，nginx-t/reload0。现有worker_connections2048大于openfile1024警告保留，未扩大本轮范围，不作容量承诺。
+- archival write: README/version-record/progress/matrix同步最终事实；保留历史blocked证据，追加当前授权账号/撤回正控/清理correction；aws-real-cloud总行只因最终资源账单unknown仍blocked，独立生命周期行passed。production行追加0.14.10 structured evidence；修正未经证明的管理主机Lightsail归类。新安全回执复制到artifacts/acceptance/0.14.10/production-release-20261114/，58项JUnit和两张UI截图保留。无版本变化、不重打tag。
+- limitations: 当前测试资源数0不等于成本0；CE资源过滤无groups，因此逐资源最终账单unknown。Google证据仅TLS/HTTP200部分响应；未声明完整下载、Shadowrocket真机或SWAS通过。用户授权仅Lightsail，未使用EC2。
+- rollback/reuse: 使用上一组0.14.9 backend1659380c29d362f275adf7b70a33a228209005fdcdf9df5ae7c4708e00c6e6bb/frontend a589ae6b00e7fccbbfc16182805d92fa415004524e64db669d6ab75ec9071885及root历史config。应用回退不倒退撤销、安全、云状态。后续从系统设置复用可信catalog+root runner；最终费用待提供商出具可归因资源账单后只读核对。
+
+
+## 2026-11-14T04:28:31.429712+08:00 - 归档静态门禁与秘密扫描核对
+
+- acceptance matrix、boundary、X-ray skill、git diff --check均exit0；最终服务读回已独立归档final-health-receipt.json。历史Gitleaks165commits/10.91MB无泄露exit0。
+- 补充整文件stdin和no-git扫描均exit1，4项命中全部位于原台账596/683/724/864行，逐行与HEAD比较preexisting=true：历史幂等UUID字段、普通API/表单说明、文件路径/源码SHA256及其上下文误判，不是本轮新秘密。完整旧台账无修改；报告只在run-owned /tmp权限目录，未输出命中值。定位脚本首次因stdin行号0而StopIteration(exit1)，改成真实文件扫描后定位成功exit0；不能把此整文件扫描描述为零告警。随后以新增diff及新回执独立扫描确认本轮范围。
+- 已按用户明确“加入本地记忆”追加extensions/ad_hoc/notes/xray-lightsail-only-production.md：0.14.10入口/升级、Lightsail-only、资源清理及费用unknown，未记录秘密；exit0。只关闭本轮临时Python session12241(exit0，先前issued已清)，保留既有受管SSH tunnel和线上服务。
+- 当前变更仅五份文档/matrix、新安全JSON/JUnit和两张已审阅截图；无业务源码、数据库、AWS资源、秘密或tag变化。静态及独立审计通过后进行相干提交推送；回退仅git revert该归档提交，不改变生产或撤销状态。
+
+
+## 2026-11-14T04:29:35.353731+08:00 - 最终验证与提交前状态
+
+- 本轮新增diff与新回执独立Gitleaks stdin扫描34911bytes，exit0/no leaks；不扫描或持久化秘密。历史扫描165commits exit0；整旧文件4个既有误报已单独披露，未加忽略规则。matrix再次exit0，boundary0，skill0，diffcheck0。
+- 最终status main与origin/main同步，五份相干审计文件modified，本轮0.14.10回执目录和两张升级截图untracked；全部已独立核对。准备仅stage这些路径，cached diffcheck与stat复核后提交、普通pushmain；不修改v0.14.10 immutable标签或既有业务源码。
+- acceptance: 前端在线升级与0.14.9→0.14.10真实生产升级passed；发布/CI/资源清理passed；逐资源最终账单unknown仍blocked，Linux一次性systemd测试skip、真机/SWAS未运行，不宣称整体全部外部门禁完成。rollback_ref: 归档提交可git revert；运行回退沿用root历史digest/config并保留撤销/安全/云状态。

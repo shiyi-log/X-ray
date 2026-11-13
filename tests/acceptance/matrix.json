@@ -1,6 +1,6 @@
 {
   "version": "0.14.10",
-  "generated_at": "2026-11-14T03:57:44.408003+08:00",
+  "generated_at": "2026-11-14T04:25:03.747878+08:00",
   "allowed_statuses": [
     "passed",
     "failed",
@@ -1213,11 +1213,7 @@
       "environment": "real_cloud",
       "status": "blocked",
       "blockers": [
-        "Real-AWS profile-level revocation positive control remains unverified. The local Fake/Stub API integration passes but does not establish cloud behavior; the earlier REVOCATION_UNCONFIRMED block and later active-subscription 2-to-1 shrink do not prove profile-level revocation.",
-        "Final per-resource AWS cost is unknown; Cost Explorer returned only an account-wide Lightsail daily aggregate that is not attributable to these test resources, and the latest read-only inventory and billing calls returned AccessDenied.",
-        "Real-AWS profile-level revocation positive control remains unverified; Fake/Stub tests do not establish AWS behavior.",
-        "No new node was created. Resource-level final cost, real profile revocation, and cloud node/traffic count reconciliation remain unverified.",
-        "The configured default and root account-field fingerprints do not match the authorized account; root inventory cannot establish the authorized account resource count, and X-ray admin session/step-up/CloudAccount remain unavailable."
+        "Final per-resource bills remain unknown for the historical test runs and the 2026-11-14 run; resource-filtered Cost Explorer returned no groups. No attributable final amount can be asserted."
       ],
       "evidence": [
         {
@@ -1889,11 +1885,22 @@
           "authorized_account_resource_count": null,
           "authorized_account_resource_cost_usd": null,
           "result": "blocked; no new AWS request was made, and no current authorized-account resource inventory or cost was established"
+        },
+        {
+          "kind": "current_aws_acceptance_correction",
+          "timestamp": "2026-11-14T04:25:03.747878+08:00",
+          "supersedes": "Historical identity/session/profile-revocation/no-node blockers do not describe the newly authorized account run on 2026-11-14. Historical evidence remains unchanged.",
+          "lifecycle_evidence_row": "aws-lightsail-production-lifecycle-20261114",
+          "account_ref": "sha256:4a0ef08458dd",
+          "profile_positive_control": "passed; A old credential rejected and B positive control succeeded",
+          "resource_inventory": "authorized us-east-1 inventory zero after automatic deletion",
+          "cost_status": "unknown; no attributable final resource bill",
+          "artifact": "artifacts/acceptance/0.14.10/production-release-20261114/cloud-receipt.json"
         }
       ],
-      "commit": null,
+      "commit": "8f54917c0504ce3764897f44dae70818cc8aa75d",
       "source_base_commit": "940d155970a9571049192e07385ac717a9d14791",
-      "candidate_worktree": true,
+      "candidate_worktree": false,
       "provider": "aws-lightsail",
       "region": "us-east-1",
       "cost": null,
@@ -1987,7 +1994,7 @@
         {
           "kind": "production_release",
           "timestamp": "2026-11-14T03:28:54+08:00",
-          "server_ref": "redacted-authorized-lightsail-production-host",
+          "server_ref": "redacted-authorized-production-host",
           "tls_evidence": "LE HTTPS SAN admin.xray.ai163.cc and sub.xray.ai163.cc verified with strict trust; renewal timer active, dry-run not yet completed",
           "restore_evidence": "Encrypted pre-upgrade backup independently held locally, age/checksum/pg_restore verification exit0 and isolated network-none tmpfs PostgreSQL restore exit0; MAINTENANCE confirmed. No live database restore.",
           "image_digests": {
@@ -2009,9 +2016,42 @@
             "Three browser warnings observed; no clean-console claim",
             "Full new Lightsail lifecycle acceptance remains separate and in progress"
           ]
+        },
+        {
+          "kind": "production_release",
+          "timestamp": "2026-11-14T04:25:03.747878+08:00",
+          "server_ref": "redacted-authorized-production-host",
+          "tls_evidence": "Strict-trust LE HTTPS verified for both configured domains; Certbot renewal dry-run and actual renewal wrapper/nginx validation/reload exit0; renewal timer active.",
+          "restore_evidence": "New encrypted 0.14.10 pre-upgrade backup copied independently off host; age decrypt, both checksums and pg_restore listing exit0. Prior isolated PostgreSQL restore confirmed MAINTENANCE. No live database recovery or security-state resurrection.",
+          "image_digests": {
+            "backend": "sha256:c6b69cd45d3f4a03b0b333aab6caf544fca93d9a9281329013136288258e6437",
+            "frontend": "sha256:bc6d4091860310fef532316346bddebae9ae6cd45346123d3e5069f59ecc600d",
+            "backup_tools": "sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1"
+          },
+          "release_version": "0.14.10",
+          "source_commit": "8f54917c0504ce3764897f44dae70818cc8aa75d",
+          "browser_receipt": "artifacts/acceptance/0.14.10/production-release-20261114/online-upgrade-receipt.json",
+          "job_id": "013dcb3b-6c04-417d-b081-30677a7df144",
+          "checks": [
+            "Real Chrome UI normal login, enforced recent step-up, submit202, cross-version0.14.9->0.14.10 SUCCEEDED/COMPLETE and session retained after refresh",
+            "Fresh authenticated GET200/current_version0.14.10 and same successful job",
+            "admin-api/subscription-api/frontend/gateway/postgres/redis healthy; worker/beat/outbox/security-ledger-dispatcher running; upgrade and renewal timers active",
+            "Confirmed-revoked subscription address refresh published0/failed0; no pending operations or retained test instances"
+          ],
+          "limitations": [
+            "Three browser warnings observed",
+            "Per-resource final cloud bill remains unknown",
+            "Backup independently held locally, not immutable object storage",
+            "nginx worker_connections2048 exceeds current open-file1024; no capacity claim"
+          ]
+        },
+        {
+          "kind": "production_host_identity_correction",
+          "timestamp": "2026-11-14T04:25:03.747878+08:00",
+          "reason": "SSH authorization and host fingerprint do not establish whether the management host is Lightsail. Earlier server_ref provider wording was unsupported; use redacted-authorized-production-host. The test-node provider is independently verified Lightsail."
         }
       ],
-      "commit": "50c85c357e34834ec31aa4d99c32fcd5f48574a2",
+      "commit": "8f54917c0504ce3764897f44dae70818cc8aa75d",
       "provider": null,
       "region": null,
       "cost": null,
@@ -3588,6 +3628,30 @@
       "region": "us-east-1",
       "cost": null,
       "cost_status": "unknown:CE resource query returned no groups, not zero",
+      "residual_resources": []
+    },
+    {
+      "id": "github-release-v0.14.10",
+      "environment": "github",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_release",
+          "timestamp": "2026-11-14T04:25:03.747878+08:00",
+          "tag": "v0.14.10",
+          "annotated_tag_object": "10530fc2d641279721ac364266cfee9798515e25",
+          "release_id": 444685736,
+          "run_id": 43498766084,
+          "ci_run_id": 43497335886,
+          "asset_checks": "Three assets independently downloaded; actual SHA256, GitHub digest, SHA256SUMS and inner/outer manifest version/tag/commit match",
+          "receipt": "artifacts/acceptance/0.14.10/production-release-20261114/release-receipt.json",
+          "ci_receipt": "artifacts/acceptance/0.14.10/production-release-20261114/ci-receipt.json"
+        }
+      ],
+      "commit": "8f54917c0504ce3764897f44dae70818cc8aa75d",
+      "provider": null,
+      "region": null,
+      "cost": null,
       "residual_resources": []
     }
   ]

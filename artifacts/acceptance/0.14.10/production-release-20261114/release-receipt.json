@@ -1,0 +1,46 @@
+{
+  "checked_at": "2026-11-14T04:10:31.521923+08:00",
+  "commit": "8f54917c0504ce3764897f44dae70818cc8aa75d",
+  "tag": "v0.14.10",
+  "annotated_tag_object": "10530fc2d641279721ac364266cfee9798515e25",
+  "release_id": 444685736,
+  "release_url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.14.10",
+  "draft": false,
+  "prerelease": false,
+  "published_at": "2026-11-13T20:08:39Z",
+  "run_id": 43498766084,
+  "run_url": "https://github.com/shiyi-log/X-ray/actions/runs/43498766084",
+  "status": "completed",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "id": 132138714720,
+      "conclusion": "success",
+      "completed_at": "2026-11-13T20:08:42Z"
+    }
+  ],
+  "assets": [
+    {
+      "id": 745015949,
+      "name": "SHA256SUMS",
+      "size": 199,
+      "digest": "sha256:d61c14a5e19c7af01cda06e16bdb132afea459335775d46b6dd3793baab1b7ab"
+    },
+    {
+      "id": 745015954,
+      "name": "xray-installer-0.14.10-manifest.json",
+      "size": 612,
+      "digest": "sha256:e1791cb939c3a1ddb80392e9b0a36c549cbc08df1cb933474d9ef25a3998300e"
+    },
+    {
+      "id": 745015950,
+      "name": "xray-installer-0.14.10.tar.gz",
+      "size": 24170,
+      "digest": "sha256:8c13f631b9563192bfde08e5b702b0ebf897cfc94ca109638ed94ba953dc9ee0"
+    }
+  ],
+  "download_checksums_match_github": true,
+  "sha256sums_match": true,
+  "manifest_matches_tag_commit": true,
+  "archive_manifest_matches": true
+}

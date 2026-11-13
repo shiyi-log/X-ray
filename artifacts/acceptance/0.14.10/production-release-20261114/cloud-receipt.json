@@ -1,0 +1,35 @@
+{
+  "account_fingerprint": "4a0ef08458dd",
+  "node_id": "4e1661d7-b4f6-5030-a2ac-f2743e8d75db",
+  "create_operation": "bd6d62dc-c9eb-442d-a411-d26a0938d01b",
+  "profile_revoke_operation": "e6361be2-f2d6-48e1-a0a2-facbeccd1303",
+  "delete_operation": "3f85154a-dc57-4f48-97dc-4bad2311af31",
+  "delete_request_id": "0bc380cf-7836-4bdc-a67e-7524400df638",
+  "google": {
+    "success": true,
+    "http_status": 200,
+    "response_bytes": 87964,
+    "wire_sent": 1887,
+    "wire_received": 94583,
+    "code": "HTTP_RECEIVED_PARTIAL",
+    "elapsed_seconds": 3.198
+  },
+  "b_positive_control": {
+    "success": true,
+    "http_status": 200,
+    "response_bytes": 88148,
+    "wire_sent": 1887,
+    "wire_received": 94789,
+    "code": "HTTP_RECEIVED_PARTIAL",
+    "elapsed_seconds": 3.309
+  },
+  "final_traffic_total_bytes": 101608,
+  "quota": 0,
+  "used": 0,
+  "node_state": "DELETED",
+  "resource_state": "RELEASED",
+  "aws_inventory_count": 0,
+  "cost_status": "unknown",
+  "automation_enabled": false,
+  "nonterminal_operations": 0
+}
