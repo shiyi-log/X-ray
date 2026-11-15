@@ -11,6 +11,11 @@ step-up，未绑定时重新验证密码，已绑定时验证密码与 TOTP。�
 
 ## 当前状态
 
+2026-11-14：管理入口已开放为 [https://admin.xray.ai163.cc](https://admin.xray.ai163.cc)，
+通过公网 443 访问，无需本机隧道或专用浏览器窗口。管理员登录、服务端会话、
+CSRF 和敏感操作的近期身份验证保持生效；退出登录所需的会话表权限已补齐。
+入口部署与回退见 [公网管理入口说明](deploy/nginx/public-admin.md)。
+
 2026-11-14：**v0.14.10 已正式发布并上线**。前端入口为「系统设置 → 版本更新 → 在线升级」，支持目标版本选择、近期身份验证、执行阶段、结果与升级期间重连；真实 Chrome 已完成 0.14.9 → 0.14.10 升级，任务 `SUCCEEDED / COMPLETE`，刷新后会话有效。地区分配保存、桌面三列与手机单列布局均已在线验证。精确发布提交 CI 的 19 项门禁通过：后端/交付 666 passed、1 个一次性 Linux/systemd 项 skipped，前端 97 passed、浏览器 E2E 8 passed。
 
 同日一台授权 Lightsail 节点已验证自动补齐、每日停止后启动、新 IP/健康/订阅写回、四种支持格式、流量采集、profile 撤回正向控制，以及自动缩容清理。旧订阅 GET/HEAD 为 410；测试实例和资源已删除/释放，库存、配额及订阅节点计数为零。Google 探测确认 TLS 与 HTTP 200，响应读取为部分完成；逐资源最终账单仍未知。0.14.10 同时修复已确认撤销令牌被地址刷新任务重复发布的问题，线上最终刷新结果为零失败。AWS 新节点仅允许 Lightsail，禁止 EC2。正式资产见 [v0.14.10 Release](https://github.com/shiyi-log/X-ray/releases/tag/v0.14.10)，完整证据见 `docs/progress.md`、`tests/acceptance/matrix.json` 和 `artifacts/acceptance/0.14.10/production-release-20261114/`。

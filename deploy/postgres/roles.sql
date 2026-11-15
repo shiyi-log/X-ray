@@ -23,6 +23,11 @@ GRANT USAGE ON SCHEMA public TO xray_admin_api, xray_subscription_reader, xray_w
 GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA public TO xray_admin_api;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO xray_admin_api;
 
+-- Server-side logout and session-key rotation delete obsolete session rows.
+SELECT format('GRANT DELETE ON TABLE %I.%I TO xray_admin_api', schemaname, tablename)
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'django_session' \gexec
+
 -- Replacing regional quotas removes only unused, superseded allocations.
 SELECT format('GRANT DELETE ON TABLE %I.%I TO xray_admin_api', schemaname, tablename)
 FROM pg_tables

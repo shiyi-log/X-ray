@@ -1,0 +1,168 @@
+{
+  "checked_at": "2026-11-15T06:59:37.760593+00:00",
+  "writes_attempted": false,
+  "account_fingerprint": "4a0ef08458dd",
+  "account_plus_newline_fingerprint": "94a91b85428b",
+  "historical_ec2": {
+    "http_status": 200,
+    "request_id": "66a4e21e-f694-4671-b1e0-dc4b5f0b886c",
+    "found_count": 0
+  },
+  "historical_ebs": {
+    "error_code": "InvalidVolume.NotFound",
+    "request_id": "e3ee070c-efab-465c-9849-0cce37d2695d"
+  },
+  "historical_ec2_events": {
+    "http_status": 200,
+    "request_id": "7af400d2-a90c-46ea-8210-556a6ff4bd32",
+    "pagination_present": true,
+    "events": [
+      {
+        "name": "TerminateInstances",
+        "time": "2026-11-14T00:47:35+08:00",
+        "id": "b9726b39-6386-4e26-ab41-560caf6cd814"
+      }
+    ]
+  },
+  "retained_runner": {
+    "http_status": 200,
+    "request_id": "710b7861-f33e-4cdc-a217-cd4f83129d60",
+    "bundle": "medium_3_0",
+    "created_at": "2026-11-08T03:00:01.664000+08:00",
+    "state": "running",
+    "NetworkIn": {
+      "http_status": 200,
+      "request_id": "0444af49-e240-4856-988e-7b60831f9792",
+      "bytes": "622871382.0",
+      "data_points": 180
+    },
+    "NetworkOut": {
+      "http_status": 200,
+      "request_id": "fb8ba9ba-e6a7-4f89-8a0b-aab44ce10f64",
+      "bytes": "2677515.0",
+      "data_points": 180
+    }
+  },
+  "bundle_prices": {
+    "http_status": 200,
+    "request_id": "70f98e0d-0ea6-40fc-8721-2d6dcda28e80",
+    "values": [
+      {
+        "bundleId": "small_3_0",
+        "price": 12.0,
+        "transferPerMonthInGb": 3072,
+        "diskSizeInGb": 60,
+        "isActive": true
+      },
+      {
+        "bundleId": "medium_3_0",
+        "price": 24.0,
+        "transferPerMonthInGb": 4096,
+        "diskSizeInGb": 80,
+        "isActive": true
+      }
+    ]
+  },
+  "historical_ec2_metrics": {
+    "NetworkIn": {
+      "request_id": "b7132ff4-d7d9-4e49-a751-18b9d369a3f9",
+      "data_points": 141,
+      "sum": "18240506713.0"
+    },
+    "NetworkOut": {
+      "request_id": "0ad06c2d-f278-4d21-a9a9-e1b217bf1e61",
+      "data_points": 141,
+      "sum": "487106258.0"
+    },
+    "CPUSurplusCreditsCharged": {
+      "request_id": "0f1f6775-85e9-4255-b76f-0e8b75014849",
+      "data_points": 141,
+      "sum": "0.0"
+    }
+  },
+  "whole_account_positive_cost": {
+    "request_id": "09cfffe5-2ff3-42b2-a056-efdaaea262ed",
+    "period_utc": {
+      "Start": "2026-11-06",
+      "End": "2026-11-16"
+    },
+    "amount": "151.2842322555",
+    "estimated": true,
+    "record_types": [
+      "Usage"
+    ],
+    "not_task_attributable": true
+  },
+  "latest_checked_at": "2026-11-15T07:00:44.099594+00:00",
+  "official_pricing": {
+    "t3_medium_linux": {
+      "request_id": "29591b77-6668-4d51-93dd-096d3c663855",
+      "product_count": 1,
+      "pagination_present": false,
+      "rates": [
+        {
+          "unit": "Hrs",
+          "usd": "0.0528000000",
+          "description": "$0.0528 per On Demand Linux t3.medium Instance Hour",
+          "beginRange": "0",
+          "endRange": "Inf"
+        }
+      ]
+    },
+    "gp3_storage": {
+      "request_id": "b6a7032c-857b-4baa-8644-7892823893c6",
+      "product_count": 1,
+      "pagination_present": false,
+      "rates": [
+        {
+          "unit": "GB-Mo",
+          "usd": "0.0960000000",
+          "description": "$0.096 per GB-month of General Purpose (gp3) provisioned storage - Asia Pacific (Singapore)",
+          "beginRange": "0",
+          "endRange": "Inf"
+        }
+      ]
+    },
+    "public_ipv4": {
+      "request_id": "fe257a1b-f346-4644-a41e-5a3e5392dd19",
+      "product_count": 0,
+      "pagination_present": false,
+      "rates": []
+    },
+    "internet_transfer_out": {
+      "request_id": "460e4a8b-0e9c-44be-9ee5-1a00ac994cc3",
+      "product_count": 1,
+      "pagination_present": false,
+      "rates": [
+        {
+          "unit": "GB",
+          "usd": "0.0850000000",
+          "description": "$0.085 per GB - next 40 TB / month data transfer out",
+          "beginRange": "10240",
+          "endRange": "51200"
+        },
+        {
+          "unit": "GB",
+          "usd": "0.1200000000",
+          "description": "$0.120 per GB - first 10 TB / month data transfer out beyond the global free tier",
+          "beginRange": "0",
+          "endRange": "10240"
+        },
+        {
+          "unit": "GB",
+          "usd": "0.0820000000",
+          "description": "$0.082 per GB - next 100 TB / month data transfer out",
+          "beginRange": "51200",
+          "endRange": "153600"
+        },
+        {
+          "unit": "GB",
+          "usd": "0.0800000000",
+          "description": "$0.080 per GB - greater than 150 TB / month data transfer out",
+          "beginRange": "153600",
+          "endRange": "Inf"
+        }
+      ]
+    }
+  }
+}

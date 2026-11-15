@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-11-14T10:24:29.764819+00:00",
+  "status": "configured",
+  "nginx_test_exit": 0,
+  "nginx_reload_exit": 0,
+  "gateway_recreate_exit": 0,
+  "config_validate_exit": 0,
+  "config_backup": "/var/lib/xray/upgrade/history/public-admin-20261114.env",
+  "config_before_sha256": "71aa2feeb78fa9fff0660a3965afb359ae0b270eb51e80338bf33b06d483229a",
+  "stream_sha256": "b63e1d3e862c6b9ccc04e36061aa25047521ec5653f6b702f5a033c4fec4e089",
+  "public_admin_origin": "https://admin.xray.ai163.cc",
+  "gateway_compose": "/var/lib/xray/upgrade/releases/0.14.10/source/deploy/compose/production.yml",
+  "application_version": "0.14.10",
+  "cloud_resource_writes": false,
+  "application_auth_changes": false
+}

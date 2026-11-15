@@ -1,6 +1,6 @@
 {
-  "version": "0.14.10",
-  "generated_at": "2026-11-14T04:42:48.017188+08:00",
+  "version": "0.14.11",
+  "generated_at": "2026-11-15T15:24:07.418841+08:00",
   "allowed_statuses": [
     "passed",
     "failed",

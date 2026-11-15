@@ -1,0 +1,17 @@
+# Install inside the host Nginx stream context, after explicit substitution.
+# TLS terminates at the existing gateway; no private keys or HTTP logs here.
+map $ssl_preread_server_name $xray_tls_backend {
+    ${XRAY_ADMIN_HOST}        127.0.0.1:8443;
+    ${XRAY_SUBSCRIPTION_HOST} 127.0.0.1:443;
+    default                  "";
+}
+
+server {
+    listen ${XRAY_PUBLIC_BIND_IP}:443;
+    ssl_preread on;
+    proxy_pass $xray_tls_backend;
+    proxy_connect_timeout 5s;
+    proxy_timeout 60s;
+    access_log off;
+    error_log /dev/null;
+}

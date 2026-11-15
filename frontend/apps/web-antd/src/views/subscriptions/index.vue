@@ -4,7 +4,7 @@ import { KeyRound, Plus, Settings, RefreshCw, RotateCw, Send, ShieldX } from 'lu
 import { useRouter } from 'vue-router';
 
 import { Page } from '@vben/common-ui';
-import { Alert, Button, Card, Input, Space, Table, Tag } from 'ant-design-vue';
+import { Alert, Button, Card, Input, Modal, Space, Table, Tag } from 'ant-design-vue';
 
 import {
   resourcesApi,
@@ -20,6 +20,7 @@ import DangerConfirm from '@/components/DangerConfirm.vue';
 import PageState from '@/components/PageState.vue';
 import SecretDelivery from '@/components/SecretDelivery.vue';
 import StatusBadge from '@/components/StatusBadge.vue';
+import StepUpDialog from '@/components/StepUpDialog.vue';
 import { useResource } from '@/composables/useResource';
 import SubscriptionEditor from './SubscriptionEditor.vue';
 
@@ -78,6 +79,27 @@ const dangerBusy = ref(false);
 const dangerErrorCode = ref('');
 const dangerErrorMessage = ref('');
 const actionError = ref('');
+const actionNotice = ref('');
+const stepUpOpen = ref(false);
+const linkTarget = ref<Subscription | null>(null);
+
+function handleActionError(caught: unknown, fallback: string) {
+  if (caught instanceof ApiError && caught.code === 'STEP_UP_REQUIRED') {
+    actionError.value = '请先验证身份，再重新执行此操作。';
+    stepUpOpen.value = true;
+  } else {
+    actionError.value = caught instanceof Error ? caught.message : fallback;
+  }
+}
+function identityVerified() {
+  stepUpOpen.value = false;
+  actionError.value = '';
+  actionNotice.value = '身份已验证，请再次点击原操作。';
+}
+function openLinks(item: Subscription) {
+  actionNotice.value = '';
+  linkTarget.value = item;
+}
 const busyAction = ref('');
 const expandedRows = ref<string[]>([]);
 const tokenResults = ref<Record<string, PageResult<SubscriptionToken>>>({});
@@ -102,17 +124,21 @@ const columns = [
 ];
 
 async function rotate(item: Subscription) {
+  if (busyAction.value) return;
   actionError.value = '';
+  actionNotice.value = '';
   busyAction.value = `rotate:${item.id}`;
   try {
     delivery.value = await resourcesApi.rotateSubscription(item.id);
+    linkTarget.value = null;
     if (expandedRows.value.includes(item.id)) {
       tokenPages.value = { ...tokenPages.value, [item.id]: 1 };
       await loadTokens(item.id, 1);
     }
     await reload();
   } catch (caught) {
-    actionError.value = caught instanceof Error ? caught.message : '轮换失败';
+    linkTarget.value = null;
+    handleActionError(caught, '轮换失败');
   } finally {
     busyAction.value = '';
   }
@@ -157,12 +183,13 @@ function tokenPageChanged(subscriptionId: string, pageNumber: number) {
 async function issueProfile(profile: AccessProfile) {
   if (issuingProfileId.value) return;
   actionError.value = '';
+  actionNotice.value = '';
   issuingProfileId.value = profile.id;
   try {
     delivery.value = await resourcesApi.issueSubscription(profile.id);
     await Promise.all([reloadProfiles(), reload()]);
   } catch (caught) {
-    actionError.value = caught instanceof Error ? caught.message : 'Token 签发失败';
+    handleActionError(caught, 'Token 签发失败');
   } finally {
     issuingProfileId.value = '';
   }
@@ -209,6 +236,7 @@ async function openTokenRevoke(subscription: Subscription, token: SubscriptionTo
   try {
     await refreshPreview();
   } catch (caught) {
+    if (caught instanceof ApiError) dangerErrorCode.value = caught.code;
     dangerErrorMessage.value = caught instanceof Error ? caught.message : '预览失败';
   }
 }
@@ -222,6 +250,7 @@ async function openProfileRevoke(subscription: Subscription) {
   try {
     await refreshPreview();
   } catch (caught) {
+    if (caught instanceof ApiError) dangerErrorCode.value = caught.code;
     dangerErrorMessage.value = caught instanceof Error ? caught.message : '预览失败';
   }
 }
@@ -301,6 +330,7 @@ function closeDanger() {
     <Input.Search v-model:value="search" class="mb-4 max-w-sm" placeholder="搜索 Token 对应的访问配置" allow-clear @search="searchSubscriptions" />
     <PageState :loading="loading" :error="error" :empty="false" @retry="reload">
       <Alert v-if="actionError" class="mb-4" type="error" show-icon :message="actionError" role="alert" />
+      <Alert v-if="actionNotice" class="mb-4" type="success" show-icon :message="actionNotice" role="status" />
       <Alert v-if="empty" class="mb-4" type="info" show-icon message="当前没有已签发的 Token。" />
       <Alert class="mb-4" type="info" show-icon message="所有 Token 集中在同一个订阅池。统一链接默认提供包含全部已发布协议的 Mihomo 配置；每个 Token 都可以单独撤销。" />
       <Card :bordered="false">
@@ -335,12 +365,15 @@ function closeDanger() {
             <template v-else-if="column.key === 'formats'">{{ record.formats?.join(' / ') || '-' }}</template>
             <StatusBadge v-else-if="column.key === 'revision_usable'" :value="record.revision_usable" />
             <Space v-else-if="column.key === 'actions'" wrap>
+              <Button type="link" :disabled="Boolean(busyAction) || record.status !== 'ACTIVE'" @click="openLinks(record as Subscription)">
+                <template #icon><KeyRound :size="14" /></template>订阅链接
+              </Button>
               <Button type="link" @click="openEditor(record.id)"><template #icon><Settings :size="14" /></template>管理</Button>
               <Button type="link" :loading="tokenLoading[record.id]" @click="toggleTokens(record as Subscription)">
                 <template #icon><KeyRound :size="14" /></template>
                 Token 历史
               </Button>
-              <Button type="link" :disabled="Boolean(busyAction) || record.status !== 'ACTIVE'" :loading="busyAction === `rotate:${record.id}`" @click="rotate(record as Subscription)">
+              <Button type="link" :disabled="Boolean(busyAction) || record.status !== 'ACTIVE'" :loading="busyAction === `rotate:${record.id}`" @click="openLinks(record as Subscription)">
                 <template #icon><RotateCw :size="14" /></template>
                 轮换 Token
               </Button>
@@ -428,5 +461,14 @@ function closeDanger() {
     <SubscriptionEditor :open="editorOpen" :subscription-id="editorId" @close="editorOpen = false" @saved="reload" @delivery="delivery = $event" />
     <DangerConfirm :open="dangerOpen" :title="revokeTitle" :description="revokeDescription" :preview="preview" :busy="dangerBusy" :error-code="dangerErrorCode" :error-message="dangerErrorMessage" @close="closeDanger" @refresh="refreshPreview" @confirm="confirmRevoke" />
     <SecretDelivery :open="Boolean(delivery)" :delivery="delivery" @close="delivery = null" />
+    <StepUpDialog v-if="stepUpOpen" :open="stepUpOpen" @close="stepUpOpen = false" @verified="identityVerified" />
+    <Modal :open="Boolean(linkTarget)" title="订阅链接" :footer="null" :mask-closable="false" @cancel="!busyAction && (linkTarget = null)">
+      <p class="mb-3">订阅链接仅在签发或轮换成功时交付，请在交付窗口复制保存。服务器无法再次读取旧链接。</p>
+      <Alert class="mb-4" type="warning" show-icon message="轮换后旧链接将立即失效，已保存旧链接的客户端需要更新。" />
+      <Space>
+        <Button :disabled="Boolean(busyAction)" @click="linkTarget = null">取消</Button>
+        <Button type="primary" :loading="Boolean(busyAction)" @click="linkTarget && rotate(linkTarget)">确认轮换并获取新链接</Button>
+      </Space>
+    </Modal>
   </Page>
 </template>

@@ -8444,3 +8444,141 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 
 - receipt assertions0，matrix0，boundary0，skill0，diffcheck0，新增diff+两JSON11173bytes Gitleaks0/noleaks。status仅两份docs和两份安全receipt；将按精确路径stage/cachedcheck/commit/push，无其他修改。
 - 业务发布源码8f54917和最新审计源码5009e09的完整CI均已成功；后续仅回执提交用上述文档静态门禁比例验证，不追加版本或重启生产，不把未运行CI结果写成成功。费用状态保持unknown，后续只在有可归因外部账单后继续。
+
+
+## 2026-11-14T17:18:17.581988+08:00 - 用户请求打开线上管理页
+
+- scope: 仅打开既有线上管理页，无AWS写、部署、云账号或应用配置变更；复用现有8443SSH tunnel，不修改其他浏览器会话。主goal费用blocked不因打开页面请求自动完成。
+- CUA Chrome新临时页访问管理域8443两次导航超时；可见ERR_TIMED_OUT。本机只读lsof确认8443/9543均有既有ssh listener；strictTLS curl --resolve管理域8443到127.0.0.1返回HTTP200，exit0。普通DNS为本机代理fakeIP，hosts无管理域，系统HTTPS代理开启；未更改代理或hosts。
+- 独立online_access_route读取台账证实管理端口仅远端loopback，此前验收浏览器使用专用host-resolver映射；现有普通Chrome缺少此映射。sudo-n检查需用户密码(exit1)，未索取密码或提权。Terminal CUA被安全策略拒绝，未绕过该限制改用其他工具启动浏览器。
+- native typeText一次未正确输入冒号，浏览器成为搜索页；随后用paste准确URL纠正，最终仍超时。没有打开搜索结果链接、绕过TLS警告、读取运行凭据或修改安全设置。临时错误标签已关闭，用户既有标签/隧道/服务保持。
+- outcome: 没有声称线上管理页已在浏览器成功打开；访问阻塞在普通Chrome域名到loopback的路由配置，需用户启动仅此域映射的独立Chrome窗口。本轮未改代码/版本/tag，只有追加审计，可revert该条记录。
+
+## 2026-11-14T17:40:00+08:00 - 标准公网管理入口授权与实施范围
+
+- run_id: xray-public-admin-20261114。用户明确授权通过 https://admin.xray.ai163.cc 的443开放现有生产管理页，保留管理员登录、会话/CSRF及升级/删除等近期step-up。授权仅该主机入口、SSH部署、必要网关配置与公网验证；不创建/删除AWS资源、不执行真实升级或节点删除、不改变凭据或数据库安全历史。
+- read: AGENTS、project-conventions、xray-manager及三个references、progress/ledger尾、VERSION、git status/diff/log、production Compose、nginx模板、release/preflight/upgrade流程、相关测试和既有安全回执；有效命令exit0。只读定位存在glob不匹配或错误路径exit1，后续精确定位成功。首次台账追加脚本SyntaxError/exit1发生在执行前，未写文件，改用apply_patch追加。HEAD799da8f，VERSION0.14.10；原有ledger九行追加保持。
+- fresh read: 指定3.0.199.9通过既有known_hosts严格校验SSH，ss/docker只读exit0，X-ray六个HTTP/数据库服务healthy、四个后台服务running。443由X-ray订阅gateway占有，admin127.0.0.1:8443；公网严格TLS访问admin443返回404/exit0，证实入口尚未开放。仅读取config.env白名单非秘密host/bind/CIDR字段，不输出其余配置。
+- scope/decision: 使用主机既有Nginx stream SNI分流到现有TLS网关，订阅gateway443改绑loopback，主机分流仅监听公网对应私网IP443；绑定值保存在既有config.env，root升级runner保留非镜像配置。新增本项目stream配置模板/部署说明及真实本地TLS路由回归；不覆盖已执行发布快照、不改业务认证/版本/tag。主机nginx编译支持stream_ssl_preread，现有nginx-t成功，既有ACME/续期保持。
+- risks/rollback: 公网可达性增加，验证未登录拒绝、TLS域名隔离、Secure/HttpOnly/SameSite会话、CSRF及近期验证；写前保留精确配置备份，nginx测试通过才加载。回退移除本轮stream配置、恢复旧订阅bind并仅重建gateway；不恢复数据库/撤销/安全/云状态，不改其他站点/服务。
+- time_logic: 本轮使用Asia/Shanghai aware实际时钟，标题17:40仅近似阶段标签，最终回执提供精确时间；入口授权不延长过期AWS写窗口、不调整step-up/session TTL。所有凭据仅正常认证进程内使用，禁止截图或日志包含秘密。复用现有证书和正常管理员认证；验证完成前不声明上线成功。
+
+
+## 2026-11-14T18:30:11.113817+08:00 - 公网切换完成与会话退出缺口定位
+
+- 时间纠正：前一17:40标题是近似阶段标签，不是精确操作时刻；远端实际切换回执2026-11-14T10:24:29.764819+00:00（北京时间18:24:29）。不改写历史。
+- 新增tests/deploy/test_public_sni.py，RED缺配置1failed，增加public-sni.conf.template后首次夹具订阅端口不匹配导致TLS EOF，定位夹具9443与生产loopback443差异后修正夹具，GREEN1passed。联合原gateway3passed，全部deploy82passed26skip/exit0；skip来自未配置额外镜像和一次性Linux条件，不能声称全覆盖。真实network-none容器未占主机端口。采用TDD、systematic-debugging和verification技能；多次工具JS/临时脚本SyntaxError发生在执行前，无副作用，均重写后成功。
+- 部署：仅新增/opt/xray/ops/public-sni.conf.template与主机tcp/xray-public-sni.conf，root0600备份history/public-admin-20261114.env；独占runner锁/无pending后将现有config.env的订阅bind改loopback，仅gateway重建，nginx-t/reload/Composevalidate/wait均exit0。stream绑定172.26.3.194:443；现有TLS/ACME/证书续期不改，不覆盖已执行快照。复用最新gateway原Compose快照。
+- 验证：公网严格TLS admin200/subhealth200/普通DNS200；普通Chrome登录页可见，无resolver窗口或隧道需求。Chrome工具初次扩展UI阻挡，转native点击本次标签后看到登录页，已completion_summary；未修改其他会话。API内存正常登录200，Secure/HttpOnly/HostOnly/SameSiteStrict，升级GET200/current0.14.10；无近期验证升级/虚构节点delete均403 STEP_UP_REQUIRED；CSRF缺失/外域403；正常stepup200后无效升级400、无预览delete409，升级队列未变。
+- 额外真实发现：logout500。只读权限查询确认xray_admin_api对django_session DELETE=false，服务日志仅布尔匹配permission denied=true，未输出异常内容。与本轮入口无关的既有部署角色缺口会破坏用户要求的会话保护，纳入最小修复：仅会话表DELETE权限，不授予审计/撤销/节点DELETE。真实隔离PG测试RED1failed(permission denied)，补roles.sql白名单后GREEN1passed/exit0。允许写canonical roles.sql和生产精确GRANT；不改已执行不可变发布快照、不实际删除他人会话，回退只REVOKE本轮新增会话表权限（会恢复退出缺陷）。
+- 文件：新增public-admin.md部署/升级持久性及回退说明；持久配置来自runner保留非镜像配置与主机stream独立于source的源码证据，实际再次升级not-run。计划下一步精确GRANT、复验退出/会话撤销、静态/秘密检查、归档回执，不新增版本/tag、不提交云资源操作。
+
+
+## 2026-11-14T18:32:01.767924+08:00 - 公网与会话最终验收归档
+
+- canonical roles.sql同步/opt/xray后，仅对public.django_session授予xray_admin_api DELETE，exit0；不删除已有会话。真实PG角色测试从permission denied RED到GREEN；生产正常退出200、随后受保护GET401，修复已通过实际行为验证。线上不可变source未修改，后续旧版本bootstrap不会撤回该精确权限；未来发行必须携带canonical修复。无新phase release或tag，当前仍0.14.10。
+- 公网API验收脚本最终exit0：未登录401、login200、安全Cookie属性全满足、upgradeGET200/0.14.10、无近期验证upgrade/delete403 STEP_UP_REQUIRED、缺CSRF/外域403、正常stepup200、无效升级400/无preview删除409、重复GET会话保持/队列不变、logout200后401。仅虚构节点且无有效preview，不提交Operation或升级。前两次logout500的安全诊断脚本exit1已定位为既有角色缺陷；不遗漏失败。密码/CSRF/Cookie仅进程内，未截图、未持久化。
+- 复核部署主机ss/nginx/docker exit0：公网IP443由host nginx监听，loopback443/8443由本项目gateway监听；六服务healthy、四daemon running，后台容器未重启。普通Chrome标准URL登录页可见；普通DNS curl200，直接公网IP带标准SNI/严格TLS admin200与subhealth200。未修改hosts/代理、既有隧道或其他站点配置。
+- tests: deploy全套首次82passed26skip；配置专用PG镜像最终83passed25skip/exit0，JUnit/tmp/xray-public-admin-deploy-tests.xml；跳过项来自未提供backend/frontend镜像，不转passed。原gateway+新SNI真实networknone TLS3passed；role真实PG1passed；ruff0.13.1全改动测试0，最初错误backend/.venv/bin/ruff路径exit127后使用已有锁定版本成功。未新增源码业务逻辑，采用比例部署验证；未重跑完整后端/前端，本轮远端CI未运行。
+- writes: README增加新入口；deploy/nginx/public-admin.md记录复用、升级持久性与回退；progress追加当前门禁；artifacts/acceptance/0.14.10/public-admin-20261114仅三份脱敏JSON，无cookie/密码/URI/凭据。生产backup/config仅受限root路径，无内容入库。后续只跑文档/边界/秘密/diff最终门禁，不自动commit/push或发布。
+- limits/rollback: 主机SNI转发不保留原客户端IP，现有网关看到代理来源，认证限流可能共享来源桶；不信任客户端X-Forwarded-For，不削弱身份门禁。主机公网接口IP未来变化时需更新精确stream监听；本轮不承诺IP迁移。回退路径见public-admin.md，先释放公网监听再恢复订阅bind；不要覆盖后续配置。旧费用unknown不影响本轮公网入口完成，不声称所有历史外部验收完成。
+
+
+## 2026-11-14T18:32:57.403720+08:00 - 标准公网入口最终静态检查收尾
+
+- acceptance0/boundary0/ruff0/diffcheck0；skill默认python缺yaml exit1，改项目backend/.venv/bin/python后valid/exit0。本机未安装Gitleaks CLI，使用既有固定摘要network-none镜像对新增diff及全部新文件22088bytes扫描exit0；无泄露。最终status main@799da8f，五份tracked改动、三个新配置/测试文件与三份安全回执；保留最初用户九行ledger追加，未stage/commit/push/tag。
+- acceptance: 标准公网admin443与订阅健康各HTTP200/strictTLS、普通Chrome登录页可见；正常认证/会话退出/近期验证/CSRF/preview门禁passed。部署测试83passed25skipped，真实再升级或真实删除not-run，未把历史CI或费用结论套用本轮。回退及复用见deploy/nginx/public-admin.md，生产仍0.14.10，原费用unknown单独保持。此次请求已完成；最终回复提供标准入口及脱敏证据。
+
+
+## 2026-11-15T14:49:30.362638+08:00 - 公网入口恢复后当前状态复核
+
+- run_id: xray-public-admin-followup-20261115。前一轮为progress，当前读取发现公网配置已实际实施，不能按旧摘要再次部署。保留当前全部五个tracked改动、三个新配置/测试及三份回执，HEAD799da8f、版本0.14.10不变。继续使用既有用户公网入口/SSH/发布授权，仅读回生产和现有账单，不延长已过期AWS资源写窗口。
+- scope: 重新验证公网TLS/普通Chrome登录页、生产网关/服务健康，审阅角色最小DELETE与SNI隔离，按相干范围归档配置；账单因已跨日，只做一次有界只读复核，禁止资源创建/删除/标签写入或新报告。rollback: git revert本轮配置归档；生产沿用public-admin.md精确回退，不恢复撤销/安全/云历史。
+- meaningful reads: AGENTS、project-conventions、xray-manager、ledger/progress尾、当前diff、public-sni/public-admin/test_public_sni/test_initial_roles和三份安全回执，verification-before-completion/TDD技能。只读命令均0，/tmp helper搜索1表示无匹配；一次JS嵌套SSH格式SyntaxError执行前失败，一次rg两个旧路径不存在exit2，后续定位正确文件。
+- fresh probes: admin标准443直连3.0.199.9并校验域名TLS返回200/verify0/exit0。第一次订阅检查误用/healthz返回404/verify0/exit0，不当故障或成功；真实配置为/health/live，下一步改用该路径。普通Chrome已可见标准域管理员登录页，未输入或保存凭据。
+- time_logic: 使用实际Asia/Shanghai aware时间及UTC请求时间，当前2026-11-15；不沿用昨天的费用数据作为今日事实，不改session/step-up TTL；读回不续期AWS写授权。
+
+
+## 2026-11-15T14:50:40.400871+08:00 - 密码遗失后的本机钥匙串元数据核对
+
+- scope/authorization: 用户称管理员密码遗失；仅核对本机既有钥匙串条目存在性及仓库恢复命令，不读取或显示密码、不SSH、不重置凭据、不撤销现有会话。按已读xray-manager流程保持原工作树和并发追加。
+- reads/evidence: AGENTS、project-conventions、skill、ledger尾、identity recover_superadmin.py及development恢复段，git status均exit0；security find-generic-password不带-w且stdout/stderr丢弃，exit0确认指定service/account条目仍存在，仅记录布尔。存在条目不能证明其值仍是线上当前密码。recover_superadmin仅处理TOTP且要求已知密码，不能作为遗失密码重置方案。
+- outcome/reuse/rollback: 引导用户在钥匙串访问中显示既有条目；无生产/认证/代码/版本变化，无运行回退需求，仅追加审计可单独撤销。time_logic为Asia/Shanghai aware，未变更TTL；当前密码有效性not-run。
+
+## 2026-11-15 - 管理员登录失败诊断与正常认证验证
+
+- run_id: xray-admin-access-recovery-20261115。用户报告取出的密码登录失败，页面显示账号或密码错误；先诊断，不盲目重置。读取当前status/ledger、模型/manager、bootstrap/recover、change_password/revoke_all、限流及AuditService，有效命令exit0。两个审计追加临时Python脚本分别编码/字符串SyntaxError，执行前失败，无写入；本条补记。
+- 严格known_hosts SSH元数据exit0：唯一管理员xrayadmin、active=true、MFA未绑定、未锁定。钥匙串值仅进程内读取，通过SSH stdin校验，exit0/saved_password_matches=true；未输出密码/hash/密钥。
+- fresh verification: 公网3.0.199.9:443带admin域名SNI并严格校验TLS，不使用隧道；正常CSRF和同源POST login HTTP200/authenticated=true/mfa_required=false，仅注销本次测试session HTTP200，脚本exit0。所有凭据/CSRF/Cookie仅内存。证明当前保存值可登录，用户手工失败的具体输入差异未确认。
+- decision: 不重置可用密码、不撤销用户会话、不改认证/生产配置，指导准确账号xrayadmin及指定钥匙串条目、覆盖浏览器自动填充；不能将可能的账号/条目/输入差异说成已定位根因。Asia/Shanghai aware实际日期2026-11-15，保持限流60秒/step-up300秒。复用正常认证，无运行回退，仅追加审计可撤销；保留全部原工作树修改，无版本/tag/提交变化。
+
+## 2026-11-15 - 持续登录失败及明文截图后的密码轮换范围
+
+- run_id: xray-admin-rotate-20261115。用户在提出仍失败即重置的后续提供错误截图，密码明文可见；不复制截图密码或保存截图到证据。按当前管理员访问恢复范围对精确xrayadmin轮换密码，更新本机既有钥匙串，事务作废旧会话及未消费MFA挑战，保留TOTP配置和云/订阅/安全历史。无需更改代码/部署/版本。
+- scope: 采用Django set_password、revoke_all及AuditService；新密码本机安全随机生成，仅进程内/SSH stdin/macOS Keychain API交付，不进参数/日志/文件。读过当前模型、会话撤销、审计实现，原脏树保持。SSH严格known_hosts，精确原生产admin-api容器；无AWS写。
+- verification/rollback: 先确认保存材料可写再轮换，轮换后正常公网TLS+CSRF登录与退出，读取会话/挑战已撤销计数；不恢复已曝光旧密码/旧会话，失败时受控再次恢复。Asia/Shanghai日期2026-11-15，具体回执记录aware时间，TTL不变。
+
+## 2026-11-15T14:58:10.758449+08:00 - 管理员密码轮换与公网认证通过
+
+- 本机macOS Security framework API直接更新既有钥匙串条目，不通过-w参数传密码；新密码安全随机生成仅内存。严格SSH通过stdin输入旧/新值，在数据库事务中锁定唯一xrayadmin、校验原密码、set_password及last_password_change_at、revoke_all并追加identity.admin_access_recovery审计；远端exit0。无TOTP配置更改、无云资源/订阅/服务配置修改。
+- 安全读回：新密码匹配、旧密码不匹配、session_version推进；未撤销会话0、未消费挑战0。公网admin443严格TLS/CSRF正常login200/authenticatedtrue、stepup200、仅测试会话logout200；脚本最终exit0。未输出/保存任何密码、hash、Cookie或CSRF，不保存含明文的用户截图。临时编排脚本只有逻辑，无秘密，首次JS语法错误发生在执行前未写入。
+- completion/reuse/limits: 钥匙串service/account保持原值，用户需重新打开条目获取新值并覆盖浏览器旧自动填充。已完成轮换和实际公网认证验证，未声称用户浏览器已登录。保留全部既有工作树，无代码/版本/tag/提交变化；回退不恢复曝光密码或旧会话。最终git diff --check及status检查后交付，密码不在聊天/审计内。
+
+
+## 2026-11-15T14:55:13.300873+08:00 - 公网复核、独立审查与费用渠道变化
+
+- 当前线上fresh read: nginx-t0、版本0.14.10；修正docker模板转义后ps0，6个HTTP/数据服务healthy、4个daemon running；首次模板失败但组合命令最后VERSION0不能掩盖该错误。admin首页200、sub正确/health/live200、匿名system401、SNI/Host不符404、订阅域管理API404，所有curl严格TLS/exit0，普通Chrome标准URL登录页可见并保留为交付tab。未新增部署、云写或凭据操作。reverification-20261115.json安全记录。
+- independent session_permission_review: 真隔离PG角色1passed及runtime allocation角色1passed/exit0，DELETE新增仅django_session，审计/撤销墓碑/安全事件/云凭据/节点删除仍拒绝；首次系统python无pytest1，改用既有backend/.venv通过。独立SNI review与root fresh TLS测试各3passed/exit0，Host、未知SNI与端口路由契约一致，runner保留bind源码已核对。review发现public-admin.md称只更新镜像不精确，已改为镜像及安全快照路径；无运行变更。
+- 有界账单只读前置STS0：root profile摘要4a0ef08458dd匹配当前授权线上账号，default为b1746f68f5be未用于费用。AWS CE新数据RESOURCE_ID17条，其中us-east-1一条（昨天0）；候选资源摘要0b802eeb9f77，精确资源GetCostAndUsageWithResources返回USD0.0061233521/Estimated true，但无本节点标签映射，不能认定归属或最终费用。初次GetCostAndUsage按RESOURCE_ID分组ValidationException，官方接口能力不同；改为tag totals与WithResources后200。tag总额0/映射0仅表示无归因证据，不当节点零费用。billing-followup-20261115.json保存请求ID、计数和估算性质，无ARN/账号/凭据。
+- gates: acceptance0/boundary0/skill0/diff0；另一次读取复数check-boundaries不存在exit1，已定位正确单数脚本成功；后续全deploy重新运行，不复用昨天结果。当前新增文件仅配置/测试/安全回执和审计，无新版本/tag。一次台账写入脚本收到非UTF8输入exit1，解析前失败无写，重试UTF8模式。
+
+
+## 2026-11-15T15:12:01.729696+08:00 - 订阅签发近期验证与链接复制补齐范围
+
+- run_id: xray-subscription-stepup-copy-20261115。用户截图后明确触发为“签发 Token”，并将目标追加“要有订阅链接复制入口”。承接原测试/发布/线上升级授权；当前AWS资源写窗口过期，不为本UI修复创建云节点。
+- root cause: 订阅列表issueProfile/rotate与编辑器save只显示STEP_UP_REQUIRED原消息，没有就地验证；后端recent=True为正确边界，不移除。旧SecretDelivery已有图标复制但不明显；后端只保存digest且关闭后不可再次读取，不能为复制而明文存储旧Token或静默轮换。
+- scope: 新共享StepUpDialog及测试；订阅list/editor错误恢复和focused测试；SecretDelivery明确复制按钮及其回归；按需版本元数据/发布/线上升级与安全回执。禁止改变后端认证/MFA/会话TTL/Token摘要与撤销边界，禁止读其他项目或新云写。
+- behavior: 被403拦截后正常密码/已绑定TOTP验证成功，再由用户重试原操作；不自动重复签发/撤销。创建profile后验证重试仍复用原profile防重。列表新增明确链接入口，旧链接不可回读时解释并要求显式确认轮换后交付复制；不自动撤销旧链接。秘密只在现有交付内存五分钟，关闭/退出/卸载清除。
+- tests: 先RED复现无验证入口，再GREEN；验证成功/失败/取消/并发及重试不重复、复制真实clipboard调用与失败fallback、已有撤回preview契约；前端全suite/type/lint/build、部署权限回归、交付19gate和发布精确SHA证据。
+- risks/rollback: UI失败不改变已签发Token；网络不确定不得自动生成新令牌。线上升级使用新版本与前组digest/config回退，保留已执行0.14.10快照，不回滚DB/撤销/安全/云历史。time_logic沿用服务端recent_auth_until、交付5分钟清除，不延长授权或认证。
+- reads: systematic-debugging/TDD及writing-good-tests，subscriptions list/editor/tests、SecuritySettings、session/auth/request、SecretDelivery及其tests、package/vitest/setup、后端订阅权限。发现旧api/client及backend subscription api/services路径不存在exit1/2，已定位admin_views和request；读取失败无状态变化。独立review确认同根因，既有3项订阅测试passed但不覆盖此缺口。
+
+
+## 2026-11-15T15:20:58.194674+08:00 - 0.14.11 本地完整门禁环境准备
+
+- run_id: xray-gate-01411-20261115；子代理local_gate_01411_environment仅准备本地Fake/Stub测试环境，不运行完整门禁、不SSH/AWS/生产。已读AGENTS、project-conventions、xray-manager、local-port-management、ledger尾、Makefile/test Compose/check-local/runtime/E2E配置与当前脏树，保留所有并发修改。
+- scope/authorization: 使用当前仓库已登记Gate项目2fd3b838ea894306b826cc57534c87e8端口55435/56382、E2E项目5098b32dceeb4593bb7455676fe26859端口55671至55674；portctl check各exit0，当前无监听/无该新project容器和卷。计划经portctl run启动全新独立Compose project xray-gate-01411-20261115，卷同名后缀postgres/redis，不复用其他数据库、秘密或旧卷；提供临时Corepack wrapper以避免嵌套调用全局pnpm11。
+- risk/rollback: 仅loopback新测试服务，完整门禁由root代码冻结后运行；回退用此精确Compose project down且不带-v，保留本轮卷，不释放端口登记。不得停止其他容器/进程。time_logic为Asia/Shanghai aware实际时钟，无业务TTL变更。
+- current runtime evidence: Python3.13.17、Node22.23.4、Corepack pnpm10.33.0、Compose5.5.0、固定Xray26.3.27均exit0；端口登记只读检查与本项目范围搜索exit0；尚未启动容器。
+
+
+## 2026-11-15T15:23:14.168560+08:00 - 订阅验证和复制入口候选实现
+
+- user steering: 已确认错误来自签发Token；明确要求订阅管理有复制入口。新list入口“订阅链接”先解释只摘要不可回读，再显式确认轮换，旧链接失效提示；原轮换也经同一确认，不静默轮换。SecretDelivery统一和小火箭按钮均有可见文字，从当前内存URL派生格式，clipboard失败保留手动复制。
+- RED/GREEN: root新增subscription-actions两测试对旧list实际2failed，分别无验证输入和无链接入口；最小list集成StepUpDialog、验证后显式重试、初次revoke preview保存errorCode。4文件focused22passed0；当前完整前端21files112passed/exit0，typecheck与定向ESLint0。一次测试写入JS引号SyntaxError执行前失败，改apply_patch成功；初次测试无router警告已安装实际memoryRouter。
+- agents: StepUpDialog组件/6测试；SecretDelivery9测试；editor5测试，均先RED后GREEN。当前会话每次正常loadSession确定MFA，未知/失效禁提交，密码/动态码在关闭/失败/成功/卸载清除，异步关闭不emit verified；editor保留profileId，重试不会重复创建。copy不发网络/不写浏览器存储，5分钟与退出清除保持。
+- metadata: 0.14.11九个元数据路径同步，无依赖更新或migration，双schema字节一致SHA b32e5e5ec8f74790d108c334469eccbd2d9d9c80d2bd2beb7171f7ef25d42eff，generate-api0、uvlockcheck0、发布/契约测试44passed0；仍candidate，不冒称CI/发布/生产新版本。首次schema旧路径/系统python错误已修正。后续matrix/progress由root统一更新。
+- reuse/rollback: 新共享StepUpDialog仅正常认证，server为权威；当前线上0.14.10未变，新版本发布后按前组digest/config回退但安全/撤销/云历史保留。费用审查新增官方价格/历史EC2磁盘精确缺失与指标，无云写，最终成本unknown与预算上界分开记录。
+
+
+## 2026-11-15T15:23:14.709954+08:00 - 0.14.11 门禁环境就绪交接
+
+- start evidence: portctl managed run + 精确新Compose project xray-gate-01411-20261115 up -d --wait exit0。新postgres/redis容器均running/healthy，明确发布127.0.0.1:55435/56382；Compose labels指向本仓库deploy/compose，卷仅xray-gate-01411-20261115-postgres/redis。未停止其他服务、未复用/删除历史卷。
+- temporary tools: /tmp/xray-gate-01411-20261115-tools/pnpm仅调用既有Corepack，不改全局工具；scripts/check-runtime.sh用该wrapper exit0，Python3.13.17/Node22.23.4/pnpm10.33.0。/tmp同目录gate-command.txt写入固定已登记E2E55671至55674、外部测试服务标记和安全临时auth-state路径，完整门禁尚未运行。一次构造JS字符串SyntaxError发生在执行前，无写；改String.raw后成功。
+- reuse/handoff: root代码冻结及0.14.11版本元数据完成后可运行临时命令文件，check-local会构建尚不存在的0.14.11-local三镜像；不把旧0.14.10镜像当新候选。E2E临时auth路径/tmp/xray-gate-01411-20261115-auth/admin.json不得纳入Git或打印。
+- cleanup/rollback: 验证完仅docker compose -p xray-gate-01411-20261115 -f deploy/compose/test.yml down，不带-v；保留命名卷和端口登记。当前状态passed environment preparation / not-run complete gate，不能称业务或生产验收通过。无SSH/AWS/提交/tag。
+
+
+## 2026-11-15T15:29:26.235100+08:00 - 本地gate端口边界与补充审查
+
+- local gate handle43081 authoritative exit1；前runtime/compose/django/migration/ruff五gate均0，backend-tests内固定Xray临时socket由OS分配56141至56145，外层portctl仅登记E2E端口而停止本次进程组。原日志与summary保留，不记完整成功，不重新运行同一失败命令；未停其他服务，专用PG/Redis继续healthy。局部focused单测不代表完整gate。本轮选择精确提交的隔离GitHub CI完成19gate，不为临时unit socket扩张登记或改业务代码。
+- code review两项实际异步边界：StepUpDialog需在全局401清理时清空密码/码并关闭、使延迟响应失效；SecretDelivery旧clipboardPromise需绑定交付代次，不能污染新交付成功或错误反馈。两个独立代理按RED/GREEN补齐同文件测试，完成后重跑前端suite/type/lint/build再冻结。
+- git/GitHub: 本机gh缺失127，不安装或重配；既有osxkeychain git credential只在Python内存用于repo API200，权限admin/push，未输出或落地token。Git push/tag与Release仍沿用用户发布授权；真实生产升级须候选CI成功、镜像digest验证、备份与受信任快照完成后进行。
+
+
+## 2026-11-15T15:35:10.161668+08:00 - 0.14.11候选冻结前验证
+
+- 两项异步边界按RED/GREEN完成：StepUpDialog全局401清空/关闭、延迟session/stepup失效，8passed；SecretDelivery交付代次与复制反馈定时器回收，12passed；root重新完整前端21files117passed/exit0，vue-tsc及全前端ESLint0，Vite build0。独立focused红色失败及中间测试修正保留。
+- 验收矩阵顶层版本0.14.11与aware generated_at同步，原历史验收行保持各自scope；acceptance0/boundary0/skill0/diff0。本地完整gate前5项0后端口管理阻断结果保留，不记全套成功。新差异与所有新文件Gitleaks113641bytes/exit0/noleaks；第一次中文台账脚本NonUTF8解析失败无写，本条重试修正，不遗漏。
+- amd64 backend构建exit0；frontend在QEMU中pnpm/Vite输出完成后SegmentationFault139，Dockerbuildexit1。复查Dockerfile确认Node builder无原生平台选择，静态输出与架构无关；最小配置修复FROM --platform=$BUILDPLATFORM，最终nginx运行层仍按target linux/amd64，重构建handle86360待终态；不掩盖失败或绕过构建命令。新增Dockerfile范围已授权为必要生产构建修复，后续CI和镜像实际运行门禁验证。
+- 计划stage仅本轮相干源代码/测试/版本/配置/审计和安全回执；本地gate日志保留但不作为全套passed。提交后正常gitpush main并跟踪精确SHA Delivery Gates，CI未成功不创建发布tag或应用生产升级。回退源码gitrevert，线上0.14.10旧digest/config及已执行快照保留。

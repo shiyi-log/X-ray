@@ -1,0 +1,80 @@
+{
+  "checked_at": "2026-11-15T06:51:21.288666+00:00",
+  "account_fingerprint": "4a0ef08458dd",
+  "writes_attempted": false,
+  "time_period_utc": {
+    "Start": "2026-11-13",
+    "End": "2026-11-14"
+  },
+  "resource_cost_status": "unknown",
+  "final_bill_confirmed": false,
+  "resource_dimensions": {
+    "http_status": 200,
+    "request_id": "e72d83c5-6178-44de-af38-714f9d41dd91",
+    "total_count": 17,
+    "us_east_1_count": 1,
+    "pagination_present": false
+  },
+  "exact_node_tag_cost": {
+    "error_code": "ValidationException"
+  },
+  "interpretation": "No resource attribution is established by an empty result; account totals or bundle prices are not the final resource bill.",
+  "query_correction": "GetCostAndUsage cannot group by RESOURCE_ID; exact tag query corrected to totals, resource query uses GetCostAndUsageWithResources.",
+  "exact_node_tag_cost_corrected": {
+    "http_status": 200,
+    "request_id": "8124acc8-1994-48c2-83bf-fa7e9f12b1d1",
+    "groups": [],
+    "totals": [
+      {
+        "UnblendedCost": {
+          "Amount": "0",
+          "Unit": "USD"
+        }
+      }
+    ],
+    "estimated_flags": [
+      true
+    ],
+    "pagination_present": false
+  },
+  "candidate_fingerprint": "0b802eeb9f77",
+  "candidate_resource_cost": {
+    "http_status": 200,
+    "request_id": "c72c3244-a377-4c8d-b2e4-224da433719b",
+    "groups": [
+      {
+        "resource_fingerprint": "0b802eeb9f77",
+        "metrics": {
+          "UnblendedCost": {
+            "Amount": "0.0061233521",
+            "Unit": "USD"
+          }
+        }
+      }
+    ],
+    "totals": [
+      {}
+    ],
+    "estimated_flags": [
+      true
+    ],
+    "pagination_present": false
+  },
+  "node_tag_resource_mapping": {
+    "http_status": 200,
+    "request_id": "c18f8b35-c3b6-435f-b19d-2b8cd4087be6",
+    "matched_candidate": false,
+    "count": 0,
+    "pagination_present": false
+  },
+  "latest_checked_at": "2026-11-15T06:52:20.865923+00:00",
+  "provider_attribution_followup": {
+    "checked_at": "2026-11-15T06:57:47.631073+00:00",
+    "writes_attempted": false,
+    "matching_create_instance_count": 1,
+    "cloudtrail_request_id": "d011d524-48b3-4cf8-be1d-ff698f364074",
+    "provider_operations": {
+      "error_code": "NotFoundException"
+    }
+  }
+}

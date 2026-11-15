@@ -1,0 +1,30 @@
+{
+  "checked_at": "2026-11-14T18:31:24.539484+08:00",
+  "public_checks": {
+    "admin.xray.ai163.cc": {
+      "http": 200,
+      "strict_tls": true,
+      "exit": 0
+    },
+    "sub.xray.ai163.cc": {
+      "http": 200,
+      "strict_tls": true,
+      "exit": 0
+    }
+  },
+  "ordinary_chrome_login_page_visible": true,
+  "browser_origin": "https://admin.xray.ai163.cc",
+  "domain_mapping_or_tunnel_required": false,
+  "current_version": "0.14.10",
+  "deployment_exit": 0,
+  "auth_verification_exit": 0,
+  "tests": {
+    "passed": 83,
+    "skipped": 25,
+    "exit": 0
+  },
+  "session_delete_grant_exit": 0,
+  "real_upgrade_submitted": false,
+  "real_server_deleted": false,
+  "application_release_performed": false
+}

@@ -1,6 +1,6 @@
 ARG NODE_IMAGE=node@sha256:752ea8a2f758c34002a0461bd9f1cee4f9a3c36d48494586f60ffce1fc708e0e
 ARG NGINX_IMAGE=nginx@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284
-FROM ${NODE_IMAGE} AS builder
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS builder
 
 RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 WORKDIR /build/frontend

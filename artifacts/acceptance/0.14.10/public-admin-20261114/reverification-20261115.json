@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-11-15T14:55:00+08:00",
+  "timestamp_precision": "phase minute; individual request times not captured",
+  "application_version": "0.14.10",
+  "transport": "public_ip_443_strict_hostname_tls",
+  "ssh_tunnel_used": false,
+  "public_admin_http": 200,
+  "subscription_health_live_http": 200,
+  "tls_verify_result": 0,
+  "anonymous_admin_api_http": 401,
+  "sni_http_host_mismatch_http": 404,
+  "subscription_host_admin_api_http": 404,
+  "ordinary_chrome_login_page_visible": true,
+  "host_nginx_config_test_exit": 0,
+  "healthy_http_and_data_services": 6,
+  "running_background_services": 4,
+  "cloud_resource_writes": false,
+  "production_mutations": false,
+  "corrections": [
+    "First subscription probe used nonexistent /healthz and returned 404; canonical /health/live returned 200.",
+    "First docker formatting command failed; corrected names/status-only read succeeded."
+  ]
+}

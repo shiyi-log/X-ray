@@ -13,13 +13,18 @@ const secret = ref<SecretDeliveryValue | null>(null);
 const copied = ref('');
 const copyError = ref('');
 let timer: number | undefined;
+let feedbackTimer: number | undefined;
+let generation = 0;
 
 function wipe() {
+  generation += 1;
   secret.value = null;
   copied.value = '';
   copyError.value = '';
   if (timer) window.clearTimeout(timer);
+  if (feedbackTimer) window.clearTimeout(feedbackTimer);
   timer = undefined;
+  feedbackTimer = undefined;
 }
 
 function close() {
@@ -47,14 +52,36 @@ onScopeDispose(() => {
 });
 
 const unifiedUrl = computed(() => secret.value?.url || null);
+const shadowrocketUrl = computed(() => {
+  if (!unifiedUrl.value) return null;
+  try {
+    const url = new URL(unifiedUrl.value);
+    url.searchParams.set('format', 'shadowrocket');
+    return url.toString();
+  } catch {
+    return null;
+  }
+});
 
 async function copy(label: string, value: string) {
+  if (!props.open || !secret.value) return;
+  const attempt = generation;
   copyError.value = '';
+  copied.value = '';
+  if (feedbackTimer) window.clearTimeout(feedbackTimer);
+  feedbackTimer = undefined;
   try { await navigator.clipboard.writeText(value); }
-  catch { copyError.value = '剪贴板不可用，请手动复制订阅链接。'; return; }
+  catch {
+    if (generation === attempt && props.open && secret.value) {
+      copyError.value = '剪贴板不可用，请手动复制订阅链接。';
+    }
+    return;
+  }
+  if (generation !== attempt || !props.open || !secret.value) return;
   copied.value = label;
-  window.setTimeout(() => {
-    if (copied.value === label) copied.value = '';
+  feedbackTimer = window.setTimeout(() => {
+    if (generation === attempt && copied.value === label) copied.value = '';
+    feedbackTimer = undefined;
   }, 1600);
 }
 </script>
@@ -108,6 +135,19 @@ async function copy(label: string, value: string) {
                 <Check v-if="copied === 'unified-url'" :size="16" />
                 <Clipboard v-else :size="16" />
               </template>
+              {{ copied === 'unified-url' ? '已复制' : '复制订阅链接' }}
+            </Button>
+          </div>
+        </Descriptions.Item>
+        <Descriptions.Item v-if="shadowrocketUrl" label="小火箭订阅链接">
+          <div class="flex items-start justify-between gap-3">
+            <code data-testid="shadowrocket-url" class="min-w-0 break-all">{{ shadowrocketUrl }}</code>
+            <Button aria-label="复制小火箭链接" title="复制小火箭链接" @click="copy('shadowrocket-url', shadowrocketUrl)">
+              <template #icon>
+                <Check v-if="copied === 'shadowrocket-url'" :size="16" />
+                <Clipboard v-else :size="16" />
+              </template>
+              {{ copied === 'shadowrocket-url' ? '已复制' : '复制小火箭链接' }}
             </Button>
           </div>
         </Descriptions.Item>

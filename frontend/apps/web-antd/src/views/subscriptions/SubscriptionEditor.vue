@@ -3,12 +3,16 @@ import { reactive, ref, watch } from 'vue';
 import { Alert, Button, Form, Input, Modal, Table, Tabs } from 'ant-design-vue';
 
 import { resourcesApi, type SecretDelivery, type SubscriptionDetail } from '@/api/resources';
+import { ApiError } from '@/api/request';
+import StepUpDialog from '@/components/StepUpDialog.vue';
 
 const props = defineProps<{ open: boolean; subscriptionId?: string }>();
 const emit = defineEmits<{ close: []; saved: []; delivery: [value: SecretDelivery] }>();
 const loading = ref(false);
 const saving = ref(false);
 const error = ref('');
+const identityVerified = ref(false);
+const stepUpOpen = ref(false);
 const detail = ref<SubscriptionDetail>();
 const tab = ref('profile');
 const profileId = ref('');
@@ -17,6 +21,8 @@ const form = reactive({ name: '' });
 const createKey = ref('');
 
 watch(() => props.open, async (open) => {
+  stepUpOpen.value = false;
+  identityVerified.value = false;
   if (!open) return;
   error.value = '';
   loading.value = true;
@@ -42,9 +48,10 @@ watch(() => props.open, async (open) => {
 });
 
 async function save() {
-  if (saving.value) return;
+  if (saving.value || stepUpOpen.value) return;
   saving.value = true;
   error.value = '';
+  identityVerified.value = false;
   try {
     const name = form.name.trim();
     if (!name) throw new Error('请输入名称');
@@ -62,10 +69,27 @@ async function save() {
     emit('saved');
     emit('close');
   } catch (caught) {
-    error.value = caught instanceof Error ? caught.message : '保存失败';
+    if (caught instanceof ApiError && caught.code === 'STEP_UP_REQUIRED') {
+      error.value = '签发或保存订阅需要近期身份验证。请验证后再次保存。';
+      stepUpOpen.value = props.open;
+    } else {
+      error.value = caught instanceof Error ? caught.message : '保存失败';
+    }
   } finally {
     saving.value = false;
   }
+}
+
+function identityConfirmed() {
+  stepUpOpen.value = false;
+  error.value = '';
+  identityVerified.value = true;
+}
+
+function close() {
+  if (saving.value) return;
+  stepUpOpen.value = false;
+  emit('close');
 }
 </script>
 
@@ -77,9 +101,10 @@ async function save() {
     :footer="null"
     :confirm-loading="saving"
     :mask-closable="false"
-    @cancel="!saving && emit('close')"
+    @cancel="close"
   >
     <Alert v-if="error" type="error" show-icon :message="error" class="mb-4" role="alert" />
+    <Alert v-if="identityVerified" type="success" show-icon message="身份已验证，请核对订阅后再次保存。" class="mb-4" role="status" />
     <Tabs v-model:active-key="tab">
       <Tabs.TabPane key="profile" tab="订阅">
         <Form layout="vertical" :model="form" @finish="save">
@@ -124,4 +149,5 @@ async function save() {
       </Tabs.TabPane>
     </Tabs>
   </Modal>
+  <StepUpDialog v-if="stepUpOpen && open" :open="true" @close="stepUpOpen = false" @verified="identityConfirmed" />
 </template>
