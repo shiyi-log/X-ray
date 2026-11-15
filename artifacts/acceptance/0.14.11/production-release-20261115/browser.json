@@ -1,0 +1,39 @@
+{
+  "recorded_at": "2026-11-15T16:21:44.045442+08:00",
+  "source": "actual Chrome CUA/native AX observations recorded by the executing agent; clipboard values compared only in memory",
+  "version": "0.14.11",
+  "normal_admin_login": true,
+  "normal_password_step_up": true,
+  "draft_preserved_after_step_up": true,
+  "unique_test_profile_created": true,
+  "profile_id": "97faecb2-26ba-4209-b9b6-009d957b567c",
+  "subscription_id": "3c09940e-0224-4bd8-89d7-f44e476cf0b4",
+  "existing_2222_mutated": false,
+  "unified_copy_button_visible": true,
+  "shadowrocket_copy_button_visible": true,
+  "unified_full_clipboard_match": true,
+  "shadowrocket_full_clipboard_match": true,
+  "shadowrocket_format_parameter_match": true,
+  "closed_delivery_unified_url_dom_count": 0,
+  "list_subscription_link_entry_visible": true,
+  "explicit_rotation_confirmation": true,
+  "old_link_invalidity_warning_visible": true,
+  "rotated_delivery_url_changed": true,
+  "api_additional_rotations": 2,
+  "final_token_epoch": 4,
+  "secrets_persisted": false,
+  "screenshots_capture_secrets": false,
+  "screenshots": [
+    "subscription-links.jpg",
+    "link-rotation-confirm.jpg",
+    "subscription-final.jpg"
+  ],
+  "step_up_screenshot_scope": "step-up.jpg captures preserved draft/form error; it is not an image of the fully rendered verification dialog",
+  "browser_final_test_profile_status": "REVOKED",
+  "new_cloud_operations": false,
+  "clipboard_values_not_in_receipt": true,
+  "subscription_observation_interval_utc": [
+    "2026-11-15T07:58:40.160206+00:00",
+    "2026-11-15T08:10:00.550934+00:00"
+  ]
+}

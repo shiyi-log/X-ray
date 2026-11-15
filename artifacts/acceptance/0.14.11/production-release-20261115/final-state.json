@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-11-15T08:19:07.602015+00:00",
+  "transaction_read_only": true,
+  "automation": {
+    "pool_sync_enabled": false,
+    "daily_restart_enabled": false,
+    "usage_sync_enabled": false
+  },
+  "node_status_sync": {
+    "enabled": false
+  },
+  "nonterminal_operations": 0,
+  "consuming_nodes": 0,
+  "test_profile_status": "REVOKED",
+  "test_token_epoch": 4,
+  "existing_2222": {
+    "exists": true,
+    "has_subscription": false
+  },
+  "cloud_writes_performed": false
+}

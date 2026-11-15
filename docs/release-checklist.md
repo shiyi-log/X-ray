@@ -1,8 +1,30 @@
 # 交付与发布检查表
 
-## v0.14.10 当前状态（2026-11-14）
+## v0.14.11 当前状态（2026-11-15）
 
-本节是当前发布索引；下方各旧版本条目仅描述当时的运行结果。精确源码为
+当前线上与正式标签源码为 `d037899d15bcdb5a6f27d9255b27270be0a5d6fe`。
+证据目录：`artifacts/acceptance/0.14.11/production-release-20261115/`。
+
+- [x] 精确源码 CI `43690632106`，19/19 gate exit 0；后端667 passed、1 skipped，前端117、E2E8。
+- [x] annotated v0.14.11及正式Release445892040；三项资产独立下载，GitHub digest/SHA256SUMS/内外manifest一致。
+- [x] 正常公网登录、step-up与前端在线升级0.14.10→0.14.11，任务51b28c61-b092-4092-b318-72f5a3eae5b9 SUCCEEDED/COMPLETE，刷新会话保持。
+- [x] 订阅列表“订阅链接”、统一和小火箭两个可见复制按钮；真实Chrome完整剪贴板匹配，关闭后交付清空；验证后草稿保留且不重复创建。
+- [x] 显式轮换提示旧链接立即失效；轮换及撤回GET/HEAD410，缺preview409，profile撤回Operation成功，测试profile已REVOKED，原2222未签发。
+- [x] 十服务running、六healthy；严格TLS管理200/订阅健康200/匿名system401/订阅域管理404。加密备份checksum有效，回退文件及安全快照存在；本轮未再次解密备份，先前隔离恢复证据保留。
+- [x] 本轮无AWS写；自动补池、每日重启、状态同步和流量同步开关均关闭，无非终态Operation、无占配额节点。本轮保留池expected1、assigned/ready/published0的差异显示，不擅改用户配置。
+- [x] 既有真实Lightsail补齐、计划重启、新IP/健康/订阅写回、流量、节点数、撤回正控和自动缩容验收见下方0.14.10历史证据，本轮不重复建云资源。
+- [x] 预算核对已完成：已知组件USD124.75771355652、附假设审慎评估额度USD250；最新单节点预算USD25，报告列明预留与限制，未将评估写成无条件最终账单硬上界。
+- [ ] 逐资源最终账单仍unknown；功能完成不额外等待最终发票。
+- [ ] 一次性Linux/systemd集成、SWAS及Shadowrocket iOS真机未运行，不以订阅格式或Lightsail证据冒充。
+
+应用回退使用 `/var/lib/xray/upgrade/history/51b28c61-b092-4092-b318-72f5a3eae5b9.env`，
+源码回退使用v0.14.10或git revert；不得恢复已撤销、安全或云状态。AWS写授权已过期。
+
+---
+
+## v0.14.10 历史验收状态（2026-11-14）
+
+本节仅描述该版本当时的验收结果。精确源码为
 `8f54917c0504ce3764897f44dae70818cc8aa75d`，当前证据见
 `artifacts/acceptance/0.14.10/production-release-20261114/` 和验收矩阵。
 

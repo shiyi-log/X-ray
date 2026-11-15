@@ -1,0 +1,33 @@
+{
+  "checked_at": "2026-11-15T08:10:00.550934+00:00",
+  "version": "0.14.11",
+  "profile_id": "97faecb2-26ba-4209-b9b6-009d957b567c",
+  "subscription_id": "3c09940e-0224-4bd8-89d7-f44e476cf0b4",
+  "unique_test_profile": true,
+  "credential_count": 0,
+  "old_after_rotation": {
+    "get": 410,
+    "head": 410
+  },
+  "missing_preview_http": 409,
+  "token_revoke_http": 200,
+  "new_after_revoke": {
+    "get": 410,
+    "head": 410
+  },
+  "profile_revoke_http": 202,
+  "operation_id": "3ae42252-bb80-42c8-ae90-41a3eca0adcf",
+  "operation_status": "SUCCEEDED",
+  "final_profile_status": "REVOKED",
+  "final_credential_count": 0,
+  "node_counts": {
+    "expected": 1,
+    "assigned": 0,
+    "ready": 0,
+    "published": 0,
+    "mismatch": true
+  },
+  "logout_http": 200,
+  "secrets_persisted": false,
+  "new_cloud_operations": false
+}

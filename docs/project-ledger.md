@@ -8582,3 +8582,51 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - 验收矩阵顶层版本0.14.11与aware generated_at同步，原历史验收行保持各自scope；acceptance0/boundary0/skill0/diff0。本地完整gate前5项0后端口管理阻断结果保留，不记全套成功。新差异与所有新文件Gitleaks113641bytes/exit0/noleaks；第一次中文台账脚本NonUTF8解析失败无写，本条重试修正，不遗漏。
 - amd64 backend构建exit0；frontend在QEMU中pnpm/Vite输出完成后SegmentationFault139，Dockerbuildexit1。复查Dockerfile确认Node builder无原生平台选择，静态输出与架构无关；最小配置修复FROM --platform=$BUILDPLATFORM，最终nginx运行层仍按target linux/amd64，重构建handle86360待终态；不掩盖失败或绕过构建命令。新增Dockerfile范围已授权为必要生产构建修复，后续CI和镜像实际运行门禁验证。
 - 计划stage仅本轮相干源代码/测试/版本/配置/审计和安全回执；本地gate日志保留但不作为全套passed。提交后正常gitpush main并跟踪精确SHA Delivery Gates，CI未成功不创建发布tag或应用生产升级。回退源码gitrevert，线上0.14.10旧digest/config及已执行快照保留。
+
+
+## 2026-11-15T15:46:49.436529+08:00 - 0.14.11 精确CI通过、镜像验证与发布执行
+
+- reuse run_id xray-subscription-stepup-copy-20261115。承接用户已授权发布/线上升级和订阅复制要求；无AWS资源写。恢复后重读约定/技能/台账/进度/源码runner、当前clean main d037899，保持分支。首次若干zsh通配路径无匹配exit1及不存在config/example路径已改为rg实际文件定位，无变更。
+- actual CI readback: d037899d15bcdb5a6f27d9255b27270be0a5d6fe run43690632106/job132740331004于07:44:09Z success；artifact14152132956 ZIP SHA256 6f665c31d1629bc5b2211c9acd866a094634af960c0827ef85cb98694b0704e1与GitHub digest相同，root独立解析summary19项均0。后端667passed1skip（需专用一次性Linux/systemd），frontend117passed、E2E8passed；本机portctl失败原结果保留。
+- image gates handle12866 exit0/12passed；两新镜像linux/amd64，save/gzip/SSH/load7805 exit0，registry tag/push28757 exit0；实际OCI manifest body SHA256与Docker-Content-Digest一致，digest pull exit0并inspect amd64，backend dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638、frontend a6518601264074284cefb7d6a4326e8bd9bbca2c5600269d900d43b777eeff9d。此处digest事实由registry请求验证，非仅本地image ID。
+- production readiness91436 exit0：upgrade.timer active、新0.14.11快照absent、既有registry running。目录只读find49770末尾不存在/etc/xray/upgrade.conf使exit1；已实际读取catalog/0.14.10manifest60096 exit0。生产未切换仍0.14.10。接下来以git archive精确d037899生成root可信新快照，保留0.14.10历史；CI通过后annotated v0.14.11及正式workflow_dispatch，核验三资产再正常session/CSRF/step-up在线升级。
+- browser: 普通Chrome旧订阅页可读但会话已失效；正常登录尝试因CUA debugger连接不稳未提交，非密码验证失败。首security CLI读取在CUA30秒超时，改Security.framework只读在进程内确认成功，不输出密码；脚本只有读取逻辑无秘密，仅供受控capture，禁止直接打印调用。无凭据轮换或认证绕过。
+- rollback: 应用沿用0.14.10 immutable digest与root history/env，数据库/撤销/安全/云历史保留；源码revert；未完成新线上验收前不称已上线。time_logic aware UTC/AsiaShanghai；请求90分钟TTL及服务端recent300秒、交付5分钟不变。
+
+
+## 2026-11-15T15:57:48.425860+08:00 - 0.14.11正式发布与在线升级预检纠正
+
+- annotated v0.14.11精确d037899正常push exit0；release workflow_dispatch HTTP204/run43691516917 success，公开Release445892040三资产逐个下载，GitHub摘要/SHA256SUMS/内外manifest精确commit一致，release-verify exit0，安全回执production-release-20261115/release.json。
+- git archive d037899 deploy/installer/VERSION经严格SSH提取新root快照exit0，47文件无symlink/hardlink、uid0且go-w，manifest摘要39d255a5fa0f54b1364c932885f6a23ff90999118f173884e609e4aa1432e721，0.14.10快照保留。初次远端Python heredoc因换行字符串SyntaxError exit1，解析前未写manifest；改为脚本stdin48268 exit0。catalog在CI/Release资产验证后原子追加0.14.11、root0644，exit0。
+- normal Chrome登录成功，未绑定TOTP、密码stepup成功。CUA debugger/AX stale多次受限，按文档改Chrome原生AX输入完成，同服务既有密码仅内存，不写剪贴板/存储/日志。未改密码、MFA或认证边界。
+- first UI upgrade d35b7565-96c4-4d32-b0a5-11de9ed5061a FAILED/VALIDATING/RELEASE_UNTRUSTED；只读trace定位/opt/xray/VERSION uid0 mode0664（新snapshot已通过），未执行备份/部署/服务切换，仍0.14.10。精确chmod0644后完整_release/current_version/config trust checks exit0，保留原失败结果。
+- 用户原升级授权内第二次UI提交51b28c61-b092-4092-b318-72f5a3eae5b9 accepted，正常host runner BACKUP→RELEASING；当前未终态，不称线上0.14.11成功。回退记录history/<job>.env，旧镜像保留，安全/撤销/云状态不回滚。
+- budget independent附件完成：5small整月60、Lightsailrunner跨月48、历史EC2七天8.8704、gp3整月4.8、IPv4 0.84、双向流量均按0.12计2.24731355652，已知124.75771355652；250评估包络与最新25验收均含明确预留假设，不是无条件最终账单封顶。STS/PriceList只读0，官方AmazonVPC IPv4 0.005/h，requestb6793137-a8e3-43a3-a54c-b3fd3c5230f2。旧94a91b85428b与4a0ef08458dd是相同账号带/不带终止换行的SHA输入差异，不算两个账号；最终账单unknown不另加为必须等待发票门禁。
+- reads: release-lib/drain/backup scripts、frontend delivery/editor/stepup、backend admin_views与upgrade/urls、版本索引/matrix。错误的system/api、backup.py/README路径只读失败已改rg实际路径；无需业务代码变化。预算附件算术/hash/链接与boundary/Gitleaks/diff均0，前次构造任务两语法/链接正则失败无写已披露。
+
+
+## 2026-11-15T16:18:32.829414+08:00 - 0.14.11线上验收收尾范围与最终只读核对
+
+- reuse run_id xray-subscription-stepup-copy-20261115；恢复后读project-conventions/xray-manager/verification-before-completion、ledger/progress/version/matrix、最新CI/Release/production/subscription回执与相关models。session28737生产最终检查exit0，确认0.14.11 SUCCEEDED/COMPLETE、真实运行digest、十服务健康状态、严格TLS/认证路由与本次加密备份校验；decryption_this_run=false，不称本轮解密恢复通过。
+- 本轮remaining scope仅审计归档：更新progress/version-record/release-checklist/matrix，新增无秘密browser/final-state回执和已审阅截图，预算附件沿用独立核对；不改业务源码、VERSION、tag或重新发布。授权沿用用户上线/订阅测试授权，AWS写窗口已过期，无新云写。rollback只revert归档提交，生产回退沿用history/51b28c61-b092-4092-b318-72f5a3eae5b9.env，不恢复DB/撤销/安全/云历史。
+- 最终生产聚合使用Django事务SET TRANSACTION READ ONLY，仅查自动化开关、非终态Operation、consumes_quota、测试profile及原2222是否已签发，不加载原Token/凭据；初次命令错误路径/app/manage.py exit2，无DB操作，随后按实际Dockerfile改backend/manage.py重试。不存在allocations/system_settings models路径rgexit2及shell backup glob无匹配exit1，仅只读定位失败，后续rg定位真实identity/nodes models。
+- 已应用local-port-management技能，仅停止本轮xray-gate-01411-20261115；子代理核实Compose labels/目录/loopback55435及56382后精确down exit0、不带-v，容器0且两命名卷和登记保留。其他栈/监听/会话/服务保持；首次委派正文为空未执行，改临时任务文件后完成。
+- 独立只读复核CI/Release/生产/撤回JSON一致，19gate均0；view_image检查link-rotation-confirm.jpg、subscription-final.jpg无秘密。将依据实际Chrome见证补browser布尔回执，不从截图推断剪贴板成功。time_logic使用实际aware UTC/AsiaShanghai，五分钟交付清除及服务端recent-auth规则未变。
+
+
+## 2026-11-15T16:24:13.078833+08:00 - 0.14.11真实订阅复制、撤回及线上升级最终验收
+
+- upgrade: 51b28c61-b092-4092-b318-72f5a3eae5b9自2026-11-15T07:53:08.403697Z至07:58:40.160206Z成功COMPLETE。正常Chrome看见0.14.11、刷新会话保留；前一RELEASE_UNTRUSTED失败保留。production-final.py严格SSH session28737 exit0，十服务running/六healthy、backend/frontend运行digest与config一致；管理200/订阅健康200/匿名system401/订阅域管理404；新备份创建晚于本单、密文checksum有效，未解密。history回退env/security snapshot均存在，没有恢复安全状态。
+- actual browser: 仅新建复制入口验收20261115/profile97faecb2-26ba-4209-b9b6-009d957b567c/subscription3c09940e-0224-4bd8-89d7-f44e476cf0b4。正常密码step-up后草稿保留、再保存只创建一个profile；交付两按钮完整clipboard值在内存比较均true，小火箭format匹配true，关闭后统一URL DOM0。列表入口显式轮换、提示旧链接失效，新URL不同。browser.json仅布尔/非秘密UUID，不含链接/Token/Cookie。
+- API: subscription-accept.py session54338 exit0，仅测试profile追加两次轮换，最终epoch4；旧URL GET/HEAD410，缺preview409，正常preview+stepup+UUID幂等Token撤回200，新URL GET/HEAD410；profile撤回202→3ae42252-bb80-42c8-ae90-41a3eca0adcf SUCCEEDED、REVOKED/credential0、logout200。node_counts expected1/assigned0/ready0/published0/mismatchtrue来自用户保留配额，不混淆旧清理时刻全0，不擅改配置。没有新云操作。
+- final-state.py第二次直接docker exec因绕过entrypoint未加载生产secret，仅RuntimeError exit1、未连数据库；改用现有/usr/local/bin/xray-entrypoint在受控容器进程内加载、未回显，session53643 exit0。事务SET TRANSACTION READ ONLY核对四开关false、nonterminal0、consumes_quota0、测试REVOKED/epoch4、原2222exists且无subscription。backup-tools精确白名单读回session59989 exit0，digest78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1，与历史一致。
+- screenshots: subscription-links.jpg、link-rotation-confirm.jpg、subscription-final.jpg和step-up.jpg均已实际view_image无秘密；step-up.jpg仅保留草稿表单，不冒称完整验证框。CUA最终completion_summary已提交，不另开浏览器；多次debugger detach/AX stale改原生AX完成，错误索引fresh后复制成功；临时JS/Python语法失败在执行前无副作用，nodeChild未定义reset清空旧内存。交付五分钟清除曾到期，随后正常API重新轮换完成410核验，没有找回或持久化旧Token。
+- writes: 新browser/final-state安全回执、生产/CI/Release/API回执与截图、预算说明/assessment；更新version-record第0.14.11行、progress、release-checklist当前索引、matrix新增本版各行并保留历史。首次将aws-real-cloud旧混合历史行直接改passed导致validator拒绝其中历史simulated字样exit1，恢复旧行并加historical_scope/superseded_by，新建纯真实结构行；再次validate exit0，未改验证器。旧账单unknown保留，USD250附预留假设为预算评估而非最终发票硬上界；不会以最终发票未知额外拖延功能完成。
+- final verification: matrix25tests passed exit0；跨回执commit/19gates/10services/clipboard/410/state断言exit0；boundary/skill/diff各0。完整goal逐项由0.14.10真实Lightsail生命周期与0.14.11新增UI/发布/升级证据覆盖；SWAS/iOS真机/一次性Linuxsystemd仍not-run/skip，新备份未重复解密、最终逐资源账单unknown如实披露。此为归档无新版本/标签，无AWS/EC2写。回退仅revert归档提交，运行回退不恢复DB/安全/撤销/云状态。
+
+
+## 2026-11-15T16:24:58.232867+08:00 - 0.14.11归档提交前最终验证
+
+- status main与origin/main同步，只有本轮五份审计索引、预算文档及0.14.11预算/生产安全回执与四张已审阅截图；源码/tag/生产配置无新增差异。matrix0、boundary0、skill0、diffcheck0；验收矩阵25passed0，跨回执断言0。新增diff+新文本Gitleaks69841bytes无泄露exit0。
+- 本轮精确测试栈已down0、容器0，卷及端口登记保留；线上仍0.14.11、升级成功和订阅测试清理证据已归档。按精确路径stage、cached diffcheck、再次staged秘密扫描后中文commit并普通push main；归档commit不重打v0.14.11标签、不改变发布源码。归档提交CI在push后单独跟踪，不借用业务提交的精确SHA通过结论。
+- completion scope: 请求功能/复制/认证入口/版本发布/线上升级验收完成。限制为最终资源账单unknown、预算评估依赖已披露预留假设、本轮新备份未解密、一次性Linuxsystemd skip、SWAS/iOS真机not-run；不把这些结果描述成已通过。应用回退见51b28c61历史env，审计回退gitrevert，不恢复安全/撤销/云状态。

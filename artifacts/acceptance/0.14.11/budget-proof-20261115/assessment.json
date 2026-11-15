@@ -1,0 +1,111 @@
+{
+  "run_id": "xray-budget-proof-20261115",
+  "generated_at": "2026-11-15T15:46:59.616609+08:00",
+  "source_commit": "d037899d15bcdb5a6f27d9255b27270be0a5d6fe",
+  "writes_attempted": false,
+  "account_fingerprint": "4a0ef08458dd",
+  "account_fingerprint_correction": {
+    "canonical_account": "4a0ef08458dd",
+    "same_account_plus_newline": "94a91b85428b",
+    "different_accounts": false
+  },
+  "sources": [
+    {
+      "path": "artifacts/acceptance/0.14.10/public-admin-20261114/budget-inventory-20261115.json",
+      "sha256": "8ff5f8b6c707cc0d7877418b99aba92508c5ad9a57da5a4318e0e903ed67f880"
+    },
+    {
+      "path": "artifacts/acceptance/0.14.10/public-admin-20261114/billing-followup-20261115.json"
+    },
+    {
+      "path": "docs/cloud-test-authorization.md"
+    },
+    {
+      "path": "docs/project-ledger.md"
+    },
+    {
+      "path": "artifacts/acceptance/0.14.10/production-release-20261114/cloud-receipt.json"
+    }
+  ],
+  "additional_official_pricing_read": {
+    "service": "AmazonVPC",
+    "region_code": "ap-southeast-1",
+    "group": "VPCPublicIPv4Address",
+    "request_id": "b6793137-a8e3-43a3-a54c-b3fd3c5230f2",
+    "http_status": 200,
+    "product_count": 2,
+    "pagination_present": false,
+    "rates_usd_per_address_hour": {
+      "in_use": "0.005",
+      "idle": "0.005"
+    },
+    "read_only": true
+  },
+  "line_items": [
+    {
+      "name": "five_application_lightsail_small_bundles",
+      "formula": "5 * 12",
+      "allowance_usd": "60"
+    },
+    {
+      "name": "retained_lightsail_runner_through_2026_12_08",
+      "formula": "2 * 24",
+      "allowance_usd": "48"
+    },
+    {
+      "name": "historical_ec2_compute",
+      "formula": "168 * 0.0528",
+      "allowance_usd": "8.8704"
+    },
+    {
+      "name": "historical_ec2_gp3_capacity",
+      "formula": "50 * 0.096",
+      "allowance_usd": "4.8"
+    },
+    {
+      "name": "historical_ec2_public_ipv4",
+      "formula": "168 * 0.005",
+      "allowance_usd": "0.84"
+    },
+    {
+      "name": "historical_ec2_observed_network",
+      "formula": "18727612971 / 1000000000 * 0.12",
+      "allowance_usd": "2.24731355652"
+    }
+  ],
+  "known_components_total_usd": "124.75771355652",
+  "rounded_component_allowance_usd": "125",
+  "overall_assessment_envelope_usd": "250",
+  "additional_contingency_above_known_components_usd": "125.24228644348",
+  "user_overall_cap_usd": "1000",
+  "headroom_to_cap_usd": "750",
+  "latest_single_node": {
+    "count": 1,
+    "type": "small_3_0",
+    "region": "us-east-1",
+    "whole_month_bundle_allowance_usd": "12",
+    "observed_metered_bytes": 101608,
+    "contingency_usd": "13",
+    "assessment_envelope_usd": "25",
+    "provider_confirmed_absent": true,
+    "final_cost_usd": null
+  },
+  "assumptions": [
+    "No task resources beyond the deduplicated five application instances, retained Lightsail runner, and terminated historical EC2 runner with one 50GB gp3 disk and one public IPv4.",
+    "No task-created snapshots, additional disks, load balancers, static IP allocations, NAT gateway, or paid marketplace image.",
+    "EC2 gp3 used baseline IOPS and throughput; historical requested instance had only size/type settings.",
+    "Retained Lightsail runner is not kept beyond 2026-12-08T03:00:00+08:00 without a new budget assessment.",
+    "Future runner transfer, unmetered host/bootstrap traffic, taxes and incidental monitoring/API charges remain within the documented contingency; this reserve is an assessment assumption, not an enforced cloud spending cap."
+  ],
+  "limitations": [
+    "Final attributed resource bill is unknown.",
+    "Retained runner future network use cannot be mathematically bounded by current metrics.",
+    "Application metering covers Xray traffic, not all host network or provider billing.",
+    "Taxes and any negotiated/account-specific pricing have not been read back.",
+    "USD250 is a conservative assessment envelope under listed assumptions, not proof of an unconditional all-in maximum."
+  ],
+  "final_bill_confirmed": false,
+  "task_attributed_final_cost_usd": null,
+  "budget_assessment": "within_user_cap_under_documented_assumptions",
+  "billing_attribution_status": "unknown"
+}
