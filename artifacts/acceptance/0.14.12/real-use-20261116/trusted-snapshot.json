@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "version": "0.14.12",
+  "source_commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+  "archive_sha256": "2deaea8a4e87dd523cb5ca3dc081e874799041e1dfea0ec7134b86449b842a9b",
+  "root_trust_valid": true,
+  "snapshot_files": 47,
+  "manifest": {
+    "schema_version": 1,
+    "version": "0.14.12",
+    "backend_image": "127.0.0.1:15000/xray/backend@sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+    "frontend_image": "127.0.0.1:15000/xray/frontend@sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136"
+  },
+  "catalog_versions": [
+    "0.14.12",
+    "0.14.11",
+    "0.14.10",
+    "0.14.9"
+  ],
+  "catalog_before_sha256": "a96bc45373d09fd4eff0f2029fca4344ebe4517e38f3cfef62a81e2a94eb317b",
+  "current_version": "0.14.11",
+  "running_services_changed": false
+}

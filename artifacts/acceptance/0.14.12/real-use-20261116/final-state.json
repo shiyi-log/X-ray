@@ -1,0 +1,21 @@
+{
+  "configured_images": {
+    "XRAY_BACKEND_IMAGE": "127.0.0.1:15000/xray/backend@sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+    "XRAY_FRONTEND_IMAGE": "127.0.0.1:15000/xray/frontend@sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+    "XRAY_BACKUP_TOOLS_IMAGE": "127.0.0.1:15000/xray/backup-tools@sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1"
+  },
+  "runtime_state": {
+    "automation": {
+      "pool_sync_enabled": true,
+      "daily_restart_enabled": false,
+      "usage_sync_enabled": true
+    },
+    "status_sync": {
+      "enabled": true
+    },
+    "nonterminal": 0,
+    "active_nodes": 2
+  },
+  "transaction_read_only": true,
+  "cloud_writes": false
+}

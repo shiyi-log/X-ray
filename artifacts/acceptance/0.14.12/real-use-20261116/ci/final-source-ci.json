@@ -1,0 +1,349 @@
+{
+  "observed_at": "2026-11-16T05:06:55.349367+00:00",
+  "sha": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+  "read_only": true,
+  "artifacts": [
+    {
+      "id": 14193562381,
+      "name": "xray-acceptance-43793611925-1",
+      "size_in_bytes": 2292694,
+      "created_at": "2026-11-16T02:47:27Z",
+      "expires_at": "2026-11-30T02:47:26Z",
+      "digest": "sha256:cb3f1ec1e7719a942df92586becad3c181b634c25e74ef7876033c74a0df2ea7",
+      "download_sha256": "sha256:cb3f1ec1e7719a942df92586becad3c181b634c25e74ef7876033c74a0df2ea7",
+      "digest_matches": true,
+      "local_zip_path": "/tmp/xray-01412-ci-artifact-14193562381.zip",
+      "entry_count": 29,
+      "gates": [
+        {
+          "gate": "runtime",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:41:44Z",
+          "finished_at": "2026-11-16T02:41:45Z"
+        },
+        {
+          "gate": "compose-config",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:41:45Z",
+          "finished_at": "2026-11-16T02:42:49Z"
+        },
+        {
+          "gate": "django-check",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:42:49Z",
+          "finished_at": "2026-11-16T02:42:53Z"
+        },
+        {
+          "gate": "migration-drift",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:42:53Z",
+          "finished_at": "2026-11-16T02:42:53Z"
+        },
+        {
+          "gate": "ruff",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:42:53Z",
+          "finished_at": "2026-11-16T02:42:54Z"
+        },
+        {
+          "gate": "backend-tests",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:42:54Z",
+          "finished_at": "2026-11-16T02:45:24Z"
+        },
+        {
+          "gate": "openapi-determinism",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:45:24Z",
+          "finished_at": "2026-11-16T02:45:26Z"
+        },
+        {
+          "gate": "fixed-xray",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:45:26Z",
+          "finished_at": "2026-11-16T02:45:26Z"
+        },
+        {
+          "gate": "subscription-formats",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:45:26Z",
+          "finished_at": "2026-11-16T02:45:30Z"
+        },
+        {
+          "gate": "frontend-typecheck",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:45:30Z",
+          "finished_at": "2026-11-16T02:45:42Z"
+        },
+        {
+          "gate": "frontend-lint",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:45:43Z",
+          "finished_at": "2026-11-16T02:45:45Z"
+        },
+        {
+          "gate": "frontend-unit",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:45:45Z",
+          "finished_at": "2026-11-16T02:46:16Z"
+        },
+        {
+          "gate": "frontend-build",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:46:16Z",
+          "finished_at": "2026-11-16T02:46:33Z"
+        },
+        {
+          "gate": "frontend-e2e",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:46:33Z",
+          "finished_at": "2026-11-16T02:47:15Z"
+        },
+        {
+          "gate": "shellcheck",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:47:15Z",
+          "finished_at": "2026-11-16T02:47:17Z"
+        },
+        {
+          "gate": "boundary",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:47:17Z",
+          "finished_at": "2026-11-16T02:47:19Z"
+        },
+        {
+          "gate": "secrets",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:47:19Z",
+          "finished_at": "2026-11-16T02:47:25Z"
+        },
+        {
+          "gate": "skill",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:47:25Z",
+          "finished_at": "2026-11-16T02:47:26Z"
+        },
+        {
+          "gate": "acceptance-matrix",
+          "exit_code": "0",
+          "started_at": "2026-11-16T02:47:26Z",
+          "finished_at": "2026-11-16T02:47:26Z"
+        }
+      ],
+      "all_19_gates_passed": true,
+      "backend_junit": {
+        "tests": 692,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1,
+        "passed": 691,
+        "skip_cases": [
+          {
+            "class": "installer.test_service.SystemdCredentialTest",
+            "name": "test_dynamic_service_user_can_read_root_only_configuration",
+            "reason": "requires an explicitly selected disposable Linux systemd host"
+          }
+        ]
+      },
+      "frontend_unit_summary": [
+        "Test Files  21 passed (21)",
+        "Tests  118 passed (118)"
+      ],
+      "playwright_stats": {
+        "startTime": "2026-11-16T02:46:34.729Z",
+        "duration": 40651.096,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      }
+    }
+  ],
+  "run": {
+    "id": 43793611925,
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/shiyi-log/X-ray/actions/runs/43793611925",
+    "created_at": "2026-11-16T02:40:39Z",
+    "updated_at": "2026-11-16T02:47:34Z",
+    "run_attempt": 1,
+    "path": ".github/workflows/ci.yml",
+    "event": "push",
+    "head_sha": "34fff784ecbff0d82d0ceda17846984bb0a2c04d"
+  },
+  "jobs": [
+    {
+      "id": 133057389051,
+      "name": "verify",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-16T02:40:50Z",
+      "completed_at": "2026-11-16T02:47:33Z",
+      "html_url": "https://github.com/shiyi-log/X-ray/actions/runs/43793611925/job/133057389051",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-16T02:40:50Z",
+          "completed_at": "2026-11-16T02:40:53Z"
+        },
+        {
+          "name": "Initialize containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-16T02:40:53Z",
+          "completed_at": "2026-11-16T02:41:04Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-16T02:41:04Z",
+          "completed_at": "2026-11-16T02:41:08Z"
+        },
+        {
+          "name": "Prepare isolated acceptance paths",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-16T02:41:08Z",
+          "completed_at": "2026-11-16T02:41:08Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-16T02:41:08Z",
+          "completed_at": "2026-11-16T02:41:09Z"
+        },
+        {
+          "name": "Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-16T02:41:09Z",
+          "completed_at": "2026-11-16T02:41:13Z"
+        },
+        {
+          "name": "Run pnpm/action-setup@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-16T02:41:13Z",
+          "completed_at": "2026-11-16T02:41:14Z"
+        },
+        {
+          "name": "Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-16T02:41:14Z",
+          "completed_at": "2026-11-16T02:41:24Z"
+        },
+        {
+          "name": "Install locked dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-16T02:41:24Z",
+          "completed_at": "2026-11-16T02:41:44Z"
+        },
+        {
+          "name": "Validate acceptance claims before execution",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-16T02:41:44Z",
+          "completed_at": "2026-11-16T02:41:44Z"
+        },
+        {
+          "name": "Run complete local delivery gates",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-16T02:41:44Z",
+          "completed_at": "2026-11-16T02:47:26Z"
+        },
+        {
+          "name": "Upload sanitized acceptance evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-11-16T02:47:26Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Remove run-specific images and browser authentication state",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 13,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Post Run actions/setup-node@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Post Run pnpm/action-setup@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Post Run astral-sh/setup-uv@v6",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:28Z"
+        },
+        {
+          "name": "Stop containers",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 26,
+          "started_at": "2026-11-16T02:47:28Z",
+          "completed_at": "2026-11-16T02:47:29Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 27,
+          "started_at": "2026-11-16T02:47:29Z",
+          "completed_at": "2026-11-16T02:47:29Z"
+        }
+      ]
+    }
+  ],
+  "active_steps": [],
+  "verified_success": true
+}

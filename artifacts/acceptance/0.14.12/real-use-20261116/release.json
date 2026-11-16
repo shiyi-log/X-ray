@@ -1,0 +1,50 @@
+{
+  "at": "2026-11-16T05:12:40.437735+00:00",
+  "source_commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+  "tag": "v0.14.12",
+  "run_id": 43808611452,
+  "run_conclusion": "success",
+  "release_id": 446631467,
+  "url": "https://github.com/shiyi-log/X-ray/releases/tag/v0.14.12",
+  "assets": [
+    {
+      "name": "SHA256SUMS",
+      "id": 753546755,
+      "bytes": 199,
+      "sha256": "41177ac1f3fdc27ef4f3af2eb3395affb57a2436e81624df5ba6160b36a79182",
+      "github_digest_verified": true
+    },
+    {
+      "name": "xray-installer-0.14.12-manifest.json",
+      "id": 753546757,
+      "bytes": 612,
+      "sha256": "2154b214d82947ee3400196b3c1dea2018a33f7cc2aaccdbc1c34111097520e5",
+      "github_digest_verified": true
+    },
+    {
+      "name": "xray-installer-0.14.12.tar.gz",
+      "id": 753546756,
+      "bytes": 24551,
+      "sha256": "453204e3f06e77906255af8ed05c39e7bd89d138a0d9b50b0ab4f1961a2f9a2a",
+      "github_digest_verified": true
+    }
+  ],
+  "manifest": {
+    "version": "0.14.12",
+    "tag": "v0.14.12",
+    "commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+    "files": [
+      "xray-installer-0.14.12/installer/README.md",
+      "xray-installer-0.14.12/installer/apply-config.sh",
+      "xray-installer-0.14.12/installer/inline-certificates.py",
+      "xray-installer-0.14.12/installer/install.sh",
+      "xray-installer-0.14.12/installer/licenses/MPL-2.0.txt",
+      "xray-installer-0.14.12/installer/manifest.json",
+      "xray-installer-0.14.12/installer/one-click.sh",
+      "xray-installer-0.14.12/installer/verify.sh",
+      "xray-installer-0.14.12/installer/xray.service"
+    ]
+  },
+  "checksums_verified": true,
+  "embedded_manifest_verified": true
+}

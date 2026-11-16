@@ -1236,14 +1236,27 @@
           "candidate_source_base": "db4505abb1a37e354993d790222ee8392eebaf73",
           "candidate_worktree": true,
           "production_version": "0.14.11"
+        },
+        {
+          "kind": "shadowrocket_ip_label_runtime",
+          "timestamp": "2026-11-16T05:23:05.983374+00:00",
+          "receipt": "artifacts/acceptance/0.14.12/real-use-20261116/shadowrocket-ip-labels-acceptance.json",
+          "production_version": "0.14.12",
+          "all_ip_labels_visible": true,
+          "published_endpoints": 4,
+          "passed": 3,
+          "failed": 1,
+          "production_subscription_refreshed": true,
+          "overall_status": "failed",
+          "failed_endpoint": "N2 IPv4 46.137.228.67:8388"
         }
       ],
-      "commit": "d037899d15bcdb5a6f27d9255b27270be0a5d6fe",
+      "commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
       "provider": null,
       "region": null,
       "cost": null,
       "residual_resources": [],
-      "production_version": "0.14.11"
+      "production_version": "0.14.12"
     },
     {
       "id": "remote-ssh",
@@ -4027,6 +4040,95 @@
       "cost": null,
       "cost_status": "final bill unknown; documented budget assessment completed, see budget-assessment-20261115",
       "residual_resources": []
+    },
+    {
+      "commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [],
+      "id": "github-ci-0.14.12-final-source",
+      "environment": "external",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_actions",
+          "timestamp": "2026-11-16T05:23:05.983374+00:00",
+          "run_id": 43793611925,
+          "conclusion": "success",
+          "all_19_gates_passed": true,
+          "receipt": "artifacts/acceptance/0.14.12/real-use-20261116/ci/final-source-ci.json"
+        }
+      ]
+    },
+    {
+      "commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [],
+      "id": "github-release-0.14.12",
+      "environment": "external",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "github_release",
+          "timestamp": "2026-11-16T05:23:05.983374+00:00",
+          "release_id": 446631467,
+          "run_id": 43808611452,
+          "checksums_verified": true,
+          "receipt": "artifacts/acceptance/0.14.12/real-use-20261116/release.json"
+        }
+      ]
+    },
+    {
+      "commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [],
+      "id": "shadowrocket-ip-labels-0.14.12",
+      "environment": "external",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "native_client_ui",
+          "timestamp": "2026-11-16T05:23:05.983374+00:00",
+          "client": "Shadowrocket macOS",
+          "all_four_ip_labels_visible": true,
+          "names_start_with_ip": true,
+          "receipt": "artifacts/acceptance/0.14.12/real-use-20261116/shadowrocket-ip-labels-acceptance.json",
+          "all_endpoints_available": false
+        }
+      ]
+    },
+    {
+      "id": "production-release-0.14.12-ip-labels",
+      "environment": "production",
+      "status": "passed",
+      "commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "provider": null,
+      "region": null,
+      "cost": null,
+      "residual_resources": [],
+      "evidence": [
+        {
+          "kind": "production_release",
+          "timestamp": "2026-11-16T05:20:25.438448+00:00",
+          "server_ref": "redacted-authorized-xray-production",
+          "tls_evidence": "Strict TLS admin200/subscription health200/anonymous system401/subscription admin404.",
+          "restore_evidence": "Upgrade encrypted checksum valid and rollback env/security snapshot exist; separate fixed-script isolated old0.14.11 backup restored MAINTENANCE. New upgrade backup not decrypted; A410/B503 not-run.",
+          "image_digests": {
+            "backend": "sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+            "frontend": "sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+            "backup_tools": "sha256:78d076b99d4bdd33c0ac14ea06e16f09d159b9f3752c2f17b1fbfbdf8d43bbe1"
+          },
+          "receipt": "artifacts/acceptance/0.14.12/real-use-20261116/production.json",
+          "upgrade_job": "5a79fc8d-97cc-4c89-8776-15c3ffdde457",
+          "overall_endpoint_availability": "failed3of4; independent gate",
+          "backup_tools_scope": "Production retained previously verified backup-tools digest; new0.14.12 tools built/pushed/verified but not selected by normal upgrade manifest."
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "container": "xray-real-use-20261116-recovery-pg",
+  "exact_id": "3f021955c927c48a4addc635818d04fdc090d243c07a71637e841c57d4f9a8e2",
+  "ownership_verified": true,
+  "stop_exit": 0,
+  "remove_exit": 0,
+  "tmpfs_database_removed": true,
+  "encrypted_inputs_preserved": true,
+  "other_containers_unchanged": true,
+  "A410_B503_status": "not-run; raw A/B memory unavailable after tool recovery"
+}

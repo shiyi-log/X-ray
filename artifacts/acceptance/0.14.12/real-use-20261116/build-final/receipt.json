@@ -1,0 +1,120 @@
+{
+  "started_at": "2026-11-16T05:06:41.621845+00:00",
+  "source_commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+  "source_directory": "/tmp/xray-01412-source-34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+  "source_archive_sha256": "5d515be2c726a74c2497dce45c2c1a5eb8aa586c316e3acb0e45d9da24fa9d2f",
+  "source_file_count": 1257,
+  "source_hash_receipt": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.12/real-use-20261116/build-final/source-sha256.json",
+  "platform_requested": "linux/amd64",
+  "local_build_only": true,
+  "registry_pushed": false,
+  "production_changed": false,
+  "images": [
+    {
+      "name": "backend",
+      "tag": "xray/backend:0.14.12-local",
+      "dockerfile": "deploy/docker/backend.Dockerfile",
+      "command": [
+        "docker",
+        "build",
+        "--platform",
+        "linux/amd64",
+        "--progress=plain",
+        "--label",
+        "org.opencontainers.image.revision=34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+        "--label",
+        "org.opencontainers.image.version=0.14.12",
+        "-f",
+        "deploy/docker/backend.Dockerfile",
+        "-t",
+        "xray/backend:0.14.12-local",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 26.642,
+      "log": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.12/real-use-20261116/build-final/backend.log",
+      "image_id": "sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "os": "linux",
+      "architecture": "amd64",
+      "repo_digests": [
+        "xray/backend@sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5"
+      ],
+      "labels": {
+        "org.opencontainers.image.revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+        "org.opencontainers.image.version": "0.14.12"
+      }
+    },
+    {
+      "name": "frontend",
+      "tag": "xray/frontend:0.14.12-local",
+      "dockerfile": "deploy/docker/frontend.Dockerfile",
+      "command": [
+        "docker",
+        "build",
+        "--platform",
+        "linux/amd64",
+        "--progress=plain",
+        "--label",
+        "org.opencontainers.image.revision=34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+        "--label",
+        "org.opencontainers.image.version=0.14.12",
+        "-f",
+        "deploy/docker/frontend.Dockerfile",
+        "-t",
+        "xray/frontend:0.14.12-local",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 5.647,
+      "log": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.12/real-use-20261116/build-final/frontend.log",
+      "image_id": "sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "os": "linux",
+      "architecture": "amd64",
+      "repo_digests": [
+        "xray/frontend@sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136"
+      ],
+      "labels": {
+        "maintainer": "NGINX Docker Maintainers <docker-maint@nginx.com>",
+        "org.opencontainers.image.revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+        "org.opencontainers.image.version": "0.14.12"
+      }
+    },
+    {
+      "name": "backup-tools",
+      "tag": "xray/backup-tools:0.14.12-local",
+      "dockerfile": "deploy/docker/backup-tools.Dockerfile",
+      "command": [
+        "docker",
+        "build",
+        "--platform",
+        "linux/amd64",
+        "--progress=plain",
+        "--label",
+        "org.opencontainers.image.revision=34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+        "--label",
+        "org.opencontainers.image.version=0.14.12",
+        "-f",
+        "deploy/docker/backup-tools.Dockerfile",
+        "-t",
+        "xray/backup-tools:0.14.12-local",
+        "."
+      ],
+      "exit_code": 0,
+      "duration_seconds": 4.761,
+      "log": "/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.12/real-use-20261116/build-final/backup-tools.log",
+      "image_id": "sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c",
+      "os": "linux",
+      "architecture": "amd64",
+      "repo_digests": [
+        "xray/backup-tools@sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c"
+      ],
+      "labels": {
+        "org.opencontainers.image.revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+        "org.opencontainers.image.title": "X-ray backup tools",
+        "org.opencontainers.image.version": "0.14.12"
+      }
+    }
+  ],
+  "finished_at": "2026-11-16T05:07:08.452373+00:00",
+  "status": "passed"
+}

@@ -1,32 +1,31 @@
 # 交付与发布检查表
 
-## v0.14.12 候选状态（2026-11-16）
+## v0.14.12 当前状态（2026-11-16）
 
-当前生产仍为 `0.14.11`；本地 `0.14.12` 只是未提交候选，尚无提交、annotated tag、GitHub Release、immutable 镜像或生产升级。候选订阅生成代码会在 Shadowrocket 等节点名称最前面加入实际地址，IPv4 原样显示、IPv6 用方括号包裹；生产客户端尚未刷新到该版本，不能据此声称生产显示已修复。
+生产已升级为 0.14.12，源码与 annotated v0.14.12 固定在 34fff784ecbff0d82d0ceda17846984bb0a2c04d。Shadowrocket 现有订阅已刷新，四条名称均以前置实际 IP 标识；IPv6 使用方括号。真实截图和结果位于 artifacts/acceptance/0.14.12/real-use-20261116/shadowrocket-ip-labels.png 及 shadowrocket-ip-labels-acceptance.json。
 
-本机 macOS Shadowrocket 对活动节点的四个已发布入口逐一验收。一个地址族的成功不替代另一个地址族；任一入口未通过，整体验收保持未通过。
+- [x] 本地候选19/19 gate、prefix focused19 passed；精确源码远端CI43793611925 success，19/19 gate，后端691 passed/1 Linux skip、前端118、E2E8。
+- [x] 正式Release446631467与workflow43808611452 success；三个资产独立下载、SHA256SUMS、GitHubdigest和内外manifest一致。
+- [x] backend/frontend/backup-tools linux/amd64不可变镜像、HTTP manifest摘要、platform/config digest和revision核验；root可信source snapshot/catalog。
+- [x] 正常管理员login/CSRF/recent step-up/UUID升级，job5a79fc8d-97cc-4c89-8776-15c3ffdde457 SUCCEEDED/COMPLETE；十服务running六healthy，TLS200/200/401/404，备份checksum有效。
+- [x] B正常重新发布revision4且token epoch不变；小火箭更新现有订阅，四个IP均可见。
+- [x] fixed restore真实隔离恢复0、已有目标库拒绝1、MAINTENANCE读回0；恢复环境未复开。
+- [ ] 全节点验收仍failed：N2 IPv4超时。原云写窗口结束，N2一次停止/启动换动态IPv4的授权待用户回复；未执行该动作。
+- [ ] A410/B503原始token完整恢复验收仍not-run，不能用shell回归或无token的维护屏障检查替代。
+- [ ] 逐资源最终费用unknown，未声称最终账单或immutable offsite storage通过。
 
-| 节点 | 地址 | Shadowrocket 结果 | 证据边界 |
-| --- | --- | --- | --- |
-| N2 `c43c5e28` | IPv4 `46.137.228.67:8388` | **failed**：客户端显示超时 | 固定 Xray 的 Google 204 经已开启隧道，不能证明直连；关闭隧道的 N2 IPv4 TCP 对照超时 |
-| N2 `c43c5e28` | IPv6 `[2406:da18:1e16:f200:f22:8595:ebaf:81ee]:8388` | **passed**：网页与 YouTube 视频通过 | 仅此 IPv6 入口 |
-| N1 `f38db145` | IPv4 `13.212.118.138:8388` | **passed**：Shadowrocket 显示约 92 ms；经客户端 SOCKS 访问 Google 返回 204 | 未以服务器监听或 TCP 可达替代代理数据面结果 |
-| N1 `f38db145` | IPv6 `[2406:da18:1e16:f200:e076:f3d5:e3eb:d72]:8388` | **passed**：网页与 YouTube 视频通过 | 仅此 IPv6 入口 |
+| 节点 | 发布地址 | 本机刷新后逐项测试 |
+| --- | --- | --- |
+| N2 | 46.137.228.67:8388 | **failed：超时** |
+| N2 | [2406:da18:1e16:f200:f22:8595:ebaf:81ee]:8388 | passed：87ms；此前网页/视频成功 |
+| N1 | 13.212.118.138:8388 | passed：88ms；此前客户端SOCKS Google204 |
+| N1 | [2406:da18:1e16:f200:e076:f3d5:e3eb:d72]:8388 | passed：90ms；此前网页/视频成功 |
 
-因此当前全节点 Shadowrocket 验收为 **failed / 未通过**，N2 IPv4 是明确阻断；不得缩容或删除 N1。四项记录和脱敏探测回执位于 `artifacts/acceptance/0.14.11/real-use-20261116/`。目标候选新 gate 证据应写入 `artifacts/acceptance/0.14.12/real-use-20261116/`，保留旧目录历史。
+IP显示交付通过，全节点可用性为3/4、整体failed；不得删除N1或用单节点替代。客户端保留N2 IPv6选中、隧道开启。原自然48小时/iPhone/蜂窝验收由用户改为本机单次快速验收，不恢复旧要求。应用回退使用0.14.11验证镜像/config及history/5a79fc8d-97cc-4c89-8776-15c3ffdde457.env；不恢复撤销Token、凭据、安全或云状态。
 
-- [x] 0.14.12 完整 19 项本地 gate、验收矩阵 validator、边界/秘密/skill 扫描及最终 `git diff --check` 均在当前候选上通过；首次重跑曾因 `PATH` 缺少 Node 在 runtime 前置阶段以 exit 127 结束，该次失败需保留，不能计为代码测试失败或完整 gate 通过。
-- [ ] N2 IPv4 Shadowrocket 入口修复并重新逐项验收全部四个发布地址；若仍超时，保持总体验收失败并继续调查。
-- [ ] 生产加密备份后的新隔离恢复检查及 A 撤回/B 正向控制；恢复环境保持 `MAINTENANCE`，不得以旧脚本缺陷修复的 shell 回归代替真实恢复。
-- [ ] 当前候选精确 SHA 的 CI、annotated `v0.14.12`、正式 Release 资产摘要核验、三项 `linux/amd64` immutable 镜像 digest、root-owned trusted snapshot/catalog 与正常管理员 UI/API 在线升级。未完成之前生产仍为 `0.14.11`。
-- [ ] 升级后生产订阅刷新，确认四个节点名都包含对应当前 IP；随后逐项 Shadowrocket 测试全部四个发布入口。
-- [ ] 自动化设置最终读回及精确清理本次隔离恢复容器；不触碰其他实例、服务或容器。
+## v0.14.11 历史状态（2026-11-15）
 
-IP 标签修复可按正常发布链独立交付；N2 IPv4 失败阻止整体节点验收及缩容。当前应用发布仍待执行。源码回退在提交后使用 `git revert` 或回到仍有效的 `v0.14.11`；生产回退只能切换已验证旧镜像/config，数据库、安全、撤销与云操作状态不回滚。AWS Lightsail 测试授权仍限于原精确两节点与 `[2026-11-16 02:20, 08:20) +08:00` 窗口；窗口外不沿用授权执行云写。
-
-## v0.14.11 当前状态（2026-11-15）
-
-当前线上与正式标签源码为 `d037899d15bcdb5a6f27d9255b27270be0a5d6fe`。
+当时线上与正式标签源码为 `d037899d15bcdb5a6f27d9255b27270be0a5d6fe`。
 证据目录：`artifacts/acceptance/0.14.11/production-release-20261115/`。
 
 - [x] 精确源码 CI `43690632106`，19/19 gate exit 0；后端667 passed、1 skipped，前端117、E2E8。

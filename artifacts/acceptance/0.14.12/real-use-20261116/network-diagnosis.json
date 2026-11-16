@@ -1,0 +1,607 @@
+{
+  "nodes": [
+    {
+      "node_id": "f38db145-b76e-57e0-86d6-20bc365f2f20",
+      "external_id": "xray-d1ef3ca7-f38db145",
+      "node_meta": {
+        "region": "ap-southeast-1",
+        "addresses": [
+          {
+            "kind": "dynamic",
+            "value": "13.212.118.138",
+            "family": 4,
+            "resource_id": "xray-d1ef3ca7-f38db145"
+          },
+          {
+            "kind": "dynamic",
+            "value": "2406:da18:1e16:f200:e076:f3d5:e3eb:d72",
+            "family": 6,
+            "resource_id": "xray-d1ef3ca7-f38db145"
+          }
+        ],
+        "provisioning_state": "READY",
+        "health_state": "HEALTHY",
+        "security_state": "OPEN"
+      },
+      "provider_port_states": [
+        {
+          "fromPort": 80,
+          "toPort": 80,
+          "protocol": "tcp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        },
+        {
+          "fromPort": 8388,
+          "toPort": 8388,
+          "protocol": "udp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        },
+        {
+          "fromPort": 22,
+          "toPort": 22,
+          "protocol": "tcp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        },
+        {
+          "fromPort": 8388,
+          "toPort": 8388,
+          "protocol": "tcp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        }
+      ],
+      "provider_request_id": "f82167cc-040d-4e23-be67-bee7b880294e",
+      "production_tcp_probes": [
+        {
+          "family": 4,
+          "host": "13.212.118.138",
+          "port": 22,
+          "status": "connected",
+          "duration_seconds": 0.001
+        },
+        {
+          "family": 4,
+          "host": "13.212.118.138",
+          "port": 8388,
+          "status": "connected",
+          "duration_seconds": 0.001
+        },
+        {
+          "family": 6,
+          "host": "2406:da18:1e16:f200:e076:f3d5:e3eb:d72",
+          "port": 22,
+          "status": "failed",
+          "safe_error": "OSError",
+          "duration_seconds": 0.0
+        },
+        {
+          "family": 6,
+          "host": "2406:da18:1e16:f200:e076:f3d5:e3eb:d72",
+          "port": 8388,
+          "status": "failed",
+          "safe_error": "OSError",
+          "duration_seconds": 0.0
+        }
+      ],
+      "host_key_matches_preapproved": true,
+      "node_command_exit": 0,
+      "node_stderr_present": false,
+      "node_network": {
+        "checked_at": "2026-11-16T02:40:28.605203+00:00",
+        "service_before": {
+          "command": [
+            "systemctl",
+            "show",
+            "xray",
+            "--property=MainPID,ExecMainStartTimestampMonotonic,ActiveState,SubState"
+          ],
+          "exit_code": 0,
+          "stdout": "MainPID=576\nExecMainStartTimestampMonotonic=7592160\nActiveState=active\nSubState=running\n",
+          "stderr_present": false,
+          "truncated": false
+        },
+        "commands": [
+          {
+            "command": [
+              "ss",
+              "-H",
+              "-lntup",
+              "( sport = :8388 )"
+            ],
+            "exit_code": 0,
+            "stdout": "udp UNCONN 0      0      *:8388 *:* users:((\"xray\",pid=576,fd=7))\ntcp LISTEN 0      4096   *:8388 *:* users:((\"xray\",pid=576,fd=6))\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "address",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"ifindex\":1,\"ifname\":\"lo\",\"flags\":[\"LOOPBACK\",\"UP\",\"LOWER_UP\"],\"mtu\":65536,\"qdisc\":\"noqueue\",\"operstate\":\"UNKNOWN\",\"group\":\"default\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet\",\"local\":\"127.0.0.1\",\"prefixlen\":8,\"scope\":\"host\",\"label\":\"lo\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]},{\"ifindex\":2,\"ifname\":\"ens5\",\"flags\":[\"BROADCAST\",\"MULTICAST\",\"UP\",\"LOWER_UP\"],\"mtu\":9001,\"qdisc\":\"mq\",\"operstate\":\"UP\",\"group\":\"default\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet\",\"local\":\"172.26.12.60\",\"prefixlen\":20,\"metric\":100,\"broadcast\":\"172.26.15.255\",\"scope\":\"global\",\"dynamic\":true,\"label\":\"ens5\",\"valid_life_time\":2575,\"preferred_life_time\":2575}]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-6",
+              "address",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"ifindex\":1,\"ifname\":\"lo\",\"flags\":[\"LOOPBACK\",\"UP\",\"LOWER_UP\"],\"mtu\":65536,\"operstate\":\"UNKNOWN\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet6\",\"local\":\"::1\",\"prefixlen\":128,\"scope\":\"host\",\"noprefixroute\":true,\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]},{\"ifindex\":2,\"ifname\":\"ens5\",\"flags\":[\"BROADCAST\",\"MULTICAST\",\"UP\",\"LOWER_UP\"],\"mtu\":9001,\"operstate\":\"UP\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet6\",\"local\":\"2406:da18:1e16:f200:e076:f3d5:e3eb:d72\",\"prefixlen\":128,\"scope\":\"global\",\"dynamic\":true,\"noprefixroute\":true,\"valid_life_time\":442,\"preferred_life_time\":132},{\"family\":\"inet6\",\"local\":\"fe80::4ff:cdff:fefa:6d69\",\"prefixlen\":64,\"scope\":\"link\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "route",
+              "show",
+              "table",
+              "main"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"dst\":\"default\",\"gateway\":\"172.26.0.1\",\"dev\":\"ens5\",\"protocol\":\"dhcp\",\"prefsrc\":\"172.26.12.60\",\"metric\":100,\"flags\":[]},{\"dst\":\"172.26.0.0/20\",\"dev\":\"ens5\",\"protocol\":\"kernel\",\"scope\":\"link\",\"prefsrc\":\"172.26.12.60\",\"metric\":100,\"flags\":[]},{\"dst\":\"172.26.0.1\",\"dev\":\"ens5\",\"protocol\":\"dhcp\",\"scope\":\"link\",\"prefsrc\":\"172.26.12.60\",\"metric\":100,\"flags\":[]},{\"dst\":\"172.26.0.2\",\"dev\":\"ens5\",\"protocol\":\"dhcp\",\"scope\":\"link\",\"prefsrc\":\"172.26.12.60\",\"metric\":100,\"flags\":[]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-6",
+              "route",
+              "show",
+              "table",
+              "main"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"dst\":\"2406:da18:1e16:f200::/64\",\"dev\":\"ens5\",\"protocol\":\"ra\",\"metric\":100,\"flags\":[],\"metrics\":[{\"hoplimit\":255}],\"pref\":\"medium\"},{\"dst\":\"fe80::/64\",\"dev\":\"ens5\",\"protocol\":\"kernel\",\"metric\":256,\"flags\":[],\"pref\":\"medium\"},{\"dst\":\"default\",\"gateway\":\"fe80::41a:f1ff:fe63:e9d3\",\"dev\":\"ens5\",\"protocol\":\"ra\",\"metric\":100,\"flags\":[],\"expires\":1791,\"metrics\":[{\"hoplimit\":255}],\"pref\":\"medium\"}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "rule",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"priority\":0,\"src\":\"all\",\"table\":\"local\"},{\"priority\":32766,\"src\":\"all\",\"table\":\"main\"},{\"priority\":32767,\"src\":\"all\",\"table\":\"default\"}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-6",
+              "rule",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"priority\":0,\"src\":\"all\",\"table\":\"local\"},{\"priority\":32766,\"src\":\"all\",\"table\":\"main\"}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "route",
+              "get",
+              "3.0.199.9"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"dst\":\"3.0.199.9\",\"gateway\":\"172.26.0.1\",\"dev\":\"ens5\",\"prefsrc\":\"172.26.12.60\",\"flags\":[],\"uid\":0,\"cache\":[]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "iptables",
+              "-S"
+            ],
+            "exit_code": 0,
+            "stdout": "-P INPUT ACCEPT\n-P FORWARD ACCEPT\n-P OUTPUT ACCEPT\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip6tables",
+              "-S"
+            ],
+            "exit_code": 0,
+            "stdout": "-P INPUT ACCEPT\n-P FORWARD ACCEPT\n-P OUTPUT ACCEPT\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ufw",
+              "status",
+              "verbose"
+            ],
+            "exit_code": 0,
+            "stdout": "Status: inactive\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "sysctl",
+              "net.ipv6.bindv6only",
+              "net.ipv4.conf.all.rp_filter",
+              "net.ipv4.conf.default.rp_filter",
+              "net.ipv4.conf.all.src_valid_mark"
+            ],
+            "exit_code": 0,
+            "stdout": "net.ipv6.bindv6only = 0\nnet.ipv4.conf.all.rp_filter = 2\nnet.ipv4.conf.default.rp_filter = 2\nnet.ipv4.conf.all.src_valid_mark = 0\n",
+            "stderr_present": false,
+            "truncated": false
+          }
+        ],
+        "read_only": true,
+        "service_after": {
+          "command": [
+            "systemctl",
+            "show",
+            "xray",
+            "--property=MainPID,ExecMainStartTimestampMonotonic,ActiveState,SubState"
+          ],
+          "exit_code": 0,
+          "stdout": "MainPID=576\nExecMainStartTimestampMonotonic=7592160\nActiveState=active\nSubState=running\n",
+          "stderr_present": false,
+          "truncated": false
+        },
+        "service_identity_unchanged": true
+      },
+      "status": "read_complete"
+    },
+    {
+      "node_id": "c43c5e28-6f0f-552f-a896-f7bd166ebab8",
+      "external_id": "xray-d1ef3ca7-c43c5e28",
+      "node_meta": {
+        "region": "ap-southeast-1",
+        "addresses": [
+          {
+            "kind": "dynamic",
+            "value": "46.137.228.67",
+            "family": 4,
+            "resource_id": "xray-d1ef3ca7-c43c5e28"
+          },
+          {
+            "kind": "dynamic",
+            "value": "2406:da18:1e16:f200:f22:8595:ebaf:81ee",
+            "family": 6,
+            "resource_id": "xray-d1ef3ca7-c43c5e28"
+          }
+        ],
+        "provisioning_state": "READY",
+        "health_state": "HEALTHY",
+        "security_state": "OPEN"
+      },
+      "provider_port_states": [
+        {
+          "fromPort": 80,
+          "toPort": 80,
+          "protocol": "tcp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        },
+        {
+          "fromPort": 8388,
+          "toPort": 8388,
+          "protocol": "udp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        },
+        {
+          "fromPort": 22,
+          "toPort": 22,
+          "protocol": "tcp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        },
+        {
+          "fromPort": 8388,
+          "toPort": 8388,
+          "protocol": "tcp",
+          "state": "open",
+          "cidrs": [
+            "0.0.0.0/0"
+          ],
+          "ipv6Cidrs": [
+            "::/0"
+          ],
+          "cidrListAliases": []
+        }
+      ],
+      "provider_request_id": "d6008a63-8b00-4f42-b70a-3dd4629296b6",
+      "production_tcp_probes": [
+        {
+          "family": 4,
+          "host": "46.137.228.67",
+          "port": 22,
+          "status": "connected",
+          "duration_seconds": 0.001
+        },
+        {
+          "family": 4,
+          "host": "46.137.228.67",
+          "port": 8388,
+          "status": "connected",
+          "duration_seconds": 0.001
+        },
+        {
+          "family": 6,
+          "host": "2406:da18:1e16:f200:f22:8595:ebaf:81ee",
+          "port": 22,
+          "status": "failed",
+          "safe_error": "OSError",
+          "duration_seconds": 0.0
+        },
+        {
+          "family": 6,
+          "host": "2406:da18:1e16:f200:f22:8595:ebaf:81ee",
+          "port": 8388,
+          "status": "failed",
+          "safe_error": "OSError",
+          "duration_seconds": 0.0
+        }
+      ],
+      "host_key_matches_preapproved": true,
+      "node_command_exit": 0,
+      "node_stderr_present": false,
+      "node_network": {
+        "checked_at": "2026-11-16T02:40:32.050175+00:00",
+        "service_before": {
+          "command": [
+            "systemctl",
+            "show",
+            "xray",
+            "--property=MainPID,ExecMainStartTimestampMonotonic,ActiveState,SubState"
+          ],
+          "exit_code": 0,
+          "stdout": "MainPID=1930\nExecMainStartTimestampMonotonic=339864200\nActiveState=active\nSubState=running\n",
+          "stderr_present": false,
+          "truncated": false
+        },
+        "commands": [
+          {
+            "command": [
+              "ss",
+              "-H",
+              "-lntup",
+              "( sport = :8388 )"
+            ],
+            "exit_code": 0,
+            "stdout": "udp UNCONN 0      0      *:8388 *:* users:((\"xray\",pid=1930,fd=6))\ntcp LISTEN 0      4096   *:8388 *:* users:((\"xray\",pid=1930,fd=3))\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "address",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"ifindex\":1,\"ifname\":\"lo\",\"flags\":[\"LOOPBACK\",\"UP\",\"LOWER_UP\"],\"mtu\":65536,\"qdisc\":\"noqueue\",\"operstate\":\"UNKNOWN\",\"group\":\"default\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet\",\"local\":\"127.0.0.1\",\"prefixlen\":8,\"scope\":\"host\",\"label\":\"lo\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]},{\"ifindex\":2,\"ifname\":\"ens5\",\"flags\":[\"BROADCAST\",\"MULTICAST\",\"UP\",\"LOWER_UP\"],\"mtu\":9001,\"qdisc\":\"mq\",\"operstate\":\"UP\",\"group\":\"default\",\"txqlen\":1000,\"altnames\":[\"enp0s5\"],\"addr_info\":[{\"family\":\"inet\",\"local\":\"172.26.2.227\",\"prefixlen\":20,\"metric\":100,\"broadcast\":\"172.26.15.255\",\"scope\":\"global\",\"dynamic\":true,\"label\":\"ens5\",\"valid_life_time\":3585,\"preferred_life_time\":3585}]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-6",
+              "address",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"ifindex\":1,\"ifname\":\"lo\",\"flags\":[\"LOOPBACK\",\"UP\",\"LOWER_UP\"],\"mtu\":65536,\"operstate\":\"UNKNOWN\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet6\",\"local\":\"::1\",\"prefixlen\":128,\"scope\":\"host\",\"noprefixroute\":true,\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]},{\"ifindex\":2,\"ifname\":\"ens5\",\"flags\":[\"BROADCAST\",\"MULTICAST\",\"UP\",\"LOWER_UP\"],\"mtu\":9001,\"operstate\":\"UP\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet6\",\"local\":\"2406:da18:1e16:f200:f22:8595:ebaf:81ee\",\"prefixlen\":128,\"scope\":\"global\",\"dynamic\":true,\"noprefixroute\":true,\"valid_life_time\":435,\"preferred_life_time\":125},{\"family\":\"inet6\",\"local\":\"fe80::4ff:c1ff:feb5:39a3\",\"prefixlen\":64,\"scope\":\"link\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "route",
+              "show",
+              "table",
+              "main"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"dst\":\"default\",\"gateway\":\"172.26.0.1\",\"dev\":\"ens5\",\"protocol\":\"dhcp\",\"prefsrc\":\"172.26.2.227\",\"metric\":100,\"flags\":[]},{\"dst\":\"172.26.0.0/20\",\"dev\":\"ens5\",\"protocol\":\"kernel\",\"scope\":\"link\",\"prefsrc\":\"172.26.2.227\",\"metric\":100,\"flags\":[]},{\"dst\":\"172.26.0.1\",\"dev\":\"ens5\",\"protocol\":\"dhcp\",\"scope\":\"link\",\"prefsrc\":\"172.26.2.227\",\"metric\":100,\"flags\":[]},{\"dst\":\"172.26.0.2\",\"dev\":\"ens5\",\"protocol\":\"dhcp\",\"scope\":\"link\",\"prefsrc\":\"172.26.2.227\",\"metric\":100,\"flags\":[]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-6",
+              "route",
+              "show",
+              "table",
+              "main"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"dst\":\"2406:da18:1e16:f200::/64\",\"dev\":\"ens5\",\"protocol\":\"ra\",\"metric\":100,\"flags\":[],\"metrics\":[{\"hoplimit\":255}],\"pref\":\"medium\"},{\"dst\":\"fe80::/64\",\"dev\":\"ens5\",\"protocol\":\"kernel\",\"metric\":256,\"flags\":[],\"pref\":\"medium\"},{\"dst\":\"default\",\"gateway\":\"fe80::41a:f1ff:fe63:e9d3\",\"dev\":\"ens5\",\"protocol\":\"ra\",\"metric\":100,\"flags\":[],\"expires\":1796,\"metrics\":[{\"hoplimit\":255}],\"pref\":\"medium\"}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "rule",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"priority\":0,\"src\":\"all\",\"table\":\"local\"},{\"priority\":32766,\"src\":\"all\",\"table\":\"main\"},{\"priority\":32767,\"src\":\"all\",\"table\":\"default\"}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-6",
+              "rule",
+              "show"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"priority\":0,\"src\":\"all\",\"table\":\"local\"},{\"priority\":32766,\"src\":\"all\",\"table\":\"main\"}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip",
+              "-j",
+              "-4",
+              "route",
+              "get",
+              "3.0.199.9"
+            ],
+            "exit_code": 0,
+            "stdout": "[{\"dst\":\"3.0.199.9\",\"gateway\":\"172.26.0.1\",\"dev\":\"ens5\",\"prefsrc\":\"172.26.2.227\",\"flags\":[],\"uid\":0,\"cache\":[]}]\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "iptables",
+              "-S"
+            ],
+            "exit_code": 0,
+            "stdout": "-P INPUT ACCEPT\n-P FORWARD ACCEPT\n-P OUTPUT ACCEPT\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ip6tables",
+              "-S"
+            ],
+            "exit_code": 0,
+            "stdout": "-P INPUT ACCEPT\n-P FORWARD ACCEPT\n-P OUTPUT ACCEPT\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "ufw",
+              "status",
+              "verbose"
+            ],
+            "exit_code": 0,
+            "stdout": "Status: inactive\n",
+            "stderr_present": false,
+            "truncated": false
+          },
+          {
+            "command": [
+              "sysctl",
+              "net.ipv6.bindv6only",
+              "net.ipv4.conf.all.rp_filter",
+              "net.ipv4.conf.default.rp_filter",
+              "net.ipv4.conf.all.src_valid_mark"
+            ],
+            "exit_code": 0,
+            "stdout": "net.ipv6.bindv6only = 0\nnet.ipv4.conf.all.rp_filter = 2\nnet.ipv4.conf.default.rp_filter = 2\nnet.ipv4.conf.all.src_valid_mark = 0\n",
+            "stderr_present": false,
+            "truncated": false
+          }
+        ],
+        "read_only": true,
+        "service_after": {
+          "command": [
+            "systemctl",
+            "show",
+            "xray",
+            "--property=MainPID,ExecMainStartTimestampMonotonic,ActiveState,SubState"
+          ],
+          "exit_code": 0,
+          "stdout": "MainPID=1930\nExecMainStartTimestampMonotonic=339864200\nActiveState=active\nSubState=running\n",
+          "stderr_present": false,
+          "truncated": false
+        },
+        "service_identity_unchanged": true
+      },
+      "status": "read_complete"
+    }
+  ],
+  "cloud_writes_performed": false,
+  "node_mutations_performed": false,
+  "run_id": "xray-real-use-20261116",
+  "observed_at": "2026-11-16T02:40:38.684229+00:00",
+  "authorization": "parent delegated read-only existing productionSSH and two test nodes; no expired-window writes",
+  "source_commit": "755fab8b32061c0134db0b6175dd2b7b475ec5fa",
+  "secrets_persisted": false
+}

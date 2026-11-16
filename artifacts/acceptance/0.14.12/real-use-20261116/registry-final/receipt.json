@@ -1,0 +1,342 @@
+{
+  "started_at": "2026-11-16T05:07:41.333957+00:00",
+  "source_commit": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+  "version": "0.14.12",
+  "authorization_scope": "Existing production-host localhost registry only; no AWS/node/service/config/catalog/snapshot writes",
+  "commands": [
+    {
+      "label": "local_image_export",
+      "command": [
+        "docker",
+        "image",
+        "save",
+        "--output",
+        "/tmp/xray-01412-final-images.tar",
+        "xray/backend:0.14.12-local",
+        "xray/frontend:0.14.12-local",
+        "xray/backup-tools:0.14.12-local"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "strict_ssh_registry_and_services_preflight",
+      "command": [
+        "ssh",
+        "-i",
+        "/Users/shiyi/Documents/pem/2120-ap-southeast-1.pem",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "admin@3.0.199.9",
+        "sudo python3 -"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "transfer_images",
+      "local_source": "verified docker image save archive streamed via stdin",
+      "remote_command": [
+        "ssh",
+        "-i",
+        "/Users/shiyi/Documents/pem/2120-ap-southeast-1.pem",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "admin@3.0.199.9",
+        "sudo docker image load"
+      ],
+      "load_exit_code": 0
+    },
+    {
+      "label": "tag_push_verify_immutable_pull",
+      "command": [
+        "ssh",
+        "-i",
+        "/Users/shiyi/Documents/pem/2120-ap-southeast-1.pem",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "admin@3.0.199.9",
+        "sudo python3 -"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "strict_ssh_services_unchanged_readback",
+      "command": [
+        "ssh",
+        "-i",
+        "/Users/shiyi/Documents/pem/2120-ap-southeast-1.pem",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "StrictHostKeyChecking=yes",
+        "-o",
+        "ConnectTimeout=15",
+        "admin@3.0.199.9",
+        "sudo python3 -"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "images": [
+    {
+      "name": "backend",
+      "tag": "127.0.0.1:15000/xray/backend:0.14.12-prefix",
+      "immutable_image": "127.0.0.1:15000/xray/backend@sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "digest": "sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "docker_content_digest": "sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "manifest_sha256_verified": true,
+      "platform_manifest_digest": "sha256:e525220dd94d83823e345a800eb0743de0d97eefa31204c624c0ae500976549e",
+      "manifest_config_digest": "sha256:d186641b518334e4b01bffb6aa405da114b30ef048d543f0fc1dbe8dec3382f6",
+      "media_type": "application/vnd.oci.image.index.v1+json",
+      "image_id": "sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "os": "linux",
+      "architecture": "amd64",
+      "revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "push_exit_code": 0,
+      "pull_by_digest_exit_code": 0
+    },
+    {
+      "name": "frontend",
+      "tag": "127.0.0.1:15000/xray/frontend:0.14.12-prefix",
+      "immutable_image": "127.0.0.1:15000/xray/frontend@sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "digest": "sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "docker_content_digest": "sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "manifest_sha256_verified": true,
+      "platform_manifest_digest": "sha256:87e8b58cd11e38f6e3d9cfd2fd3d98e4c54043a35f6b1c496574d475da3c3f4c",
+      "manifest_config_digest": "sha256:61a35031be15e074e660b7f03ad61d6c65ca48ffdbd382e03ed9a73f1e1beaa9",
+      "media_type": "application/vnd.oci.image.index.v1+json",
+      "image_id": "sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "os": "linux",
+      "architecture": "amd64",
+      "revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "push_exit_code": 0,
+      "pull_by_digest_exit_code": 0
+    },
+    {
+      "name": "backup-tools",
+      "tag": "127.0.0.1:15000/xray/backup-tools:0.14.12-prefix",
+      "immutable_image": "127.0.0.1:15000/xray/backup-tools@sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c",
+      "digest": "sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c",
+      "docker_content_digest": "sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c",
+      "manifest_sha256_verified": true,
+      "platform_manifest_digest": "sha256:8176f1cd909db4941e57608ab5b807c16238151c5703eedd55117898260131bc",
+      "manifest_config_digest": "sha256:215e96293f5d04115b906c7a5839e1bbe1a4dc47bc0438a221da784bd4e1e24e",
+      "media_type": "application/vnd.oci.image.index.v1+json",
+      "image_id": "sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c",
+      "os": "linux",
+      "architecture": "amd64",
+      "revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "push_exit_code": 0,
+      "pull_by_digest_exit_code": 0
+    }
+  ],
+  "status": "passed",
+  "local_verified_images": [
+    {
+      "name": "backend",
+      "local_tag": "xray/backend:0.14.12-local",
+      "image_id": "sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "os": "linux",
+      "architecture": "amd64",
+      "revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "config_digest": "sha256:d186641b518334e4b01bffb6aa405da114b30ef048d543f0fc1dbe8dec3382f6"
+    },
+    {
+      "name": "frontend",
+      "local_tag": "xray/frontend:0.14.12-local",
+      "image_id": "sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "os": "linux",
+      "architecture": "amd64",
+      "revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "config_digest": "sha256:61a35031be15e074e660b7f03ad61d6c65ca48ffdbd382e03ed9a73f1e1beaa9"
+    },
+    {
+      "name": "backup-tools",
+      "local_tag": "xray/backup-tools:0.14.12-local",
+      "image_id": "sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c",
+      "os": "linux",
+      "architecture": "amd64",
+      "revision": "34fff784ecbff0d82d0ceda17846984bb0a2c04d",
+      "config_digest": "sha256:215e96293f5d04115b906c7a5839e1bbe1a4dc47bc0438a221da784bd4e1e24e"
+    }
+  ],
+  "before": {
+    "version": "0.14.11",
+    "services": [
+      {
+        "name": "/xray-production-admin-api-1",
+        "id": "d59ba5029c01eb937aa3699b135773b7bfa3f1bd86fe960a98cf75bd363b2c09",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:57:34.346535123Z"
+      },
+      {
+        "name": "/xray-production-beat-1",
+        "id": "bde5754d86cf318c9747f3c993a89710f796acc93b7c430be5d7eb9b9d7d239e",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:38.886602025Z"
+      },
+      {
+        "name": "/xray-production-frontend-1",
+        "id": "4dfec8735edfb804de46c6b1b3c5f7d994899f4463cb598dfd1b7c6760e04946",
+        "image": "127.0.0.1:15000/xray/frontend@sha256:a6518601264074284cefb7d6a4326e8bd9bbca2c5600269d900d43b777eeff9d",
+        "running": true,
+        "started_at": "2026-11-15T07:57:33.525924212Z"
+      },
+      {
+        "name": "/xray-production-gateway-1",
+        "id": "ad7df71e403bc525c8be69b1066dfc1d2db2d986a4aca2c49ea0bebf65fad4b4",
+        "image": "nginx@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284",
+        "running": true,
+        "started_at": "2026-11-15T07:58:05.407743585Z"
+      },
+      {
+        "name": "/xray-production-outbox-dispatcher-1",
+        "id": "dea09f67766b7b28a32d7390c88fdfb45e98e6678244a381a3192d853446fd22",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:38.531009599Z"
+      },
+      {
+        "name": "/xray-production-postgres-1",
+        "id": "ac6540fccd53702345520815eb4a0ca8990f10b1584c27e260c221e382bd6040",
+        "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+        "running": true,
+        "started_at": "2026-11-13T17:44:33.538704Z"
+      },
+      {
+        "name": "/xray-production-redis-1",
+        "id": "a46e64f563d77693a158df73cf060ea8214814784047b3f6cf1d1df005474258",
+        "image": "redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+        "running": true,
+        "started_at": "2026-11-13T17:44:33.286594597Z"
+      },
+      {
+        "name": "/xray-production-security-ledger-dispatcher-1",
+        "id": "160d9e7345e2fe5648f56cbf631a540aab07ab8a22cb414cb34d43ce2fcc178f",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:38.303701246Z"
+      },
+      {
+        "name": "/xray-production-subscription-api-1",
+        "id": "4fe2c852e6b21fa3773e8e00ca03f5a673c790cee662cecbcfcf1ba071c46367",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:57:34.02991803Z"
+      },
+      {
+        "name": "/xray-production-worker-1",
+        "id": "47f0b19c4dd3b7f32334f5ac3b0c61121f310466f98d27129a2308ea806fd20d",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:39.458577847Z"
+      }
+    ],
+    "registry_status": 200,
+    "target_tags": {
+      "backend": {
+        "exists": false
+      },
+      "frontend": {
+        "exists": false
+      },
+      "backup-tools": {
+        "exists": false
+      }
+    }
+  },
+  "phase": "complete",
+  "after": {
+    "version": "0.14.11",
+    "services": [
+      {
+        "name": "/xray-production-admin-api-1",
+        "id": "d59ba5029c01eb937aa3699b135773b7bfa3f1bd86fe960a98cf75bd363b2c09",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:57:34.346535123Z"
+      },
+      {
+        "name": "/xray-production-beat-1",
+        "id": "bde5754d86cf318c9747f3c993a89710f796acc93b7c430be5d7eb9b9d7d239e",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:38.886602025Z"
+      },
+      {
+        "name": "/xray-production-frontend-1",
+        "id": "4dfec8735edfb804de46c6b1b3c5f7d994899f4463cb598dfd1b7c6760e04946",
+        "image": "127.0.0.1:15000/xray/frontend@sha256:a6518601264074284cefb7d6a4326e8bd9bbca2c5600269d900d43b777eeff9d",
+        "running": true,
+        "started_at": "2026-11-15T07:57:33.525924212Z"
+      },
+      {
+        "name": "/xray-production-gateway-1",
+        "id": "ad7df71e403bc525c8be69b1066dfc1d2db2d986a4aca2c49ea0bebf65fad4b4",
+        "image": "nginx@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284",
+        "running": true,
+        "started_at": "2026-11-15T07:58:05.407743585Z"
+      },
+      {
+        "name": "/xray-production-outbox-dispatcher-1",
+        "id": "dea09f67766b7b28a32d7390c88fdfb45e98e6678244a381a3192d853446fd22",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:38.531009599Z"
+      },
+      {
+        "name": "/xray-production-postgres-1",
+        "id": "ac6540fccd53702345520815eb4a0ca8990f10b1584c27e260c221e382bd6040",
+        "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+        "running": true,
+        "started_at": "2026-11-13T17:44:33.538704Z"
+      },
+      {
+        "name": "/xray-production-redis-1",
+        "id": "a46e64f563d77693a158df73cf060ea8214814784047b3f6cf1d1df005474258",
+        "image": "redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf",
+        "running": true,
+        "started_at": "2026-11-13T17:44:33.286594597Z"
+      },
+      {
+        "name": "/xray-production-security-ledger-dispatcher-1",
+        "id": "160d9e7345e2fe5648f56cbf631a540aab07ab8a22cb414cb34d43ce2fcc178f",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:38.303701246Z"
+      },
+      {
+        "name": "/xray-production-subscription-api-1",
+        "id": "4fe2c852e6b21fa3773e8e00ca03f5a673c790cee662cecbcfcf1ba071c46367",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:57:34.02991803Z"
+      },
+      {
+        "name": "/xray-production-worker-1",
+        "id": "47f0b19c4dd3b7f32334f5ac3b0c61121f310466f98d27129a2308ea806fd20d",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638",
+        "running": true,
+        "started_at": "2026-11-15T07:58:39.458577847Z"
+      }
+    ]
+  },
+  "running_services_unchanged": true,
+  "production_config_changed": false,
+  "catalog_changed": false,
+  "aws_writes": false,
+  "finished_at": "2026-11-16T05:10:35.643543+00:00"
+}

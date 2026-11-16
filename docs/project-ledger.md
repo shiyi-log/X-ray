@@ -8721,3 +8721,29 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - staged scan：首轮stdin扫描4 findings，三条为UUID字段key命名，已改operation_request_id；另一条为无文件上下文跨行误报。改用Gitleaks protect --staged按文件解析，唯一finding为installer/xray.service已核对源码SHA256（非秘密）；该linux-gates原始回执保留本地未提交。未改仓库allowlist或全局扫描规则；历史scan0、静态validator0。
 
 - IP显示可见性追加：截图节点长名称可能截断末尾IP，因此将实际IP移到名称最前端；IPv6仍方括号。先改四格式/地址刷新测试，RED5failed14passed/exit1，随后最小实现；GREEN证据ip-prefix-green.junit.xml。本地首次构建755fab8三镜像通过（linux/amd64，revision正确）保留历史，后端将从最终prefix提交重建；未升级生产。源码前缀改动需新精确SHA CI，不借用旧SHA。
+
+
+## 2026-11-16T13:11:27.295044+08:00 - 精确IP前置源码CI与tag前交付核验
+
+- source34fff784ecbff0d82d0ceda17846984bb0a2c04d，CI43793611925 completed/success，artifact14193562381独立SHA/CRC/19gate核验通过。prefix focused19passed/0；RED5failed保留本地。旧755fab8构建/registry保留历史，不用于最终部署。
+- 最终三镜像从34fff78导出构建linux/amd64均0，revision正确；strictSSH加载、registry push、HTTP manifest body/header SHA、amd64 child manifest/config hash、immutable pull均0。生产十服务ID/start/image不变、VERSION0.14.11，未改config/catalog。
+- immutable backend 127.0.0.1:15000/xray/backend@sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5
+- immutable frontend 127.0.0.1:15000/xray/frontend@sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136
+- immutable backup-tools 127.0.0.1:15000/xray/backup-tools@sha256:9f8f6b6ece0e08efffd94fe5cb58bccdc2b2b6c1fbe606496d200604106cfc8c
+- 加密恢复receipt recovery/isolated-restore.json：原0.14.11密文SHA dcee7605ccc6041e2e750061524e28be58af63270880eaee615eda2db268241e；fixed0.14.12脚本真实恢复0、已有target拒绝1、MAINTENANCE读回0，未复开；A410/B503仍not-run。tag前证据已记录。
+- 生产preflight读取0但自加pending断言1：当前自动status产生两条node.refresh PENDING，服务健康且两台READY/HEALTHY/OPEN；不是升级脚本失败，不借此停止独立IP交付，正常release本身drain。当前actual13:xx+08，云写窗口已过；无新增节点写。tag将固定源码34fff78，后续审计commit不移动tag。
+
+- publication: annotated v0.14.12固定source34fff78，正常push0；Release dispatch0、workflow43808611452success/Release446631467，三资产独立下载SHA/GitHubdigest/内外manifest/source核验0。严格snapshot安装0：47files/root无groupwrite/symlink/hardlink，source archive SHA2deaea8a4e87dd523cb5ca3dc081e874799041e1dfea0ec7134b86449b842a9b；catalog原摘要保留，新版本正常追加，无手工compose/热补丁。
+- production: 正常Keychain内存密码登录/CSRF/recent stepup/UUID5a79fc8d-97cc-4c89-8776-15c3ffdde457升级POST202；BACKUP→RELEASING进行中。未使用绕过认证的路径，API会话finally logout。最新读回不能称成功。N2一次stop/start需云窗口续授问题已发，未回复前不执行。
+- tooling: 三个子代理末段供应商503，root读取结果文件接续；此前两次消息正文为空未推定执行。当前时钟从10:xx变到13:xx按实际aware记录，不模拟耗时。一次final-build helper生成转义失败exit2执行前无写，修正后最终三构建0、platform/revision通过。prefix Ruff第一次路径缺失127后uv入口0。
+
+- production完成：job5a79fc8d-97cc-4c89-8776-15c3ffdde457于05:19:27Z SUCCEEDED/COMPLETE；十服务running六healthy、backend/frontend最终immutable digest正确、严格TLS200/200/401/404，升级备份密文checksum有效，本次新备份未解密；回退env/security snapshot存在。生产receipt production.json。临时API网络URLError1处于切换窗口，随后正常读回成功，未重放提交。
+- 现有订阅B publish正常API0，revision4、epoch不变、expected/assigned/ready/published各2；未轮换B，不影响旧导入链接。CUA更新后看到四名称均IP前置，refresh默认选第一条N2IPv4后立即恢复N2IPv6；逐行测试N2v4超时，N2v6 87ms、N1v4 88ms、N1v6 90ms；全4名可见但全节点仍failed3/4。原本地节点/订阅保留。截图shadowrocket-ip-labels.png已实际审阅无秘密，completion_summary已提交。
+
+- 最终只读state：nonterminal0、active2，pool/status/usage开启、daily关闭，未为失败节点缩容/删除或开启自然重启；N2 stop/start续授权仍待回复。生产backup-tools配置保留原验证digest78d076b9，新0.14.12 tools虽构建推送但正常upgrade manifest只切backend/frontend，matrix按实际配置更正，不混淆build和runtime。
+- recovery精确cleanup：核对ID3f021955c927c48a4addc635818d04fdc090d243c07a71637e841c57d4f9a8e2、runlabel/networknone/ports空/tmpfs后stop0/rm0；仅删本run内存恢复DB，密文与identity保留，其他容器未改。原A/B仅内存值在工具恢复后不可用，A410/B503not-run，不再声称原token完整恢复验证通过；本轮不轮换B。
+
+- 独立final_ip_review只读复核并实际view截图：四IP前置可见、整体3/4failed、正常Release/升级证据一致；建议旧0.14.11当前标题改历史已修正。backup-tools运行配置问题已有final-state.json只读证据且matrix改原生产digest。复核acceptance0/diff0，无业务/生产/云写。
+- 本轮收尾范围为IP显示交付与失败如实记录：授权N2重启问题仍待用户回复，未绕过窗口；完整所有节点可用目标尚未达成。原始失败/未审阅zip图与旧构建证据保留本地，提交只含相干脱敏最终回执。当前acceptance/boundary/skill/cached-diff各0，staged Gitleaks285KB无泄漏0；history扫描仍运行，结果后记。
+
+- final verification before audit commit: history Gitleaks172commits/11.70MB无泄漏exit0；staged secrets0、acceptance0、boundary0、skill0、diff0。git statusmain与origin同步source34fff78，仅本次审计stage及保留原始未跟踪证据。后续正常审计commit/push不改v0.14.12标签/生产源码，源码CI成功不冒称审计提交CI已通过。当前全节点仍failed，N2续授权待回复。

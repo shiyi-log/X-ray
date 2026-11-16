@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-16T05:20:18.170576+00:00",
+  "token_rotated": false,
+  "cloud_writes": false,
+  "status": "passed",
+  "version": "0.14.12",
+  "subscription_id": "cefde612-f250-43d0-8135-e1f3f1ff6ea6",
+  "published_revision": 4,
+  "token_epoch_unchanged": true,
+  "node_counts": {
+    "expected": 2,
+    "assigned": 2,
+    "ready": 2,
+    "published": 2,
+    "mismatch": false
+  }
+}

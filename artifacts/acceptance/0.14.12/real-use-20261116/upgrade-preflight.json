@@ -1,0 +1,201 @@
+{
+  "at": "2026-11-16T05:08:44.498560+00:00",
+  "cloud_writes": false,
+  "system_version": "0.14.11",
+  "upgrade": {
+    "current_version": "0.14.11",
+    "available": true,
+    "reason": null,
+    "candidates": [
+      {
+        "version": "0.14.11",
+        "published_at": "2026-11-15T07:50:38.635376+00:00",
+        "notes": "\u8ba2\u9605\u7b7e\u53d1\u5c31\u5730\u8eab\u4efd\u9a8c\u8bc1\u3001\u7edf\u4e00\u4e0e\u5c0f\u706b\u7bad\u94fe\u63a5\u590d\u5236\u5165\u53e3\u3001\u663e\u5f0f\u8f6e\u6362\u786e\u8ba4\uff1b19\u9879CI\u901a\u8fc7\u3002"
+      }
+    ],
+    "jobs": [
+      {
+        "id": "51b28c61-b092-4092-b318-72f5a3eae5b9",
+        "version": "0.14.11",
+        "status": "SUCCEEDED",
+        "phase": "COMPLETE",
+        "error_code": null,
+        "created_at": "2026-11-15T07:53:08.403697+00:00",
+        "updated_at": "2026-11-15T07:58:40.160206+00:00"
+      },
+      {
+        "id": "d35b7565-96c4-4d32-b0a5-11de9ed5061a",
+        "version": "0.14.11",
+        "status": "FAILED",
+        "phase": "VALIDATING",
+        "error_code": "UPGRADE_FAILED",
+        "created_at": "2026-11-15T07:51:02.346031+00:00",
+        "updated_at": "2026-11-15T07:51:02.669663+00:00"
+      },
+      {
+        "id": "013dcb3b-6c04-417d-b081-30677a7df144",
+        "version": "0.14.10",
+        "status": "SUCCEEDED",
+        "phase": "COMPLETE",
+        "error_code": null,
+        "created_at": "2026-11-13T20:08:13.359678+00:00",
+        "updated_at": "2026-11-13T20:13:54.775282+00:00"
+      },
+      {
+        "id": "9c85e3e6-c216-41ac-933a-53e028b54caa",
+        "version": "0.14.9",
+        "status": "SUCCEEDED",
+        "phase": "COMPLETE",
+        "error_code": null,
+        "created_at": "2026-11-13T19:19:38.806947+00:00",
+        "updated_at": "2026-11-13T19:24:17.796265+00:00"
+      }
+    ]
+  },
+  "active_nodes": [
+    {
+      "id": "c43c5e28-6f0f-552f-a896-f7bd166ebab8",
+      "addresses": [
+        {
+          "kind": "dynamic",
+          "value": "46.137.228.67",
+          "family": 4,
+          "resource_id": "xray-d1ef3ca7-c43c5e28"
+        },
+        {
+          "kind": "dynamic",
+          "value": "2406:da18:1e16:f200:f22:8595:ebaf:81ee",
+          "family": 6,
+          "resource_id": "xray-d1ef3ca7-c43c5e28"
+        }
+      ],
+      "provisioning_state": "READY",
+      "health_state": "HEALTHY",
+      "security_state": "OPEN",
+      "desired_state": "PRESENT"
+    },
+    {
+      "id": "f38db145-b76e-57e0-86d6-20bc365f2f20",
+      "addresses": [
+        {
+          "kind": "dynamic",
+          "value": "13.212.118.138",
+          "family": 4,
+          "resource_id": "xray-d1ef3ca7-f38db145"
+        },
+        {
+          "kind": "dynamic",
+          "value": "2406:da18:1e16:f200:e076:f3d5:e3eb:d72",
+          "family": 6,
+          "resource_id": "xray-d1ef3ca7-f38db145"
+        }
+      ],
+      "provisioning_state": "READY",
+      "health_state": "HEALTHY",
+      "security_state": "OPEN",
+      "desired_state": "PRESENT"
+    }
+  ],
+  "nonterminal": [
+    {
+      "id": "23a1e183-48db-4f5c-97a5-18335c61a698",
+      "kind": "node.refresh",
+      "status": "PENDING"
+    },
+    {
+      "id": "21079a2d-6d8b-487e-bcb5-1e588110aec8",
+      "kind": "node.refresh",
+      "status": "PENDING"
+    }
+  ],
+  "production": {
+    "version": "0.14.11",
+    "current_version_trusted": true,
+    "target_release_exists": false,
+    "catalog": {
+      "schema_version": 1,
+      "releases": [
+        {
+          "version": "0.14.11",
+          "published_at": "2026-11-15T07:50:38.635376+00:00",
+          "notes": "\u8ba2\u9605\u7b7e\u53d1\u5c31\u5730\u8eab\u4efd\u9a8c\u8bc1\u3001\u7edf\u4e00\u4e0e\u5c0f\u706b\u7bad\u94fe\u63a5\u590d\u5236\u5165\u53e3\u3001\u663e\u5f0f\u8f6e\u6362\u786e\u8ba4\uff1b19\u9879CI\u901a\u8fc7\u3002"
+        },
+        {
+          "version": "0.14.10",
+          "published_at": "2026-11-13T20:07:59.598729+00:00",
+          "notes": "\u5206\u914d\u4fdd\u5b58\u4e0e\u5728\u7ebf\u5347\u7ea7\uff1b\u4fee\u590d\u5df2\u786e\u8ba4\u64a4\u9500\u4ee4\u724c\u7684\u5730\u5740\u5237\u65b0\uff0c\u5b8c\u6574CI\u901a\u8fc7\u3002"
+        },
+        {
+          "version": "0.14.9",
+          "published_at": "2026-11-13T19:11:36.239481+00:00",
+          "notes": "\u670d\u52a1\u5668\u5206\u914d\u4fdd\u5b58\u3001\u4e09\u5217\u5730\u533a\u5e03\u5c40\u548c\u7cfb\u7edf\u5728\u7ebf\u5347\u7ea7\u5165\u53e3\u3002\u5305\u542b\u5907\u4efd\u3001\u6392\u7a7a\u3001\u8fc1\u79fb\u4e0e\u5065\u5eb7\u68c0\u67e5\u3002"
+        }
+      ]
+    },
+    "services": [
+      {
+        "name": "/xray-production-worker-1",
+        "running": true,
+        "health": null,
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638"
+      },
+      {
+        "name": "/xray-production-security-ledger-dispatcher-1",
+        "running": true,
+        "health": null,
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638"
+      },
+      {
+        "name": "/xray-production-outbox-dispatcher-1",
+        "running": true,
+        "health": null,
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638"
+      },
+      {
+        "name": "/xray-production-beat-1",
+        "running": true,
+        "health": null,
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638"
+      },
+      {
+        "name": "/xray-production-gateway-1",
+        "running": true,
+        "health": "healthy",
+        "image": "nginx@sha256:30f1c0d78e0ad60901648be663a710bdadf19e4c10ac6782c235200619158284"
+      },
+      {
+        "name": "/xray-production-admin-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638"
+      },
+      {
+        "name": "/xray-production-subscription-api-1",
+        "running": true,
+        "health": "healthy",
+        "image": "127.0.0.1:15000/xray/backend@sha256:dfa40e9033e56cff6861517d6b6a1aef30ab7f3c36d20181be60bb205a20a638"
+      },
+      {
+        "name": "/xray-production-frontend-1",
+        "running": true,
+        "health": "healthy",
+        "image": "127.0.0.1:15000/xray/frontend@sha256:a6518601264074284cefb7d6a4326e8bd9bbca2c5600269d900d43b777eeff9d"
+      },
+      {
+        "name": "/xray-production-redis-1",
+        "running": true,
+        "health": "healthy",
+        "image": "redis@sha256:ff02b58f971e7d7d156a1267e283fcbbeee91773b6aa36c49dac28ecfe28eadf"
+      },
+      {
+        "name": "/xray-production-postgres-1",
+        "running": true,
+        "health": "healthy",
+        "image": "postgres@sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94"
+      }
+    ],
+    "rollback_env_exists": true
+  },
+  "status": "failed",
+  "safe_error": "AssertionError"
+}

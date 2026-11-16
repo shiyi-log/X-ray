@@ -1,0 +1,96 @@
+{
+  "checked_at": "2026-11-16T05:20:25.438448+00:00",
+  "version": "0.14.12",
+  "job": {
+    "created_at": "2026-11-16T05:13:29.760148+00:00",
+    "error_code": "",
+    "id": "5a79fc8d-97cc-4c89-8776-15c3ffdde457",
+    "phase": "COMPLETE",
+    "status": "SUCCEEDED",
+    "updated_at": "2026-11-16T05:19:27.464813+00:00",
+    "version": "0.14.12"
+  },
+  "first_attempt": null,
+  "version_file_mode": "0o644",
+  "services": [
+    {
+      "name": "xray-production-worker-1",
+      "running": true,
+      "health": null
+    },
+    {
+      "name": "xray-production-security-ledger-dispatcher-1",
+      "running": true,
+      "health": null
+    },
+    {
+      "name": "xray-production-beat-1",
+      "running": true,
+      "health": null
+    },
+    {
+      "name": "xray-production-outbox-dispatcher-1",
+      "running": true,
+      "health": null
+    },
+    {
+      "name": "xray-production-gateway-1",
+      "running": true,
+      "health": "healthy"
+    },
+    {
+      "name": "xray-production-admin-api-1",
+      "running": true,
+      "health": "healthy"
+    },
+    {
+      "name": "xray-production-subscription-api-1",
+      "running": true,
+      "health": "healthy"
+    },
+    {
+      "name": "xray-production-frontend-1",
+      "running": true,
+      "health": "healthy"
+    },
+    {
+      "name": "xray-production-redis-1",
+      "running": true,
+      "health": "healthy"
+    },
+    {
+      "name": "xray-production-postgres-1",
+      "running": true,
+      "health": "healthy"
+    }
+  ],
+  "images": {
+    "admin-api": {
+      "image": "127.0.0.1:15000/xray/backend@sha256:e6ced0836b5c227edca81fa02bfbdd612ebeaefb411a9edad5fe76cd0f4481d5",
+      "running": true,
+      "health": "healthy"
+    },
+    "frontend": {
+      "image": "127.0.0.1:15000/xray/frontend@sha256:e4905671a2c059df6c3193409223d8bf725381bc63c4657fdb6ae5401f160136",
+      "running": true,
+      "health": "healthy"
+    }
+  },
+  "backup": {
+    "directory_name": "xray-0.14.12-20261116T051438Z-1",
+    "app_version": "0.14.12",
+    "created_at": "2026-11-16T05:14:38Z",
+    "encrypted_checksum_valid": true,
+    "encrypted_bytes": 296175,
+    "decryption_this_run": false
+  },
+  "strict_tls_probes": {
+    "admin": 200,
+    "subscription_health": 200,
+    "anonymous_system": 401,
+    "subscription_admin_api": 404
+  },
+  "rollback_file_present": true,
+  "security_snapshot_present": true,
+  "security_state_restore_performed": false
+}
