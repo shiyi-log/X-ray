@@ -8719,3 +8719,5 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 
 - 新恢复证据：fixed restore在新network-none/tmpfs PG实际恢复0、已有目标拒绝1（预期）、MAINTENANCE读回0，SQL语法警告false；sequence8/cloud_write blocked，A410/B503尚not-run；只精确替换本run容器，无生产/SSH/云动作。证据0.14.12/real-use-20261116/recovery，密文SHA与旧备份一致。恢复receipt当前提交前归档。
 - staged scan：首轮stdin扫描4 findings，三条为UUID字段key命名，已改operation_request_id；另一条为无文件上下文跨行误报。改用Gitleaks protect --staged按文件解析，唯一finding为installer/xray.service已核对源码SHA256（非秘密）；该linux-gates原始回执保留本地未提交。未改仓库allowlist或全局扫描规则；历史scan0、静态validator0。
+
+- IP显示可见性追加：截图节点长名称可能截断末尾IP，因此将实际IP移到名称最前端；IPv6仍方括号。先改四格式/地址刷新测试，RED5failed14passed/exit1，随后最小实现；GREEN证据ip-prefix-green.junit.xml。本地首次构建755fab8三镜像通过（linux/amd64，revision正确）保留历史，后端将从最终prefix提交重建；未升级生产。源码前缀改动需新精确SHA CI，不借用旧SHA。

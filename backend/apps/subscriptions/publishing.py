@@ -181,8 +181,8 @@ class Publisher:
                     {
                         "node_id": str(node.pk),
                         "name": (
-                            f"{subscription.profile.name}-{str(node.pk)[:8]}-"
-                            f"{protocol.protocol}-v{family}-{display_host}"
+                            f"{display_host}-{subscription.profile.name}-"
+                            f"{str(node.pk)[:8]}-{protocol.protocol}-v{family}"
                         ),
                         "protocol": protocol.protocol,
                         "host": host,

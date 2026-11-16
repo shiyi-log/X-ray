@@ -104,8 +104,8 @@ def test_published_node_labels_display_each_endpoint_ip(publishable_subscription
 
     prefix = f"{subscription.profile.name}-{str(node.pk)[:8]}-trojan"
     assert labels == {
-        f"{prefix}-v4-192.0.2.50",
-        f"{prefix}-v6-[2001:db8::50]",
+        f"192.0.2.50-{prefix}-v4",
+        f"[2001:db8::50]-{prefix}-v6",
     }
 
 
@@ -209,7 +209,7 @@ def test_address_refresh_republishes_with_new_ip_and_invalidates_old_revision(
     assert "192.0.2.50" not in payload
     labels = {unquote(urlsplit(uri).fragment) for uri in payload.splitlines()}
     assert labels == {
-        f"{subscription.profile.name}-{str(node.pk)[:8]}-trojan-v4-198.51.100.77"
+        f"198.51.100.77-{subscription.profile.name}-{str(node.pk)[:8]}-trojan-v4"
     }
 
 
