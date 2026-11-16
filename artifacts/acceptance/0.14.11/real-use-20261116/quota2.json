@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-15T18:32:28.370516+00:00",
+  "N1_ready": {
+    "id": "f38db145-b76e-57e0-86d6-20bc365f2f20",
+    "external_id": "xray-d1ef3ca7-f38db145",
+    "created_at": "2026-11-15T18:23:48.554436+00:00",
+    "desired_generation": 1,
+    "applied_generation": 1
+  },
+  "quota": 2,
+  "status": "waiting_for_natural_pool_scheduler"
+}

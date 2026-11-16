@@ -383,3 +383,25 @@ CloudAccount。90 分钟窗口内不绕过标准 X-ray 流程执行云写入；�
 阻挡并告知匹配 profile 名称，再由正常浏览器/API 读回 session、recent step-up、
 CloudAccount 账号摘要，并再次确认该 profile 的 AWS 身份和费用边界。未完成时窗口
 到期自动失效。
+# 2026-11-16 本机小火箭快速验收授权
+
+run_id: `xray-real-use-20261116`。本对话用户要求实施计划，并明确将客户端
+改为本机 Shadowrocket、观察期改为单次快速验收。以下细化本次已批准范围，
+不沿用历史授权窗口。
+
+| 字段 | 本次范围 |
+| --- | --- |
+| authorization_ref | 本对话 Please implement the plan、本机小火箭及单次快速验收回复 |
+| account/provider | aws-lightsail；root profile；精确 Account 无换行 SHA256 前12位 `4a0ef08458dd`，与生产 CloudAccount `e478fe0b-8e7f-4316-8441-d4becc0c4ef1` 匹配 |
+| region/plan/image | ap-southeast-1 / small_3_0 / ubuntu_24_04；目录价 USD12/月 |
+| resources/window | 本run最多两台；本次写窗口 `[2026-11-16T02:20:00+08:00,2026-11-16T08:20:00+08:00)`；已确认 stop 后的 start 恢复及本run清理优先 |
+| budget | 新增测试 USD30、USD24 预警；保留节点月目标 USD15，不含已有管理主机。两台按整月套餐 USD24 加 USD6 预留评估；实际网络及附属费用单列，不声称云端硬封顶 |
+| production | admin.xray.ai163.cc / sub.xray.ai163.cc；admin@3.0.199.9，原PEM及严格known_hosts；不变更其他服务/会话/凭据 |
+| allowed actions | 正常API/Operation创建、安装、firewall、SSH、健康、状态、流量、stop/start、公网HTTPS/限量视频；两份新订阅A轮换撤回、B正向对照；隔离加密备份恢复 |
+| pool settings | 正常配置接口将香港quota1改0、新加坡0改2，其余保持0；补池15分钟、状态5分钟、流量1分钟；每日Asia/Shanghai04:00，准备完毕后启用 |
+| delete | 本run较老N1的2→1缩容；失败/超预算/到期时仅清理本run明确归属新节点；不删除已有9台实例或其他项目资源 |
+| retain | 通过后较新N2保留日常使用，quota1，补池/状态/流量/每日04:00重启启用；接受单节点中断及手动更新订阅。长期保留持续计费，标签不会自动停止或删除 |
+| exclusions | 不创建EC2、SWAS、静态IP、快照、额外盘或第三台；不恢复生产数据库，不操作其他订阅，不绕过host-key/step-up/preview/idempotency |
+
+48小时和两个自然日期轮转本轮记为not-run；手动快速stop/start不记为自然
+每日调度通过。macOS本机网络测试不冒充iPhone/蜂窝真机验收。

@@ -1,0 +1,129 @@
+{
+  "f38db145-b76e-57e0-86d6-20bc365f2f20": {
+    "node_id": "f38db145-b76e-57e0-86d6-20bc365f2f20",
+    "port_states": [
+      {
+        "fromPort": 80,
+        "toPort": 80,
+        "protocol": "tcp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      },
+      {
+        "fromPort": 8388,
+        "toPort": 8388,
+        "protocol": "udp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      },
+      {
+        "fromPort": 22,
+        "toPort": 22,
+        "protocol": "tcp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      },
+      {
+        "fromPort": 8388,
+        "toPort": 8388,
+        "protocol": "tcp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      }
+    ],
+    "production_tcp_v4": true
+  },
+  "c43c5e28-6f0f-552f-a896-f7bd166ebab8": {
+    "node_id": "c43c5e28-6f0f-552f-a896-f7bd166ebab8",
+    "port_states": [
+      {
+        "fromPort": 80,
+        "toPort": 80,
+        "protocol": "tcp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      },
+      {
+        "fromPort": 8388,
+        "toPort": 8388,
+        "protocol": "udp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      },
+      {
+        "fromPort": 22,
+        "toPort": 22,
+        "protocol": "tcp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      },
+      {
+        "fromPort": 8388,
+        "toPort": 8388,
+        "protocol": "tcp",
+        "state": "open",
+        "cidrs": [
+          "0.0.0.0/0"
+        ],
+        "ipv6Cidrs": [
+          "::/0"
+        ],
+        "cidrListAliases": []
+      }
+    ],
+    "production_tcp_v4": true,
+    "listeners": [
+      "State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess",
+      "LISTEN 0      4096      127.0.0.54:53         0.0.0.0:*          ",
+      "LISTEN 0      4096         0.0.0.0:22         0.0.0.0:*          ",
+      "LISTEN 0      4096   127.0.0.53%lo:53         0.0.0.0:*          ",
+      "LISTEN 0      4096       127.0.0.1:10085      0.0.0.0:*          ",
+      "LISTEN 0      4096            [::]:22            [::]:*          ",
+      "LISTEN 0      4096               *:8388             *:*          "
+    ],
+    "ss_exit": 0
+  },
+  "at": "2026-11-15T19:30:23.100556+00:00"
+}

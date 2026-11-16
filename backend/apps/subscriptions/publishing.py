@@ -176,12 +176,13 @@ class Publisher:
             ):
                 continue
             for family, host in _usable_addresses(node):
+                display_host = f"[{host}]" if family == 6 else host
                 endpoints.append(
                     {
                         "node_id": str(node.pk),
                         "name": (
                             f"{subscription.profile.name}-{str(node.pk)[:8]}-"
-                            f"{protocol.protocol}-v{family}"
+                            f"{protocol.protocol}-v{family}-{display_host}"
                         ),
                         "protocol": protocol.protocol,
                         "host": host,

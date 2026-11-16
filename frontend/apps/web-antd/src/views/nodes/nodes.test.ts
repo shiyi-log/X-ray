@@ -82,7 +82,7 @@ describe('server management', () => {
       const text = wrapper.text();
       expect(text).toContain('服务器管理');
       expect(text).toContain('203.0.113.10');
-      expect(text).not.toContain('2001:db8::10');
+      expect(text).toContain('2001:db8::10');
       expect(text).toContain('运行中');
       expect(text).toContain('3.00 GiB');
       expect(text).toContain('上行 1.00 GiB · 下行 2.00 GiB');
@@ -98,21 +98,28 @@ describe('server management', () => {
       expect(resourcesApi.nodeDetail).toHaveBeenCalledWith('node-1');
       expect(document.body.textContent).toContain('服务器详情');
       expect(document.body.textContent).toContain('203.0.113.10');
-      expect(document.body.textContent).not.toContain('2001:db8::10');
+      expect(document.body.textContent).toContain('2001:db8::10');
     } finally {
       wrapper.unmount();
     }
   });
 
-  it('accepts legacy IPv4 strings and hides IPv6 or invalid address values', async () => {
+  it('shows legacy and current IP addresses while hiding invalid or mismatched values', async () => {
     mockNodes([{
       ...node,
       addresses: [
         '198.51.100.4',
         '2001:db8::20',
+        { value: '2001:db8::20', family: 6 },
         '999.0.0.1',
+        '2001:db8:::30',
+        'proxy.example.test',
         { value: '192.0.2.5', family: 6 },
         { value: '192.0.2.6', family: 4 },
+        { value: '2001:db8::40', family: 4 },
+        { address: '2001:db8::50', family: 6 },
+        { ip_address: '2001:db8::60' },
+        { ip: '2001:db8::70', family: 6 },
       ],
     } as ManagedNode]);
     const { wrapper } = mountNodes();
@@ -122,9 +129,37 @@ describe('server management', () => {
       const text = wrapper.text();
       expect(text).toContain('198.51.100.4');
       expect(text).toContain('192.0.2.6');
-      expect(text).not.toContain('2001:db8::20');
+      for (const address of ['2001:db8::20', '2001:db8::50', '2001:db8::60', '2001:db8::70']) {
+        expect(text).toContain(address);
+      }
+      expect(text.match(/2001:db8::20/g)).toHaveLength(1);
       expect(text).not.toContain('999.0.0.1');
+      expect(text).not.toContain('2001:db8:::30');
+      expect(text).not.toContain('proxy.example.test');
       expect(text).not.toContain('192.0.2.5');
+      expect(text).not.toContain('2001:db8::40');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('shows an IPv6-only server address in the list and details', async () => {
+    const ipv6OnlyNode = {
+      ...node,
+      addresses: [{ value: '2001:db8::80', family: 6 }],
+    } as ManagedNode;
+    mockNodes([ipv6OnlyNode]);
+    vi.spyOn(resourcesApi, 'nodeDetail').mockResolvedValue(ipv6OnlyNode);
+    const { wrapper } = mountNodes();
+
+    try {
+      await flushPromises();
+      expect(wrapper.text()).toContain('2001:db8::80');
+      await wrapper.findAll('button').find((button) => button.text().includes('详情'))!.trigger('click');
+      await flushPromises();
+      const dialog = new DOMWrapper([...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')]
+        .find((item) => item.style.display !== 'none')!);
+      expect(dialog.text()).toContain('2001:db8::80');
     } finally {
       wrapper.unmount();
     }

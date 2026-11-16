@@ -70,7 +70,9 @@ def test_test_settings_never_enable_real_node_bootstrap_or_health_probe():
     assert settings.XRAY_NODE_HEALTH_PROBE == ""
 
 
-def test_ssh_health_probe_uses_shadowsocks_port_and_validates_fresh_proxy_connection():
+def test_ssh_health_probe_uses_shadowsocks_port_and_validates_fresh_proxy_connection(
+    xray_port_pool,
+):
     from apps.nodes.bootstrap_runtime import _SSH_PROBE
 
     xray = Path(
@@ -82,18 +84,16 @@ def test_ssh_health_probe_uses_shadowsocks_port_and_validates_fresh_proxy_connec
     if not xray.is_file() or not os.access(xray, os.X_OK):
         pytest.skip("fixed Xray test binary is unavailable")
 
-    def reserve_port():
-        with socket.socket() as listener:
-            listener.bind(("127.0.0.1", 0))
-            return listener.getsockname()[1]
-
-    server_port = reserve_port()
+    # Allocate every listener before starting resources so exhaustion cannot leak
+    # the Xray child process or target thread.
+    server_port = xray_port_pool.allocate()
+    target_port = xray_port_pool.allocate()
+    probe_port = xray_port_pool.allocate()
     target = socket.socket()
     target.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    target.bind(("127.0.0.1", 0))
+    target.bind(("127.0.0.1", target_port))
     target.listen()
     target.settimeout(0.2)
-    target_port = target.getsockname()[1]
     stop_target = threading.Event()
 
     def serve_target():
@@ -131,6 +131,10 @@ def test_ssh_health_probe_uses_shadowsocks_port_and_validates_fresh_proxy_connec
     server.stdin.close()
     source = _SSH_PROBE.replace(
         'xray = "/usr/local/bin/xray"', f"xray = {json.dumps(str(xray))}"
+    )
+    source = source.replace(
+        'listener.bind(("127.0.0.1", 0))',
+        f'listener.bind(("127.0.0.1", {probe_port}))',
     )
     try:
         deadline = time.monotonic() + 8
@@ -176,6 +180,21 @@ def test_ssh_health_probe_uses_shadowsocks_port_and_validates_fresh_proxy_connec
         stop_target.set()
         target.close()
         target_thread.join(timeout=1)
+
+
+def test_health_probe_exhaustion_precedes_listener_or_child_process_start(tmp_path, monkeypatch):
+    from port_pool import PortPool
+
+    monkeypatch.setattr(PortPool, "_available", staticmethod(lambda _port: True))
+
+    def unexpected_resource(*_args, **_kwargs):
+        pytest.fail("health probe started a resource before allocating all ports")
+
+    monkeypatch.setattr(socket, "socket", unexpected_resource)
+    monkeypatch.setattr(subprocess, "Popen", unexpected_resource)
+    with PortPool.from_value("55701,55702", lock_dir=tmp_path) as pool:
+        with pytest.raises(OSError, match="XRAY_TEST_PORTS exhausted"):
+            test_ssh_health_probe_uses_shadowsocks_port_and_validates_fresh_proxy_connection(pool)
 
 
 def test_pinned_bundle_download_checks_https_hash_and_size_before_returning():

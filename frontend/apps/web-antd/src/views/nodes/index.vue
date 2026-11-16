@@ -55,12 +55,22 @@ function isIpv4(value: unknown): value is string {
     && /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/.test(value);
 }
 
+function isIp(value: unknown): value is string {
+  if (isIpv4(value)) return true;
+  if (typeof value !== 'string' || !value.includes(':') || !/^[\da-f:.]+$/i.test(value)) return false;
+  try {
+    return new URL(`http://[${value}]/`).hostname.startsWith('[');
+  } catch {
+    return false;
+  }
+}
+
 function nodeIp(node: ManagedNode) {
   const addresses = (node.addresses ?? []).flatMap((entry) => {
-    if (typeof entry === 'string') return isIpv4(entry) ? [entry] : [];
-    if (entry.family !== undefined && entry.family !== 4) return [];
+    if (typeof entry === 'string') return isIp(entry) ? [entry] : [];
     return [entry.value, entry.address, entry.ip_address, entry.ip].filter(
-      isIpv4,
+      (value): value is string => isIp(value)
+        && (entry.family === undefined || entry.family === (isIpv4(value) ? 4 : 6)),
     );
   });
   return [...new Set(addresses)].join(', ') || '-';

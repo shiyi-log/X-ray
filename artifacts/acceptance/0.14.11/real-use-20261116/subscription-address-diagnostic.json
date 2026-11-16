@@ -1,0 +1,36 @@
+{
+  "endpoints": [
+    {
+      "name": "本机快速验收20261116B-c43c5e28-shadowsocks-v4",
+      "host": "46.137.228.67",
+      "port": 8388,
+      "method": "aes-128-gcm",
+      "tcp_reachable": true
+    },
+    {
+      "name": "本机快速验收20261116B-c43c5e28-shadowsocks-v6",
+      "host": "2406:da18:1e16:f200:f22:8595:ebaf:81ee",
+      "port": 8388,
+      "method": "aes-128-gcm",
+      "tcp_reachable": true
+    },
+    {
+      "name": "本机快速验收20261116B-f38db145-shadowsocks-v4",
+      "host": "13.212.118.138",
+      "port": 8388,
+      "method": "aes-128-gcm",
+      "tcp_reachable": true
+    },
+    {
+      "name": "本机快速验收20261116B-f38db145-shadowsocks-v6",
+      "host": "2406:da18:1e16:f200:e076:f3d5:e3eb:d72",
+      "port": 8388,
+      "method": "aes-128-gcm",
+      "tcp_reachable": true
+    }
+  ],
+  "paired_credentials_equal": [
+    true,
+    true
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "run_id": "xray-real-use-20261116",
+  "kind": "final-local-backend-and-delivery",
+  "started_at": "2026-11-15T18:47:37.578417+00:00",
+  "ports": [
+    55801,
+    55802,
+    55803,
+    55804,
+    55805,
+    55806,
+    55807,
+    55808,
+    55809,
+    55810,
+    55811,
+    55812,
+    55813,
+    55814,
+    55815,
+    55816,
+    55817,
+    55818,
+    55819,
+    55820,
+    55821,
+    55822,
+    55823,
+    55824,
+    55825,
+    55826,
+    55827,
+    55828,
+    55829,
+    55830,
+    55831,
+    55832,
+    55833,
+    55834,
+    55835,
+    55836,
+    55837,
+    55838,
+    55839,
+    55840
+  ],
+  "project": "76b7fd95e2bd49c79842c0976f7f150e",
+  "fixed_xray": "26.3.27",
+  "scope": "local Fake/Stub; dedicated test database and Redis only",
+  "prior_preflight": {
+    "exit_code": 1,
+    "stage": "before pytest or portctl run",
+    "port": 55710,
+    "protocol": "TCP",
+    "errno": 48,
+    "listener_present": false,
+    "outcome": "registered separate bounded 40-port pool, original registration preserved"
+  },
+  "all_ports_tcp_udp_bindable_before": true,
+  "command": [
+    "python3",
+    "/Users/shiyi/Documents/ChatGPT/duankou/portctl.py",
+    "run",
+    "--project",
+    "76b7fd95e2bd49c79842c0976f7f150e",
+    "--ports",
+    "55801,55802,55803,55804,55805,55806,55807,55808,55809,55810,55811,55812,55813,55814,55815,55816,55817,55818,55819,55820,55821,55822,55823,55824,55825,55826,55827,55828,55829,55830,55831,55832,55833,55834,55835,55836,55837,55838,55839,55840",
+    "--",
+    "uv",
+    "run",
+    "--project",
+    "backend",
+    "pytest",
+    "-c",
+    "backend/pyproject.toml",
+    "--confcutdir=/Users/shiyi/Documents/ChatGPT/x-ray",
+    "backend/tests",
+    "tests",
+    "-q",
+    "--junitxml=/Users/shiyi/Documents/ChatGPT/x-ray/artifacts/acceptance/0.14.11/real-use-20261116/final-backend.junit.xml"
+  ],
+  "images": {
+    "XRAY_BACKEND_TEST_IMAGE": "xray-manager-backend:0.14.11-local",
+    "XRAY_FRONTEND_TEST_IMAGE": "xray-manager-frontend:0.14.11-local",
+    "XRAY_BACKUP_TEST_IMAGE": "xray-manager-backup-tools:0.14.11-local",
+    "XRAY_POSTGRES_TEST_IMAGE": "postgres:17.6-alpine"
+  },
+  "exit_code": 0,
+  "duration_seconds": 166.03,
+  "completed_at": "2026-11-15T18:50:23.609180+00:00",
+  "junit_counts": {
+    "tests": 682,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 2,
+    "passed": 680
+  },
+  "skips": [
+    {
+      "name": "test_one_click_install_then_update_preserves_config_and_generation",
+      "reason": "one-click runtime integration requires a disposable Linux host"
+    },
+    {
+      "name": "test_dynamic_service_user_can_read_root_only_configuration",
+      "reason": "requires an explicitly selected disposable Linux systemd host"
+    }
+  ],
+  "portctl_final_exit_code": 0,
+  "listeners_final": [],
+  "tcp_udp_bind_failures_final": [],
+  "image_ids": {
+    "XRAY_BACKEND_TEST_IMAGE": {
+      "id": "sha256:0b68cb010d65d7732f0b7c2c7148dd8690f8cd949d92c868300f769bafc9cbfb",
+      "os": "linux",
+      "architecture": "arm64"
+    },
+    "XRAY_FRONTEND_TEST_IMAGE": {
+      "id": "sha256:84a77ea627c2a85990ed13f347e2e22a33c9d69e178432c66dfdbccdd3c16b71",
+      "os": "linux",
+      "architecture": "arm64"
+    },
+    "XRAY_BACKUP_TEST_IMAGE": {
+      "id": "sha256:1bb8a44fc4a5ccfb02864e2ae15058c78de76745fbb4fc007992f2a3a4de8ed1",
+      "os": "linux",
+      "architecture": "arm64"
+    },
+    "XRAY_POSTGRES_TEST_IMAGE": {
+      "id": "sha256:ef257d85f76e48da1c64832459b59fcaba1a4dac97bf5d7450c77753542eee94",
+      "os": "linux",
+      "architecture": "arm64"
+    }
+  },
+  "final_diff_check_exit": 2,
+  "final_diff_check_limitation": "docs/cloud-test-authorization.md:408 extra blank EOF; parent-owned",
+  "no_source_changes_by_this_subtask": true,
+  "registration_retained": true
+}

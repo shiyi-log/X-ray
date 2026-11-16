@@ -1,0 +1,362 @@
+{
+  "run_id": "xray-real-use-20261116",
+  "checked_at": "2026-11-15T18:06:07.845072+00:00",
+  "cloud_writes_performed": false,
+  "production_writes_performed": false,
+  "commands": [
+    {
+      "tool": "aws",
+      "profile": "default",
+      "operation": "sts get-caller-identity",
+      "exit_code": 0
+    },
+    {
+      "tool": "aws",
+      "profile": "root",
+      "operation": "sts get-caller-identity",
+      "exit_code": 0
+    },
+    {
+      "tool": "aws",
+      "profile": "root",
+      "operation": "lightsail get-instances --region ap-southeast-1",
+      "exit_code": 0
+    },
+    {
+      "tool": "aws",
+      "profile": "root",
+      "operation": "lightsail get-bundles --region ap-southeast-1 --include-inactive",
+      "exit_code": 0
+    },
+    {
+      "tool": "aws",
+      "profile": "root",
+      "operation": "lightsail get-blueprints --region ap-southeast-1 --include-inactive",
+      "exit_code": 0
+    }
+  ],
+  "identities": [
+    {
+      "profile": "default",
+      "account_sha256": "b1746f68f5be",
+      "matches_authorized_account": false
+    },
+    {
+      "profile": "root",
+      "account_sha256": "4a0ef08458dd",
+      "matches_authorized_account": true
+    }
+  ],
+  "selected_profile": "root",
+  "singapore_inventory": [
+    {
+      "name_sha256": "11f35f5cbf02",
+      "state": "running",
+      "bundle_id": "xlarge_3_0",
+      "blueprint_id": "ubuntu_24_04",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "8a89b21cd817",
+      "state": "running",
+      "bundle_id": "medium_3_0",
+      "blueprint_id": "ubuntu_24_04",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "9779469589f9",
+      "state": "running",
+      "bundle_id": "xlarge_win_3_0",
+      "blueprint_id": "windows_server_2025",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "74e09aaacb25",
+      "state": "running",
+      "bundle_id": "medium_3_0",
+      "blueprint_id": "debian_12",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "d28b2cd892c8",
+      "state": "running",
+      "bundle_id": "small_3_0",
+      "blueprint_id": "debian_12",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "60c9882483b2",
+      "state": "running",
+      "bundle_id": "medium_3_0",
+      "blueprint_id": "ubuntu_24_04",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "bfd487eb1a7d",
+      "state": "running",
+      "bundle_id": "medium_3_0",
+      "blueprint_id": "debian_12",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "178237205f19",
+      "state": "running",
+      "bundle_id": "nano_3_0",
+      "blueprint_id": "ubuntu_24_04",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    },
+    {
+      "name_sha256": "0f67a1e12197",
+      "state": "running",
+      "bundle_id": "medium_3_0",
+      "blueprint_id": "ubuntu_24_04",
+      "zone": "ap-southeast-1a",
+      "is_known_production_host": false
+    }
+  ],
+  "bundle": [
+    {
+      "bundleId": "small_3_0",
+      "price": 12.0,
+      "cpuCount": 2,
+      "ramSizeInGb": 2.0,
+      "diskSizeInGb": 60,
+      "transferPerMonthInGb": 3072,
+      "isActive": true,
+      "supportedPlatforms": [
+        "LINUX_UNIX"
+      ],
+      "publicIpv4AddressCount": 1
+    }
+  ],
+  "blueprint": [
+    {
+      "blueprintId": "ubuntu_24_04",
+      "isActive": true,
+      "platform": "LINUX_UNIX",
+      "version": "24.04 LTS",
+      "minPower": 0
+    }
+  ],
+  "ssh_exit_code": 0,
+  "strict_host_key_checking": true,
+  "error": "STRICT_SSH_READBACK_FAILED",
+  "production_checked_at": "2026-11-15T18:08:25.432547+00:00",
+  "production": {
+    "checked_at": "2026-11-15T18:08:23.359872+00:00",
+    "transaction_read_only": true,
+    "accounts": [
+      {
+        "id": "e478fe0b-8e7f-4316-8441-d4becc0c4ef1",
+        "provider": "aws_lightsail",
+        "enabled": true,
+        "account_sha256": "4a0ef08458dd",
+        "validated_at": "2026-11-13T18:25:27.767173+00:00",
+        "last_validation_code": "OK",
+        "credential_version": 1
+      }
+    ],
+    "nodes": [
+      {
+        "id": "4e1661d7-b4f6-5030-a2ac-f2743e8d75db",
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "cloud_account_id": "e478fe0b-8e7f-4316-8441-d4becc0c4ef1",
+        "region": "us-east-1",
+        "plan_id": "small_3_0",
+        "image_id": "ubuntu_24_04",
+        "raw_cloud_state": "running",
+        "desired_state": "DELETED",
+        "provisioning_state": "DELETED",
+        "health_state": "HEALTHY",
+        "security_state": "OPEN",
+        "consumes_quota": false,
+        "desired_generation": 2,
+        "applied_generation": 2,
+        "observation_error": "",
+        "observed_at": "2026-11-13 19:46:12.395923+00:00",
+        "created_at": "2026-11-13 19:28:10.805926+00:00"
+      }
+    ],
+    "pools": [
+      {
+        "id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-east-1",
+        "quota": 1,
+        "allow_create": true
+      }
+    ],
+    "allocations": [
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-east-1",
+        "quota": 1
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-northeast-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-northeast-2",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-south-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-southeast-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-southeast-2",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-southeast-3",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ap-southeast-5",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "ca-central-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "eu-central-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "eu-north-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "eu-south-2",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "eu-west-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "eu-west-2",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "eu-west-3",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "sa-east-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "us-east-1",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "us-east-2",
+        "quota": 0
+      },
+      {
+        "pool_id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+        "region": "us-west-2",
+        "quota": 0
+      }
+    ],
+    "automation": {
+      "pool_sync_enabled": false,
+      "pool_sync_interval_minutes": 5,
+      "daily_restart_enabled": false,
+      "daily_restart_time": "03:37",
+      "daily_restart_timezone": "Asia/Shanghai",
+      "daily_restart_last_local_date": "2026-11-14",
+      "daily_restart_last_success_node_id": "4e1661d7-b4f6-5030-a2ac-f2743e8d75db",
+      "usage_sync_enabled": false,
+      "usage_sync_interval_minutes": 1,
+      "policy_version": 5
+    },
+    "status_sync": {
+      "enabled": false,
+      "interval_minutes": 5,
+      "last_scheduled_at": "2026-11-13 19:50:10.242147+00:00"
+    },
+    "nonterminal_operations": [],
+    "consuming_nodes": 0,
+    "version": "0.14.11",
+    "service_read_exit_code": 0,
+    "services": [
+      {
+        "name": "xray-production-worker-1",
+        "status": "Up 10 hours"
+      },
+      {
+        "name": "xray-production-security-ledger-dispatcher-1",
+        "status": "Up 10 hours"
+      },
+      {
+        "name": "xray-production-outbox-dispatcher-1",
+        "status": "Up 10 hours"
+      },
+      {
+        "name": "xray-production-beat-1",
+        "status": "Up 10 hours"
+      },
+      {
+        "name": "xray-production-gateway-1",
+        "status": "Up 10 hours (healthy)"
+      },
+      {
+        "name": "xray-production-admin-api-1",
+        "status": "Up 10 hours (healthy)"
+      },
+      {
+        "name": "xray-production-subscription-api-1",
+        "status": "Up 10 hours (healthy)"
+      },
+      {
+        "name": "xray-production-frontend-1",
+        "status": "Up 10 hours (healthy)"
+      },
+      {
+        "name": "xray-production-redis-1",
+        "status": "Up 2 days (healthy)"
+      },
+      {
+        "name": "xray-production-postgres-1",
+        "status": "Up 2 days (healthy)"
+      }
+    ]
+  },
+  "prior_preflight_attempt": {
+    "ssh_exit_code": 1,
+    "stage": "local-generated remote Python syntax before runtime query",
+    "production_writes_performed": false
+  }
+}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="19" failures="3" errors="0" time="11.002302209">
+    <testsuite name="src/views/nodes/nodes.test.ts" timestamp="2026-11-15T19:03:49.063Z" hostname="shiyideMac-Mini.local" tests="19" failures="3" errors="0" skipped="0" time="11.002302209">
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows IP, running status, traffic totals and detail/action controls" time="0.37996525">
+            <failure message="expected &apos;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状…&apos; to contain &apos;2001:db8::10&apos;" type="AssertionError">
+AssertionError: expected &apos;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状…&apos; to contain &apos;2001:db8::10&apos;
+
+Expected: &quot;2001:db8::10&quot;
+Received: &quot;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状态流量统计操作     新加坡服务器AWS Lightsail · 新加坡（ap-southeast-1）203.0.113.10运行中3.00 GiB 上行 1.00 GiB · 下行 2.00 GiB启动停止重启详情删除&quot;
+
+ ❯ src/views/nodes/nodes.test.ts:85:20
+            </failure>
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows legacy and current IP addresses while hiding invalid or mismatched values" time="0.23619425">
+            <failure message="expected &apos;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状…&apos; to contain &apos;2001:db8::20&apos;" type="AssertionError">
+AssertionError: expected &apos;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状…&apos; to contain &apos;2001:db8::20&apos;
+
+Expected: &quot;2001:db8::20&quot;
+Received: &quot;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状态流量统计操作     新加坡服务器AWS Lightsail · 新加坡（ap-southeast-1）198.51.100.4, 192.0.2.6运行中3.00 GiB 上行 1.00 GiB · 下行 2.00 GiB启动停止重启详情删除&quot;
+
+ ❯ src/views/nodes/nodes.test.ts:132:22
+            </failure>
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows an IPv6-only server address in the list and details" time="0.205977917">
+            <failure message="expected &apos;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状…&apos; to contain &apos;2001:db8::80&apos;" type="AssertionError">
+AssertionError: expected &apos;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状…&apos; to contain &apos;2001:db8::80&apos;
+
+Expected: &quot;2001:db8::80&quot;
+Received: &quot;服务器管理服务器状态、流量与操作更新状态地区分配创建服务器服务器IP运行状态流量统计操作     新加坡服务器AWS Lightsail · 新加坡（ap-southeast-1）-运行中3.00 GiB 上行 1.00 GiB · 下行 2.00 GiB启动停止重启详情删除&quot;
+
+ ❯ src/views/nodes/nodes.test.ts:155:30
+            </failure>
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; opens region allocation as a modal with every supported region initialized to zero" time="1.003953625">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; submits cloud status updates and can show confirmed missing servers" time="0.824005666">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; checks every server across list pages" time="1.107416583">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows starting as a Chinese runtime status" time="0.437086334">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows stopping as a Chinese runtime status" time="0.476926541">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows rebooting as a Chinese runtime status" time="0.452180709">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows shutting-down as a Chinese runtime status" time="0.362757125">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows terminated as a Chinese runtime status" time="0.389838084">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows provider-specific-state as a Chinese runtime status" time="0.497017959">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; disables cloud actions until an instance exists while keeping details available" time="0.455568834">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; disables cloud actions for deleted instances while keeping details available" time="0.738912292">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; creates a server from account and region without a pool field" time="0.857521">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; explains and blocks creation when the region configuration disables it" time="0.285769792">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; submits start, stop, and restart through the existing node-action route" time="0.678309666">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; explains that start and restart require fresh authentication" time="0.668828">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; requires a fresh preview, exact confirmation, and a new idempotency key for deletion" time="0.941927166">
+        </testcase>
+    </testsuite>
+</testsuites>

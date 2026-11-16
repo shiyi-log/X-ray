@@ -1,5 +1,6 @@
 """Launcher safety checks; no database or containers required."""
 import importlib.util
+import os
 from pathlib import Path
 import socket
 import tempfile
@@ -102,7 +103,12 @@ class LauncherTests(unittest.TestCase):
 
     @staticmethod
     def available_port_block(size=4):
-        for start in range(20000, 60000 - size):
+        configured = os.getenv('XRAY_TEST_PORTS')
+        allowed = {int(port) for port in configured.split(',')} if configured else None
+        starts = sorted(allowed) if allowed is not None else range(20000, 60000 - size)
+        for start in starts:
+            if allowed is not None and not set(range(start, start + size)).issubset(allowed):
+                continue
             listeners = []
             try:
                 for port in range(start, start + size):

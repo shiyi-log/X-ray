@@ -1,0 +1,10 @@
+{
+  "run_id": "xray-real-use-20261116",
+  "started_at": "2026-11-15T18:42:56.399361+00:00",
+  "export_exit_code": 0,
+  "snapshot_copy_exit_code": 1,
+  "status": "failed",
+  "phase": "copy_snapshot",
+  "safe_error": "RuntimeError",
+  "remote_work_directory": "/run/xray-real-use-20261116-backup-028fc21710c4"
+}

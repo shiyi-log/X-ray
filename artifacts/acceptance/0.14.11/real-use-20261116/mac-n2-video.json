@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-15T18:53:11.421Z",
+  "node_id": "c43c5e28-6f0f-552f-a896-f7bd166ebab8",
+  "address_family": 6,
+  "web": "Google search loaded",
+  "video": "YouTube Big Buck Bunny official",
+  "evidence": {
+    "currentTime": 51.960317,
+    "error": null,
+    "paused": false,
+    "readyState": 4,
+    "videoHeight": 720,
+    "videoWidth": 1280
+  },
+  "ipv4": "ERR_TUNNEL_CONNECTION_FAILED"
+}

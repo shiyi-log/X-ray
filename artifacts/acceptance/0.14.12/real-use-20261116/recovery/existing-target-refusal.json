@@ -1,0 +1,6 @@
+{
+  "exit_code": 1,
+  "existing_target_message": true,
+  "psql_syntax_warning": false,
+  "backup_verification_reached": false
+}

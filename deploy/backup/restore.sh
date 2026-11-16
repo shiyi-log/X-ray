@@ -45,17 +45,28 @@ mkdir -p "$evidence_dir"
 chmod 0700 "$evidence_dir"
 case "$(file_mode "$pgpass_file")" in 400|600) ;; *) die "pgpass file must be 0400 or 0600" ;; esac
 
-"$script_dir/verify.sh" --backup "$backup_dir" --identity "$identity"
 manifest="$backup_dir/manifest.json"
 started_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 started_epoch=$(date +%s)
 
-exists=$(PGSERVICEFILE=$pg_service_file PGPASSFILE=$pgpass_file \
-  psql --no-password --tuples-only --no-align \
+if ! exists=$(PGSERVICEFILE=$pg_service_file PGPASSFILE=$pgpass_file \
+  psql --no-password --no-psqlrc --tuples-only --no-align \
   --dbname="service=$admin_service dbname=postgres" \
+  --set=ON_ERROR_STOP=1 \
   --set="target=$target" \
-  --command="SELECT 1 FROM pg_database WHERE datname = :'target'" | tr -d '[:space:]')
-[ -z "$exists" ] || die "restore target already exists"
+  <<'SQL'
+SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'target');
+SQL
+); then
+  die "restore target check failed"
+fi
+case "$exists" in
+  f) ;;
+  t) die "restore target already exists" ;;
+  *) die "restore target check returned an invalid result" ;;
+esac
+
+"$script_dir/verify.sh" --backup "$backup_dir" --identity "$identity"
 
 PGSERVICEFILE=$pg_service_file PGPASSFILE=$pgpass_file \
   createdb --maintenance-db="service=$admin_service dbname=postgres" "$target"

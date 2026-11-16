@@ -1,0 +1,69 @@
+{
+  "started_at": "2026-11-16T02:24:10.233309+00:00",
+  "container": "xray-real-use-20261116-recovery-pg",
+  "target_database": "xray_restore_real_use_20261116",
+  "actions": [
+    {
+      "kind": "owned_pg_stop",
+      "exit_code": 0
+    },
+    {
+      "kind": "owned_pg_remove",
+      "exit_code": 0
+    },
+    {
+      "kind": "isolated_pg_start",
+      "exit_code": 0
+    },
+    {
+      "kind": "pg_isready",
+      "exit_code": 0
+    },
+    {
+      "kind": "new_target_absent",
+      "exit_code": 0
+    },
+    {
+      "kind": "fixed_restore_script",
+      "exit_code": 0
+    },
+    {
+      "kind": "existing_target_refused",
+      "exit_code": 1
+    },
+    {
+      "kind": "mode_readback",
+      "exit_code": 0
+    }
+  ],
+  "restored_application_version": "0.14.11",
+  "restore_script_candidate_version": "0.14.12",
+  "previous_container_id": "034679e39d696025121b3a2a0a5bc7687df19f59f810049f9dd9cdd009ffb3f2",
+  "ownership_verified_before_removal": true,
+  "container_id": "3f021955c927c48a4addc635818d04fdc090d243c07a71637e841c57d4f9a8e2",
+  "network": {
+    "mode": "none",
+    "published_ports": {},
+    "networks": [
+      "none"
+    ],
+    "tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    }
+  },
+  "psql_target_check_warning": false,
+  "restore_stderr_empty": false,
+  "status": "passed",
+  "security_mode": "MAINTENANCE",
+  "backup_directory": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery/input/xray-0.14.11-20261115T184501Z-1",
+  "restore_receipt": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery/evidence-01412/restore-xray_restore_real_use_20261116-1794795869.json",
+  "ciphertext_sha256": "dcee7605ccc6041e2e750061524e28be58af63270880eaee615eda2db268241e",
+  "security_ledger_sequence_at_backup": 8,
+  "cloud_workers_started": false,
+  "production_database_restored": false,
+  "production_keys_loaded": false,
+  "token_checks_complete": false,
+  "token_acceptance_status": "not-run",
+  "finished_at": "2026-11-16T02:24:43.361214+00:00",
+  "duration_monotonic_seconds": 33.128
+}

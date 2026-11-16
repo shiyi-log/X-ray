@@ -1,7 +1,9 @@
 import base64
 from copy import deepcopy
+from urllib.parse import unquote, urlsplit
 
 import pytest
+import yaml
 from django.core.exceptions import ValidationError
 
 
@@ -76,6 +78,35 @@ def test_publish_includes_each_ready_node_address(publishable_subscription):
         f"{node.pk}:{_credential.pk}:v6",
     }
     assert SubscriptionRevision.objects.filter(pk=revision.pk, usable=True).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("format", ["shadowrocket", "v2ray", "clash", "mihomo"])
+def test_published_node_labels_display_each_endpoint_ip(publishable_subscription, format):
+    from apps.subscriptions.publishing import Publisher, decrypt_payload
+
+    _issued, subscription, node, _credential = publishable_subscription
+    node.addresses = [
+        {"value": "192.0.2.50", "family": 4, "kind": "static"},
+        {"value": "2001:db8::50", "family": 6, "kind": "static"},
+    ]
+    node.save(update_fields=["addresses", "updated_at"])
+
+    revision = Publisher.publish(subscription.pk)
+    payload = decrypt_payload(revision, format)
+    if format in {"shadowrocket", "v2ray"}:
+        labels = {
+            unquote(urlsplit(uri).fragment)
+            for uri in base64.b64decode(payload).decode().splitlines()
+        }
+    else:
+        labels = {proxy["name"] for proxy in yaml.safe_load(payload)["proxies"]}
+
+    prefix = f"{subscription.profile.name}-{str(node.pk)[:8]}-trojan"
+    assert labels == {
+        f"{prefix}-v4-192.0.2.50",
+        f"{prefix}-v6-[2001:db8::50]",
+    }
 
 
 @pytest.mark.django_db
@@ -176,6 +207,10 @@ def test_address_refresh_republishes_with_new_ip_and_invalidates_old_revision(
     assert new_revision.usable is True
     assert "198.51.100.77" in payload
     assert "192.0.2.50" not in payload
+    labels = {unquote(urlsplit(uri).fragment) for uri in payload.splitlines()}
+    assert labels == {
+        f"{subscription.profile.name}-{str(node.pk)[:8]}-trojan-v4-198.51.100.77"
+    }
 
 
 @pytest.mark.django_db

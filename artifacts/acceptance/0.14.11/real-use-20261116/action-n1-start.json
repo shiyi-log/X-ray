@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-15T18:52:53.303943+00:00",
+  "node_id": "f38db145-b76e-57e0-86d6-20bc365f2f20",
+  "action": "start",
+  "before": {
+    "provisioning_state": "READY",
+    "raw_cloud_state": "stopped",
+    "health_state": "HEALTHY",
+    "addresses": [
+      {
+        "kind": "dynamic",
+        "value": "54.169.64.42",
+        "family": 4,
+        "resource_id": "xray-d1ef3ca7-f38db145"
+      },
+      {
+        "kind": "dynamic",
+        "value": "2406:da18:1e16:f200:e076:f3d5:e3eb:d72",
+        "family": 6,
+        "resource_id": "xray-d1ef3ca7-f38db145"
+      }
+    ]
+  },
+  "operation_id": "682bd6fa-d93c-40b3-8d12-2f3b3f2777ee",
+  "accepted_at": "2026-11-15T18:53:02.786794+00:00",
+  "operation_request_id": "09710f1c-7b31-44fe-a54c-e37729796ee0"
+}

@@ -1,0 +1,47 @@
+{
+  "at": "2026-11-15T19:36:11Z",
+  "client": "Shadowrocket 2.2.92(3445) on macOS",
+  "subscription": "B",
+  "results": [
+    {
+      "node": "N2",
+      "node_id_prefix": "c43c5e28",
+      "address_family": 4,
+      "address": "46.137.228.67:8388",
+      "status": "failed",
+      "detail": "Shadowrocket test timed out; tunnel failed"
+    },
+    {
+      "node": "N2",
+      "node_id_prefix": "c43c5e28",
+      "address_family": 6,
+      "address": "[2406:da18:1e16:f200:f22:8595:ebaf:81ee]:8388",
+      "status": "passed",
+      "detail": "Shadowrocket test passed; web and YouTube video loaded"
+    },
+    {
+      "node": "N1",
+      "node_id_prefix": "f38db145",
+      "address_family": 4,
+      "address": "13.212.118.138:8388",
+      "status": "passed",
+      "detail": "Shadowrocket test passed at approximately 80-92 ms; Google 204 through client SOCKS"
+    },
+    {
+      "node": "N1",
+      "node_id_prefix": "f38db145",
+      "address_family": 6,
+      "address": "[2406:da18:1e16:f200:e076:f3d5:e3eb:d72]:8388",
+      "status": "passed",
+      "detail": "Shadowrocket test passed; web and YouTube video loaded"
+    }
+  ],
+  "overall_status": "failed",
+  "failure_reason": "Every published endpoint must pass independently; N2 IPv4 remains failed.",
+  "selected_after_test": "N2 IPv6",
+  "limits": [
+    "Independent fixed-Xray probes do not replace Shadowrocket endpoint results.",
+    "Open firewall rules and a server listener do not replace proxy data-plane acceptance.",
+    "Production subscription still contains names without IP labels because 0.14.12 has not been deployed or refreshed."
+  ]
+}

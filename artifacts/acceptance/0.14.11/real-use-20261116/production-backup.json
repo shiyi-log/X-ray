@@ -1,0 +1,19 @@
+{
+  "run_id": "xray-real-use-20261116",
+  "started_at": "2026-11-15T18:44:33.442606+00:00",
+  "export_exit_code": 0,
+  "snapshot_copy_exit_code": 0,
+  "security_ledger_sequence": 8,
+  "backup_exit_code": 0,
+  "status": "passed",
+  "backup_directory": "/var/lib/xray/offsite-staging/xray-0.14.11-20261115T184501Z-1",
+  "created_at": "2026-11-15T18:45:01Z",
+  "app_version": "0.14.11",
+  "ciphertext_bytes": 207669,
+  "encrypted_sha256": "dcee7605ccc6041e2e750061524e28be58af63270880eaee615eda2db268241e",
+  "manifest_sha256": "480e29268e2228be22039038e1002fe877470f262330381c60e32edc6e1cd67c",
+  "snapshot_path": "/run/xray-real-use-20261116-backup-852adcace5df/security-at-backup.json",
+  "snapshot_sha256": "75f3c45ecf250c8c038055b5c88e7c208c45a6d770f2c7acbf9185ba848208fb",
+  "remote_work_directory": "/run/xray-real-use-20261116-backup-852adcace5df",
+  "finished_at": "2026-11-15T18:45:05.517177+00:00"
+}

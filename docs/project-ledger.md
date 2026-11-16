@@ -8630,3 +8630,92 @@ Mapping correction: the old `v0.12.1` annotated tag object is `725bde1664442ec5a
 - status main与origin/main同步，只有本轮五份审计索引、预算文档及0.14.11预算/生产安全回执与四张已审阅截图；源码/tag/生产配置无新增差异。matrix0、boundary0、skill0、diffcheck0；验收矩阵25passed0，跨回执断言0。新增diff+新文本Gitleaks69841bytes无泄露exit0。
 - 本轮精确测试栈已down0、容器0，卷及端口登记保留；线上仍0.14.11、升级成功和订阅测试清理证据已归档。按精确路径stage、cached diffcheck、再次staged秘密扫描后中文commit并普通push main；归档commit不重打v0.14.11标签、不改变发布源码。归档提交CI在push后单独跟踪，不借用业务提交的精确SHA通过结论。
 - completion scope: 请求功能/复制/认证入口/版本发布/线上升级验收完成。限制为最终资源账单unknown、预算评估依赖已披露预留假设、本轮新备份未解密、一次性Linuxsystemd skip、SWAS/iOS真机not-run；不把这些结果描述成已通过。应用回退见51b28c61历史env，审计回退gitrevert，不恢复安全/撤销/云状态。
+
+
+## 2026-11-15T19:24:46.530329+08:00 - 下一阶段开发计划范围定义
+
+- run_id: xray-development-plan-20261115；event_id: development-plan-definition。用户请求“制定开发计划”，本轮只编写计划和必需审计，不实施计划中的业务变更。基线 main@db4505abb1a37e354993d790222ee8392eebaf73，VERSION 0.14.11，开始时工作树干净；git status/branch/log/rev-parse/diff/stat/diff-check均exit0。
+- scope: 新建 docs/development-plan-20261115.md，追加 docs/project-ledger.md 与 docs/progress.md。排除业务源码、测试实现、依赖/锁文件、VERSION/CHANGELOG/version-record、验收矩阵、凭据/数据库/运行状态；不提交、不推送、不打标签、不发布。
+- reads: AGENTS.md、完整project-conventions、xray-manager及三份references；ledger最新发布/升级/费用/归档事件，progress当前与历史门禁、release-checklist当前索引、development、本版budget-proof；2026-09-16主计划用于识别历史范围，不执行其中子代理/旧路径指令。读取matrix的当前/历史验收行、VERSION、frontend/package.json、CI与check-local/boundary/secrets脚本；定向读取nodes automation/serializers、pool UI、upgrade runner/tests及subscription runtime socket fixtures，定位计划入口。通过rg排除archive与其他项目，不读取运行秘密。部分批量输出截断后按当前条目定向复读；不以截断内容推断未见结果。
+- runtime metadata: lsof仅检查既定项目端口，此次过滤未见监听；未启动/停止进程。python3为3.9.6、Node22.23.4、Corepack pnpm10.33.0，元数据命令exit0；系统python版本不等于backend受控环境，本轮不执行运行门禁。
+- decisions/assumptions: 既有v0.14.11 CI/Release/生产/复制回执及0.14.10 Lightsail真实生命周期为历史基线，本轮未重新联网验证；优先本地门禁、状态诊断、自动化可解释性、升级预检和恢复。AWS应用与验收节点限定Lightsail，不新增EC2；SWAS待用户明确扩展。最终逐资源账单unknown单列，不增加为功能完成门禁；用户未给新功能清单，按现有缺口规划，产品新增项实施前确认契约。
+- authorization: 仅本地文档与静态验证；真实云写、SSH、公网探测、生产/设备/删除/IP/发布均未获本任务授权。历史授权窗口不复用；计划估算不代表排期承诺或执行授权。
+- risks/rollback/reuse: 历史matrix含superseded blocked条目，不误判最新Lightsail功能失败；expected1且自动化关闭不直接视为bug，不擅改用户配额。文档可按本轮diff撤销/删除新计划，台账纠正追加不重写历史；已提交后仅revert对应文档提交。复用现有19gate、Fake/Stub、focused tests与release/restore流程。
+- time_logic: 实际机器aware时钟转Asia/Shanghai并保留UTC 2026-11-15T11:24:46.530329+00:00；用户日期2026-11-15；估算用人日/依赖，不假定自然日交付；不变更TTL/授权窗口/调度语义。
+- planned verification: diff-check、acceptance validator、boundary、skill validator、固定Gitleaks历史及本轮文档范围扫描、Markdown相对链接/范围检查；不运行业务suite或容器，结果下一事件记录。
+
+
+## 2026-11-15T19:32:27.887016+08:00 - 开发计划静态验证与收尾
+
+- run_id: xray-development-plan-20261115；对计划文档、进度摘要和本台账定义记录执行静态验证。
+- commands/results: `git diff --check` exit 0；`python3 scripts/validate-acceptance.py` exit 0（matrix valid）；`bash scripts/check-boundary.sh` exit 0；系统 Python 3.9.6 下技能 validator 因缺 `yaml` exit 1，未改系统环境；`uv run --project backend python scripts/vendor/skill-quick-validate.py skills/xray-manager` exit 0（Skill is valid!）；`bash scripts/check-secrets.sh` exit 0，Gitleaks v8.24.3 扫描170 commits约11.13 MB，无泄漏；11个计划相对Markdown链接目标存在；计划文档13,267 bytes / 118 lines。`git status --short --branch` 为 main...origin/main，只有 `docs/development-plan-20261115.md` 新文件和 `docs/project-ledger.md`、`docs/progress.md` 修改。
+- status: 文档计划已形成；业务工作包、运行/测试/容器/CI/云及发布均 `not-run`，本轮没有新 acceptance matrix 行。无提交/版本/tag/生产状态变化。最终 `git diff --check` 复核通过。
+- unresolved: 完整业务门禁仍应由D1恢复；系统Python缺PyYAML以仓库uv环境成功验证；计划工时为估算，设备、Linux与外部授权等待不含在内。最终逐资源账单unknown、SWAS/iOS真机/Linux systemd状态按既有矩阵保持。
+- reuse/rollback: 可复用计划D1–D6、19项delivery gate及专用Fake/Stub环境；本轮不运行Docker。新计划/进度描述可按本次审阅diff撤销，追加式台账通过后续correction更正；若变为提交则只revert对应文档提交。
+- time_logic: 实际aware Asia/Shanghai记录 `2026-11-15T19:32:27.887016+08:00`；本次没有业务时钟/TTL更改。
+
+
+## 2026-11-16T02:00:21.910833+08:00 - 真实使用验收实施启动
+
+- run_id: xray-real-use-20261116；event_id: real-use-start。用户明确要求实施已确认计划，随后将客户端调整为本机小火箭；不再以iPhone为本轮必需设备。main@db4505abb1a37e354993d790222ee8392eebaf73，VERSION0.14.11；保留原有docs/progress.md、docs/project-ledger.md及未跟踪development-plan修改。
+- requested_outcome: 新加坡Lightsail两节点48小时自然运行，网页/视频/网络切换、两个04:00 stop/start周期、A撤回/B正向控制、隔离恢复；最后删除较老N1保留N2，配额1、补池/状态/流量及Asia/Shanghai04:00每日重启；允许客户端手动更新一次订阅。新增测试预算USD30、预警USD24，保留节点月目标USD15；不包含既有管理主机。
+- scope: tests固定Xray端口分配/相关聚焦用例、scripts/check-local.sh及必要启动配置、docs/development.md、已存在计划文档的后续补充、cloud-test-authorization/progress/ledger/matrix及安全验收产物。public API/业务模型默认不变；运行仅专用PG/Redis、Fake/Stub；真实操作只针对本run新加坡两节点和既有明确Xray生产目标。
+- authorization: 本轮Please implement the plan涵盖已具体列出的生产读取、Lightsail创建/安装/stop/start/健康探测、测试订阅签发轮换撤回、N1删除与N2保留、隔离备份恢复；执行前补精确目标/费用/截止记录。无EC2、SWAS、静态IP、快照、额外实例或生产数据库恢复授权。不借用旧授权时间窗口、不修改已有无关资源或凭据。只有确有生产源码修复才走发布流程。
+- reads: AGENTS/conventions/xray-manager及三references、ledger/progress最新计划与0.14.11记录、测试/部署检查入口、当前diff/status/log、受控Python/Node依赖声明；共享端口登记只读和lsof元数据表明本项目测试/E2E端口当前未监听。系统Python3.9仅静态脚本，实际测试使用backend受控3.13。尚未连接生产或云。
+- risks: 全局自动重启/补缩容可能触及其他地区/节点，先核查并阻断范围冲突；本机小火箭已有会话需保留，不覆盖原配置；关闭重启不终止已确认stop的恢复start。预算估算不代表提供商硬封顶，结果未知不重放云写。
+- rollback_ref: db4505ab前已验证代码及线上v0.14.11不可变digest/config；本地代码按本轮精确diff撤销/后续gitrevert。仅删除本run已确认目标，生产数据库/撤销/安全/云历史不回退。保留命名卷和端口登记。
+- verification: 先RED/GREEN端口fixture、固定Xray运行用例、完整19门禁，再运行真实验收；所有not-run/blocked/failed如实记录。root统一维护共享台账；子任务回报每条命令/exit/path供追加。time_logic: UTC2026-11-15T18:00:21.910833+00:00、上海aware记录；48h从两个节点和客户端准备完毕后的12:00开始；时间窗[start,end)，耗时monotonic。
+
+
+## 2026-11-16T02:10:44.384203+08:00 - 端口修复与只读预检
+
+- run_id xray-real-use-20261116。CUA仅获取Shadowrocket，观察已安装2.2.92(3445)、已有连接开启，未改节点/开关/订阅；已提交该读取阶段completion_summary。用户将iPhone调整为本机小火箭，设备真机维度改为macOS；蜂窝维度需要手机热点另行配合，不以Mac自带蜂窝推定。
+- reads: 两套固定Xray runtime/free_port及tests fixture、check-local/runtime、test Compose、E2E config、CI、端口管理CLI/register实现；registry与lsof仅读归属。root处理主台账，子代理port_fixture已建立helper/fixture初稿与RED用例，因消息交付间歇空白被中断，root接续审阅/整合；cloud_readback通过任务文件完成预检，无云写。临时task文件仅任务文字无秘密。
+- RED: 受控XRAY_TEST_PORTS单测输出64934而非56001，pytest1failed/exit1，ports-red.junit.xml；GREEN: shared PortPool引入tests/conftest，TCP/UDP双检查、显式列表唯一/范围校验、跨进程flock租约、exhaust不回退，两个runtime测试使用同fixture；纯用例12passed/exit0。root后补UDP/排除项用例及整合运行fixed-runtime.junit.xml共16passed/exit0(13.63s)，已由portctl受管运行固定26.3.27，五协议/撤销未skip。Ruff focused exit0、diffcheck0。一次Python编辑脚本因字符串换行SyntaxError在执行前失败无写；随后apply_patch成功。
+- ports: 登记c7c1957470da46d08b27378162adb3f6，55701–55724有限列表绑定当前repo，register0；55701–55720供runtime，55721–55724预留本轮E2E。既有55435/56382与55671–55674check0，未释放或转让任何登记。local-port-management已读并应用；仅通过官方CLI新增，不直接重写registry。
+- cloud/production read: default STS b1746f68f5be不匹配，root4a0ef08458dd匹配；新加坡small_3_0 active/USD12、Ubuntu24.04 active，已有9台其他实例不操作。严格known_hosts SSH生产VERSION0.14.11；只读DB事务聚合10容器running/6healthy、CloudAccount账号匹配、consumes_quota0、pending0。单池香港quota1/新加坡0，开启全局补池前必须正常API改成香港0新加坡2；四开关关闭，旧日重启03:37。preflight.json含修正前SSH语法失败exit1及最终0，不以历史raw_cloud_state=running的DELETED节点视为存活。
+- safety/rollback: 尚未创建计费资源或改生产；root随后将按已批准新加坡两节点范围记录精确window/动作，保留既有9台和所有原订阅。代码仅tests，当前无生产业务修复不升版本；复用线上0.14.11。完整19gate待执行；48h/视频/本机代理测试仍not-run。
+
+## 2026-11-16T02:31:00+08:00 - 快速验收更正、完整门禁与创建
+
+- run_id: xray-real-use-20261116。correction: 前两条启动事件中的48小时/12:00自然观察已被用户“改为本机单次快速验收”取代；macOS Shadowrocket为本轮设备，48h/两个自然日期/iPhone/蜂窝not-run。手动stop/start不记为自然04:00通过。最终保留N2、配额1与04:00排程不变。
+- reads/writes: root conftest.py、tests/port_pool.py、相关runtime/launcher/bootstrap测试、scripts/check-local.sh；跨进程端口租约和in-process loopback0绑定有限端口，backend subprocess SSH probe单独注入测试端口；check-local增加confcutdir加载根fixture。生产源码/VERSION不变。读取正常API/节点序列化/调度器/备份手册/系统测试及临时safe API helper，无边界项目读取。
+- verification: managed-runtime-r2漏XRAY_ENV=test为6failed64passed；完整gates首次端口边界阻断exit1，保留。最终gates-r2/summary.tsv共19/19 exit0：backend676passed5skipped(143s)，frontend117passed，Playwright8passed；固定Xray26.3.27真实运行未跳过；skip为3个需指定PG镜像、oneclick/systemd各1。schema/types/lint/build/shellcheck/boundary/Gitleaks/skill/matrix均0。临时pnpm wrapper10.33.0；专用PG55435/Redis56382、E2E55721–55724、runtime55701–55720由portctl有限登记监管，未停无关服务。
+- authorization/actions: 本次cloud-test-authorization窗口[02:20,08:20)+08、账号4a0ef08458dd、Singapore small_3_0 Ubuntu24.04 max2/USD30；正常Keychain密码登录、CSRF/step-up/UUID幂等。setup71653 exit0，A/B签发仅保留ID；正常API香港quota1→0/Singapore0→1分步创建N1后再2，补池15/status5/traffic1启用，daily04:00仍关。原配置setup.json保存。N1 f38db145-b76e-57e0-86d6-20bc365f2f20 / xray-d1ef3ca7-f38db145，create75cc9519-2cf0-45ce-8122-60b8ac1b8584 SUCCEEDED；18:23:48Z创建。正常refresh0ccfd0dd-d0d8-4ef4-a3fd-13aa858b91a7 SUCCEEDED；bootstrap401ecfbc-8816-4182-8aac-3fc87d1242fd RUNNING。9台既有Singapore实例未操作。
+- readback: read90620/read47087/read17742/refresh33190 exit0。预检JSON顶层error属于已保留首次SSH解析失败，最终ssh_exit_code0有效。CUA恢复说明/获取首页/打开添加订阅，原连接配置保留，无截图或秘密。两次脚本文本解析失败在执行前终止无写，改用apply_patch。
+- review: 子代理review_ports只读确认标准backend入口缺root fixture、probe端口耗尽发生在finally前可遗留进程；setup-plan exit1、无测试体/DB操作。已委派fix_ports作局部修复及开发文档，后续聚焦回归不重复无关门禁；root统一审计。
+- rollback/reuse: 精确本轮测试diff可撤销；云仅清理本run精确目标，不恢复撤销/云历史；既有服务/卷/端口登记保留。端口fixture/19gate证据可复用，真实数据平面验收仍in-progress。
+
+
+## 2026-11-16T03:00:22.465381+08:00 - 全节点验收边界、IP显示与恢复检查缺陷
+
+- run_id xray-real-use-20261116；承接用户最新“节点要显示IP、所有节点可用、不能单个节点当作通过”。整体仍in-progress/未通过；必须覆盖两台活动节点的每个已发布地址，不能只用IPv6成功替代IPv4失败。N1 stop/start后IPv4已变为13.212.118.138；N2为46.137.228.67。两节点IPv6网页与720p视频实际成功，两个IPv4客户端连接失败，防火墙/服务监听/TCP可达不构成代理成功。
+- scope扩展为验收发现的最小生产缺陷：backend/apps/subscriptions/publishing.py订阅名称实际IP与focused发布格式测试；读取frontend节点IP展示后若必要补IPv6展示与测试；deploy/backup/restore.sh目标库检查的psql变量替换及失败传播修复和focused回归。生产源码变更必须正常版本发布/可信资产/备份/drain升级，不做运行热补丁。授权仍仅本run既定窗口/精确两节点。
+- 备份/恢复：18:45:01Z生产加密备份成功，密文SHA256 dcee7605ccc6041e2e750061524e28be58af63270880eaee615eda2db268241e；专用network-none/tmpfs恢复成功并保持MAINTENANCE，发现restore存在性SQL语法失败且管道掩盖错误，不能把该检查记为通过。先测试再修复，失败必须在createdb之前退出。原始A/B均在受控CUA内存，A18:42轮换早于备份，子代理称A丢弃的结论需更正；后续同token撤销/恢复HTTP检验尚not-run。
+- review/verification：重读conventions/xray-manager、debugging/TDD/verification技能、ledger当前段、plan更新、safehelpers、restore.sh、IPv4diagnostic与node_ip报告。最终后端680passed2skipped/exit0，Linux systemd1/oneclick3真实通过且实际xrayPID不变，详见final-backend与linux-gates回执；两个Mac视频回执仅覆盖IPv6，UDP未验。端口fixture后续资源清理和普通入口修复见fix_ports报告，组合耗尽失败保留。root统一追加后续完整证据。
+- rollback：源码仅本轮精确diff/git revert；生产沿用v0.14.11已验证digest/history，不回退数据库/撤销/安全/云状态。时间使用实际aware Asia/Shanghai，授权[02:20,08:20)，不模拟自然04:00。
+
+
+## 2026-11-16T03:37:11+08:00 - 0.14.12候选门禁和全发布地址Shadowrocket验收
+
+- run_id: xray-real-use-20261116；event_id: shadowrocket-all-endpoints-01412。用户强调订阅节点名须显示实际IP，且所有发布节点都需逐个可用，单个节点/地址族通过不得代表整体通过。当前main仍为基线db4505abb1a37e354993d790222ee8392eebaf73，候选VERSION0.14.12，未提交/打tag/Release/升级生产。候选变更包括backend/apps/subscriptions/publishing.py与格式测试、frontend节点双栈IP显示和测试、deploy/backup/restore.sh严格目标库检查与测试、有限测试端口fixture及launcher/runtime测试和开发文档；版本/changelog/version-record/progress/release checklist/matrix一并更新。没有编辑生产配置。
+- test-first/verification: 订阅、前端、restore缺陷有RED记录，GREEN focused证据分别位于 artifacts/acceptance/0.14.11/real-use-20261116/{focused-backend-recheck.junit.xml,frontend-ip-recheck.junit.xml,restore-target-check.junit.xml}。前端19 passed；订阅+恢复151 passed/2 skipped；恢复shell新增9 passed。0.14.12候选 scripts/check-local.sh 在专用PG55435/Redis56382、固定Xray26.3.27、portctl有限登记项目76b7fd95e2bd49c79842c0976f7f150e8 ports55801-55840下19/19 exit0，后端690 passed/2 Linux环境skip，前端118，Playwright8。完整回执 artifacts/acceptance/0.14.12/real-use-20261116/gates/summary.tsv。首次PATH缺Node在测试前exit127，保留且重跑使用受控PATH；runtime成功回执不能覆盖失败历史。acceptance validator/boundary/secrets/skill均exit0；系统Python缺yaml的skill校验失败后改用backend/.venv/bin/python成功。最终diff-check另需复跑归档。
+- external endpoint matrix: macOS Shadowrocket2.2.92(3445) fresh AX逐项Test四个订阅B端点：N2 46.137.228.67:8388 IPv4 timeout/failed；N2 [2406:da18:1e16:f200:f22:8595:ebaf:81ee]:8388 IPv6 passed（84ms；网页/视频此前通过）；N1 13.212.118.138:8388 IPv4 passed（80-92ms且客户端SOCKS Google204）；N1 [2406:da18:1e16:f200:e076:f3d5:e3eb:d72]:8388 IPv6 passed（96ms；网页/视频此前通过）。操作后保持N2 IPv6选中。逐项脱敏回执 artifacts/acceptance/0.14.12/real-use-20261116/shadowrocket-endpoint-results.json；acceptance matrix shadowrocket-device由历史not-run更新为本轮failed，3/4通过，不删除旧历史。
+- diagnosis/limits: N2 Lightsail读取显示running、TCP/UDP8388 firewall OPEN、服务*:8388监听，固定Xray客户端经端点访问Google204；以上均不等价Shadowrocket端点通过。现有客户端回执报N2 IPv4 ERR_TUNNEL_CONNECTION_FAILED/timeout、IPv6网页视频通过；路径缩小到本机Shadowrocket/utun/IPv4路由，具体根因未确定，更新严格SSH诊断无回执，未重试云写。候选生产订阅尚未刷新，截图中节点名仍无IP；生产仍0.14.11。N2 IPv4失败阻断所有节点验收与2→1缩容，N1保留。AWS授权仅本run窗口[02:20,08:20)+08和指定目标；本次未做生产更新、订阅刷新、N1删除、其他节点/EC2/SWAS操作。
+- docs/status: docs/release-checklist.md新增0.14.12 candidate章节和四项端点状态、剩余release/backup/recovery gates；progress与matrix登记本地passed及端点failed。计划工时估算与自然48小时/iPhone/蜂窝验收均被用户改为本机单次快速验收；不得恢复旧观察要求。已提交CUA completion_summary Tested all four subscription nodes。
+- rollback/reuse: 本轮源码按精确差异或后续git revert回退；发布后应用只切换经验证v0.14.11 digest/config，不回退数据库、撤销token/凭据、安全或云操作。复用四端点矩阵作为再验收唯一门槛；N2 IPv4单独通过前不升级生产/刷新订阅/删除N1。时间记录使用系统实际时钟aware Asia/Shanghai 2026-11-16T03:37:11+08:00；无应用TTL或排程修改。
+
+
+## 2026-11-16T10:24:29.473642+08:00 - IP名称独立交付与验收边界更正
+
+- run_id xray-real-use-20261116；correction引用shadowrocket-all-endpoints-01412：N2 IPv4失败阻止全节点验收与删除N1，不阻止已授权且完整本地门禁通过的IP标签修复发布。原通过前不升级/刷新是代理自行附加门槛，现撤销；正常不可变镜像/精确CI/Release/可信snapshot/catalog/管理员step-up升级仍必需。回退0.14.11镜像/config，不恢复数据库/撤销/安全/云状态。
+- correction: 端口登记ID为76b7fd95e2bd49c79842c0976f7f150e，55801–55840，原末尾e8误写。固定Xray四端点Google204时隧道开启、IPv4 route为utun4，不能称本机直连通过。关闭隧道TCP对照N1 IPv4成功、N2 IPv4超时，两者route均en0/192.168.1.1；指向N2 IPv4入站/网络路径，根因未定，不再缩小为仅Shadowrocket/utun。SOCKS探测时选中N2 IPv6，先前口头N1更正。严格SSH缺节点指纹拒绝255未绕过。
+- 当前实际aware时钟已过AWS窗口[02:20,08:20)+08，禁止新Lightsail stop/start/delete及其他云写。生产应用修复发布沿用本任务正常生产缺陷发布授权，不改节点/配额/排程；两台及原会话保留。
+- reads: 重读AGENTS/conventions/xray-manager及acceptance/versioning、verification/TDD/debugging、ledger尾/current progress/version/checklist/matrix、diff、Dockerfiles/.dockerignore、旧可信snapshot/安全Release helper、restore启动/handoff、正常API helper。读取0；tmp glob无匹配1仅定位。远端main与本地db4505ab一致，helper=osxkeychain仅元数据；Docker列表确认专用/无关容器归属。
+- verification: 完整候选19/19 exit0、backend690passed2Linuxskip/frontend118/E2E8，固定Xray26.3.27；新正确入口聚焦backend28passed/0、frontend22passed/0（nodes19），证据0.14.12/real-use-20261116。此前缺DB/alias两次入口错误测试前exit1保留。diffcheck0。
+- writes/next: 当前checklist/version/matrix/progress索引更正；台账保留历史。main相干提交后精确SHA构建三镜像并行恢复，tag前登记digest与恢复receipt。生产当前0.14.11名称无IP，交付未完成。release_build收到空任务只读无构建，改任务文件；root统一审计。一次apply_patch缺Begin及一次exec字符串解析失败均无写入。
+
+- 提交准备补充：acceptance/boundary/skill/diff当前均0；系统secret scan与完整staged补丁另行核验。新加入原始失败JUnit含尾空格导致cached diffcheck2，未篡改原始回执，按精确路径从暂存移除；未经本轮视觉复核的PNG/zip也保留本地不提交。首次matrix脚本KeyError因键名tests应为items，后单独修正；两次临时exec字符串解析失败无文件写入。
+
+- 新恢复证据：fixed restore在新network-none/tmpfs PG实际恢复0、已有目标拒绝1（预期）、MAINTENANCE读回0，SQL语法警告false；sequence8/cloud_write blocked，A410/B503尚not-run；只精确替换本run容器，无生产/SSH/云动作。证据0.14.12/real-use-20261116/recovery，密文SHA与旧备份一致。恢复receipt当前提交前归档。
+- staged scan：首轮stdin扫描4 findings，三条为UUID字段key命名，已改operation_request_id；另一条为无文件上下文跨行误报。改用Gitleaks protect --staged按文件解析，唯一finding为installer/xray.service已核对源码SHA256（非秘密）；该linux-gates原始回执保留本地未提交。未改仓库allowlist或全局扫描规则；历史scan0、静态validator0。

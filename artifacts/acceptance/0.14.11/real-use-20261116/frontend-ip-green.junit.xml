@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="19" failures="0" errors="0" time="11.388676792">
+    <testsuite name="src/views/nodes/nodes.test.ts" timestamp="2026-11-15T19:05:09.778Z" hostname="shiyideMac-Mini.local" tests="19" failures="0" errors="0" skipped="0" time="11.388676792">
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows IP, running status, traffic totals and detail/action controls" time="0.405447042">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows legacy and current IP addresses while hiding invalid or mismatched values" time="0.24133675">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows an IPv6-only server address in the list and details" time="0.459262208">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; opens region allocation as a modal with every supported region initialized to zero" time="1.006587125">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; submits cloud status updates and can show confirmed missing servers" time="0.85091875">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; checks every server across list pages" time="0.929494083">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows starting as a Chinese runtime status" time="0.503317167">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows stopping as a Chinese runtime status" time="0.481815333">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows rebooting as a Chinese runtime status" time="0.577909958">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows shutting-down as a Chinese runtime status" time="0.55586875">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows terminated as a Chinese runtime status" time="0.479467166">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; shows provider-specific-state as a Chinese runtime status" time="0.640529583">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; disables cloud actions until an instance exists while keeping details available" time="0.551582666">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; disables cloud actions for deleted instances while keeping details available" time="0.487095125">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; creates a server from account and region without a pool field" time="0.81104875">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; explains and blocks creation when the region configuration disables it" time="0.310550208">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; submits start, stop, and restart through the existing node-action route" time="0.579661458">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; explains that start and restart require fresh authentication" time="0.599771708">
+        </testcase>
+        <testcase classname="src/views/nodes/nodes.test.ts" name="server management &gt; requires a fresh preview, exact confirmation, and a new idempotency key for deletion" time="0.915267625">
+        </testcase>
+    </testsuite>
+</testsuites>

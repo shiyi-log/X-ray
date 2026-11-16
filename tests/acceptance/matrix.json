@@ -1,5 +1,5 @@
 {
-  "version": "0.14.11",
+  "version": "0.14.12",
   "generated_at": "2026-11-15T16:21:44.045442+08:00",
   "allowed_statuses": [
     "passed",
@@ -9,6 +9,47 @@
     "risky_not_executed"
   ],
   "items": [
+    {
+      "id": "local-delivery-gates-0.14.12-candidate",
+      "environment": "local",
+      "status": "passed",
+      "evidence": [
+        {
+          "kind": "final_delivery_gate_summary",
+          "summary_file": "artifacts/acceptance/0.14.12/real-use-20261116/gates/summary.tsv",
+          "gates": 19,
+          "nonzero_exit_codes": 0,
+          "backend_tests": {
+            "passed": 690,
+            "skipped": 2,
+            "failures": 0,
+            "errors": 0
+          },
+          "skip_reasons": [
+            "one-click runtime integration requires a disposable Linux host",
+            "service integration requires an explicitly selected disposable Linux systemd host"
+          ],
+          "frontend_unit_tests": 118,
+          "browser_e2e": 8,
+          "fixed_xray_version": "26.3.27",
+          "candidate_worktree": true,
+          "source_base_commit": "db4505abb1a37e354993d790222ee8392eebaf73",
+          "started_at": "2026-11-15T19:27:50Z",
+          "finished_at": "2026-11-15T19:33:16Z",
+          "runtime_path_failure_retained": "Initial candidate attempt exited 127 before tests because PATH lacked Node; rerun used the controlled Node/pnpm path.",
+          "residual_resources": "Dedicated PostgreSQL/Redis stack and finite port registration retained; no listeners remained after the gate."
+        }
+      ],
+      "commit": "db4505abb1a37e354993d790222ee8392eebaf73",
+      "source_base_commit": "db4505abb1a37e354993d790222ee8392eebaf73",
+      "candidate_worktree": true,
+      "provider": null,
+      "region": null,
+      "cost": 0,
+      "residual_resources": [
+        "No production or cloud changes were made by this local gate."
+      ]
+    },
     {
       "id": "local-delivery-gates-0.14.6",
       "environment": "local",
@@ -1178,13 +1219,31 @@
     {
       "id": "shadowrocket-device",
       "environment": "external",
-      "status": "not-run",
-      "evidence": [],
-      "commit": "940d155970a9571049192e07385ac717a9d14791",
+      "status": "failed",
+      "evidence": [
+        {
+          "kind": "shadowrocket_endpoint_matrix",
+          "timestamp": "2026-11-15T19:36:11Z",
+          "client": "Shadowrocket 2.2.92(3445) on macOS",
+          "subscription": "B",
+          "receipt": "artifacts/acceptance/0.14.12/real-use-20261116/shadowrocket-endpoint-results.json",
+          "endpoints_tested": 4,
+          "passed": 3,
+          "failed": 1,
+          "failed_endpoint": "N2 IPv4 46.137.228.67:8388",
+          "overall_rule": "all published endpoints must pass independently",
+          "production_subscription_refreshed": false,
+          "candidate_source_base": "db4505abb1a37e354993d790222ee8392eebaf73",
+          "candidate_worktree": true,
+          "production_version": "0.14.11"
+        }
+      ],
+      "commit": "d037899d15bcdb5a6f27d9255b27270be0a5d6fe",
       "provider": null,
       "region": null,
       "cost": null,
-      "residual_resources": []
+      "residual_resources": [],
+      "production_version": "0.14.11"
     },
     {
       "id": "remote-ssh",

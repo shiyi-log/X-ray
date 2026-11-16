@@ -1,0 +1,209 @@
+{
+  "run_id": "xray-real-use-20261116",
+  "started_at": "2026-11-15T18:23:03.243413+00:00",
+  "actions": [
+    {
+      "kind": "pool_singapore_initial_quota",
+      "quota": 1,
+      "at": "2026-11-15T18:23:23.034960+00:00"
+    },
+    {
+      "kind": "automation_enabled_initial_one_node",
+      "at": "2026-11-15T18:23:25.106610+00:00"
+    }
+  ],
+  "previous_pool": {
+    "id": "d1ef3ca7-bb6f-4f7b-8aeb-4a15e50c4c20",
+    "name": "IP",
+    "region": "ap-east-1",
+    "regions": [
+      "ap-east-1",
+      "ap-northeast-1",
+      "ap-northeast-2",
+      "ap-south-1",
+      "ap-southeast-1",
+      "ap-southeast-2",
+      "ap-southeast-3",
+      "ap-southeast-5",
+      "ca-central-1",
+      "eu-central-1",
+      "eu-north-1",
+      "eu-south-2",
+      "eu-west-1",
+      "eu-west-2",
+      "eu-west-3",
+      "sa-east-1",
+      "us-east-1",
+      "us-east-2",
+      "us-west-2"
+    ],
+    "allocations": [
+      {
+        "region": "ap-east-1",
+        "quota": 1,
+        "used": 0,
+        "available": 1
+      },
+      {
+        "region": "ap-northeast-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ap-northeast-2",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ap-south-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ap-southeast-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ap-southeast-2",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ap-southeast-3",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ap-southeast-5",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "ca-central-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "eu-central-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "eu-north-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "eu-south-2",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "eu-west-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "eu-west-2",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "eu-west-3",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "sa-east-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "us-east-1",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "us-east-2",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      },
+      {
+        "region": "us-west-2",
+        "quota": 0,
+        "used": 0,
+        "available": 0
+      }
+    ],
+    "quota": 1,
+    "used": 0,
+    "available": 1,
+    "allow_create": true,
+    "created_at": "2026-11-13T18:59:25.925233+00:00",
+    "updated_at": "2026-11-15T07:08:48.641748+00:00"
+  },
+  "previous_automation": {
+    "node_pool_sync": {
+      "enabled": false,
+      "interval_minutes": 5,
+      "creation_templates": [
+        {
+          "region": "us-east-1",
+          "plan_id": "small_3_0",
+          "image_id": "ubuntu_24_04",
+          "cloud_account_id": "e478fe0b-8e7f-4316-8441-d4becc0c4ef1"
+        }
+      ],
+      "last_scheduled_at": "2026-11-13T19:51:10.558743+00:00",
+      "source": "DATABASE"
+    },
+    "node_daily_restart": {
+      "enabled": false,
+      "time": "03:37",
+      "timezone": "Asia/Shanghai",
+      "last_scheduled_at": "2026-11-13T19:38:11.600862+00:00",
+      "source": "DATABASE"
+    },
+    "node_status_sync": {
+      "enabled": false,
+      "interval_minutes": 5,
+      "last_scheduled_at": "2026-11-13T19:50:10.242147+00:00",
+      "source": "DATABASE"
+    },
+    "usage_sync": {
+      "enabled": false,
+      "interval_minutes": 1,
+      "last_scheduled_at": "2026-11-13T19:52:10.399379+00:00",
+      "source": "DATABASE"
+    }
+  },
+  "profiles": {
+    "A": {
+      "id": "4a058f0c-c049-4d35-8814-81d350c4f636",
+      "subscription_id": "4b666e1f-6f48-46f8-a4af-ceb779f6552a"
+    },
+    "B": {
+      "id": "88e463c1-3693-409e-b500-8823dec5f5c7",
+      "subscription_id": "cefde612-f250-43d0-8135-e1f3f1ff6ea6"
+    }
+  },
+  "finished_at": "2026-11-15T18:23:25.106644+00:00"
+}

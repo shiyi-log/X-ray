@@ -139,6 +139,19 @@ uv run --project backend python backend/manage.py check --settings=config.settin
 uv run --project backend pytest -c backend/pyproject.toml backend/tests -q
 ```
 
+受本机端口登记约束运行测试时，先为当前仓库登记一组有限的空闲端口，再将
+同一份逗号分隔列表传给端口管理器和 `XRAY_TEST_PORTS`。五协议撤销用例
+单独需要至少 17 个可用端口，完整门禁须留足其余监听和关闭后尚未释放的端口；
+实际列表必须以当前登记及占用检查为准。共享测试 fixture
+同时支持上面的普通后端 pytest 命令及完整门禁入口，会检查 TCP/UDP 占用并用
+进程间租约排除并发测试；显式列表耗尽会报错，不会退回随机端口。
+
+`XRAY_TEST_PORTS` 未设置时保留 CI 的临时端口行为。本机通过
+`portctl.py run --project <项目编号> --ports <相同端口列表> -- <测试命令>`
+受管启动，并保持专用 PostgreSQL/Redis 使用各自已登记的端口。不要用扩大到
+整个临时端口范围或关闭端口监管来规避冲突；连续重跑时先复查 TCP/UDP 可绑定性，
+等待关闭连接释放端口或登记另一组空闲端口。停止测试后仍保留登记和专用卷。
+
 真实 AWS、阿里云、SSH、Google 探测、服务器部署和生产密钥不属于本地测试流程；测试中的云和 SSH 必须使用 stub/fake。
 
 ## 前端

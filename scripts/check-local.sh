@@ -169,7 +169,8 @@ gate_backend_tests() {
   docker image inspect "$XRAY_BACKEND_TEST_IMAGE" >/dev/null
   docker image inspect "$XRAY_FRONTEND_TEST_IMAGE" >/dev/null
   docker image inspect "$XRAY_BACKUP_TEST_IMAGE" >/dev/null
-  uv run --project backend pytest -c backend/pyproject.toml backend/tests tests -q \
+  uv run --project backend pytest -c backend/pyproject.toml --confcutdir="$root_dir" \
+    backend/tests tests -q \
     --junitxml="$artifact_dir/backend-and-delivery.junit.xml"
 }
 

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "target_database": "xray_restore_real_use_20261116",
+  "started_at": "2026-11-16T02:24:28Z",
+  "completed_at": "2026-11-16T02:24:29Z",
+  "duration_seconds": 1,
+  "backup_manifest_sha256": "480e29268e2228be22039038e1002fe877470f262330381c60e32edc6e1cd67c",
+  "security_mode": "MAINTENANCE",
+  "network_mode": "isolated",
+  "requires_manual_reopen": true
+}

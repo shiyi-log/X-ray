@@ -14,12 +14,6 @@ from pathlib import Path
 import pytest
 
 
-def free_port() -> int:
-    with closing(socket.socket()) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
-
-
 def process_env() -> dict[str, str]:
     return {
         key: value
@@ -336,12 +330,12 @@ def assert_connection_closed(sock: socket.socket, timeout: float = 5) -> None:
 
 
 def test_fixed_xray_rejects_old_five_protocol_credentials_and_closes_sessions(
-    tmp_path,
+    tmp_path, xray_port_pool,
 ):
     binary = fixed_xray_binary()
     protocols = ("ss", "socks", "vmess", "vless", "trojan")
-    server_ports = {protocol: free_port() for protocol in protocols}
-    target_port = free_port()
+    server_ports = {protocol: xray_port_pool.allocate() for protocol in protocols}
+    target_port = xray_port_pool.allocate()
     old = {
         "ss": "shared-old-password",
         "socks_user": "old-user",
@@ -392,7 +386,7 @@ def test_fixed_xray_rejects_old_five_protocol_credentials_and_closes_sessions(
         old_proxy_ports = {}
         for label in old_labels:
             protocol = old_protocol[label]
-            proxy_port = free_port()
+            proxy_port = xray_port_pool.allocate()
             old_proxy_ports[label] = proxy_port
             path = write_config(
                 tmp_path / f"client-old-{label}.json",
@@ -423,7 +417,7 @@ def test_fixed_xray_rejects_old_five_protocol_credentials_and_closes_sessions(
             assert rejected.returncode != 0, f"old {label} credential still connected"
 
         for protocol in protocols:
-            proxy_port = free_port()
+            proxy_port = xray_port_pool.allocate()
             path = write_config(
                 tmp_path / f"client-new-{protocol}.json",
                 client_config(

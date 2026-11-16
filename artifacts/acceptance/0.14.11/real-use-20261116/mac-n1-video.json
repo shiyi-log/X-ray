@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-15T18:38:13.740Z",
+  "node_id": "f38db145-b76e-57e0-86d6-20bc365f2f20",
+  "address_family": 6,
+  "client": "Shadowrocket 2.2.92(3445)",
+  "web": "Google search loaded",
+  "video": "YouTube Big Buck Bunny official",
+  "evidence": {
+    "currentTime": 23.097462,
+    "error": null,
+    "paused": false,
+    "readyState": 4,
+    "videoHeight": 720,
+    "videoWidth": 1280
+  },
+  "ipv4": "client TCP timeout and HTTP CONNECT 503",
+  "limits": "IPv6 pass does not imply IPv4 or other networks pass"
+}

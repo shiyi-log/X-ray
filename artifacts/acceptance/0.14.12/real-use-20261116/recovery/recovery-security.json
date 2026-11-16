@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-11-16T02:25:20.460062+00:00",
+  "exit_code": 0,
+  "tokens_persisted": false,
+  "checker_image_version": "0.14.11",
+  "restore_script_candidate_version": "0.14.12",
+  "public_statuses": {},
+  "cloud_write_blocked": true,
+  "security_mode": "MAINTENANCE",
+  "expected_sequence": 8,
+  "last_security_sequence": 8,
+  "active_nodes_not_maintenance": 0,
+  "revocation_tombstone_count": 8,
+  "token_checks_complete": false,
+  "status": "passed",
+  "token_acceptance_status": "not-run"
+}

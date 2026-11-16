@@ -1,0 +1,10 @@
+{
+  "transfer_exit_code": 0,
+  "work_directory": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery",
+  "backup_directory": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery/input/xray-0.14.11-20261115T184501Z-1",
+  "ciphertext_checksum_valid": true,
+  "snapshot_checksum_valid": true,
+  "secrets_transferred": false,
+  "plaintext_dump_transferred": false,
+  "offsite_immutable_storage": "not-run"
+}

@@ -1,4 +1,10 @@
+import sys
+from pathlib import Path
+
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
+from runtime_ports import managed_loopback_binds, xray_port_pool  # noqa: E402, F401
 
 
 @pytest.fixture

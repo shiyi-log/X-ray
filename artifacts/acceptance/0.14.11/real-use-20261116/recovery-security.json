@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-11-15T18:51:06.521816+00:00",
+  "exit_code": 0,
+  "tokens_persisted": false,
+  "public_statuses": {},
+  "cloud_write_blocked": true,
+  "security_mode": "MAINTENANCE",
+  "expected_sequence": 8,
+  "last_security_sequence": 8,
+  "active_nodes_not_maintenance": 0,
+  "revocation_tombstone_count": 8,
+  "status": "passed",
+  "token_checks_complete": false,
+  "token_acceptance_status": "not-run"
+}

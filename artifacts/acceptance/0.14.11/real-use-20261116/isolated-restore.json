@@ -1,0 +1,38 @@
+{
+  "started_at": "2026-11-15T18:47:11.461235+00:00",
+  "container": "xray-real-use-20261116-recovery-pg",
+  "target_database": "xray_restore_real_use_20261116",
+  "actions": [
+    {
+      "kind": "pg_start",
+      "exit_code": 0
+    },
+    {
+      "kind": "restore_script",
+      "exit_code": 0
+    },
+    {
+      "kind": "mode_readback",
+      "exit_code": 0
+    }
+  ],
+  "network": {
+    "mode": "none",
+    "published_ports": {},
+    "networks": [
+      "none"
+    ],
+    "tmpfs": {
+      "/var/lib/postgresql/data": "rw,nosuid,size=512m"
+    }
+  },
+  "psql_target_check_warning": true,
+  "status": "passed",
+  "restore_receipt": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery/evidence/restore-xray_restore_real_use_20261116-1794768434.json",
+  "backup_directory": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery/input/xray-0.14.11-20261115T184501Z-1",
+  "work_directory": "/Users/shiyi/.local/share/xray-real-use-20261116-recovery",
+  "finished_at": "2026-11-15T18:47:14.225085+00:00",
+  "production_database_restored": false,
+  "cloud_workers_started": false,
+  "keys_loaded_from_production": false
+}
