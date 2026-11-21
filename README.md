@@ -1,71 +1,63 @@
-# X-ray 管理平台
+# X-ray · 基于 3x-ui 的二次开发
 
-一个独立、开源、面向单管理员自托管的 X-ray 管理平台。前端基于 Vben Admin 二次开发，后端使用 Django REST Framework；AWS Lightsail 与阿里云轻量应用服务器 SWAS 同时纳入第一版。
+本项目已按 2026-11-17 的决定放弃原 Django/Vben 实现，改为基于
+[MHSanaei/3x-ui](https://github.com/MHSanaei/3x-ui) 二次开发。第一阶段只建立
+可追溯的上游底座和本地构建、测试流程；云节点、订阅池、自动化与在线升级等旧定制功能
+不属于当前实现，后续按独立需求逐项重做。
 
-本仓库使用自己的超级管理员、PostgreSQL、Redis、密钥、域名、控制服务器及发布流程。Shop 相关仓库仅作只读业务参考，不是本项目的依赖，也不属于本项目改造范围。
+## 固定基线
 
-管理员 TOTP 为可选绑定：未绑定时使用正确密码登录，已绑定时继续验证 TOTP
-或一次性恢复码。系统设置提供主动绑定与近期身份验证入口；敏感操作仍须
-step-up，未绑定时重新验证密码，已绑定时验证密码与 TOTP。登录状态由服务端
-会话管理，CSRF、会话撤销和目标确认保持生效。
+- 上游版本：`v3.11.0`
+- 上游提交：`c621ba9014a6aa21fd7c9ecf45655e44e24ebf13`
+- Go `1.27.3`，Node `26`，npm `>=11`；依赖使用原始 `go.sum` 和 `frontend/package-lock.json`。
+- Go/Gin/GORM 后端，React 19 / Ant Design 6 / TypeScript 前端；SQLite/PostgreSQL 由上游支持。
+- 来源、归档摘要及回退点见 [UPSTREAM.json](UPSTREAM.json)，逐文件 SHA256 见
+  [导入清单](artifacts/acceptance/3x-ui-rebase-20261117/replacement-manifest.json)。
 
-## 当前状态
+## 开发入口
 
-2026-11-14：管理入口已开放为 [https://admin.xray.ai163.cc](https://admin.xray.ai163.cc)，
-通过公网 443 访问，无需本机隧道或专用浏览器窗口。管理员登录、服务端会话、
-CSRF 和敏感操作的近期身份验证保持生效；退出登录所需的会话表权限已补齐。
-入口部署与回退见 [公网管理入口说明](deploy/nginx/public-admin.md)。
+先读 [本地开发说明](docs/development.md)。使用干净源码副本执行构建，避免复用遗留依赖：
 
-2026-11-14：**v0.14.10 已正式发布并上线**。前端入口为「系统设置 → 版本更新 → 在线升级」，支持目标版本选择、近期身份验证、执行阶段、结果与升级期间重连；真实 Chrome 已完成 0.14.9 → 0.14.10 升级，任务 `SUCCEEDED / COMPLETE`，刷新后会话有效。地区分配保存、桌面三列与手机单列布局均已在线验证。精确发布提交 CI 的 19 项门禁通过：后端/交付 666 passed、1 个一次性 Linux/systemd 项 skipped，前端 97 passed、浏览器 E2E 8 passed。
-
-同日一台授权 Lightsail 节点已验证自动补齐、每日停止后启动、新 IP/健康/订阅写回、四种支持格式、流量采集、profile 撤回正向控制，以及自动缩容清理。旧订阅 GET/HEAD 为 410；测试实例和资源已删除/释放，库存、配额及订阅节点计数为零。Google 探测确认 TLS 与 HTTP 200，响应读取为部分完成；逐资源最终账单仍未知。0.14.10 同时修复已确认撤销令牌被地址刷新任务重复发布的问题，线上最终刷新结果为零失败。AWS 新节点仅允许 Lightsail，禁止 EC2。正式资产见 [v0.14.10 Release](https://github.com/shiyi-log/X-ray/releases/tag/v0.14.10)，完整证据见 `docs/progress.md`、`tests/acceptance/matrix.json` 和 `artifacts/acceptance/0.14.10/production-release-20261114/`。
-
-2026-11-12：0.14.8 增加 Lightsail/SWAS 全分页只读库存核对和每日云账号审计，差异只记审计、不自动删云资源；本地 19 项交付门禁通过。真实 AWS profile 与 CloudAccount 仍未匹配授权账号，AWS 生命周期、撤回正向控制和逐资源费用保持 blocked/not-run。
-
-2026-11-11：`0.14.7` 增加流量采集失败的有界退避和每节点数据库租约，避免多 worker 重复采集，并补齐租约过期恢复与旧 worker fencing 回归；池缩容及每日动态 IP/健康/订阅 handler 有 Fake provider 集成测试。实际 AWS 验收仍需匹配 profile、正常 X-ray 登录/step-up/CloudAccount 和资源级费用读回，当前保持 blocked/not-run。
-
-2026-11-10：`0.14.6` 候选修复了节点池缩容删除遇到已撤销 Token 时的无意义重新发布；撤回时间、不可变墓碑与安全事件不匹配或仍有活动 Token 时继续失败关闭。修复已通过新的授权 AWS 测试运行：池 `1→0` 删除 Operation `3dfd0491-097b-49ec-9200-504bc50994a3` 成功，provider 确认缺失、配额与资源账本释放，池和订阅节点计数均为零。授权范围内的双节点测试此前已覆盖补齐、按 `(created_at, pk)` 每日重启一台、动态 IPv4/健康/IP 刷新、订阅签发/发布/撤回和流量统计。`0.14.6` 本地全门禁通过；profile 级节点撤回正向控制尚未确认，AWS 逐资源最终账单未知，SWAS、真机、独立公网探测和生产未运行；状态详见 `docs/progress.md` 与 `tests/acceptance/matrix.json`。
-
-`v0.14.5` 的 annotated 标签指向 `e38b48b`，GitHub Release `439611923` 已发布且资产摘要与 `SHA256SUMS` 已核对。`0.14.6` 发布候选的本地门禁已通过，新的 AWS 运行已验证修复后的节点池删除；profile 级节点撤回正向控制和逐资源最终账单仍待确认。尚未执行 SWAS、独立 SSH 登录或 Google 公网探测、Shadowrocket 真机、独立生产服务器、域名/TLS 或生产部署。本地 Compose、Fake/Stub、镜像、提交、标签和 GitHub Release 都不代表生产部署。
-
-- [正式设计规格](docs/superpowers/specs/2026-09-16-xray-manager-design.md)
-- [开发计划总览](docs/superpowers/plans/2026-09-16-xray-manager.md)
-
-## 目录约定
-
-```text
-backend/       Django API、领域模型、云适配器、Celery
-frontend/      新项目自有的 Vben 应用及必要的工作区包
-installer/     新项目自有安装、配置、验证与凭据撤销工具
-deploy/        Compose、Nginx、备份和发布配置
-docs/          规格、分阶段计划、接口与运维文档
-tests/         跨服务契约和端到端测试
-archive/       本机参考归档，禁止提交、构建、发布或运行时引用
+```bash
+python3 scripts/check-baseline.py
+python3 scripts/export-source.py /tmp/xray-3xui-source.tar
 ```
 
-前端固定参考 Vben `v5.7.0` / `63a38dce49ba109f61607994e21ba921d8e970e9`，精确来源、许可证和保留包见 `frontend/UPSTREAM.md`。原先遗留的根目录 `nodes/`、`xray_service/`、`static/` 仅是空骨架，不视为可运行系统。
+导出目标必须尚不存在。导出只包含清单中的公开源码和构建门禁，不读取本机 `.env`、
+数据库、旧 `node_modules`、证据或 Git 凭据。完整验证入口为 `scripts/check-local.sh`；
+会监听临时端口的测试应在无宿主端口映射的隔离容器执行。
 
-## 执行边界
+当前目录结构：
 
-本地与 CI 使用专用测试数据库及模拟云适配器。真实云验收需要另行确认测试账号、区域、套餐和预算；资源删除与 IP 释放单独授权。GitHub 源码发布和安装器资产使用不可变版本标签；生产服务器仍需按 `docs/release.md` 使用不可变镜像摘要执行发布，GitHub Release 不等于生产部署。
+```text
+main.go           3x-ui 主程序
+internal/         管理服务、数据库、订阅、节点及 Xray 适配
+frontend/         React 应用及上游前端测试
+tools/            上游代码生成工具
+scripts/          上游工具及本项目来源/构建验证入口
+UPSTREAM.json     上游不可变版本锁定
+```
 
-`archive/` 包含此前按用户要求保存的完整 Shop 快照，可能含敏感信息。它仅保存在本机，父目录权限为 `0700`，不得加入 Git 或任何构建上下文。新服务从空数据库、新密钥和新管理员开始。
+上游安装器、Dockerfile 和系统服务文件作为底座源码保留，尚未完成本项目部署适配。
+首次启动的管理员凭据交付和 Xray/MTG/geo 资产锁定仍需后续处理；本阶段不自动运行安装器
+或启动面板。构建成功仅证明程序可编译，不代表代理连通或生产可用。
 
-## 开源许可证
+## 验证与历史
 
-Copyright (c) 2026 shiyi-log and X-ray contributors.
+本阶段实际验证结果见 [进度](docs/progress.md) 末尾与
+[底座验收目录](artifacts/acceptance/3x-ui-rebase-20261117/)。新 CI 仅执行源码门禁，
+不发布或部署。没有创建新的项目版本、提交或标签。
 
-本项目自有代码采用 **GNU Affero General Public License v3.0 only**
-（SPDX：`AGPL-3.0-only`），完整条款见 [LICENSE](LICENSE)。
-源码仓库：[shiyi-log/X-ray](https://github.com/shiyi-log/X-ray)。
+应用代码保持上游原样；本地 `.env.example` 关闭调试模式，且移除了只验证上游
+自动评论机器人的测试文件。具体差异与原始摘要均记入来源清单。
 
-允许使用、修改、分发和商业使用；分发，以及通过网络向用户提供修改后的程序时，
-需要遵守 AGPL-3.0 对相应源码提供、许可证和版权声明等方面的要求。网络交互的
-源码提供义务见许可证第 13 条。自托管修改版本时，请向远程交互用户提供获取
-该运行版本相应源码的方式。
+旧代码保留在 Git 历史 `ad90a0f4c5d58adab703ecfe25bf268321f5e44a`；
+旧 `VERSION`、`CHANGELOG.md`、`docs/version-record.md` 与 `tests/acceptance/matrix.json`
+只记录旧系统，不能用于判定当前 3x-ui 底座的能力或版本。旧 `docs/`、`artifacts/`、
+`output/` 的历史证据以及已有本地数据和环境保留，但不参与新构建。
 
-Vben 上游代码保留其 MIT 许可证及版权声明；Xray-core 使用 MPL-2.0，
-其他第三方依赖按各自许可证使用。来源和适用边界见
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和
-[frontend/UPSTREAM.md](frontend/UPSTREAM.md)。仓库开源不代表生产部署或真实云验收完成，
-当前能力与限制仍以本页当前状态和验收记录为准。
+## 许可证
+
+当前 3x-ui 底座遵循上游 GNU GPL v3，原文见 [LICENSE](LICENSE)。
+上游版权和第三方许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+旧项目自有代码的 AGPL 声明保留在 Git 历史，不能用它替换上游代码的许可证。

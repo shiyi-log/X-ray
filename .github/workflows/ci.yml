@@ -1,120 +1,87 @@
-name: X-ray delivery gates
+name: 3x-ui source baseline
 
 on:
-  push:
-    branches: [main, codex/xray-manager]
   pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: xray-delivery-${{ github.ref }}
+  group: baseline-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Source checks only. Live PostgreSQL, panel/node processes, Xray binaries,
+# production deployments and release publication are separate acceptance gates.
 jobs:
-  verify:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 60
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
-      XRAY_ENV: test
-      DJANGO_SETTINGS_MODULE: config.settings.test
-      XRAY_TEST_DATABASE_URL: postgresql://xray_test:xray_test_only_password@127.0.0.1:55432/xray_test
-      XRAY_REDIS_URL: redis://127.0.0.1:56379/0
-      XRAY_TEST_SERVICES_EXTERNAL: "1"
-      XRAY_CSRF_TRUSTED_ORIGINS: http://127.0.0.1:9528
-      XRAY_BACKEND_TEST_IMAGE: xray-manager-backend:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      XRAY_FRONTEND_TEST_IMAGE: xray-manager-frontend:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      XRAY_BACKUP_TEST_IMAGE: xray-manager-backup-tools:ci-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-      XRAY_POSTGRES_TEST_IMAGE: postgres:17.6-alpine
-      XRAY_ACCEPTANCE_ARTIFACT_DIR: ${{ github.workspace }}/artifacts/acceptance/ci-${{ github.run_id }}-${{ github.run_attempt }}
-      XRAY_SKILL_VALIDATOR: scripts/vendor/skill-quick-validate.py
-    services:
-      postgres:
-        image: postgres:17.6-alpine
-        env:
-          POSTGRES_DB: xray_test
-          POSTGRES_USER: xray_test
-          POSTGRES_PASSWORD: xray_test_only_password
-        ports:
-          - 55432:5432
-        options: >-
-          --health-cmd "pg_isready -U xray_test -d xray_test"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 20
-      redis:
-        image: redis:7.4-alpine
-        ports:
-          - 56379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 20
+      HUSKY: "0"
+      CGO_ENABLED: "1"
+      GOTOOLCHAIN: local
+      TZ: Asia/Shanghai
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
-          fetch-depth: 0
           persist-credentials: false
-      - name: Prepare isolated acceptance paths
-        id: acceptance-paths
-        shell: bash
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Check source baseline and whitespace
         run: |
-          set -euo pipefail
-          auth_directory=$(mktemp -d "$RUNNER_TEMP/xray-auth.XXXXXX")
-          printf 'XRAY_PLAYWRIGHT_AUTH_STATE=%s/admin.json\n' "$auth_directory" >> "$GITHUB_ENV"
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - uses: astral-sh/setup-uv@v6
-        with:
-          version: "0.11.28"
-          enable-cache: true
-      - uses: pnpm/action-setup@v4
-        with:
-          version: "10.33.0"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22.18.0"
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - name: Install locked dependencies
+          python3 scripts/check-baseline.py
+          git diff --check
+      - name: Install locked frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Frontend lint, formatting and types
+        working-directory: frontend
         run: |
-          uv sync --project backend --frozen --group test
-          pnpm --dir frontend install --frozen-lockfile
-          pnpm --dir frontend exec playwright install chromium
-      - name: Validate acceptance claims before execution
-        run: python3 scripts/validate-acceptance.py
-      - name: Run complete local delivery gates
-        run: ./scripts/check-local.sh
-      - name: Upload sanitized acceptance evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: xray-acceptance-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ env.XRAY_ACCEPTANCE_ARTIFACT_DIR }}/
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Remove run-specific images and browser authentication state
-        id: cleanup-run
-        if: always()
-        shell: bash
+          npm run lint
+          npm run format:check
+          npm run typecheck
+      - name: Install Chromium for Storybook tests
+        working-directory: frontend
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Frontend unit, component and Storybook tests
+        working-directory: frontend
+        run: npm test
+      - name: Build the real embedded frontend
+        working-directory: frontend
+        run: npm run build
+      - name: Verify locked Go dependencies
         run: |
-          set -euo pipefail
-          docker image rm --force \
-            "$XRAY_BACKEND_TEST_IMAGE" \
-            "$XRAY_FRONTEND_TEST_IMAGE" \
-            "$XRAY_BACKUP_TEST_IMAGE" || true
-          if [[ -n ${XRAY_PLAYWRIGHT_AUTH_STATE:-} ]]; then
-            case "$XRAY_PLAYWRIGHT_AUTH_STATE" in
-              "$RUNNER_TEMP"/xray-auth.*/admin.json)
-                rm -f -- "$XRAY_PLAYWRIGHT_AUTH_STATE"
-                rmdir -- "$(dirname -- "$XRAY_PLAYWRIGHT_AUTH_STATE")"
-                ;;
-              *)
-                echo 'Auth state is outside the run-owned temporary directory' >&2
-                exit 1
-                ;;
-            esac
-          fi
+          go mod download
+          go mod verify
+      - name: Use the pinned Go timezone database
+        run: echo "ZONEINFO=$(go env GOROOT)/lib/time/zoneinfo.zip" >> "$GITHUB_ENV"
+      - name: Go tests
+        run: |
+          go list ./... | grep -v '/frontend/node_modules/' > "$RUNNER_TEMP/go-packages.txt"
+          mapfile -t go_packages < "$RUNNER_TEMP/go-packages.txt"
+          go test -shuffle=on -count=1 "${go_packages[@]}"
+      - name: Go vet and build
+        run: |
+          mapfile -t go_packages < "$RUNNER_TEMP/go-packages.txt"
+          go vet "${go_packages[@]}"
+          go build "${go_packages[@]}"
+          go build -trimpath -o build/x-ui .
+      - name: Check generated schema consistency
+        working-directory: frontend
+        run: |
+          npm run gen
+          git diff --exit-code -- src/generated public/openapi.json
+          cmp public/openapi.json ../docs/public/openapi.json

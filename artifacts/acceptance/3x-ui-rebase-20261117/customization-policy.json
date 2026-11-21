@@ -1,0 +1,657 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "c621ba9014a6aa21fd7c9ecf45655e44e24ebf13",
+  "approval_record": "docs/project-ledger.md: 2026-11-19 prior base replacement/sponsor cleanup and Lightsail node pool scope",
+  "patches": [
+    {
+      "path": "docs/public/openapi.json",
+      "upstream_sha256": "e26231888ccd904831f1bc3440d6e6faecaf721c4550daaaa2eb24abac58625f",
+      "local_sha256": "5f9f56b0933709f66b1cdabe999b1357f53038150f25c83aa9fb3fae02573874",
+      "reason": "Generated OpenAPI snapshot synchronized with reviewed Lightsail settings fields and Sponsor removal."
+    },
+    {
+      "path": "frontend/public/openapi.json",
+      "upstream_sha256": "e26231888ccd904831f1bc3440d6e6faecaf721c4550daaaa2eb24abac58625f",
+      "local_sha256": "5f9f56b0933709f66b1cdabe999b1357f53038150f25c83aa9fb3fae02573874",
+      "reason": "Generated OpenAPI snapshot synchronized with reviewed Lightsail settings fields and Sponsor removal."
+    },
+    {
+      "path": "frontend/src/api/queries/useAllSettings.ts",
+      "upstream_sha256": "ce8a5a9cdf370e6c39e029f8fdedb161b57827c7c274bce8d257799f572bb477",
+      "local_sha256": "baebd3a747d0e1349b6a04d46b2e3b2bb9c635496eb890e9de3cce063917d027",
+      "reason": "Validate partial settings updates against the merged saved profile while posting only the original patch."
+    },
+    {
+      "path": "frontend/src/api/queries/useSponsorsQuery.ts",
+      "upstream_sha256": "ecace055bced670727c6584cabd9fe0fa682cd05b34234ff6a297a23af675a0b",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/api/queryKeys.ts",
+      "upstream_sha256": "0b4fb7cb38fe05c739ec3267666c06b4fc09a2acf34267b93e3ecc8d9e70a9bd",
+      "local_sha256": "2570343f244d2ada0dbfbaac228efb416ca0203512f46e07b717d757f8e98e93",
+      "reason": "Add query keys for the approved Lightsail settings and catalog state."
+    },
+    {
+      "path": "frontend/src/components/command-palette/CommandPalette.tsx",
+      "upstream_sha256": "076104ba5eed14d10f0f911691ae62ebf301d46c22b9513c47b3103ed2cda8a9",
+      "local_sha256": "916a36beafc5f1dffde2e4b602e10a2dc6301d45cbf64c2f5179a22dc66ed272",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "frontend/src/components/sponsor/SponsorCard.css",
+      "upstream_sha256": "229f374d6dec959c104e6ed9148a3e78a0f1282c52bd0c212517894efcb63564",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/components/sponsor/SponsorCard.stories.tsx",
+      "upstream_sha256": "bf77169349e0f0ecbfef5a2bbcf861af42a86cdc7959f904eb483199682f2cfe",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/components/sponsor/SponsorCard.tsx",
+      "upstream_sha256": "5de7febbf9dd158ec621e4c8cf9e7bfa85f231922c853bcf47718813d5cb5ce1",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/components/sponsor/SponsorSlot.tsx",
+      "upstream_sha256": "7cac62e0f7e0e5d067f5870aa22c1da2bb5a0f34a4bb551f17cd71e8629c110d",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/generated/examples.ts",
+      "upstream_sha256": "257692f830730eed4a41049734a9832ce573aa7ff6ac19208dc563109a420e22",
+      "local_sha256": "32532906e29a0e17a273699bedc88a4f1ea9d5bfc16f3553beb937fe6d784b87",
+      "reason": "Regenerate API examples from the current OpenAPI schema and remove obsolete Sponsor endpoints."
+    },
+    {
+      "path": "frontend/src/generated/schemas.ts",
+      "upstream_sha256": "238fc49814f4ea58f0315e0f3eff0b2e25136898b4bfae9a3b9487483b986b97",
+      "local_sha256": "53cbb070b860c3240766615e9a7d90841e32fcd7a0c7a4dcde88a882357ad0da",
+      "reason": "Regenerate API schemas from the current OpenAPI schema."
+    },
+    {
+      "path": "frontend/src/generated/types.ts",
+      "upstream_sha256": "86ab9a29e999b175b5acbf89c91e6a6251f02fa6bcf1439013d167fbbc5b8d6a",
+      "local_sha256": "6008024af2c8eb1308d21488dcb0ceb4786a747317d4bed17997370dbfea4c5b",
+      "reason": "Regenerate TypeScript API types from the current OpenAPI schema."
+    },
+    {
+      "path": "frontend/src/generated/zod.ts",
+      "upstream_sha256": "651c4ae7c6151f4e4630e78d89d0e86c293f36f75dff838bd9239e233b4025b8",
+      "local_sha256": "a459d7e8cdc9ebe6ee4614cde9a188ee5eaebc1602466525d0e30923442765c8",
+      "reason": "Regenerate Zod API schemas from the current OpenAPI schema."
+    },
+    {
+      "path": "frontend/src/layouts/AppSidebar.css",
+      "upstream_sha256": "b95fb4fd3d21b99f09714bc6f846b1b14e004c63c0b623387355172da584bdd9",
+      "local_sha256": "7cc7462f26bea3ef84ccaa07b83ab4a95c10b459c8a69235bddd848179a7a884",
+      "reason": "Retain reviewed local sidebar styling from the 3x-ui fork."
+    },
+    {
+      "path": "frontend/src/layouts/AppSidebar.tsx",
+      "upstream_sha256": "5c80fb73e474828914932c63286521c3b18a18f1118eca2cbd6e05f15e553e22",
+      "local_sha256": "9b66d66955fd0d323240c8639e5f70dd51144a75a410df1e6040ea3a9bfbc3a8",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "frontend/src/lib/sponsors.ts",
+      "upstream_sha256": "e3e159fc414f174cc4968a980065d4470659bbdff3d162d65e86b600a104ac9b",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/models/setting.ts",
+      "upstream_sha256": "378ee0bb00436e48bd02f70eae4a111de7898038c55f7a0acd77e9e824dbd6d2",
+      "local_sha256": "d88d4d9c4d71030d480e28423df1be6b536a4eed742be31fd07e534f7421f439",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "frontend/src/pages/api-docs/endpoints.ts",
+      "upstream_sha256": "a054f10882f019d18e866a723d97cac5c95b7ee3869b564f2beded42127068a0",
+      "local_sha256": "70c88ea7fe97960b4587b2f4bde03f83144cb99f4f40d4f3efcc8a11f261890c",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "frontend/src/pages/index/IndexPage.tsx",
+      "upstream_sha256": "0d0f081e5ee4442ec1f6837ad9550e8aa573b3bb54bd434bbf76a604978f2c5f",
+      "local_sha256": "2cc6fd5c71fa37b465623201bff9385c175015375d35155a0ca83af3fda09ee2",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "frontend/src/pages/login/LoginPage.css",
+      "upstream_sha256": "808816fefbf1fd61486650a2e0ca5f38121ec0b4d2e812a0ac929888a17f7b56",
+      "local_sha256": "8b421c352af68145fdbd2c5383c595eb2206941f83f0b2992fad85b77690cd10",
+      "reason": "Retain reviewed local login styling from the 3x-ui fork."
+    },
+    {
+      "path": "frontend/src/pages/login/LoginPage.tsx",
+      "upstream_sha256": "a83cf37fe63e8a13130adc39c70c63e3ab8a1216f7d6c055a1ab8e7970994529",
+      "local_sha256": "28328604b84852f02e07c524d614099f7a2404c559dcbf7108ac02e7a7db875a",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "frontend/src/pages/settings/SettingsPage.tsx",
+      "upstream_sha256": "2b975e1606436f361001e9dfff4926fea7cae8307eb252b4b2db20d1cdd23b37",
+      "local_sha256": "90ba3e9ffad5acefb45c4a9a997619add4b85395b6e86c9d903bed4b46cddb38",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "frontend/src/pages/settings/SubscriptionGeneralTab.tsx",
+      "upstream_sha256": "4265b81a8af779a2e0b727b157581fda223a537398a55eadceabc07bd1c93b6e",
+      "local_sha256": "8fbd57968a984a011ff366641ccc69a8dcc1dcc14bb91c7d919792a22824f348",
+      "reason": "Retain the reviewed Lightsail settings interface integration."
+    },
+    {
+      "path": "frontend/src/pages/sponsors/SponsorsPage.css",
+      "upstream_sha256": "6639f1cd5c148117a79462ee0e51578ec45e3474e396fb771cdc5040248c3001",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/pages/sponsors/SponsorsPage.tsx",
+      "upstream_sha256": "25771a91c51ca556b2fcc9cdfc53c76f8530b954416bb94e4353a51ffff1d8ca",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/routes/panelRoutes.tsx",
+      "upstream_sha256": "0032c1d2f175c234bb2fc5176f1eb8beec1a7355ed2a7e3849a11c48fe43bc4f",
+      "local_sha256": "4eaae63589761866885f99dd57a9c23401189d4a243e3c54b3fd7d81c3334957",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "frontend/src/schemas/setting.ts",
+      "upstream_sha256": "13074d2657eba7f74e32a1eeba9727b235ca1bd45a4b4500df82540ddd2fdf15",
+      "local_sha256": "8b99ca903bd82e5a92cc55d12b71f5e517348f716c0244e06b1e19b8c21dd2fc",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "frontend/src/test/navigation-contract.test.tsx",
+      "upstream_sha256": "2c91e697df7ebd331a346fd9bdb7f0bee0d8367abb390ac9ea2cdc64054a7ace",
+      "local_sha256": "d8bc4c658461946ecced141f4caf455b227cce575c6c52e8addd439467280826",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "frontend/src/test/sponsors.test.tsx",
+      "upstream_sha256": "c0320b09519097217e02c2253bbce72509195f269a38823a3e921a960de7ce3c",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "frontend/src/test/use-all-settings.test.tsx",
+      "upstream_sha256": "43d6667a4ca942d471acaf05f9199fda43314938a57171c898e33be0550166c6",
+      "local_sha256": "1b1694717249665a04cffb6744025851e1a6294e3441e24bea33d70df4cb904e",
+      "reason": "Regression coverage for partial settings validation and preserving the partial request payload."
+    },
+    {
+      "path": "go.mod",
+      "upstream_sha256": "f9fadb7960239c196c0b901d528912a0764d0231e0701a3d58045387f0bc680f",
+      "local_sha256": "5c34d67916b994d0ece1e69aaee0d6ce7c5027a77c8bb5b5c4ec2bc40fe8fa62",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "go.sum",
+      "upstream_sha256": "c15bcb6c7cd2de4d3cbbd242f941e2eeb76f78a3dc627212192bb925344758b8",
+      "local_sha256": "5732402e38fd9bd58c7ae3f148c00405d8ac48777147b5619be73cadedfb97cf",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/database/db.go",
+      "upstream_sha256": "af4ced9dc21a388adf73c9e2d14742b8ee5d070b5288f96bfc65f0d8ed2d85d8",
+      "local_sha256": "c23c5fe2cfab2430cd4a55a9f85d08ba71bd41454f054e527235afc4fd6b4fb7",
+      "reason": "Register the reviewed Lightsail managed-node model in the existing database migration path."
+    },
+    {
+      "path": "internal/database/migrate_data.go",
+      "upstream_sha256": "bde3ac604feffb358ecca28d0529f67f190b633aa8cb5d059b74ea893e3b1375",
+      "local_sha256": "c5666c978c8aed8ded0c044967bcc7ea4a01a01c76cc2b2af4b4b0ae1af69c4b",
+      "reason": "Register the reviewed Lightsail managed-node model in the existing database migration path."
+    },
+    {
+      "path": "internal/web/controller/index.go",
+      "upstream_sha256": "448a7792993966b9d83e0d15e6267aa4ba00a6dd79184812cdc8f682da27fea3",
+      "local_sha256": "86ca71fd02a799a88a102852689ad4a1441396d1924aa4110c787cf6240759d3",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/controller/setting.go",
+      "upstream_sha256": "4ccd97025e6dd7b4aa9b6c39201c6ad4db552477ed7d29c5ad04d5d2de04fdfb",
+      "local_sha256": "5b110ff187712a5907d1744dc6985a64d7976104ef2e3a5d2bc1e708f5ebf248",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/entity/entity.go",
+      "upstream_sha256": "61a1f3268075a2b369ca440aef09d04df238856a95ca0da0812c689f0aa5f9d0",
+      "local_sha256": "8b0214aa0dd0533f85f7cf077f1bd6ad81b70177d7d3df1c9e824e80fd311bdf",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/routes_contract_test.go",
+      "upstream_sha256": "6e77b86400af37d31e3fd35405e84bb0267b5cff72db1c4138edce36866c18bd",
+      "local_sha256": "19258b26ccaffe06c6dcd9d2d6d6491517b07909f3403fa56c2479d59845b405",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "internal/web/service/node_netmetrics_test.go",
+      "upstream_sha256": "0e8bf2f23a307a754a254fba0b725058d2fadb727b6a568e9822c1fa742f98c7",
+      "local_sha256": "5257ef7b0785048ad64ce59abf73e8a510344fd64f54848060d61240c998b4d8",
+      "reason": "Add Fake HTTP regression verifying that a post-restart node is healthy only when its panel is reachable and Xray reports running."
+    },
+    {
+      "path": "internal/web/service/panel/panel.go",
+      "upstream_sha256": "8c0979adc2e7d95f34b4d1de34df5b60c7150ca659d92c7512daad5cc29352e6",
+      "local_sha256": "ecaa0641438abf47cf2e4c7541a7f00bde7a09d21679bc6db6bb90e90cfd3c59",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "internal/web/service/panel/panel_test.go",
+      "upstream_sha256": "374d4712825d9530e0388f524d15f137b0da2a9677f24e1c416f1ab535de9db4",
+      "local_sha256": "58bdfc1f7beb8629f624d7f38c37b957ae44a1264c1623cc5068fcf1a69477c2",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "internal/web/service/panel/sponsor.go",
+      "upstream_sha256": "69a09ce2f94773a37bf2a364677e21889b028f964e273d48b28839191b6f8655",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "internal/web/service/panel/sponsor_test.go",
+      "upstream_sha256": "a7d5f7514d5033dd774985f4da8d5d94d2e07a52820bf9306dd79c245fa6580e",
+      "local_sha256": null,
+      "reason": "Previously approved 3x-ui base replacement or sponsor integration removal; preserve exact upstream provenance."
+    },
+    {
+      "path": "internal/web/service/server.go",
+      "upstream_sha256": "1a1d8e33ef3a00418197e0cc20c65f523563caf09d24479c34e54f9c048af34b",
+      "local_sha256": "34da7f026d99ceecc7f9665b67c57a973d4c4570f52bd64dcdb2ef4daa78462a",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "internal/web/service/server_geofile_test.go",
+      "upstream_sha256": "62219b3c80315242c6e85b71667398dd09a6cb94e4fae1e799dcdd0bc729c9a2",
+      "local_sha256": "f1843435869fe13fb48d44b672b1e31fd8bc8e68f3a7fe488293c78234a00873",
+      "reason": "Previously approved 3x-ui fork customization recorded in the replacement worktree; retain the exact upstream and local hashes."
+    },
+    {
+      "path": "internal/web/service/setting.go",
+      "upstream_sha256": "8a5ec834e6f168e0b31192968a92522c0cbb62f6eecd4437161b6ab15190a664",
+      "local_sha256": "006bb17c4567fa8ae41f0c002ba82904b2de8a94ffaff7d6758c3232f04f7b7c",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/ar-EG.json",
+      "upstream_sha256": "10ea4a357c3a1e700e2c736977e72437299853b2e9af995b4eff1de003afa29d",
+      "local_sha256": "52f013e3a6987a81e311144a4748aeb962e11693ac9bf6f30929becdf0449da2",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/en-US.json",
+      "upstream_sha256": "35aadb784152a551dc5aa26bd95048f6b810f602f087adbb9a71d5962971c00d",
+      "local_sha256": "10256dfd8718df7d348b1f16f30f8cc1d2c02aa587694bac204e14238066cb5c",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/es-ES.json",
+      "upstream_sha256": "3ea51509ca84c1519e10033af89b43bc6d341afc9651602187f40cdd40e7941b",
+      "local_sha256": "a7f8c2eba7ba543a995ee2809ee5bfed452203277e26723819cf133da5de9352",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/fa-IR.json",
+      "upstream_sha256": "d495d7e86bbf99a125fc9ded66d2490013392959b934d2f12051c825ba3c8c2e",
+      "local_sha256": "40b8a1f2f2f994e7e0e1c05e9e737e1786f85367b7ebcf99c7943df7cfee0568",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/id-ID.json",
+      "upstream_sha256": "6b9f3325fd79b70dd71a235aa90dfc82936f7d8a661e5d1e4f918e8ab190484c",
+      "local_sha256": "d8e98722c0b7b5a8899cb69cc2bf83be8484a1322e05766bba5113088ae81643",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/ja-JP.json",
+      "upstream_sha256": "5fa28b3e9f04b9262ee682f3e88471f50a5b3011a90c902d010f66d16505ea8d",
+      "local_sha256": "c7c82872fa7f8600c84e67a91fc890d98e1185e2a9d8eba38a1d146a8adad2fe",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/pt-BR.json",
+      "upstream_sha256": "3b0a480c3fa39c83e4b5dbcfdec45ef200233689d5488d77af2aa892678268c7",
+      "local_sha256": "fa55593b7f06c22c9e1fd21acc9ce46349c9e0c8b878c74721b82c76196f946b",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/ru-RU.json",
+      "upstream_sha256": "629a15dc853a979b2b6bf183201526fa7a351d2b92c0317c4e4c642c805e12e3",
+      "local_sha256": "612cbe1ee8d7c22901b3a48df4365751aa6576bfc9a810c9fa2ede62ea565ea3",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/sk-SK.json",
+      "upstream_sha256": "d693e7e9d40c5ea8e660138de34a16fe3c0f0d45158fc6f0e0a8f5f1a8016a10",
+      "local_sha256": "2abfdc3e2fa312d0b6e47761328506836b4809cd8658585e13218a6fc4ad5eb8",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/tr-TR.json",
+      "upstream_sha256": "384033aa97f13ef8597e4a691fe2388a07d1698215b77595ca5fcd484abf8816",
+      "local_sha256": "3c3c634bc6d74ecca49ffb26bd5c6c4c50a13d6b0107aa6693b08c2f77169858",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/uk-UA.json",
+      "upstream_sha256": "a26e7ac3b68ce23db4ab28304d751e7de2ab20cddd75896fe32469ca3dac4278",
+      "local_sha256": "4f7c58c104868a971a83dbc400256b612076516b4e8fcc846bdcf252bdb8973d",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/vi-VN.json",
+      "upstream_sha256": "5fd77d61227278b34527e55fb2e550fe99aabc1d406d564765944d2b4ab3b5a8",
+      "local_sha256": "e19adcf86eb9a1d60e3545f35acff2e79d758fdcfbf0e15a930169c94d243551",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/zh-CN.json",
+      "upstream_sha256": "a5a0d985873df2c573fb88cb9adabe8aef493078772f7f4b57e3ed2884e57625",
+      "local_sha256": "b6eb5b9a68f0970358387083663a2bf40dd57324a603d3a576a3ca2f742969cd",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "internal/web/translation/zh-TW.json",
+      "upstream_sha256": "e775f7695968c85098ab5b6443a7fa72a701c7523a608a294ba85d88766cd060",
+      "local_sha256": "81936915a76b0334d10ba4c39f8932662ec3fa8e8f11e5e688cbf9654723aaac",
+      "reason": "Approved Lightsail settings and read-only catalog integration; exact upstream/local hashes preserve provenance."
+    },
+    {
+      "path": "tools/openapigen/emit_types.go",
+      "upstream_sha256": "4e29b796fa4746b49498e78dcfdc015db176706118914215bbf46b20f98e43f6",
+      "local_sha256": "d5c31ea06b655024f129ddcb14b55082a997e51c34b5da724b8bed82edab18cb",
+      "reason": "Keep generated TypeScript output deterministic with a single trailing newline."
+    },
+    {
+      "path": "tools/openapigen/emit_zod.go",
+      "upstream_sha256": "48bf801f7bd2a5521067631efe2c54ba834dbc74dccc502b9ce9387d0268eb67",
+      "local_sha256": "7342354f9cd70c82c5ef9d7db2922ebbc6a6be907a4f56c19f99dbb1822b62e2",
+      "reason": "Keep generated Zod output deterministic with a single trailing newline."
+    },
+    {
+      "path": "tools/openapigen/main.go",
+      "upstream_sha256": "5bdedebcf84813a701f940400ed104dd1a2af6cddc46982f450651fe6ce50b63",
+      "local_sha256": "d79a41b7de78130c5652b267be4e02e0bc7504a7a8ba1829eed27a251a76f71d",
+      "reason": "Generate the reviewed public API without removed Sponsor schemas and paths."
+    },
+    {
+      "path": "tools/openapigen/walker_test.go",
+      "upstream_sha256": "fa52d68c488760f8fd652a75add85937b450e4cf37653c5b4933a651e474455a",
+      "local_sha256": "e3c9bb45b4885dd16e0e36d4eb91f6111904698e946a1d2f87c9116d21df9e2b",
+      "reason": "Cover the single-trailing-newline contract of generated TypeScript and Zod files."
+    }
+  ],
+  "additions": [
+    {
+      "path": "frontend/src/lib/lightsail/targets.ts",
+      "local_sha256": "161baad2d13c57a9ee9b8e99e6aab09ebef5274ce9ca54b9a7c0d56e6ee1825c",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "frontend/src/pages/settings/LightsailSettingsTab.tsx",
+      "local_sha256": "029ff6e5033ead0af807435421a88afc8c2d8a32f0507bbb26fddc16c8c8b04b",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "frontend/src/test/lightsail-settings-tab.test.tsx",
+      "local_sha256": "17493a99e8d9f13e401a00b6911ffe4365a21c95aa5905e4a15fdc5beda7edc9",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "frontend/src/test/lightsail-settings.test.ts",
+      "local_sha256": "7bd04e62f2fc17dfb44e9377c6f9d41ae2bd02d0fe9b9f26184b7a3281915970",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "frontend/src/test/lightsail-targets.test.ts",
+      "local_sha256": "9fe7bb94b82540b39c9b702bf54535a3142abca70e56d32e97e0244841860105",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/database/lightsail_models_test.go",
+      "local_sha256": "c72d34b226a14f279ced87978cffd3111f9d0e673526f5cb2ba1544d118b8d55",
+      "reason": "SQLite coverage for Lightsail managed-node, inbound-replica, and cleanup-intent models.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/database/model/lightsail_managed_node.go",
+      "local_sha256": "4473f54707318222005db50d407d00ddc27182143cedcb8eb065f075903918f8",
+      "reason": "Reviewed persistent ownership and cleanup-intent models for project-owned Lightsail nodes; no AWS writes are implemented here.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/awsread/client.go",
+      "local_sha256": "6c9864ed08b8365798f61aceecbce42e726a5bff6098823045f335b78e042187",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/awsread/client_test.go",
+      "local_sha256": "6ed53aba4778a2678cf98324764e2c92262bdd2d5f84447e565f9bf44c62eec5",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/awsread/profile_test.go",
+      "local_sha256": "405b80f498ae5003fe9b4cfc6235c2e1df82621b2d9ac73099471692ddb18ff0",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/awswrite/client.go",
+      "local_sha256": "b165dd72cae8e590ffe266a2b0f80f006a9d090834998d9aa1bb1cf2c50a6c9e",
+      "reason": "Isolated Lightsail write adapter or reconciler retained for local Fake tests; not included in build or source export until operation gating and durable panel cleanup are implemented.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "internal/lightsail/awswrite/client_test.go",
+      "local_sha256": "dd3c9478c5abce8c2e42d54cd38bf48b1b703468a3e920af28446abaaa2b47ef",
+      "reason": "Isolated Lightsail write adapter or reconciler retained for local Fake tests; not included in build or source export until operation gating and durable panel cleanup are implemented.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "internal/lightsail/config.go",
+      "local_sha256": "febe836669fac8c3f6889b820b0f5cdf343f5ee0c40d51b183db72607c5498e8",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/config_test.go",
+      "local_sha256": "000d8a30fe68be6b95fef04a192bbeb6fd6af8251c057710c2fb9e6ab51a8b07",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/plan/planner.go",
+      "local_sha256": "4fb3528df196339916c31fc5b93a0ae426b5205f835b0c2b8822b067bd8faaee",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/plan/planner_test.go",
+      "local_sha256": "540fe5dc70a34ca505cb4d09baf311e6902edc518a88ff6e8da742d49a88a9b7",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/reconcile/runner.go",
+      "local_sha256": "17dfaca34c8e281bb2275d1a030c0880f7e7f56d3b9c4b777d1a1242220c97bf",
+      "reason": "Isolated Lightsail write adapter or reconciler retained for local Fake tests; not included in build or source export until operation gating and durable panel cleanup are implemented.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "internal/lightsail/reconcile/runner_test.go",
+      "local_sha256": "2819cdf66b23fdbbb24b01e501b2ecc0e73b4b66e4269b31783ad59cc3f702ac",
+      "reason": "Isolated Lightsail write adapter or reconciler retained for local Fake tests; not included in build or source export until operation gating and durable panel cleanup are implemented.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "internal/lightsail/registry/registry_test.go",
+      "local_sha256": "a81b6cd5bec95a4b622568319739ee1de2330c23d94b1e3937b7f0996476fba7",
+      "reason": "SQLite tests for ownership verification, idempotent cleanup snapshots, and monotonic intent stages.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/registry/store.go",
+      "local_sha256": "1ad843bd0639d73244d04cac462529741205e1761bd99697e08eb3b1278b6244",
+      "reason": "Local durable registry for reviewed Lightsail ownership snapshots; no provider calls or deletions.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/replicate/planner.go",
+      "local_sha256": "dc67ba6f08acacd4ea483e56ddb17627a5a2935be5d87d407a42c0a6b741105e",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/replicate/planner_test.go",
+      "local_sha256": "c12fc7cdd98b0ca08cc52d67b813bd2cf4eec454ea9ba7c24ea6e5324ca30590",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/rolling/restart.go",
+      "local_sha256": "7d1acd2a424edc4f9f7d962ef5ac567844a61d7f304f73eac751bd6544790e43",
+      "reason": "Pure rolling restart contract retained as reviewed source; not included in the current product build because no safe lifecycle adapter or scheduler is wired.",
+      "build_context": false,
+      "source_export": true
+    },
+    {
+      "path": "internal/lightsail/rolling/restart_test.go",
+      "local_sha256": "92f566bec89f7347433bb918e626a4639103e9da4167ea9b7f23c7abcb95428f",
+      "reason": "Pure rolling restart contract retained as reviewed source; not included in the current product build because no safe lifecycle adapter or scheduler is wired.",
+      "build_context": false,
+      "source_export": true
+    },
+    {
+      "path": "internal/sub/node_dynamic_address_test.go",
+      "local_sha256": "1b7fc3049259a4abf7d4f8497de48269842853badb795b57a654ad381b0529ae",
+      "reason": "Isolated subscription regression confirming inherited node addresses update while an explicit Host, HostHeader, and SNI remain unchanged.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/web/controller/lightsail.go",
+      "local_sha256": "289daff37963e7d42754e7f4a63849d76b008a6580d00ce11a856b9f5b926d6e",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/web/controller/lightsail_test.go",
+      "local_sha256": "89361a8f70071c901b46dbfbe3b682f8221bd998eddb1ff116cfc9526ee92ac4",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/web/service/lightsail_settings_test.go",
+      "local_sha256": "24e991d28f0052e7672df178c2f3dfec950842e26f1555bbf42148f5f4ebf884",
+      "reason": "Approved Lightsail settings, read-only catalog, pure planning, or focused verification source; no production lifecycle writes are wired.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/web/service/node_dynamic_address.go",
+      "local_sha256": "424fdd2b40ad6675afaf376ba8d8e79e57599bd6c89450c441284e0cde31d66e",
+      "reason": "Address-only refresh for a managed Lightsail node, retained without scheduler or AWS lifecycle wiring.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "internal/web/service/node_dynamic_address_test.go",
+      "local_sha256": "ce036e1ec3b6e31bdff73826984bc592a9eea7199287f01106b5eb05bcae3d53",
+      "reason": "Isolated SQLite verification that dynamic address refresh changes only Node.Address and invalidates its remote cache.",
+      "build_context": true,
+      "source_export": true
+    },
+    {
+      "path": "scripts/check-baseline-test.py",
+      "local_sha256": "01f8dfe92731fb3207a0f600f15c6a8c35c91fb3c2d5789f030b544e55746e78",
+      "reason": "Reviewed local source-policy or export verification support; excluded from application Docker build context.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "scripts/check-baseline.py",
+      "local_sha256": "af26e937eb323e6593e1520256f649dd36016efecab13ed4fd7fc756644e14b5",
+      "reason": "Reviewed local source-policy or export verification support; excluded from application Docker build context.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "scripts/check-boundary.sh",
+      "local_sha256": "36ce4187f9d46207a3aaf72dbed56125abed5b77219d8960b5f1c19cc34f50f0",
+      "reason": "Previously approved project-local source, provenance verifier, or customization-process support."
+    },
+    {
+      "path": "scripts/check-local.sh",
+      "local_sha256": "e3f158cd287f5ef01b5c38f1f5835b467c4f8cf1e56cc82324be506cf02c92f3",
+      "reason": "Previously approved project-local source, provenance verifier, or customization-process support."
+    },
+    {
+      "path": "scripts/check-secrets.sh",
+      "local_sha256": "b2366ead023d7bd039202539374c4adc7373cff2af86576f7cf61cd1f99f50bd",
+      "reason": "Previously approved project-local source, provenance verifier, or customization-process support."
+    },
+    {
+      "path": "scripts/export-source-test.py",
+      "local_sha256": "e704d86cb9ac0657c61ee11240971d15b10b49370f3d07420e5ad2e7654e82a2",
+      "reason": "Reviewed local source-policy or export verification support; excluded from application Docker build context.",
+      "build_context": false,
+      "source_export": false
+    },
+    {
+      "path": "scripts/export-source.py",
+      "local_sha256": "327815e6191eaa0d4396fdb4cdf9be1d040d23f76b3dab634bad1429f61312d9",
+      "reason": "Reviewed local source-policy or export verification support; excluded from application Docker build context.",
+      "build_context": false,
+      "source_export": true
+    },
+    {
+      "path": "scripts/vendor/skill-quick-validate.py",
+      "local_sha256": "c8f43d81f70950c74e4e9af9e403389d33a0677a0a0d5411426615e18caf1abf",
+      "reason": "Previously approved project-local source, provenance verifier, or customization-process support."
+    }
+  ]
+}

@@ -10,7 +10,7 @@
 - [x] 正常管理员login/CSRF/recent step-up/UUID升级，job5a79fc8d-97cc-4c89-8776-15c3ffdde457 SUCCEEDED/COMPLETE；十服务running六healthy，TLS200/200/401/404，备份checksum有效。
 - [x] B正常重新发布revision4且token epoch不变；小火箭更新现有订阅，四个IP均可见。
 - [x] fixed restore真实隔离恢复0、已有目标库拒绝1、MAINTENANCE读回0；恢复环境未复开。
-- [ ] 全节点验收仍failed：N2 IPv4超时。原云写窗口结束，N2一次停止/启动换动态IPv4的授权待用户回复；未执行该动作。
+- [ ] 全节点验收仍failed：N2 IPv4超时。用户已回复“仅完成 IP 显示，保留连接失败记录”，本轮以IP显示交付收尾；原云写窗口未续授，不执行N2停止/启动、换动态IPv4或节点删除。
 - [ ] A410/B503原始token完整恢复验收仍not-run，不能用shell回归或无token的维护屏障检查替代。
 - [ ] 逐资源最终费用unknown，未声称最终账单或immutable offsite storage通过。
 

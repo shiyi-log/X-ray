@@ -1,84 +1,35 @@
 ---
 name: xray-manager
-description: Maintain the isolated X-ray management platform and its auditable delivery workflow.
+description: Maintain the X-ray source fork based on pinned MHSanaei/3x-ui with audited local verification.
 ---
 
 # X-ray Manager
 
-Use this skill for work under `/Users/a399/Desktop/data/X-ray`. The canonical
-project contract is [../../docs/project-conventions.md](../../docs/project-conventions.md);
-the append-only operation record is [../../docs/project-ledger.md](../../docs/project-ledger.md).
+The active application is the GPLv3 source baseline in `UPSTREAM.json`. Its exact imported files are hash-listed in `artifacts/acceptance/3x-ui-rebase-20261117/replacement-manifest.json`. The canonical working contract is [../../docs/project-conventions.md](../../docs/project-conventions.md); the append-only operation record is [../../docs/project-ledger.md](../../docs/project-ledger.md).
 
-## Required Start
+## Before editing
 
-Before any edit:
+1. Read `AGENTS.md`, the canonical conventions, ledger, relevant current progress, and affected source. Do not use obsolete Django/Vben instructions as active commands.
+2. Inspect branch/status/diff, toolchain versions, baseline hashes, relevant processes/listeners, port registrations, and ignored state without printing secrets.
+3. Append a task definition with goal, scope, exclusions, authorization, assumptions, risk, time rules, and rollback. Preserve all pre-existing dirty/untracked files and application data.
+4. For the untouched base run `python3 scripts/check-baseline.py`. A future customization must first introduce an explicit reviewed patch policy; do not regenerate a digest to silence a baseline mismatch.
 
-1. Read `AGENTS.md`, `docs/project-conventions.md`,
-   `docs/project-ledger.md`, and the relevant linked reference files.
-2. Inspect branch, status, diff, listeners, dependency versions, current
-   progress, and the applicable plan.
-3. Create or reuse a `run_id`; append a ledger definition entry containing
-   scope, exclusions, authorization, assumptions, risks, and rollback.
+## Execution and evidence
 
-Do not read `archive/` or sibling Shop runtime material. Do not print ignored
-environment files or secret-bearing output; record only redacted metadata.
+- Keep upstream license, copyright, locked dependencies, and source provenance. Do not import `archive/`, sibling Shop projects, local environments, old DBs, or generated runtime state.
+- New behavior follows test-first development with a test that exercises the real code path. Keep the upstream diff small and auditable.
+- The upstream first-run path prints default panel credentials. Until a separately reviewed bootstrap/secret-delivery change exists, do not initialize or launch the panel or upstream installer.
+- Local verification uses fresh temporary SQLite state. Do not connect the old PostgreSQL/Redis stacks by default. Go/Browser tests may bind temporary ports; run them in isolated containers without host port publishing, never on host networking. If a hosted listener is needed later, use the shared port manager and inspect ownership before starting it.
+- `bash scripts/check-local.sh` is the source gate: baseline, locked npm install, frontend lint/format/typecheck/full tests/build, Go module verification, Go tests, vet, and actual binary build. CI is source-only with read permission and does not deploy or publish.
+- Record exact exit code, package/test counts, skip reasons, tool versions, container/image identity, and evidence path. A successful compile is not proof of UI login, Xray traffic, node operation, cloud capability, or production availability. Preserve `not-run`, `blocked`, `failed`, and `risky_not_executed` honestly.
+- Never expose credentials, raw URI, cookie, access token, secret exception, or unredacted process output in project evidence. Store full test logs only in an access-restricted temporary directory, not tracked artifacts.
 
-## Execution
+## X-ray boundaries
 
-1. Read before writing and record exact paths and scopes.
-2. Make the smallest compatible implementation. Code changes need a focused
-   test; documentation/process changes need the relevant validator and boundary
-   checks.
-3. Treat time as an explicit contract: authoritative clock, IANA timezone,
-   aware/naive parsing, UTC normalization, boundary convention, TTL/expiry,
-   retries, clock skew, DST/offset behavior, and boundary test vectors.
-4. Record each write, command, test, browser/runtime check, external limitation,
-   reuse path, and rollback path in `docs/project-ledger.md`.
-5. Record phase/gate evidence in `docs/progress.md`; record release/version/tag
-   facts in `docs/version-record.md`. Do not claim a phase release for a
-   process-only document change.
-6. Run proportional verification and classify every result honestly:
-   `passed`, `failed`, `blocked`, `not-run`, or `risky_not_executed`.
-7. Append a final ledger event after `git diff --check`, status inspection, and
-   relevant validators. Corrections append new events; they do not rewrite
-   history.
+- Historical Django features such as Lightsail allocation, sensitive-action step-up, append-only security state, revocation tombstones, restore barriers, subscription pools, and online upgrade are not assumed to exist in upstream 3x-ui. Make no such claim until separately implemented and verified.
+- AWS is Lightsail-only; do not create EC2. Real cloud writes, SSH, public probes, deletion, IP release, real device testing, TLS and production publication need task-specific authorization.
+- No database migration or live panel start is included in a baseline build. Do not restore old database, revoked tokens, credentials, security events, or cloud state.
 
-## X-ray Safety Invariants
+## Finish
 
-- PostgreSQL is the source of truth; Redis/Celery work is reconstructible.
-- There is one database-enforced administrator. TOTP enrollment is optional and
-  initiated by the administrator after authenticated, recent step-up. Normal
-  password login starts a session when TOTP is unbound; a bound administrator
-  must complete TOTP or a one-time recovery code. Explicit local test login
-  bypasses remain unavailable in production.
-- Server-side sessions, CSRF, session-version invalidation, TOTP/recovery,
-  purpose-separated AEAD envelopes, and secret redaction remain mandatory.
-- Sensitive actions still require recent step-up: password when TOTP is unbound,
-  password plus TOTP when bound. Ordinary password login grants no recent
-  step-up. Password or TOTP recovery invalidates old sessions and unused
-  authentication challenges; enrollment secrets and recovery codes stay in page
-  memory only.
-- Every side-effecting API requires a UUID `Idempotency-Key`. Dangerous actions
-  require a fresh target-bound preview and step-up authentication.
-- Cloud capability is evidence-based: `SUPPORTED`, `UNSUPPORTED`, or
-  `UNVERIFIED`. Accepted cloud writes require read-after-write evidence.
-- Subscription access is token-digest based and fail-closed. Revoked tokens
-  remain permanently `410`; uncertain node revocation is visible as risk.
-- Recovery starts in `MAINTENANCE`; public subscriptions and cloud writes stay
-  blocked until audit/revocation reconciliation and credential rotation pass.
-
-## Local Evidence Boundary
-
-Use the dedicated PostgreSQL/Redis Compose stack and Fake/Stub cloud/SSH
-providers. Real AWS/SWAS, SSH, public Google probes, production TLS, production
-hosts, deletion, static-IP release, and device acceptance are separate external
-gates and remain `blocked`, `not-run`, or `risky_not_executed` without explicit
-authorization and evidence.
-
-## References
-
-- [Project conventions](../../docs/project-conventions.md)
-- [Project ledger](../../docs/project-ledger.md)
-- [Architecture](references/architecture.md)
-- [Acceptance](references/acceptance.md)
-- [Versioning and recovery](references/versioning-and-recovery.md)
+Run `git diff --check`, source and boundary checks, a redacted secret scan, and final status review. Append a final verification ledger entry and current gate evidence to `docs/progress.md`; retain historical version/matrix records without rewriting their meaning. State remaining limitations, exact files and rollback commit `ad90a0f4c5d58adab703ecfe25bf268321f5e44a`. Do not create a version/tag/release unless the task explicitly requests a release.

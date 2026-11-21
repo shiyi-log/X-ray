@@ -1,4 +1,4 @@
 interface:
   display_name: "X-ray Manager"
-  short_description: "Maintain the isolated X-ray management platform"
-  default_prompt: "Use $xray-manager to implement and verify this repository safely."
+  short_description: "Maintain the pinned 3x-ui source fork"
+  default_prompt: "Use $xray-manager to work on the pinned MHSanaei/3x-ui baseline and verify changes safely."

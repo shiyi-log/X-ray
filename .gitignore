@@ -9,6 +9,7 @@
 **/secrets/
 **/.secrets/
 *.pem
+!/internal/pia/trust/serverlist_public_key.pem
 *.key
 *.p12
 *.pfx
@@ -43,6 +44,11 @@ frontend/.playwright/
 /artifacts/acceptance/*/*.zip
 /artifacts/acceptance/*/screenshots/
 
+# Upstream screenshots contain exposed credentials; keep local copies out of Git.
+/media/APIKey2.png
+/media/newbot.png
+/media/token.png
+
 # Local editor and operating system metadata
 .DS_Store
 .idea/
@@ -50,3 +56,62 @@ frontend/.playwright/
 
 # Local Compose/runtime metadata
 .compose-state/
+
+# 3x-ui upstream build/runtime state
+# Ignore editor and IDE settings
+.idea/
+.vscode/
+.cursor/
+.specify/
+.claude/
+.cache/
+.sync*
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+tmp/
+*.tar.gz
+
+# Ignore build and distribution directories
+backup/
+bin/
+x-ui/
+dist/
+release/
+node_modules/
+
+# Ignore compiled binaries
+main
+3x-ui
+
+# Ignore OS specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Go build files
+*.exe
+*.syso
+x-ui.db
+x-ui.db-shm
+x-ui.db-wal
+system_metrics.gob
+*.dump
+
+# Ignore Docker specific files
+docker-compose.override.yml
+
+# Ignore .env (Environment Variables) file
+.env
+
+/build/
+/db/
+/cert/
+/pgdata/
+/backup/
+*.db-*
+*.sqlite
+*.sqlite-*
+/frontend/storybook-static/
+/frontend/.storybook/.cache/

@@ -1,10 +1,11 @@
-# Versioning and Recovery Reference
+# Versioning and Recovery
 
-Every phase has a focused commit and annotated tag. Update `VERSION`, `CHANGELOG.md`, `docs/version-record.md`, and `docs/progress.md` in the same coherent change. Review `git diff --cached --stat` and `git diff --cached --check` before committing.
+The current application source is pinned by `UPSTREAM.json` and the file SHA manifest. Root `VERSION`, `CHANGELOG.md`, `docs/version-record.md`, and `tests/acceptance/matrix.json` retain the prior Django application history; `0.14.12` is not the 3x-ui base version.
 
-Application rollback uses a phase tag or `git revert`; do not reset shared history. Deployment rollback changes only the verified image and never resurrects revoked tokens, credentials, or cloud actions. Database changes use expand/contract compatibility. A restored system starts in `MAINTENANCE`; subscriptions return 503, cloud writes are blocked, Redis/outbox state is rebuilt, and security audit/revocation reconciliation plus credential rotation must complete before manual reopening.
+This base replacement is not a release: do not create a version, tag, commit, GitHub Release, registry image, installer, or deployment unless a separate task explicitly requests that outcome and all required source/license/build review is complete. CI stays read-only and does not publish.
 
-Before the delivery tag, record immutable backend, frontend, and backup-tools
-image digests plus the encrypted restore receipt. The release checklist is
-`docs/release-checklist.md`; a completed local checklist is not production
-acceptance while the production matrix row remains blocked.
+Rollback to the prior source tree is anchored at `ad90a0f4c5d58adab703ecfe25bf268321f5e44a`. Use a reviewed exact diff or `git revert` if the work is committed; never hard reset or clean a shared workspace. The current run's pre-existing worktree patch and tracked-file hashes are in the private `~/.codex/tmp/xray-3xui-rebase-20261117/` snapshot. Preserve those user changes and all untracked acceptance artifacts.
+
+Do not reuse the old database, credentials, revoked subscription tokens, session/security history, cloud-operation history, or old production images as 3x-ui state. No database migration has been designed or run. An upstream compile or test does not make a legacy backup restorable.
+
+Future upstream syncs must pin a tag and commit, verify the source archive hash, review all changed paths/licenses/workflows, generate a new imported-file manifest, run applicable gates, record exact evidence, and describe rollback before changing the baseline.
